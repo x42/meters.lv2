@@ -14,18 +14,10 @@
 	foaf:mbox <mailto:robin@gareus.org> ;
 	foaf:homepage <http://gareus.org/> .
 
-<http://kokkinizita.linuxaudio.org/#me>
-	a foaf:Person ;
-	foaf:name "Fons Adriaensen" ;
-	foaf:mbox <mailto:fons@linuxaudio.org> ;
-	foaf:homepage <http://kokkinizita.linuxaudio.org/> .
-
 <http://gareus.org/oss/lv2/meters>
 	a doap:Project ;
 	doap:maintainer <http://gareus.org/rgareus#me> ;
-	doap:maintainer <http://kokkinizita.linuxaudio.org/#me> ;
 	doap:name "LV2 meters" .
-
 
 mtr:ui
 	a ui:GtkUI ;
