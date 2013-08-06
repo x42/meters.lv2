@@ -183,14 +183,16 @@ static gboolean expose_event(GtkWidget *w, GdkEventExpose *event, gpointer handl
 
 	/* draw callibration screw */
 
-	const float xc = (300.0 * ui->chn)/2.0;
+	const float xc = 150;
 	const float yc = 153;
-	const float w2 = 12;
-	const float h2 = 12;
+	const float w2 = 12.5;
+	const float h2 = 12.5;
 
+#if 0
 	cairo_set_source_rgb (cr, .25, .25, .25);
 	cairo_rectangle (cr, xc-16, yc-16, 32, 32);
 	cairo_fill(cr);
+#endif
 
 	if (ui->drag_x >= 0 || ui->drag_y >=0) {
 		int tw, th;
@@ -223,13 +225,24 @@ static gboolean expose_event(GtkWidget *w, GdkEventExpose *event, gpointer handl
 		pango_cairo_show_layout(cr, pl);
 		g_object_unref(pl);
 		cairo_restore(cr);
+		cairo_new_path (cr);
 	}
 
+	cairo_save(cr);
 	cairo_translate (cr, xc, yc);
 	cairo_rotate (cr, ui->cal_rad);
 	cairo_translate (cr, -w2, -h2);
 	cairo_set_source_surface (cr, ui->adj, 0, 0);
 	cairo_paint(cr);
+	cairo_restore(cr);
+
+	cairo_save(cr);
+	cairo_translate (cr, xc, yc);
+	cairo_set_source_rgba (cr, 0.20, 0.20, 0.20, 0.8);
+	cairo_arc(cr, 0, 0, 12.5, 0, 2 * M_PI);
+	cairo_set_line_width (cr, 1.0);
+	cairo_stroke(cr);
+	cairo_restore(cr);
 
 	cairo_destroy (cr);
 
@@ -247,10 +260,10 @@ static gboolean mousedown(GtkWidget *w, GdkEventButton *event, gpointer handle) 
 	MetersLV2UI* ui = (MetersLV2UI*)handle;
 
 	/* screw area  -- see also expose_event()*/
-	const float xc = (300.0 * ui->chn)/2.0;
+	const float xc = 150;// (300.0 * ui->chn)/2.0;
 	const float yc = 153;
-	const float w2 = 12;
-	const float h2 = 12;
+	const float w2 = 12.5;
+	const float h2 = 12.5;
 
 	if (event->x > xc-w2 && event->x < xc+w2 && event->y > yc-h2 && event->y < yc+h2) {
 		if (event->state & GDK_SHIFT_MASK) {

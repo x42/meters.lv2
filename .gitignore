@@ -1,6 +1,7 @@
 /manifest.ttl
 /meters.ttl
 /img/*.png
+/img/*.xcf
 *.so
 
 *.swp
