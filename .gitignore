@@ -2,6 +2,7 @@
 /meters.ttl
 /img/*.png
 /img/*.xcf
+/tools/gen_image
 *.so
 
 *.swp
