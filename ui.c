@@ -227,8 +227,11 @@ static gboolean expose_event(GtkWidget *w, GdkEventExpose *event, gpointer handl
 				sprintf(buf, " '4' = %.1f dBFS", -36 - ui->cal);
 				break;
 			case MT_DIN:
-				/* -3dBu = '-9' ^= -18 dbFS*/
-				sprintf(buf, " 0dBu = %.1f dBFS", -30 - ui->cal);
+				/* specs: -3dBu = '-9' ^= -18 dbFS - so these are eqivalent: */
+				//sprintf(buf, " '-6' = %.1f dBFS",  -30 - ui->cal); // no '-6' label
+				//sprintf(buf, "'50%%' = %.1f dBFS", -30 - ui->cal); // mmh
+				//sprintf(buf, " 0dBu = %.1f dBFS",  -30 - ui->cal);
+				sprintf(buf, " '-9' = %.1f dBFS",  -33 - ui->cal);
 				break;
 			case MT_EBU:
 			case MT_NOR:
