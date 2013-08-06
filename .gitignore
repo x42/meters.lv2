@@ -1,0 +1,8 @@
+/manifest.ttl
+/meters.ttl
+/img/*.png
+*.so
+
+*.swp
+cscope.*
+tags

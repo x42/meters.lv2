@@ -1,0 +1,3 @@
+.gitignore export-ignore
+.gitattributes export-ignore
+/img/fix_trigraphs.sh export-ignore
