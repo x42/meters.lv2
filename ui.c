@@ -32,6 +32,7 @@
 #include "img/din.c"
 #include "img/ebu.c"
 #include "img/nor.c"
+#include "img/cor.c"
 #include "img/screw.c"
 
 #include "lv2/lv2plug.in/ns/extensions/ui/ui.h"
@@ -44,7 +45,8 @@ enum MtrType {
 	MT_EBU,
 	MT_DIN,
 	MT_NOR,
-	MT_VU
+	MT_VU,
+	MT_COR
 };
 
 typedef struct {
@@ -136,6 +138,9 @@ static void setup_images (MetersLV2UI* ui) {
 		case MT_NOR:
 			img = (struct MyGimpImage const *) &img_nor;
 			break;
+		case MT_COR:
+			img = (struct MyGimpImage const *) &img_cor;
+			break;
 	}
 	img2surf(img, &ui->bg, &ui->img0);
 	img2surf((struct MyGimpImage const *)&img_screw, &ui->adj, &ui->img1);
@@ -190,7 +195,13 @@ static gboolean expose_event(GtkWidget *w, GdkEventExpose *event, gpointer handl
 			break;
 	}
 
-	if (ui->type == MT_BBC && ui->chn == 2) {
+	if (ui->type == MT_COR) {
+		draw_background (ui, cr, 0, 0);
+		draw_needle (ui, cr, ui->lvl[0], 0, 0, col, 2.0);
+		cairo_destroy (cr);
+		return TRUE;
+	}
+	else if (ui->type == MT_BBC && ui->chn == 2) {
 		draw_background (ui, cr, 0, 0);
 		draw_needle (ui, cr, ui->lvl[0], 0, 0, c_red, 2.0);
 		draw_needle (ui, cr, ui->lvl[1], 0, 0, c_grn, 2.0);
@@ -219,8 +230,12 @@ static gboolean expose_event(GtkWidget *w, GdkEventExpose *event, gpointer handl
 				/* -3dBu = '-9' ^= -18 dbFS*/
 				sprintf(buf, " 0dBu = %.1f dBFS", -30 - ui->cal);
 				break;
-			default:
+			case MT_EBU:
+			case MT_NOR:
 				sprintf(buf, " 'TEST' = %.1f dBFS", -36 - ui->cal);
+				break;
+			default:
+				/* not reached */
 				break;
 		}
 
@@ -335,6 +350,8 @@ static float meter_deflect(int type, float v) {
 			return (v < 0.0f) ? 0.0f : v;
 		case MT_NOR:
 			return .4166666f * log10(v) + 1.125f; // (20.0/48.0) *log(v) + (54/48.0)  -> -54dBFS ^= 0, -12dB ^= 1.0
+		case MT_COR:
+			return 0.5f * (1.0f + v);
 		default:
 			return 0;
 	}
@@ -367,6 +384,7 @@ instantiate(const LV2UI_Descriptor*   descriptor,
 	else if (!strcmp(plugin_uri, MTR_URI "DINstereo")) { ui->chn = 2; ui->type = MT_DIN; }
 	else if (!strcmp(plugin_uri, MTR_URI "NORmono"))   { ui->chn = 1; ui->type = MT_NOR; }
 	else if (!strcmp(plugin_uri, MTR_URI "NORstereo")) { ui->chn = 2; ui->type = MT_NOR; }
+	else if (!strcmp(plugin_uri, MTR_URI "COR"))       { ui->chn = 1; ui->type = MT_COR; }
 
 	if (ui->type == 0) {
 		free(ui);
@@ -396,7 +414,9 @@ instantiate(const LV2UI_Descriptor*   descriptor,
 			break;
 	}
 
-	gtk_widget_add_events(ui->m0, GDK_BUTTON1_MOTION_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK);
+	if (ui->type != MT_COR) {
+		gtk_widget_add_events(ui->m0, GDK_BUTTON1_MOTION_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK);
+	}
 
 	g_signal_connect (G_OBJECT (ui->m0), "expose_event", G_CALLBACK (expose_event), ui);
 	g_signal_connect (G_OBJECT (ui->m0), "button-press-event", G_CALLBACK (mousedown), ui);

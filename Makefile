@@ -42,12 +42,12 @@ endif
 override CFLAGS += -fPIC
 override CFLAGS += `pkg-config --cflags lv2`
 
-UIDEPS=img/vu.c img/bbc.c img/din.c img/ebu.c img/nor.c img/screw.c
+UIDEPS=img/vu.c img/bbc.c img/din.c img/ebu.c img/nor.c img/cor.c img/screw.c
 UICFLAGS+=`pkg-config --cflags gtk+-2.0 cairo pango`
 UILIBS+=`pkg-config --libs gtk+-2.0 cairo pango`
 
-DSPSRC=jmeters/vumeterdsp.cc jmeters/iec1ppmdsp.cc jmeters/iec2ppmdsp.cc
-DSPDEPS=$(DSPSRC) jmeters/jmeterdsp.h jmeters/vumeterdsp.h jmeters/iec1ppmdsp.h jmeters/iec2ppmdsp.h
+DSPSRC=jmeters/vumeterdsp.cc jmeters/iec1ppmdsp.cc jmeters/iec2ppmdsp.cc jmeters/stcorrdsp.cc
+DSPDEPS=$(DSPSRC) jmeters/jmeterdsp.h jmeters/vumeterdsp.h jmeters/iec1ppmdsp.h jmeters/iec2ppmdsp.h jmeters/stcorrdsp.h
 
 # build target definitions
 default: all

@@ -505,3 +505,49 @@ mtr:NORstereo
 		lv2:name "LevelR"
 	] ;
 	.
+
+mtr:COR
+	a lv2:Plugin, lv2:AnalyserPlugin, doap:Project ;
+	doap:license <http://usefulinc.com/doap/licenses/gpl> ;
+	doap:name "Stereo Correlation Meter";
+	lv2:project <http://gareus.org/oss/lv2/meters>
+	lv2:optionalFeature lv2:hardRTCapable ;
+	ui:ui mtr:ui ;
+	lv2:port [
+		a lv2:ControlPort ,
+			lv2:InputPort ;
+		lv2:index 0 ;
+		lv2:symbol "unused" ;
+		lv2:name "unused" ;
+	] , [
+		a lv2:AudioPort ,
+			lv2:InputPort ;
+		lv2:index 1 ;
+		lv2:symbol "inL" ;
+		lv2:name "InL"
+	] , [
+		a lv2:AudioPort ,
+			lv2:OutputPort ;
+		lv2:index 2 ;
+		lv2:symbol "outL" ;
+		lv2:name "OutL"
+	] , [
+		a lv2:ControlPort ,
+			lv2:OutputPort ;
+		lv2:index 3 ;
+		lv2:symbol "levelL" ;
+		lv2:name "LevelL"
+	] , [
+		a lv2:AudioPort ,
+			lv2:InputPort ;
+		lv2:index 4 ;
+		lv2:symbol "inR" ;
+		lv2:name "InR"
+	] , [
+		a lv2:AudioPort ,
+			lv2:OutputPort ;
+		lv2:index 5 ;
+		lv2:symbol "outR" ;
+		lv2:name "OutR"
+	] ;
+	.

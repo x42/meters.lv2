@@ -27,6 +27,7 @@
 #include "jmeters/vumeterdsp.h"
 #include "jmeters/iec1ppmdsp.h"
 #include "jmeters/iec2ppmdsp.h"
+#include "jmeters/stcorrdsp.h"
 
 #define MTR_URI "http://gareus.org/oss/lv2/meters#"
 
@@ -48,6 +49,8 @@ typedef struct {
 	float* reflvl;
 
 	JmeterDSP *mtr[2];
+	Stcorrdsp *cor;
+
 	float* level[2];
 	float* input[2];
 	float* output[2];
@@ -79,7 +82,10 @@ instantiate(const LV2_Descriptor*     descriptor,
 
 	if (!self) return NULL;
 
-	if (0);
+	if (!strcmp(descriptor->URI, MTR_URI "COR")) {
+		self->cor = new Stcorrdsp();
+		self->cor->init(rate, 2e3f, 0.3f);
+	}
 	MTRDEF("VU", Vumeterdsp)
 	MTRDEF("BBC", Iec2ppmdsp)
 	MTRDEF("EBU", Iec2ppmdsp)
@@ -128,6 +134,7 @@ connect_port(LV2_Handle instance,
 	}
 }
 
+
 static void
 run(LV2_Handle instance, uint32_t n_samples)
 {
@@ -164,6 +171,32 @@ cleanup(LV2_Handle instance)
 	free(instance);
 }
 
+
+static void
+run_cor(LV2_Handle instance, uint32_t n_samples)
+{
+	LV2meter* self = (LV2meter*)instance;
+
+	self->cor->process(self->input[0], self->input[1] , n_samples);
+	*self->level[0] = self->cor->read();
+
+	if (self->input[0] != self->output[0]) {
+		memcpy(self->output[0], self->input[0], sizeof(float) * n_samples);
+	}
+	if (self->input[1] != self->output[1]) {
+		memcpy(self->output[1], self->input[1], sizeof(float) * n_samples);
+	}
+}
+
+static void
+cleanup_cor(LV2_Handle instance)
+{
+	LV2meter* self = (LV2meter*)instance;
+	delete self->cor;
+	free(instance);
+}
+
+
 const void*
 extension_data(const char* uri)
 {
@@ -193,22 +226,33 @@ mkdesc(7, "DINstereo")
 mkdesc(8, "NORmono")
 mkdesc(9, "NORstereo")
 
+static const LV2_Descriptor descriptor10 = {
+	MTR_URI "COR",
+	instantiate,
+	connect_port,
+	NULL,
+	run_cor,
+	NULL,
+	cleanup_cor,
+	extension_data
+};
+
 LV2_SYMBOL_EXPORT
 const LV2_Descriptor*
 lv2_descriptor(uint32_t index)
 {
 	switch (index) {
-	case 0: return &descriptor0;
-	case 1: return &descriptor1;
-	case 2: return &descriptor2;
-	case 3: return &descriptor3;
-	case 4: return &descriptor4;
-	case 5: return &descriptor5;
-	case 6: return &descriptor6;
-	case 7: return &descriptor7;
-	case 8: return &descriptor8;
-	case 9: return &descriptor9;
-	default:
-		return NULL;
+	case  0: return &descriptor0;
+	case  1: return &descriptor1;
+	case  2: return &descriptor2;
+	case  3: return &descriptor3;
+	case  4: return &descriptor4;
+	case  5: return &descriptor5;
+	case  6: return &descriptor6;
+	case  7: return &descriptor7;
+	case  8: return &descriptor8;
+	case  9: return &descriptor9;
+	case 10: return &descriptor10;
+	default: return NULL;
 	}
 }
