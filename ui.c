@@ -38,6 +38,15 @@
 
 #define MTR_URI "http://gareus.org/oss/lv2/meters#"
 
+/* meter types */
+enum MtrType {
+	MT_BBC = 1,
+	MT_EBU,
+	MT_DIN,
+	MT_NOR,
+	MT_VU
+};
+
 typedef struct {
 	LV2UI_Write_Function write;
 	LV2UI_Controller     controller;
@@ -55,28 +64,33 @@ typedef struct {
 	float cal;
 	float cal_rad;
 	int chn;
-	int mode;
+	enum MtrType type;
 
 	float drag_x, drag_y, drag_cal;
 } MetersLV2UI;
 
-typedef struct {
+struct MyGimpImage {
 	unsigned int   width;
 	unsigned int   height;
 	unsigned int   bytes_per_pixel;
 	unsigned char  pixel_data[];
-} GimpImage;
-
-enum {
-	MT_BBC = 1,
-	MT_EBU,
-	MT_DIN,
-	MT_NOR,
-	MT_VU
 };
 
+/* screw area */
+static const float s_xc = 150; // was (300.0 * ui->chn)/2.0;
+static const float s_yc = 153;
+static const float s_w2 = 12.5;
+static const float s_h2 = 12.5;
+
+/* colors */
+static const float c_red[3] = {1.0, 0.0, 0.0};
+static const float c_grn[3] = {0.0, 1.0, 0.0};
+static const float c_blk[3] = {0.0, 0.0, 0.0};
+static const float c_wht[3] = {1.0, 1.0, 1.0};
+
+
 /* load gimp-exported .c image into cairo surface */
-static void img2surf (GimpImage const * img, cairo_surface_t **s, unsigned char **d) {
+static void img2surf (struct MyGimpImage const * img, cairo_surface_t **s, unsigned char **d) {
 	int x,y;
 	int stride = cairo_format_stride_for_width (CAIRO_FORMAT_ARGB32, img->width);
 
@@ -104,54 +118,43 @@ static void img2surf (GimpImage const * img, cairo_surface_t **s, unsigned char 
 }
 
 static void setup_images (MetersLV2UI* ui) {
-	GimpImage const * img;
-	switch(ui->mode) {
+	struct MyGimpImage const * img;
+	switch(ui->type) {
 		default:
 		case MT_VU:
-			img = (GimpImage const *) &img_vu;
+			img = (struct MyGimpImage const *) &img_vu;
 			break;
 		case MT_BBC:
-			img = (GimpImage const *) &img_bbc;
+			img = (struct MyGimpImage const *) &img_bbc;
 			break;
 		case MT_EBU:
-			img = (GimpImage const *) &img_ebu;
+			img = (struct MyGimpImage const *) &img_ebu;
 			break;
 		case MT_DIN:
-			img = (GimpImage const *) &img_din;
+			img = (struct MyGimpImage const *) &img_din;
 			break;
 		case MT_NOR:
-			img = (GimpImage const *) &img_nor;
+			img = (struct MyGimpImage const *) &img_nor;
 			break;
 	}
 	img2surf(img, &ui->bg, &ui->img0);
-	img2surf((GimpImage const *)&img_screw, &ui->adj, &ui->img1);
+	img2surf((struct MyGimpImage const *)&img_screw, &ui->adj, &ui->img1);
 }
 
-
-static void draw_meter (MetersLV2UI* ui, cairo_t* cr, float val, float xoff, float yoff) {
-	float col[3];
-
-	cairo_save(cr);
-
-	/* background image */
+static void draw_background (MetersLV2UI* ui, cairo_t* cr, float xoff, float yoff) {
 	cairo_set_source_surface(cr, ui->bg, xoff, yoff);
 	cairo_paint(cr);
+}
+
+static void draw_needle (MetersLV2UI* ui, cairo_t* cr, float val,
+		const float xoff, const float yoff, const float * const col, const float lw) {
+	cairo_save(cr);
 
 	/* needle area */
 	cairo_rectangle (cr, xoff, 0, 300, 135);
 	cairo_clip (cr);
 
-	switch(ui->mode) {
-		case MT_VU:
-			col[0] = col[1] = col[2] = 0.0;
-			break;
-		default:
-			col[0] = col[1] = col[2] = 1.0;
-			break;
-	}
-
 	/* draw needle */
-	const float _nw = 1.4;
 	const float _xc = 149.5 + xoff;
 	const float _yc = 209.5 + yoff;
 	const float _r1 = 0;
@@ -167,7 +170,7 @@ static void draw_meter (MetersLV2UI* ui, cairo_t* cr, float val, float xoff, flo
 	cairo_move_to (cr, _xc + s * _r1, _yc - c * _r1);
 	cairo_line_to (cr, _xc + s * _r2, _yc - c * _r2);
 	cairo_set_source_rgb (cr, col[0], col[1], col[2]);
-	cairo_set_line_width (cr, _nw);
+	cairo_set_line_width (cr, lw);
 	cairo_stroke (cr);
 
 	cairo_restore(cr);
@@ -175,30 +178,37 @@ static void draw_meter (MetersLV2UI* ui, cairo_t* cr, float val, float xoff, flo
 
 static gboolean expose_event(GtkWidget *w, GdkEventExpose *event, gpointer handle) {
 	MetersLV2UI* ui = (MetersLV2UI*)handle;
-	int c;
+	float const * col;
 	cairo_t* cr = gdk_cairo_create(GDK_DRAWABLE(w->window));
-	for (c=0; c < ui->chn; ++c) {
-		draw_meter (ui, cr, ui->lvl[c], 300.0 * c, 0);
+
+	switch(ui->type) {
+		case MT_VU:
+			col = c_blk;
+			break;
+		default:
+			col = c_wht;
+			break;
+	}
+
+	if (ui->type == MT_BBC && ui->chn == 2) {
+		draw_background (ui, cr, 0, 0);
+		draw_needle (ui, cr, ui->lvl[0], 0, 0, c_red, 2.0);
+		draw_needle (ui, cr, ui->lvl[1], 0, 0, c_grn, 2.0);
+	} else {
+		int c;
+		for (c=0; c < ui->chn; ++c) {
+			draw_background (ui, cr, 300.0 * c, 0);
+			draw_needle (ui, cr, ui->lvl[c], 300.0 * c, 0, col, 1.4);
+		}
 	}
 
 	/* draw callibration screw */
-
-	const float xc = 150;
-	const float yc = 153;
-	const float w2 = 12.5;
-	const float h2 = 12.5;
-
-#if 0
-	cairo_set_source_rgb (cr, .25, .25, .25);
-	cairo_rectangle (cr, xc-16, yc-16, 32, 32);
-	cairo_fill(cr);
-#endif
 
 	if (ui->drag_x >= 0 || ui->drag_y >=0) {
 		int tw, th;
 		char buf[48];
 		/* default gain -18.0dB in meters.cc, except DIN: -15dB (deflection) */
-		switch (ui->mode) {
+		switch (ui->type) {
 			case MT_VU:
 				sprintf(buf, "0 VU = %.1f dBFS", -36 - ui->cal);
 				break;
@@ -220,7 +230,7 @@ static gboolean expose_event(GtkWidget *w, GdkEventExpose *event, gpointer handl
 		cairo_set_source_rgba (cr, 1.0, 1.0, 1.0, 1.0);
 		pango_layout_set_text(pl, buf, -1);
 		pango_layout_get_pixel_size(pl, &tw, &th);
-		cairo_translate (cr, xc+w2+8, yc - th/2);
+		cairo_translate (cr, s_xc + s_w2 + 8, s_yc - th/2);
 		pango_cairo_layout_path(cr, pl);
 		pango_cairo_show_layout(cr, pl);
 		g_object_unref(pl);
@@ -229,15 +239,15 @@ static gboolean expose_event(GtkWidget *w, GdkEventExpose *event, gpointer handl
 	}
 
 	cairo_save(cr);
-	cairo_translate (cr, xc, yc);
+	cairo_translate (cr, s_xc, s_yc);
 	cairo_rotate (cr, ui->cal_rad);
-	cairo_translate (cr, -w2, -h2);
+	cairo_translate (cr, -s_w2, -s_h2);
 	cairo_set_source_surface (cr, ui->adj, 0, 0);
 	cairo_paint(cr);
 	cairo_restore(cr);
 
 	cairo_save(cr);
-	cairo_translate (cr, xc, yc);
+	cairo_translate (cr, s_xc, s_yc);
 	cairo_set_source_rgba (cr, 0.20, 0.20, 0.20, 0.8);
 	cairo_arc(cr, 0, 0, 12.5, 0, 2 * M_PI);
 	cairo_set_line_width (cr, 1.0);
@@ -259,30 +269,31 @@ static float cal2rad(float v) {
 static gboolean mousedown(GtkWidget *w, GdkEventButton *event, gpointer handle) {
 	MetersLV2UI* ui = (MetersLV2UI*)handle;
 
-	/* screw area  -- see also expose_event()*/
-	const float xc = 150;// (300.0 * ui->chn)/2.0;
-	const float yc = 153;
-	const float w2 = 12.5;
-	const float h2 = 12.5;
-
-	if (event->x > xc-w2 && event->x < xc+w2 && event->y > yc-h2 && event->y < yc+h2) {
-		if (event->state & GDK_SHIFT_MASK) {
-			/* shift-click -> reset to default */
-			switch(ui->mode) {
-				case MT_VU: ui->cal = -22; break;
-				case MT_DIN: ui->cal = -15; break;
-				default: ui->cal = -18; break;
-			}
-			ui->write(ui->controller, 0, sizeof(float), 0, (const void*) &ui->cal);
-			ui->cal_rad = cal2rad(ui->cal);
-			gtk_widget_queue_draw(ui->m0);
-			return TRUE;
-		}
-
-		ui->drag_x = event->x;
-		ui->drag_y = event->y;
-		ui->drag_cal = ui->cal;
+	if (   event->x < s_xc - s_w2
+			|| event->x > s_xc + s_w2
+			|| event->y < s_yc - s_h2
+			|| event->y > s_yc + s_h2
+			) {
+		/* outside of adj-screw area */
+		return TRUE;
 	}
+
+	if (event->state & GDK_SHIFT_MASK) {
+		/* shift-click -> reset to default */
+		switch(ui->type) {
+			case MT_VU: ui->cal = -22; break;
+			case MT_DIN: ui->cal = -15; break;
+			default: ui->cal = -18; break;
+		}
+		ui->write(ui->controller, 0, sizeof(float), 0, (const void*) &ui->cal);
+		ui->cal_rad = cal2rad(ui->cal);
+		gtk_widget_queue_draw(ui->m0);
+		return TRUE;
+	}
+
+	ui->drag_x = event->x;
+	ui->drag_y = event->y;
+	ui->drag_cal = ui->cal;
 	return TRUE;
 }
 
@@ -310,8 +321,8 @@ static gboolean mousemove(GtkWidget *w, GdkEventMotion *event, gpointer handle) 
 	return TRUE;
 }
 
-static float meter_deflect(int mode, float v) {
-	switch(mode) {
+static float meter_deflect(int type, float v) {
+	switch(type) {
 		case MT_VU:
 			return 5.6234149f * v;
 		case MT_BBC:
@@ -345,19 +356,19 @@ instantiate(const LV2UI_Descriptor*   descriptor,
 	MetersLV2UI* ui = (MetersLV2UI*)malloc(sizeof(MetersLV2UI));
 	*widget = NULL;
 
-	ui->mode = 0;
-	if      (!strcmp(plugin_uri, MTR_URI "VUmono"))    { ui->chn = 1; ui->mode = MT_VU; }
-	else if (!strcmp(plugin_uri, MTR_URI "VUstereo"))  { ui->chn = 2; ui->mode = MT_VU; }
-	else if (!strcmp(plugin_uri, MTR_URI "BBCmono"))   { ui->chn = 1; ui->mode = MT_BBC; }
-	else if (!strcmp(plugin_uri, MTR_URI "BBCstereo")) { ui->chn = 2; ui->mode = MT_BBC; }
-	else if (!strcmp(plugin_uri, MTR_URI "EBUmono"))   { ui->chn = 1; ui->mode = MT_EBU; }
-	else if (!strcmp(plugin_uri, MTR_URI "EBUstereo")) { ui->chn = 2; ui->mode = MT_EBU; }
-	else if (!strcmp(plugin_uri, MTR_URI "DINmono"))   { ui->chn = 1; ui->mode = MT_DIN; }
-	else if (!strcmp(plugin_uri, MTR_URI "DINstereo")) { ui->chn = 2; ui->mode = MT_DIN; }
-	else if (!strcmp(plugin_uri, MTR_URI "NORmono"))   { ui->chn = 1; ui->mode = MT_NOR; }
-	else if (!strcmp(plugin_uri, MTR_URI "NORstereo")) { ui->chn = 2; ui->mode = MT_NOR; }
+	ui->type = 0;
+	if      (!strcmp(plugin_uri, MTR_URI "VUmono"))    { ui->chn = 1; ui->type = MT_VU; }
+	else if (!strcmp(plugin_uri, MTR_URI "VUstereo"))  { ui->chn = 2; ui->type = MT_VU; }
+	else if (!strcmp(plugin_uri, MTR_URI "BBCmono"))   { ui->chn = 1; ui->type = MT_BBC; }
+	else if (!strcmp(plugin_uri, MTR_URI "BBCstereo")) { ui->chn = 2; ui->type = MT_BBC; }
+	else if (!strcmp(plugin_uri, MTR_URI "EBUmono"))   { ui->chn = 1; ui->type = MT_EBU; }
+	else if (!strcmp(plugin_uri, MTR_URI "EBUstereo")) { ui->chn = 2; ui->type = MT_EBU; }
+	else if (!strcmp(plugin_uri, MTR_URI "DINmono"))   { ui->chn = 1; ui->type = MT_DIN; }
+	else if (!strcmp(plugin_uri, MTR_URI "DINstereo")) { ui->chn = 2; ui->type = MT_DIN; }
+	else if (!strcmp(plugin_uri, MTR_URI "NORmono"))   { ui->chn = 1; ui->type = MT_NOR; }
+	else if (!strcmp(plugin_uri, MTR_URI "NORstereo")) { ui->chn = 2; ui->type = MT_NOR; }
 
-	if (ui->mode == 0) {
+	if (ui->type == 0) {
 		free(ui);
 		return NULL;
 	}
@@ -376,8 +387,15 @@ instantiate(const LV2UI_Descriptor*   descriptor,
 
 	setup_images(ui);
 
-	gtk_box_pack_start(GTK_BOX(ui->box), ui->m0, FALSE, FALSE, 0);
-	gtk_drawing_area_size(GTK_DRAWING_AREA(ui->m0), 300 * ui->chn, 170);
+	switch (ui->type) {
+		case MT_BBC:
+			gtk_drawing_area_size(GTK_DRAWING_AREA(ui->m0), 300, 170);
+			break;
+		default:
+			gtk_drawing_area_size(GTK_DRAWING_AREA(ui->m0), 300 * ui->chn, 170);
+			break;
+	}
+
 	gtk_widget_add_events(ui->m0, GDK_BUTTON1_MOTION_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK);
 
 	g_signal_connect (G_OBJECT (ui->m0), "expose_event", G_CALLBACK (expose_event), ui);
@@ -385,6 +403,7 @@ instantiate(const LV2UI_Descriptor*   descriptor,
 	g_signal_connect (G_OBJECT (ui->m0), "button-release-event", G_CALLBACK (mouseup), ui);
 	g_signal_connect (G_OBJECT (ui->m0), "motion-notify-event", G_CALLBACK (mousemove), ui);
 
+	gtk_box_pack_start(GTK_BOX(ui->box), ui->m0, FALSE, FALSE, 0);
 	gtk_widget_show(ui->m0);
 
 	*widget = ui->box;
@@ -416,11 +435,11 @@ port_event(LV2UI_Handle handle,
   if ( format != 0 ) { return; }
 
 	if (port_index == 3) {
-		ui->lvl[0] = meter_deflect(ui->mode, *(float *)buffer);
+		ui->lvl[0] = meter_deflect(ui->type, *(float *)buffer);
 		gtk_widget_queue_draw(ui->m0);
 	} else
 	if (port_index == 6) {
-		ui->lvl[1] = meter_deflect(ui->mode, *(float *)buffer);
+		ui->lvl[1] = meter_deflect(ui->type, *(float *)buffer);
 		gtk_widget_queue_draw(ui->m0);
 	} else
 	if (port_index == 0) {
