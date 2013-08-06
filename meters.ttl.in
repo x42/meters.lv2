@@ -36,7 +36,7 @@ mtr:VUmono
 	a lv2:Plugin, lv2:AnalyserPlugin, doap:Project ;
 	doap:license <http://usefulinc.com/doap/licenses/gpl> ;
 	doap:name "Mono VU meter";
-	lv2:project <http://gareus.org/oss/lv2/meters>
+	lv2:project <http://gareus.org/oss/lv2/meters> ;
 	lv2:optionalFeature lv2:hardRTCapable ;
 	ui:ui mtr:ui ;
 	lv2:port [
@@ -74,7 +74,7 @@ mtr:VUstereo
 	a lv2:Plugin, lv2:AnalyserPlugin, doap:Project ;
 	doap:license <http://usefulinc.com/doap/licenses/gpl> ;
 	doap:name "Stereo VU meter";
-	lv2:project <http://gareus.org/oss/lv2/meters>
+	lv2:project <http://gareus.org/oss/lv2/meters> ;
 	lv2:optionalFeature lv2:hardRTCapable ;
 	ui:ui mtr:ui ;
 	lv2:port [
@@ -131,7 +131,7 @@ mtr:BBCmono
 	a lv2:Plugin, lv2:AnalyserPlugin, doap:Project ;
 	doap:license <http://usefulinc.com/doap/licenses/gpl> ;
 	doap:name "Mono BBC meter";
-	lv2:project <http://gareus.org/oss/lv2/meters>
+	lv2:project <http://gareus.org/oss/lv2/meters> ;
 	lv2:optionalFeature lv2:hardRTCapable ;
 	ui:ui mtr:ui ;
 	lv2:port [
@@ -169,7 +169,7 @@ mtr:BBCstereo
 	a lv2:Plugin, lv2:AnalyserPlugin, doap:Project ;
 	doap:license <http://usefulinc.com/doap/licenses/gpl> ;
 	doap:name "Stereo BBC meter";
-	lv2:project <http://gareus.org/oss/lv2/meters>
+	lv2:project <http://gareus.org/oss/lv2/meters> ;
 	lv2:optionalFeature lv2:hardRTCapable ;
 	ui:ui mtr:ui ;
 	lv2:port [
@@ -226,7 +226,7 @@ mtr:EBUmono
 	a lv2:Plugin, lv2:AnalyserPlugin, doap:Project ;
 	doap:license <http://usefulinc.com/doap/licenses/gpl> ;
 	doap:name "Mono EBU meter";
-	lv2:project <http://gareus.org/oss/lv2/meters>
+	lv2:project <http://gareus.org/oss/lv2/meters> ;
 	lv2:optionalFeature lv2:hardRTCapable ;
 	ui:ui mtr:ui ;
 	lv2:port [
@@ -264,7 +264,7 @@ mtr:EBUstereo
 	a lv2:Plugin, lv2:AnalyserPlugin, doap:Project ;
 	doap:license <http://usefulinc.com/doap/licenses/gpl> ;
 	doap:name "Stereo EBU meter";
-	lv2:project <http://gareus.org/oss/lv2/meters>
+	lv2:project <http://gareus.org/oss/lv2/meters> ;
 	lv2:optionalFeature lv2:hardRTCapable ;
 	ui:ui mtr:ui ;
 	lv2:port [
@@ -321,7 +321,7 @@ mtr:DINmono
 	a lv2:Plugin, lv2:AnalyserPlugin, doap:Project ;
 	doap:license <http://usefulinc.com/doap/licenses/gpl> ;
 	doap:name "Mono DIN meter";
-	lv2:project <http://gareus.org/oss/lv2/meters>
+	lv2:project <http://gareus.org/oss/lv2/meters> ;
 	lv2:optionalFeature lv2:hardRTCapable ;
 	ui:ui mtr:ui ;
 	lv2:port [
@@ -359,7 +359,7 @@ mtr:DINstereo
 	a lv2:Plugin, lv2:AnalyserPlugin, doap:Project ;
 	doap:license <http://usefulinc.com/doap/licenses/gpl> ;
 	doap:name "Stereo DIN meter";
-	lv2:project <http://gareus.org/oss/lv2/meters>
+	lv2:project <http://gareus.org/oss/lv2/meters> ;
 	lv2:optionalFeature lv2:hardRTCapable ;
 	ui:ui mtr:ui ;
 	lv2:port [
@@ -416,7 +416,7 @@ mtr:NORmono
 	a lv2:Plugin, lv2:AnalyserPlugin, doap:Project ;
 	doap:license <http://usefulinc.com/doap/licenses/gpl> ;
 	doap:name "Mono Nordic meter";
-	lv2:project <http://gareus.org/oss/lv2/meters>
+	lv2:project <http://gareus.org/oss/lv2/meters> ;
 	lv2:optionalFeature lv2:hardRTCapable ;
 	ui:ui mtr:ui ;
 	lv2:port [
@@ -454,7 +454,7 @@ mtr:NORstereo
 	a lv2:Plugin, lv2:AnalyserPlugin, doap:Project ;
 	doap:license <http://usefulinc.com/doap/licenses/gpl> ;
 	doap:name "Stereo Nordic meter";
-	lv2:project <http://gareus.org/oss/lv2/meters>
+	lv2:project <http://gareus.org/oss/lv2/meters> ;
 	lv2:optionalFeature lv2:hardRTCapable ;
 	ui:ui mtr:ui ;
 	lv2:port [
@@ -510,7 +510,7 @@ mtr:COR
 	a lv2:Plugin, lv2:AnalyserPlugin, doap:Project ;
 	doap:license <http://usefulinc.com/doap/licenses/gpl> ;
 	doap:name "Stereo Correlation Meter";
-	lv2:project <http://gareus.org/oss/lv2/meters>
+	lv2:project <http://gareus.org/oss/lv2/meters> ;
 	lv2:optionalFeature lv2:hardRTCapable ;
 	ui:ui mtr:ui ;
 	lv2:port [
