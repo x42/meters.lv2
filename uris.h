@@ -38,6 +38,11 @@
 #define MTR_ebu_range_max     MTR_URI "ebu_range_max"
 #define MTR_ebu_integrating   MTR_URI "ebu_integrating"
 
+#define MTR__rdr_radarpoint   MTR_URI "rdr_radarpoint"
+#define MTR__rdr_pointpos     MTR_URI "rdr_pointpos"
+#define MTR__rdr_pos_cur      MTR_URI "rdr_pos_cur"
+#define MTR__rdr_pos_max      MTR_URI "rdr_pos_max"
+
 #define MTR__cckey    MTR_URI "controlkey"
 #define MTR__ccval    MTR_URI "controlval"
 #define MTR__control  MTR_URI "control"
@@ -81,6 +86,11 @@ typedef struct {
 	LV2_URID ebu_range_min;
 	LV2_URID ebu_range_max;
 	LV2_URID ebu_integrating;
+
+	LV2_URID rdr_radarpoint;
+	LV2_URID rdr_pointpos;
+	LV2_URID rdr_pos_cur;
+	LV2_URID rdr_pos_max;
 
 } EBULV2URIs;
 
@@ -127,6 +137,11 @@ map_eburlv2_uris(LV2_URID_Map* map, EBULV2URIs* uris)
 	uris->ebu_range_min       = map->map(map->handle, MTR_ebu_range_min);
 	uris->ebu_range_max       = map->map(map->handle, MTR_ebu_range_max);
 	uris->ebu_integrating     = map->map(map->handle, MTR_ebu_integrating);
+
+	uris->rdr_radarpoint      = map->map(map->handle, MTR__rdr_radarpoint);
+	uris->rdr_pointpos        = map->map(map->handle, MTR__rdr_pointpos);
+	uris->rdr_pos_cur         = map->map(map->handle, MTR__rdr_pos_cur);
+	uris->rdr_pos_max         = map->map(map->handle, MTR__rdr_pos_max);
 
 	uris->mtr_cckey          = map->map(map->handle, MTR__cckey);
 	uris->mtr_ccval          = map->map(map->handle, MTR__ccval);

@@ -73,6 +73,13 @@ typedef struct {
 
 	bool tranport_rolling;
 	bool ebu_integrating;
+
+	float *radarS, radarSC;
+	float *radarM, radarMC;
+	int radar_pos_cur, radar_pos_max;
+	int radar_spd_cur, radar_spd_max;
+	int radar_resync;
+
 } LV2meter;
 
 

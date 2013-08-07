@@ -84,7 +84,6 @@ static gboolean btn_start(GtkWidget *w, gpointer handle) {
 
 static gboolean btn_reset(GtkWidget *w, gpointer handle) {
 	EBUrUI* ui = (EBUrUI*)handle;
-	printf("btn reset\n");
   forge_message_kv(ui, ui->uris.mtr_meters_cfg, CTL_RESET, 0);
 	return TRUE;
 }
@@ -295,6 +294,10 @@ port_event(LV2UI_Handle handle,
 					gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(ui->cbx_transport), (vv&1)==1);
 					ui->disable_signals = false;
 				}
+			} else if (obj->body.otype == uris->rdr_radarpoint) {
+				// TODO..
+			} else {
+				fprintf(stderr, "UI: Unknown control message.\n");
 			}
 		} else {
 			fprintf(stderr, "UI: Unknown message type.\n");

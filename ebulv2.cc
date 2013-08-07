@@ -66,6 +66,22 @@ ebur128_instantiate(
 	self->tranport_rolling = false;
 	self->ebu_integrating = false;
 
+	self->radar_pos_max = 360;
+	self->radar_resync = -1;
+
+	self->radarS = (float*) malloc(self->radar_pos_max * sizeof(float));
+	self->radarM = (float*) malloc(self->radar_pos_max * sizeof(float));
+	self->radarSC = self->radarMC = -INFINITY;
+	self->radar_pos_cur = self->radar_spd_cur = 0;
+
+	for (int i=0; i < self->radar_pos_max; ++i) {
+		self->radarS[i] = -INFINITY;
+		self->radarM[i] = -INFINITY;
+	}
+
+	self->radar_spd_max = (4.0 * 60.0) * rate / self->radar_pos_max;
+	if (self->radar_spd_max < 8192) self->radar_spd_max = 8192; // XXX should be >> n_samples;
+
 	self->ebu = new Ebu_r128_proc();
 	self->ebu->init (2, rate);
 	return (LV2_Handle)self;
@@ -164,15 +180,15 @@ ebur128_run(LV2_Handle instance, uint32_t n_samples)
 				if (obj->body.otype == self->uris.time_Position) {
 					update_position(self, obj);
 				}
-				if (obj->body.otype == self->uris.mtr_meters_on) {
+				else if (obj->body.otype == self->uris.mtr_meters_on) {
 					self->ui_active = true;
 					forge_kvcontrolmessage(&self->forge, &self->uris, self->uris.mtr_control, CTL_LV2_FTM, self->follow_transport_mode);
-					// TODO send history..
+					self->radar_resync = 0;
 				}
-				if (obj->body.otype == self->uris.mtr_meters_off) {
+				else if (obj->body.otype == self->uris.mtr_meters_off) {
 					self->ui_active = false;
 				}
-				if (obj->body.otype == self->uris.mtr_meters_cfg) {
+				else if (obj->body.otype == self->uris.mtr_meters_cfg) {
 					int k; float v;
 					get_cc_key_value(&self->uris, obj, &k, &v);
 					// printf("MSG %d %f\n", k, v); // DEBUG
@@ -228,10 +244,54 @@ ebur128_run(LV2_Handle instance, uint32_t n_samples)
 	float rn = self->ebu->range_min();
 	float rx = self->ebu->range_max();
 
-	// TODO keep radar-history.. (backend here)
 	
-	// TODO send info to UI (if active)
-	//forge_kvcontrolmessage(&self->forge, &self->uris, self->uris.mtr_control, EXAMPLE1, lm);
+	if (self->radar_resync >= 0) {
+		int i;
+		for (i=0; i < 10; i++, self->radar_resync++) {
+			if (self->radar_resync >= self->radar_pos_max) {
+				self->radar_resync = -1;
+				break;
+			}
+			LV2_Atom_Forge_Frame frame;
+			lv2_atom_forge_frame_time(&self->forge, 0);
+			lv2_atom_forge_blank(&self->forge, &frame, 1, self->uris.rdr_radarpoint);
+			lv2_atom_forge_property_head(&self->forge, self->uris.ebu_loudnessM, 0);  lv2_atom_forge_float(&self->forge, self->radarM[self->radar_resync]);
+			lv2_atom_forge_property_head(&self->forge, self->uris.ebu_loudnessS, 0);  lv2_atom_forge_float(&self->forge, self->radarS[self->radar_resync]);
+			lv2_atom_forge_property_head(&self->forge, self->uris.rdr_pointpos, 0); lv2_atom_forge_int(&self->forge, self->radar_resync);
+			lv2_atom_forge_property_head(&self->forge, self->uris.rdr_pos_cur, 0); lv2_atom_forge_int(&self->forge, self->radar_pos_cur);
+			lv2_atom_forge_property_head(&self->forge, self->uris.rdr_pos_max, 0); lv2_atom_forge_int(&self->forge, self->radar_pos_max);
+			lv2_atom_forge_pop(&self->forge, &frame);
+		}
+	}
+
+	/* radar history */
+	if (lm > self->radarMC) self->radarMC = lm;
+	if (lm > self->radarSC) self->radarSC = ls;
+
+	self->radar_spd_cur += n_samples;
+	if (self->radar_spd_cur > self->radar_spd_max) {
+		if (self->ui_active) {
+			LV2_Atom_Forge_Frame frame;
+			lv2_atom_forge_frame_time(&self->forge, 0);
+			lv2_atom_forge_blank(&self->forge, &frame, 1, self->uris.rdr_radarpoint);
+			lv2_atom_forge_property_head(&self->forge, self->uris.ebu_loudnessM, 0);  lv2_atom_forge_float(&self->forge, self->radarMC);
+			lv2_atom_forge_property_head(&self->forge, self->uris.ebu_loudnessS, 0);  lv2_atom_forge_float(&self->forge, self->radarSC);
+			lv2_atom_forge_property_head(&self->forge, self->uris.rdr_pointpos, 0); lv2_atom_forge_int(&self->forge, self->radar_pos_cur);
+			lv2_atom_forge_property_head(&self->forge, self->uris.rdr_pos_cur, 0); lv2_atom_forge_int(&self->forge, self->radar_pos_cur);
+			lv2_atom_forge_property_head(&self->forge, self->uris.rdr_pos_max, 0); lv2_atom_forge_int(&self->forge, self->radar_pos_max);
+			lv2_atom_forge_pop(&self->forge, &frame);
+		}
+#if 0
+		printf("RADAR: @%d/%d  %f,%f\n", 
+				self->radar_pos_cur, self->radar_pos_max, self->radarMC, self->radarSC);
+#endif
+
+		self->radarM[self->radar_pos_cur] = self->radarMC;
+		self->radarS[self->radar_pos_cur] = self->radarSC;
+		self->radar_spd_cur = self->radar_spd_cur % self->radar_spd_max;
+		self->radar_pos_cur = (self->radar_pos_cur + 1) % self->radar_pos_max;
+		self->radarSC = self->radarMC = -INFINITY;
+	}
 
 	/* report values to UI - TODO only if changed*/
 	if (self->ui_active) {
@@ -256,12 +316,17 @@ ebur128_run(LV2_Handle instance, uint32_t n_samples)
 	if (self->input[1] != self->output[1]) {
 		memcpy(self->output[1], self->input[1], sizeof(float) * n_samples);
 	}
+#if 0
+	printf("forged %d bytes\n", self->notify->atom.size);
+#endif
 }
 
 static void
 ebur128_cleanup(LV2_Handle instance)
 {
 	LV2meter* self = (LV2meter*)instance;
+	free(self->radarS);
+	free(self->radarM);
 	delete self->ebu;
 	free(instance);
 }

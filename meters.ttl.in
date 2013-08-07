@@ -584,7 +584,7 @@ mtr:EBUr128
 		lv2:index 1 ;
 		lv2:symbol "notify" ;
 		lv2:name "plugin to UI communication" ;
-		rsz:minimumSize 1024;
+		rsz:minimumSize 2048;
 	] , [
 		a lv2:AudioPort ,
 			lv2:InputPort ;
