@@ -53,29 +53,23 @@
 
 typedef struct {
 	LV2_URID atom_Blank;
-	LV2_URID atom_String;
 	LV2_URID atom_Int;
 	LV2_URID atom_Long;
 	LV2_URID atom_Float;
 	LV2_URID atom_Bool;
-	LV2_URID atom_URID;
 	LV2_URID atom_eventTransfer;
-	LV2_URID atom_Sequence;
 
 	LV2_URID time_Position;
-	LV2_URID time_barBeat;
-	LV2_URID time_beatsPerMinute;
 	LV2_URID time_speed;
 	LV2_URID time_frame;
-	LV2_URID time_fps;
 
-	LV2_URID mtr_control;
+	LV2_URID mtr_control; // from backend to UI
 	LV2_URID mtr_cckey;
 	LV2_URID mtr_ccval;
 
 	LV2_URID mtr_meters_on;
 	LV2_URID mtr_meters_off;
-	LV2_URID mtr_meters_cfg;
+	LV2_URID mtr_meters_cfg; // from UI -> backend
 
 	LV2_URID mtr_ebulevels;
 	LV2_URID ebu_loudnessM;
@@ -111,22 +105,16 @@ static inline void
 map_eburlv2_uris(LV2_URID_Map* map, EBULV2URIs* uris)
 {
 	uris->atom_Blank         = map->map(map->handle, LV2_ATOM__Blank);
-	uris->atom_String        = map->map(map->handle, LV2_ATOM__String);
 	uris->atom_Int           = map->map(map->handle, LV2_ATOM__Int);
-	uris->atom_Long           = map->map(map->handle, LV2_ATOM__Long);
-	uris->atom_Float          = map->map(map->handle, LV2_ATOM__Float);
-	uris->atom_Bool           = map->map(map->handle, LV2_ATOM__Bool);
-	uris->atom_URID          = map->map(map->handle, LV2_ATOM__URID);
+	uris->atom_Long          = map->map(map->handle, LV2_ATOM__Long);
+	uris->atom_Float         = map->map(map->handle, LV2_ATOM__Float);
+	uris->atom_Bool          = map->map(map->handle, LV2_ATOM__Bool);
 
 	uris->atom_eventTransfer = map->map(map->handle, LV2_ATOM__eventTransfer);
-  uris->atom_Sequence      = map->map(map->handle, LV2_ATOM__Sequence);
 
 	uris->time_Position       = map->map(map->handle, LV2_TIME__Position);
-	uris->time_barBeat        = map->map(map->handle, LV2_TIME__barBeat);
-	uris->time_beatsPerMinute = map->map(map->handle, LV2_TIME__beatsPerMinute);
 	uris->time_speed          = map->map(map->handle, LV2_TIME__speed);
 	uris->time_frame          = map->map(map->handle, LV2_TIME__frame);
-	uris->time_fps            = map->map(map->handle, LV2_TIME__framesPerSecond);
 
 	uris->mtr_ebulevels       = map->map(map->handle, MTR__ebulevels);
 	uris->ebu_loudnessM       = map->map(map->handle, MTR_ebu_loudnessM);

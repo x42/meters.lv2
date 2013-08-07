@@ -277,9 +277,9 @@ static gboolean expose_event(GtkWidget *w, GdkEventExpose *event, gpointer handl
 	return TRUE;
 }
 
-static float cal2rad(float v) {
+static float cal2rad(enum MtrType t, float v) {
 	/* rotate screw  [-30..0]  -> [-M_PI/4 .. M_PI/4] */
-	return .0523583 * (v + 15.0);
+	return .0837758 * (v + (t == MT_DIN ? 15.0 : 18.0));
 }
 
 
@@ -304,7 +304,7 @@ static gboolean mousedown(GtkWidget *w, GdkEventButton *event, gpointer handle) 
 			default: ui->cal = -18; break;
 		}
 		ui->write(ui->controller, 0, sizeof(float), 0, (const void*) &ui->cal);
-		ui->cal_rad = cal2rad(ui->cal);
+		ui->cal_rad = cal2rad(ui->type, ui->cal);
 		gtk_widget_queue_draw(ui->m0);
 		return TRUE;
 	}
@@ -333,7 +333,7 @@ static gboolean mousemove(GtkWidget *w, GdkEventMotion *event, gpointer handle) 
 	//printf("Mouse move.. %f %f -> %f   (%f -> %f)\n", event->x, event->y, diff, ui->drag_cal, cal);
   ui->write(ui->controller, 0, sizeof(float), 0, (const void*) &cal);
 	ui->cal = cal;
-	ui->cal_rad = cal2rad(ui->cal);
+	ui->cal_rad = cal2rad(ui->type, ui->cal);
 	gtk_widget_queue_draw(ui->m0);
 
 	return TRUE;
@@ -398,7 +398,7 @@ instantiate(const LV2UI_Descriptor*   descriptor,
 	ui->controller = controller;
 	ui->lvl[0]     = ui->lvl[1] = 0;
 	ui->cal        = -18.0;
-	ui->cal_rad    = cal2rad(ui->cal);
+	ui->cal_rad    = cal2rad(ui->type, ui->cal);
 	ui->box        = gtk_vbox_new(FALSE, 4);
 	ui->m0         = gtk_drawing_area_new();
 	ui->bg         = NULL;
@@ -467,7 +467,7 @@ port_event(LV2UI_Handle handle,
 	} else
 	if (port_index == 0) {
 		ui->cal = *(float *)buffer;
-		ui->cal_rad = cal2rad(ui->cal);
+		ui->cal_rad = cal2rad(ui->type, ui->cal);
 		gtk_widget_queue_draw(ui->m0);
 	}
 

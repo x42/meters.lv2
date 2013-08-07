@@ -68,6 +68,7 @@ typedef struct {
   const LV2_Atom_Sequence* control;
   LV2_Atom_Sequence* notify;
 
+	double rate;
 	bool ui_active;
 	int follow_transport_mode; // bit1: follow start/stop, bit2: reset on re-start.
 

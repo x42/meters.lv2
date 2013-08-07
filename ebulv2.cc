@@ -31,6 +31,65 @@ typedef enum {
 	EBU_OUTPUT1  = 5,
 } EBUPortIndex;
 
+
+/******************************************************************************
+ * helper functions
+ */
+
+static void ebu_integrate(LV2meter* self, bool on) {
+	if (self->ebu_integrating == on) return;
+	if (on) {
+		if (self->follow_transport_mode & 2) { self->ebu->integr_reset(); }
+		self->ebu->integr_start(); self->ebu_integrating=true;
+	} else {
+		self->ebu->integr_pause(); self->ebu_integrating=false;
+	}
+}
+
+static void ebu_set_radarspeed(LV2meter* self, float seconds) {
+	self->radar_spd_max = seconds * self->rate / self->radar_pos_max;
+	if (self->radar_spd_max < 8192) self->radar_spd_max = 8192; // XXX should be >> n_samples;
+}
+
+/**
+ * Update transport state.
+ * This is called by run() when a time:Position is received.
+ */
+static void
+update_position(LV2meter* self, const LV2_Atom_Object* obj)
+{
+	const EBULV2URIs* uris = &self->uris;
+
+	// Received new transport position/speed
+	LV2_Atom *speed = NULL;
+	LV2_Atom *frame = NULL;
+	lv2_atom_object_get(obj,
+	                    uris->time_speed, &speed,
+	                    uris->time_frame, &frame,
+	                    NULL);
+	if (speed && speed->type == uris->atom_Float) {
+		float ts = ((LV2_Atom_Float*)speed)->body;
+		if (ts != 0 && !self->tranport_rolling) {
+			if (self->follow_transport_mode & 1) { ebu_integrate(self, true); }
+		}
+		if (ts == 0 && self->tranport_rolling) {
+			if (self->follow_transport_mode & 1) { ebu_integrate(self, false); }
+		}
+		self->tranport_rolling = (ts != 0);
+	}
+#if 0
+	if (frame && frame->type == uris->atom_Long) {
+		self->pos_frame = ((LV2_Atom_Long*)frame)->body;
+	}
+#endif
+}
+
+
+
+/******************************************************************************
+ * LV2 callbacks
+ */
+
 static LV2_Handle
 ebur128_instantiate(
 		const LV2_Descriptor*     descriptor,
@@ -61,6 +120,7 @@ ebur128_instantiate(
   map_eburlv2_uris(self->map, &self->uris);
   lv2_atom_forge_init(&self->forge, self->map);
 
+	self->rate = rate;
 	self->ui_active = false;
 	self->follow_transport_mode = 0; // 3
 	self->tranport_rolling = false;
@@ -79,8 +139,7 @@ ebur128_instantiate(
 		self->radarM[i] = -INFINITY;
 	}
 
-	self->radar_spd_max = (4.0 * 60.0) * rate / self->radar_pos_max;
-	if (self->radar_spd_max < 8192) self->radar_spd_max = 8192; // XXX should be >> n_samples;
+	ebu_set_radarspeed(self, 4.0 * 60.0);
 
 	self->ebu = new Ebu_r128_proc();
 	self->ebu->init (2, rate);
@@ -114,53 +173,6 @@ ebur128_connect_port(LV2_Handle instance,
 		break;
 	}
 }
-
-static void ebu_integrate(LV2meter* self, bool on) {
-	if (self->ebu_integrating == on) return;
-	if (on) {
-		if (self->follow_transport_mode & 2) { self->ebu->integr_reset(); }
-		self->ebu->integr_start(); self->ebu_integrating=true;
-	} else {
-		self->ebu->integr_pause(); self->ebu_integrating=false;
-	}
-}
-
-/**
- * Update transport state.
- * This is called by run() when a time:Position is received.
- */
-static void
-update_position(LV2meter* self, const LV2_Atom_Object* obj)
-{
-	const EBULV2URIs* uris = &self->uris;
-
-	// Received new transport position/speed
-	LV2_Atom *beat = NULL, *bpm = NULL, *speed = NULL;
-	LV2_Atom *fps = NULL, *frame = NULL;
-	lv2_atom_object_get(obj,
-	                    uris->time_barBeat, &beat,
-	                    uris->time_beatsPerMinute, &bpm,
-	                    uris->time_speed, &speed,
-	                    uris->time_frame, &frame,
-	                    uris->time_fps, &fps,
-	                    NULL);
-	if (speed && speed->type == uris->atom_Float) {
-		float ts = ((LV2_Atom_Float*)speed)->body;
-		if (ts != 0 && !self->tranport_rolling) {
-			if (self->follow_transport_mode & 1) { ebu_integrate(self, true); }
-		}
-		if (ts == 0 && self->tranport_rolling) {
-			if (self->follow_transport_mode & 1) { ebu_integrate(self, false); }
-		}
-		self->tranport_rolling = (ts != 0);
-	}
-#if 0
-	if (frame && frame->type == uris->atom_Long) {
-		self->pos_frame = ((LV2_Atom_Long*)frame)->body;
-	}
-#endif
-}
-
 
 static void
 ebur128_run(LV2_Handle instance, uint32_t n_samples)

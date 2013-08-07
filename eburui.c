@@ -175,8 +175,8 @@ instantiate(const LV2UI_Descriptor*   descriptor,
 	gtk_box_pack_start(GTK_BOX(ui->cbx_box), ui->cbx_autoreset, FALSE, FALSE, 0);
 
 	gtk_box_pack_start(GTK_BOX(ui->box), ui->label, TRUE, TRUE, 2);
-	gtk_box_pack_start(GTK_BOX(ui->box), ui->cbx_box, TRUE, TRUE, 2);
-	gtk_box_pack_start(GTK_BOX(ui->box), ui->btn_box, TRUE, TRUE, 2);
+	gtk_box_pack_start(GTK_BOX(ui->box), ui->cbx_box, FALSE, FALSE, 2);
+	gtk_box_pack_start(GTK_BOX(ui->box), ui->btn_box, FALSE, FALSE, 2);
 
 	g_signal_connect (G_OBJECT (ui->btn_start), "toggled", G_CALLBACK (btn_start), ui);
 	g_signal_connect (G_OBJECT (ui->btn_reset), "clicked", G_CALLBACK (btn_reset), ui);
