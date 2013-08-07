@@ -28,8 +28,9 @@
 #include "jmeters/iec1ppmdsp.h"
 #include "jmeters/iec2ppmdsp.h"
 #include "jmeters/stcorrdsp.h"
+#include "ebumeter/ebu_r128_proc.h"
 
-#define MTR_URI "http://gareus.org/oss/lv2/meters#"
+#include "uris.h"
 
 using namespace LV2M;
 
@@ -50,12 +51,28 @@ typedef struct {
 
 	JmeterDSP *mtr[2];
 	Stcorrdsp *cor;
+	Ebu_r128_proc *ebu;
 
 	float* level[2];
 	float* input[2];
 	float* output[2];
 
 	int chn;
+
+	/* ebur specific */
+  LV2_URID_Map* map;
+  EBULV2URIs uris;
+
+  LV2_Atom_Forge forge;
+  LV2_Atom_Forge_Frame frame;
+  const LV2_Atom_Sequence* control;
+  LV2_Atom_Sequence* notify;
+
+	bool ui_active;
+	int follow_transport_mode; // bit1: follow start/stop, bit2: reset on re-start.
+
+	bool tranport_rolling;
+	bool ebu_integrating;
 } LV2meter;
 
 
@@ -173,7 +190,7 @@ cleanup(LV2_Handle instance)
 
 
 static void
-run_cor(LV2_Handle instance, uint32_t n_samples)
+cor_run(LV2_Handle instance, uint32_t n_samples)
 {
 	LV2meter* self = (LV2meter*)instance;
 
@@ -189,7 +206,7 @@ run_cor(LV2_Handle instance, uint32_t n_samples)
 }
 
 static void
-cleanup_cor(LV2_Handle instance)
+cor_cleanup(LV2_Handle instance)
 {
 	LV2meter* self = (LV2meter*)instance;
 	delete self->cor;
@@ -202,6 +219,8 @@ extension_data(const char* uri)
 {
 	return NULL;
 }
+
+#include "ebulv2.cc"
 
 #define mkdesc(ID, NAME) \
 static const LV2_Descriptor descriptor ## ID = { \
@@ -226,14 +245,14 @@ mkdesc(7, "DINstereo")
 mkdesc(8, "NORmono")
 mkdesc(9, "NORstereo")
 
-static const LV2_Descriptor descriptor10 = {
+static const LV2_Descriptor descriptorCor = {
 	MTR_URI "COR",
 	instantiate,
 	connect_port,
 	NULL,
-	run_cor,
+	cor_run,
 	NULL,
-	cleanup_cor,
+	cor_cleanup,
 	extension_data
 };
 
@@ -252,7 +271,8 @@ lv2_descriptor(uint32_t index)
 	case  7: return &descriptor7;
 	case  8: return &descriptor8;
 	case  9: return &descriptor9;
-	case 10: return &descriptor10;
+	case 10: return &descriptorCor;
+	case 11: return &descriptorEBUr128;
 	default: return NULL;
 	}
 }

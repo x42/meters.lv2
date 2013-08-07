@@ -6,7 +6,11 @@
 @prefix rdf:  <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix ui:   <http://lv2plug.in/ns/extensions/ui#> .
+@prefix urid:  <http://lv2plug.in/ns/ext/urid#> .
+@prefix pg:    <http://lv2plug.in/ns/ext/port-groups#> .
+@prefix rsz:   <http://lv2plug.in/ns/ext/resize-port#> .
 @prefix mtr:  <http://gareus.org/oss/lv2/meters#> .
+@prefix time:  <http://lv2plug.in/ns/ext/time#> .
 
 <http://gareus.org/rgareus#me>
 	a foaf:Person ;
@@ -21,6 +25,16 @@
 
 mtr:ui
 	a ui:GtkUI ;
+	.
+
+mtr:eburui
+	a ui:GtkUI ;
+	lv2:requiredFeature urid:map ;
+	ui:portNotification [
+		ui:plugin mtr:EBUr128 ;
+		lv2:symbol "notify";
+		ui:notifyType atom:Blank
+	]
 	.
 
 
@@ -541,5 +555,63 @@ mtr:COR
 		lv2:index 5 ;
 		lv2:symbol "outR" ;
 		lv2:name "OutR"
+	] ;
+	.
+
+mtr:EBUr128
+	a lv2:Plugin, lv2:AnalyserPlugin, doap:Project ;
+	doap:license <http://usefulinc.com/doap/licenses/gpl> ;
+	doap:name "EBU R128 Meter";
+	lv2:project <http://gareus.org/oss/lv2/meters> ;
+	lv2:optionalFeature lv2:hardRTCapable ;
+	lv2:requiredFeature urid:map ;
+	ui:ui mtr:eburui ;
+	lv2:port [
+		a atom:AtomPort ,
+			lv2:InputPort ;
+		atom:bufferType atom:Sequence ;
+		lv2:designation lv2:control ;
+		atom:supports mtr:control, time:Position;
+		lv2:index 0 ;
+		lv2:symbol "control" ;
+		lv2:name "UI to plugin communication"
+	] , [
+		a atom:AtomPort ,
+			lv2:OutputPort ;
+		atom:bufferType atom:Sequence ;
+		lv2:designation lv2:control ;
+		atom:supports <http://gareus.org/oss/lv2/meters#control> ;
+		lv2:index 1 ;
+		lv2:symbol "notify" ;
+		lv2:name "plugin to UI communication" ;
+		rsz:minimumSize 1024;
+	] , [
+		a lv2:AudioPort ,
+			lv2:InputPort ;
+		lv2:index 2 ;
+		lv2:symbol "inL" ;
+		lv2:name "InL" ;
+		lv2:designation pg:left ;
+	] , [
+		a lv2:AudioPort ,
+			lv2:OutputPort ;
+		lv2:index 3 ;
+		lv2:symbol "outL" ;
+		lv2:name "OutL";
+		lv2:designation pg:left ;
+	] , [
+		a lv2:AudioPort ,
+			lv2:InputPort ;
+		lv2:index 4 ;
+		lv2:symbol "inR" ;
+		lv2:name "InR" ;
+		lv2:designation pg:right ;
+	] , [
+		a lv2:AudioPort ,
+			lv2:OutputPort ;
+		lv2:index 5 ;
+		lv2:symbol "outR" ;
+		lv2:name "OutR" ;
+		lv2:designation pg:right ;
 	] ;
 	.
