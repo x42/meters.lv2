@@ -139,7 +139,7 @@ ebur128_instantiate(
 		self->radarM[i] = -INFINITY;
 	}
 
-	ebu_set_radarspeed(self, 4.0 * 60.0);
+	ebu_set_radarspeed(self, 2.0 * 60.0);
 
 	self->ebu = new Ebu_r128_proc();
 	self->ebu->init (2, rate);
@@ -259,7 +259,7 @@ ebur128_run(LV2_Handle instance, uint32_t n_samples)
 	
 	if (self->radar_resync >= 0) {
 		int i;
-		for (i=0; i < 10; i++, self->radar_resync++) {
+		for (i=0; i < 8; i++, self->radar_resync++) {
 			if (self->radar_resync >= self->radar_pos_max) {
 				self->radar_resync = -1;
 				break;
