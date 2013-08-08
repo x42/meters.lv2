@@ -225,17 +225,17 @@ static gboolean expose_event(GtkWidget *w, GdkEventExpose *event, gpointer handl
 	write_text(pc, cr, "EBU R128 LV2", "Sans 8", 2 , 5, 1.5 * M_PI, 7, c_gry);
 
 	/* big level as text */
-	sprintf(buf, "%+6.2f %s", LUFS( slow? ui->ls : ui->lm), lufs ? "LUFS" : "LU");
+	sprintf(buf, "%+5.1f %s", LUFS( slow? ui->ls : ui->lm), lufs ? "LUFS" : "LU");
 	write_text(pc, cr, buf, "Mono 14", ww/2 , 10, 0, 8, c_wht);
 
 	/* max level background */
-	int trw = lufs ? 92 : 80;
+	int trw = lufs ? 87 : 75;
 	cairo_set_source_rgba (cr, .2, .2, .2, 1.0);
 	rounded_rectangle (cr, ww-trw-5, 5, trw, 38, 10);
 	cairo_fill (cr);
 
 	/* display max level as text */
-	sprintf(buf, "Max:\n%+6.2f %s", LUFS( slow ? ui->ms: ui->mm), lufs ? "LUFS" : "LU");
+	sprintf(buf, "Max:\n%+5.1f %s", LUFS( slow ? ui->ms: ui->mm), lufs ? "LUFS" : "LU");
 	write_text(pc, cr, buf, "Mono 9", ww-15, 10, 0, 7, c_wht);
 
 #if 1 // radar..
@@ -398,7 +398,7 @@ static gboolean expose_event(GtkWidget *w, GdkEventExpose *event, gpointer handl
 		cairo_fill (cr);
 
 		if (ui->il > -60) {
-			sprintf(buf, "Int:   %+6.2f %s", LUFS(ui->il), lufs ? "LUFS" : "LU");
+			sprintf(buf, "Int:   %+5.1f %s", LUFS(ui->il), lufs ? "LUFS" : "LU");
 			write_text(pc, cr, buf, "Mono 9", 15 , wh - 25, 0,  6, c_wht);
 		} else {
 			sprintf(buf, "[Integrating over 5 sec]");
@@ -406,18 +406,18 @@ static gboolean expose_event(GtkWidget *w, GdkEventExpose *event, gpointer handl
 		}
 
 		if (ui->rx > -60 && (ui->rx - ui->rn) > 0) {
-			sprintf(buf, "Range: %+6.2f..%+6.2f %s (%5.3f)",
+			sprintf(buf, "Range: %+5.1f..%+5.1f %s (%4.1f)",
 					LUFS(ui->rn), LUFS(ui->rx), lufs ? "LUFS" : "LU", (ui->rx - ui->rn));
 			write_text(pc, cr, buf, "Mono 9", 15 , wh - 10, 0,  6, c_wht);
 		} else {
 			sprintf(buf, "[10 sec range.. Please stand by]");
 			write_text(pc, cr, buf, "Sans 9", 15 , wh - 10, 0,  6, c_wht);
 		}
-		myoff = 0;
+		myoff = 3;
 	}
 
 	/* bottom level text display */
-	trw = lufs ? 122 : 110;
+	trw = lufs ? 117 : 105;
 	cairo_set_source_rgba (cr, .1, .1, .1, 1.0);
 	rounded_rectangle (cr, ww-55, 285+myoff, 40, 30, 10);
 	cairo_fill (cr);
@@ -425,10 +425,10 @@ static gboolean expose_event(GtkWidget *w, GdkEventExpose *event, gpointer handl
 	rounded_rectangle (cr, ww-trw-5, 305+myoff, trw, 40, 10);
 	cairo_fill (cr);
 
-	write_text(pc, cr, slow?"Slow":"Med", "Sans 8", ww-35, 290+myoff, 0, 8, c_wht);
-	sprintf(buf, "%+6.2f %s", LUFS(!slow? ui->ls : ui->lm), lufs ? "LUFS" : "LU");
+	write_text(pc, cr, slow? "Med":"Slow", "Sans 8", ww-35, 290+myoff, 0, 8, c_wht);
+	sprintf(buf, "%+5.1f %s", LUFS(!slow? ui->ls : ui->lm), lufs ? "LUFS" : "LU");
 	write_text(pc, cr, buf, "Mono 9", ww-15, 310+myoff, 0, 7, c_wht);
-	sprintf(buf, "Max:%+6.2f %s", LUFS(!slow ? ui->ms: ui->mm), lufs ? "LUFS" : "LU");
+	sprintf(buf, "Max:%+5.1f %s", LUFS(!slow ? ui->ms: ui->mm), lufs ? "LUFS" : "LU");
 	write_text(pc, cr, buf, "Mono 9", ww-15, 325+myoff, 0, 7, c_wht);
 
 
