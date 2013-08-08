@@ -259,7 +259,7 @@ ebur128_run(LV2_Handle instance, uint32_t n_samples)
 	
 	if (self->radar_resync >= 0) {
 		int i;
-		for (i=0; i < 8; i++, self->radar_resync++) {
+		for (i=0; i < 5; i++, self->radar_resync++) {
 			if (self->radar_resync >= self->radar_pos_max) {
 				self->radar_resync = -1;
 				break;

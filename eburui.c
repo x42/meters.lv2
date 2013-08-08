@@ -48,6 +48,7 @@ typedef struct {
 
 	GtkWidget* cbx_box;
 	GtkWidget* cbx_lufs;
+	GtkWidget* cbx_slow;
 	GtkWidget* cbx_transport;
 	GtkWidget* cbx_autoreset;
 
@@ -108,11 +109,17 @@ void write_text(PangoContext * pc, cairo_t* cr,
 		case 3:
 			cairo_translate (cr, -0.5, -th/2.0);
 			break;
+		case 4:
+			cairo_translate (cr, -tw, -th);
+			break;
 		case 5:
 			cairo_translate (cr, -tw/2.0 - 0.5, -th);
 			break;
 		case 6:
 			cairo_translate (cr, -0.5, -th);
+			break;
+		case 7:
+			cairo_translate (cr, -tw, 0);
 			break;
 		case 8:
 			cairo_translate (cr, -tw/2.0 - 0.5, 0);
@@ -179,6 +186,7 @@ static void radar_color(cairo_t* cr, const float v, float alpha) {
 static gboolean expose_event(GtkWidget *w, GdkEventExpose *event, gpointer handle) {
 	EBUrUI* ui = (EBUrUI*)handle;
 	bool lufs = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(ui->cbx_lufs));
+	bool slow = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(ui->cbx_slow));
 
 	cairo_t* cr = gdk_cairo_create(GDK_DRAWABLE(w->window));
 	PangoContext * pc = gtk_widget_get_pango_context(w);
@@ -187,12 +195,24 @@ static gboolean expose_event(GtkWidget *w, GdkEventExpose *event, gpointer handl
 	gint ww, wh;
 	gtk_widget_get_size_request(w, &ww, &wh);
 
+	/* fill background */
 	cairo_rectangle (cr, 0, 0, ww, wh);
 	cairo_set_source_rgba (cr, .0, .0, .0, 1.0);
 	cairo_fill (cr);
 
-	sprintf(buf, "%+6.2f %s", LUFS(ui->lm), lufs ? "LUFS" : "LU");
+	write_text(pc, cr, "EBU R128 LV2", "Sans 8", 2 , 5, 1.5 * M_PI, 7, c_gry);
+
+	int trw = lufs ? 92 : 80;
+	cairo_set_source_rgba (cr, .2, .2, .2, 1.0);
+	rounded_rectangle (cr, ww-trw-5, 5, trw, 38, 10);
+	cairo_fill (cr);
+
+	/* display current level as text */
+	sprintf(buf, "%+6.2f %s", LUFS( slow? ui->ls : ui->lm), lufs ? "LUFS" : "LU");
 	write_text(pc, cr, buf, "Mono 14", ww/2 , 10, 0, 8, c_wht);
+
+	sprintf(buf, "Max:\n%+6.2f %s", LUFS( slow ? ui->ms: ui->mm), lufs ? "LUFS" : "LU");
+	write_text(pc, cr, buf, "Mono 9", ww-15, 10, 0, 7, c_wht);
 
 	/* radar background */
 	const float radius = 120.0;
@@ -219,46 +239,44 @@ static gboolean expose_event(GtkWidget *w, GdkEventExpose *event, gpointer handl
 	cairo_stroke (cr);
 
 	if ( ui->radar_pos_max > 0) {
-		cairo_set_antialias(cr, CAIRO_ANTIALIAS_NONE);
+		float *rdr = slow ? ui->radarS : ui->radarM;
 
+		cairo_set_antialias(cr, CAIRO_ANTIALIAS_NONE);
 		const double astep = 2.0 * M_PI / (double) ui->radar_pos_max;
 		for (int ang = 0; ang < ui->radar_pos_max; ++ang) {
 			int age = (ui->radar_pos_max + ang - ui->radar_pos_cur) % ui->radar_pos_max;
 
-			radar_color(cr, ui->radarM[ang], .05 + 3.0 * age / (double) ui->radar_pos_max);
+			radar_color(cr, rdr[ang], .05 + 3.0 * age / (double) ui->radar_pos_max);
 
 			cairo_move_to(cr, cx, cy);
-			cairo_arc (cr, cx, cy, radar_deflect(ui->radarM[ang], radius),
+			cairo_arc (cr, cx, cy, radar_deflect(rdr[ang], radius),
 					(double) ang * astep, (ang+1.0) * astep);
 			cairo_line_to(cr, cx, cy);
 			cairo_fill(cr); // TODO use pattern, fill after loop.
 		}
-
 		cairo_set_antialias(cr, CAIRO_ANTIALIAS_DEFAULT);
+
 		// current position
 		cairo_set_source_rgba (cr, .7, .7, .7, 0.3);
 		cairo_move_to(cr, cx, cy);
 		cairo_arc (cr, cx, cy, radius + 5.0,
 					(double) ui->radar_pos_cur * astep, ((double) ui->radar_pos_cur + 1.0) * astep);
 		cairo_line_to(cr, cx, cy);
-		//cairo_fill_preserve (cr);
 		cairo_stroke (cr);
-
-#if 0 // current level
-		cairo_set_source_rgba (cr, 1.0, 1.0, 1.0, 0.3);
-		cairo_arc (cr, cx, cy, radar_deflect(ui->lm, radius), 0, 2.0 * M_PI);
-		cairo_fill (cr);
-#endif
-
 	}
 
+	/* circular Level display */
 	cairo_set_line_width(cr, 2.5);
 	cairo_set_line_cap(cr, CAIRO_LINE_CAP_ROUND);
 	cairo_set_source_rgba (cr, .3, .3, .3, 1.0);
+
+	const float cl = slow ? ui->ls : ui->lm;
+	const float cm = slow ? ui->ms : ui->mm;
+	bool maxed = false;
 	for (float val = -69; val <= 0; val+=.5) {
 		const double ang = val * 2.0 * 3.0 * M_PI / 69.0 / 4.0;
 		cairo_save(cr);
-		if (val < ui->lm) {
+		if (val < cl) {
 			radar_color(cr, val, -1);
 		} else {
 			cairo_set_source_rgba (cr, .3, .3, .3, 1.0);
@@ -267,7 +285,13 @@ static gboolean expose_event(GtkWidget *w, GdkEventExpose *event, gpointer handl
 		cairo_rotate (cr, ang);
 		cairo_translate (cr, radius + 10.0, 0);
 		cairo_move_to(cr,  0.5, 0);
-		cairo_line_to(cr,  9.5, 0);
+		if (!maxed && val >= cm && cm > -69) {
+			radar_color(cr, val, -1);
+			cairo_line_to(cr, 12.5, 0);
+			maxed = true;
+		} else {
+			cairo_line_to(cr,  9.5, 0);
+		}
 		cairo_stroke (cr);
 #if 0
 		if ((val+63) %10 == 0) {
@@ -290,13 +314,19 @@ static gboolean expose_event(GtkWidget *w, GdkEventExpose *event, gpointer handl
 	sprintf(buf, "%+.0f", LUFS(-46));
 	write_text(pc, cr, buf, "Mono 8", cx - radius - 23, cy, 0, 1, c_gry);
 
-	if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(ui->btn_start))) {
+	int myoff = 50;
+	if (ui->il > -60 || gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(ui->btn_start))) {
+		cairo_set_source_rgba (cr, .1, .1, .1, 1.0);
+		rounded_rectangle (cr, 15, wh-65, 40, 30, 10);
+		cairo_fill (cr);
+		write_text(pc, cr, "Long", "Sans 8", 35 , wh - 47, 0,  5, c_wht);
+
 		cairo_set_source_rgba (cr, .2, .2, .2, 1.0);
 		rounded_rectangle (cr, 5, wh-45, ww-10, 40, 10);
 		cairo_fill (cr);
 
 		if (ui->il > -60) {
-			sprintf(buf, "Int:   %+6.2f %s", LUFS(ui->lm), lufs ? "LUFS" : "LU");
+			sprintf(buf, "Int:   %+6.2f %s", LUFS(ui->il), lufs ? "LUFS" : "LU");
 			write_text(pc, cr, buf, "Mono 9", 15 , wh - 25, 0,  6, c_wht);
 		} else {
 			sprintf(buf, "[Integrating over 5 sec]");
@@ -311,7 +341,25 @@ static gboolean expose_event(GtkWidget *w, GdkEventExpose *event, gpointer handl
 			sprintf(buf, "[10 sec range.. Please stand by]");
 			write_text(pc, cr, buf, "Sans 9", 15 , wh - 10, 0,  6, c_wht);
 		}
+		myoff = 0;
 	}
+
+	if (1) {
+		trw = lufs ? 122 : 110;
+		cairo_set_source_rgba (cr, .1, .1, .1, 1.0);
+		rounded_rectangle (cr, ww-55, 285+myoff, 40, 30, 10);
+		cairo_fill (cr);
+		cairo_set_source_rgba (cr, .2, .2, .2, 1.0);
+		rounded_rectangle (cr, ww-trw-5, 305+myoff, trw, 40, 10);
+		cairo_fill (cr);
+
+		write_text(pc, cr, slow?"Slow":"Med", "Sans 8", ww-35, 290+myoff, 0, 8, c_wht);
+		sprintf(buf, "%+6.2f %s", LUFS(!slow? ui->ls : ui->lm), lufs ? "LUFS" : "LU");
+		write_text(pc, cr, buf, "Mono 9", ww-15, 310+myoff, 0, 7, c_wht);
+		sprintf(buf, "Max:%+6.2f %s", LUFS(!slow ? ui->ms: ui->mm), lufs ? "LUFS" : "LU");
+		write_text(pc, cr, buf, "Mono 9", ww-15, 325+myoff, 0, 7, c_wht);
+	}
+
 
 	cairo_destroy (cr);
 
@@ -378,7 +426,6 @@ static gboolean cbx_autoreset(GtkWidget *w, gpointer handle) {
 
 static gboolean cbx_lufs(GtkWidget *w, gpointer handle) {
 	EBUrUI* ui = (EBUrUI*)handle;
-	gtk_label_set_text(GTK_LABEL(ui->label), "?");
 	gtk_widget_queue_draw(ui->m0);
 	return TRUE;
 }
@@ -433,6 +480,7 @@ instantiate(const LV2UI_Descriptor*   descriptor,
 
 	ui->cbx_box = gtk_vbox_new(TRUE, 0);
 	ui->cbx_lufs      = gtk_check_button_new_with_label("display LUFS");
+	ui->cbx_slow      = gtk_check_button_new_with_label("display data from 'slow' integration as default");
 	ui->cbx_transport = gtk_check_button_new_with_label("use host's transport");
 	ui->cbx_autoreset = gtk_check_button_new_with_label("reset when starting");
 
@@ -442,10 +490,11 @@ instantiate(const LV2UI_Descriptor*   descriptor,
 	gtk_box_pack_start(GTK_BOX(ui->btn_box), ui->btn_reset, FALSE, FALSE, 2);
 
 	gtk_box_pack_start(GTK_BOX(ui->cbx_box), ui->cbx_lufs     , FALSE, FALSE, 0);
+	gtk_box_pack_start(GTK_BOX(ui->cbx_box), ui->cbx_slow     , FALSE, FALSE, 0);
 	gtk_box_pack_start(GTK_BOX(ui->cbx_box), ui->cbx_transport, FALSE, FALSE, 0);
 	gtk_box_pack_start(GTK_BOX(ui->cbx_box), ui->cbx_autoreset, FALSE, FALSE, 0);
 
-	gtk_box_pack_start(GTK_BOX(ui->box), ui->label, TRUE, TRUE, 2);
+	//gtk_box_pack_start(GTK_BOX(ui->box), ui->label, TRUE, TRUE, 2);
 	gtk_box_pack_start(GTK_BOX(ui->box), ui->m0, FALSE, FALSE, 0);
 	gtk_box_pack_start(GTK_BOX(ui->box), ui->cbx_box, FALSE, FALSE, 2);
 	gtk_box_pack_start(GTK_BOX(ui->box), ui->btn_box, FALSE, FALSE, 2);
@@ -454,6 +503,7 @@ instantiate(const LV2UI_Descriptor*   descriptor,
 	g_signal_connect (G_OBJECT (ui->btn_start), "toggled", G_CALLBACK (btn_start), ui);
 	g_signal_connect (G_OBJECT (ui->btn_reset), "clicked", G_CALLBACK (btn_reset), ui);
 	g_signal_connect (G_OBJECT (ui->cbx_lufs),  "toggled", G_CALLBACK (cbx_lufs), ui);
+	g_signal_connect (G_OBJECT (ui->cbx_slow),  "toggled", G_CALLBACK (cbx_lufs), ui);
 	g_signal_connect (G_OBJECT (ui->cbx_transport), "toggled", G_CALLBACK (cbx_transport), ui);
 	g_signal_connect (G_OBJECT (ui->cbx_autoreset), "toggled", G_CALLBACK (cbx_autoreset), ui);
 
@@ -603,7 +653,7 @@ port_event(LV2UI_Handle handle,
 			LV2_Atom_Object* obj = (LV2_Atom_Object*)atom;
 			if (obj->body.otype == uris->mtr_ebulevels) {
 				parse_ebulevels(ui, obj);
-				update_display(ui);
+				//update_display(ui);
 				gtk_widget_queue_draw(ui->m0);
 			} else if (obj->body.otype == uris->mtr_control) {
 				int k; float v;
