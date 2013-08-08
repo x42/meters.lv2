@@ -43,12 +43,14 @@ typedef struct {
 	GtkWidget* box;
 
 	GtkWidget* btn_box;
-	GtkWidget* btn_start;
-	GtkWidget* btn_reset;
+	GtkToolItem* btn_start;
+	GtkToolItem* btn_reset;
 
 	GtkWidget* cbx_box;
 	GtkWidget* cbx_lufs;
-	GtkWidget* cbx_slow;
+	GtkWidget* cbx_lu;
+	GtkWidget* cbx_short;
+	GtkWidget* cbx_mom;
 	GtkWidget* cbx_transport;
 	GtkWidget* cbx_autoreset;
 
@@ -194,7 +196,7 @@ static cairo_pattern_t * radar_pattern(cairo_t* cr, float cx, float cy, float ra
 	cairo_pattern_add_color_stop_rgba(pat, 0.10,  .0, .0, .0, 1.0);
 	cairo_pattern_add_color_stop_rgba(pat, radar_deflect(-45, 1.0),  .0, .0, .5, 1.0);
 	cairo_pattern_add_color_stop_rgba(pat, radar_deflect(-35, 1.0),  .0, .0, .9, 1.0);
-	cairo_pattern_add_color_stop_rgba(pat, radar_deflect(-33, 1.0),  .0, .6, .0, 1.0);
+	//cairo_pattern_add_color_stop_rgba(pat, radar_deflect(-30, 1.0),  .0, .6, .0, 1.0);
 	cairo_pattern_add_color_stop_rgba(pat, radar_deflect(-23, 1.0),  .0, .9, .0, 1.0);
 	cairo_pattern_add_color_stop_rgba(pat, radar_deflect(-17, 1.0), .75,.75, .0, 1.0);
 	cairo_pattern_add_color_stop_rgba(pat, radar_deflect(-12, 1.0),  .8, .4, .0, 1.0);
@@ -207,7 +209,7 @@ static cairo_pattern_t * radar_pattern(cairo_t* cr, float cx, float cy, float ra
 static gboolean expose_event(GtkWidget *w, GdkEventExpose *event, gpointer handle) {
 	EBUrUI* ui = (EBUrUI*)handle;
 	bool lufs = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(ui->cbx_lufs));
-	bool slow = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(ui->cbx_slow));
+	bool slow = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(ui->cbx_short));
 
 	cairo_t* cr = gdk_cairo_create(GDK_DRAWABLE(w->window));
 	PangoContext * pc = gtk_widget_get_pango_context(w);
@@ -390,7 +392,7 @@ static gboolean expose_event(GtkWidget *w, GdkEventExpose *event, gpointer handl
 
 	int myoff = 50;
 	/* integrated level text display */
-	if (ui->il > -60 || gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(ui->btn_start))) {
+	if (ui->il > -60 || gtk_toggle_tool_button_get_active(GTK_TOGGLE_TOOL_BUTTON(ui->btn_start))) {
 		cairo_set_source_rgba (cr, .1, .1, .1, 1.0);
 		rounded_rectangle (cr, 15, wh-65, 40, 30, 10);
 		cairo_fill (cr);
@@ -413,7 +415,7 @@ static gboolean expose_event(GtkWidget *w, GdkEventExpose *event, gpointer handl
 					LUFS(ui->rn), LUFS(ui->rx), lufs ? "LUFS" : "LU", (ui->rx - ui->rn));
 			write_text(pc, cr, buf, "Mono 9", 15 , wh - 10, 0,  6, c_wht);
 		} else {
-			sprintf(buf, "[10 sec range.. Please stand by]");
+			sprintf(buf, "[Collecting 10 sec range. Please stand by.]");
 			write_text(pc, cr, buf, "Sans 9", 15 , wh - 10, 0,  6, c_wht);
 		}
 		myoff = 3;
@@ -428,7 +430,7 @@ static gboolean expose_event(GtkWidget *w, GdkEventExpose *event, gpointer handl
 	rounded_rectangle (cr, ww-trw-5, 305+myoff, trw, 40, 10);
 	cairo_fill (cr);
 
-	write_text(pc, cr, slow? "Med":"Slow", "Sans 8", ww-35, 290+myoff, 0, 8, c_wht);
+	write_text(pc, cr, slow? "Mom.":"Short", "Sans 8", ww-35, 290+myoff, 0, 8, c_wht);
 	sprintf(buf, "%+5.1f %s", LUFS(!slow? ui->ls : ui->lm), lufs ? "LUFS" : "LU");
 	write_text(pc, cr, buf, "Mono 9", ww-15, 310+myoff, 0, 7, c_wht);
 	sprintf(buf, "Max:%+5.1f %s", LUFS(!slow ? ui->ms: ui->mm), lufs ? "LUFS" : "LU");
@@ -460,11 +462,13 @@ static void forge_message_kv(EBUrUI* ui, LV2_URID uri, int key, float value) {
 
 static gboolean btn_start(GtkWidget *w, gpointer handle) {
 	EBUrUI* ui = (EBUrUI*)handle;
-	if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(ui->btn_start))) {
-		gtk_button_set_label(GTK_BUTTON(ui->btn_start), "pause");
+	if (gtk_toggle_tool_button_get_active(GTK_TOGGLE_TOOL_BUTTON(ui->btn_start))) {
+		//gtk_button_set_label(GTK_BUTTON(ui->btn_start), "Pause");
+		gtk_tool_button_set_stock_id(GTK_TOOL_BUTTON(ui->btn_start), GTK_STOCK_MEDIA_PAUSE);
 		forge_message_kv(ui, ui->uris.mtr_meters_cfg, CTL_START, 0);
 	} else {
-		gtk_button_set_label(GTK_BUTTON(ui->btn_start), "start");
+		//gtk_button_set_label(GTK_BUTTON(ui->btn_start), "Start");
+		gtk_tool_button_set_stock_id(GTK_TOOL_BUTTON(ui->btn_start), GTK_STOCK_MEDIA_PLAY);
 		forge_message_kv(ui, ui->uris.mtr_meters_cfg, CTL_PAUSE, 0);
 	}
 	return TRUE;
@@ -479,10 +483,10 @@ static gboolean btn_reset(GtkWidget *w, gpointer handle) {
 static gboolean cbx_transport(GtkWidget *w, gpointer handle) {
 	EBUrUI* ui = (EBUrUI*)handle;
 	if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(ui->cbx_transport))) {
-		gtk_widget_set_sensitive(ui->btn_start, false);
+		gtk_widget_set_sensitive(GTK_WIDGET(ui->btn_start), false);
 		forge_message_kv(ui, ui->uris.mtr_meters_cfg, CTL_TRANSPORTSYNC, 1);
 	} else {
-		gtk_widget_set_sensitive(ui->btn_start, true);
+		gtk_widget_set_sensitive(GTK_WIDGET(ui->btn_start), true);
 		forge_message_kv(ui, ui->uris.mtr_meters_cfg, CTL_AUTORESET, 0);
 	}
 	return TRUE;
@@ -553,40 +557,48 @@ instantiate(const LV2UI_Descriptor*   descriptor,
 	gtk_drawing_area_size(GTK_DRAWING_AREA(ui->m0), 330, 400);
 	gtk_widget_set_size_request(ui->m0, 330, 400);
 
-	ui->btn_box = gtk_hbox_new(TRUE, 0);
-	ui->btn_start = gtk_toggle_button_new_with_label("start");
-	ui->btn_reset = gtk_button_new_with_label("reset");
+	ui->btn_box = gtk_toolbar_new();
+	ui->btn_start = gtk_toggle_tool_button_new_from_stock(GTK_STOCK_MEDIA_PLAY);
+	ui->btn_reset = gtk_tool_button_new_from_stock(GTK_STOCK_CLEAR);
+	gtk_toolbar_set_icon_size (GTK_TOOLBAR(ui->btn_box), GTK_ICON_SIZE_MENU);
+	gtk_toolbar_set_style (GTK_TOOLBAR(ui->btn_box), GTK_TOOLBAR_ICONS);
+	//gtk_tool_item_group_set_header_relief(GTK_TOOL_ITEM_GROUP(ui->btn_box),GTK_RELIEF_NONE);
 
-	ui->cbx_box = gtk_table_new(4, 3, FALSE);
-	ui->cbx_lufs      = gtk_check_button_new_with_label("display LUFS");
-	ui->cbx_slow      = gtk_check_button_new_with_label("'slow' main display");
-	ui->cbx_transport = gtk_check_button_new_with_label("use host's transport");
-	ui->cbx_autoreset = gtk_check_button_new_with_label("reset when starting");
+	ui->cbx_box = gtk_table_new(4, 5, FALSE);
+	ui->cbx_lu        = gtk_radio_button_new_with_label(NULL, "LU");
+	ui->cbx_lufs      = gtk_radio_button_new_with_label_from_widget(GTK_RADIO_BUTTON (ui->cbx_lu), "LUFS");
+	ui->cbx_mom       = gtk_radio_button_new_with_label(NULL, "Momentary");
+	ui->cbx_short     = gtk_radio_button_new_with_label_from_widget(GTK_RADIO_BUTTON(ui->cbx_mom), "Short");
+	ui->cbx_transport = gtk_check_button_new_with_label("Use Host's Transport");
+	ui->cbx_autoreset = gtk_check_button_new_with_label("Reset on Transport Start");
 	ui->spn_radartime = gtk_spin_button_new_with_range(30, 600, 15);
-	ui->lbl_radarinfo = gtk_label_new("Radar Time:");
+	ui->lbl_radarinfo = gtk_label_new("History Length:");
 	ui->lbl_radarunit = gtk_label_new("sec");
+	gtk_misc_set_alignment(GTK_MISC(ui->lbl_radarinfo), 1.0f, 0.5f);
 
-	gtk_box_pack_start(GTK_BOX(ui->btn_box), ui->btn_start, FALSE, FALSE, 2);
-	gtk_box_pack_start(GTK_BOX(ui->btn_box), ui->btn_reset, FALSE, FALSE, 2);
+	gtk_toolbar_insert(GTK_TOOLBAR(ui->btn_box), GTK_TOOL_ITEM(ui->btn_start), 0);
+	gtk_toolbar_insert(GTK_TOOLBAR(ui->btn_box), GTK_TOOL_ITEM(ui->btn_reset), 1);
 
-	gtk_table_attach_defaults(GTK_TABLE(ui->cbx_box), ui->cbx_lufs     , 0, 1, 0, 1);
-	gtk_table_attach_defaults(GTK_TABLE(ui->cbx_box), ui->cbx_slow     , 0, 1, 1, 2);
-	gtk_table_attach_defaults(GTK_TABLE(ui->cbx_box), ui->cbx_transport, 0, 1, 2, 3);
-	gtk_table_attach_defaults(GTK_TABLE(ui->cbx_box), ui->cbx_autoreset, 0, 1, 3, 4);
+	gtk_table_attach_defaults(GTK_TABLE(ui->cbx_box), ui->cbx_lu       , 0, 1, 0, 1);
+	gtk_table_attach_defaults(GTK_TABLE(ui->cbx_box), ui->cbx_lufs     , 1, 2, 0, 1);
+	gtk_table_attach_defaults(GTK_TABLE(ui->cbx_box), ui->cbx_mom      , 0, 1, 1, 2);
+	gtk_table_attach_defaults(GTK_TABLE(ui->cbx_box), ui->cbx_short    , 1, 2, 1, 2);
+	gtk_table_attach_defaults(GTK_TABLE(ui->cbx_box), ui->cbx_transport, 0, 2, 2, 3);
+	gtk_table_attach_defaults(GTK_TABLE(ui->cbx_box), ui->cbx_autoreset, 0, 2, 3, 4);
 
-	gtk_table_attach(GTK_TABLE(ui->cbx_box), ui->lbl_radarinfo, 1, 2, 1, 2, GTK_SHRINK, GTK_SHRINK, 0, 0);
-	gtk_table_attach_defaults(GTK_TABLE(ui->cbx_box), ui->spn_radartime, 1, 2, 2, 3);
-	gtk_table_attach(GTK_TABLE(ui->cbx_box), ui->lbl_radarunit, 2, 3, 2, 3, GTK_SHRINK, GTK_SHRINK, 4, 0);
+	gtk_table_attach(GTK_TABLE(ui->cbx_box), ui->lbl_radarinfo, 2, 3, 0, 2, GTK_FILL, GTK_SHRINK, 4, 0);
+	gtk_table_attach(GTK_TABLE(ui->cbx_box), ui->spn_radartime, 3, 4, 0, 2, GTK_EXPAND | GTK_FILL, GTK_EXPAND, 0, 0);
+	gtk_table_attach(GTK_TABLE(ui->cbx_box), ui->lbl_radarunit, 4, 5, 0, 2, GTK_SHRINK, GTK_SHRINK, 4, 0);
+	gtk_table_attach(GTK_TABLE(ui->cbx_box), ui->btn_box, 3, 4, 2, 4, GTK_EXPAND | GTK_FILL, GTK_EXPAND, 0, 0);
 
 	gtk_box_pack_start(GTK_BOX(ui->box), ui->m0, FALSE, FALSE, 0);
 	gtk_box_pack_start(GTK_BOX(ui->box), ui->cbx_box, FALSE, FALSE, 2);
-	gtk_box_pack_start(GTK_BOX(ui->box), ui->btn_box, FALSE, FALSE, 2);
 
 	g_signal_connect (G_OBJECT (ui->m0), "expose_event", G_CALLBACK (expose_event), ui);
 	g_signal_connect (G_OBJECT (ui->btn_start), "toggled", G_CALLBACK (btn_start), ui);
 	g_signal_connect (G_OBJECT (ui->btn_reset), "clicked", G_CALLBACK (btn_reset), ui);
 	g_signal_connect (G_OBJECT (ui->cbx_lufs),  "toggled", G_CALLBACK (cbx_lufs), ui);
-	g_signal_connect (G_OBJECT (ui->cbx_slow),  "toggled", G_CALLBACK (cbx_lufs), ui);
+	g_signal_connect (G_OBJECT (ui->cbx_short), "toggled", G_CALLBACK (cbx_lufs), ui);
 	g_signal_connect (G_OBJECT (ui->cbx_transport), "toggled", G_CALLBACK (cbx_transport), ui);
 	g_signal_connect (G_OBJECT (ui->cbx_autoreset), "toggled", G_CALLBACK (cbx_autoreset), ui);
 	g_signal_connect (G_OBJECT (ui->spn_radartime), "value-changed", G_CALLBACK (spn_radartime), ui);
@@ -651,10 +663,10 @@ static void parse_ebulevels(EBUrUI* ui, const LV2_Atom_Object* obj) {
 
 	if (ii && ii->type == uris->atom_Bool) {
 		bool ix = ((LV2_Atom_Bool*)ii)->body;
-	  bool bx = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(ui->btn_start));
+	  bool bx = gtk_toggle_tool_button_get_active(GTK_TOGGLE_TOOL_BUTTON(ui->btn_start));
 		if (ix != bx) {
 			ui->disable_signals = true;
-			gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(ui->btn_start), ix);
+			gtk_toggle_tool_button_set_active(GTK_TOGGLE_TOOL_BUTTON(ui->btn_start), ix);
 			ui->disable_signals = false;
 		}
 	}
