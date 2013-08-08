@@ -477,6 +477,10 @@ static gboolean btn_start(GtkWidget *w, gpointer handle) {
 static gboolean btn_reset(GtkWidget *w, gpointer handle) {
 	EBUrUI* ui = (EBUrUI*)handle;
   forge_message_kv(ui, ui->uris.mtr_meters_cfg, CTL_RESET, 0);
+	for (int i=0; i < ui->radar_pos_max; ++i) {
+		ui->radarS[i] = -INFINITY;
+		ui->radarM[i] = -INFINITY;
+	}
 	return TRUE;
 }
 

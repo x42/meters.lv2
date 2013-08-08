@@ -215,6 +215,10 @@ ebur128_run(LV2_Handle instance, uint32_t n_samples)
 							break;
 						case CTL_RESET:
 							self->ebu->integr_reset();
+							for (int i=0; i < self->radar_pos_max; ++i) {
+								self->radarS[i] = -INFINITY;
+								self->radarM[i] = -INFINITY;
+							}
 							break;
 						case CTL_TRANSPORTSYNC:
 							if (v==1) {
