@@ -41,7 +41,6 @@ typedef struct {
 	LV2UI_Controller     controller;
 
 	GtkWidget* box;
-	GtkWidget* label;
 
 	GtkWidget* btn_box;
 	GtkWidget* btn_start;
@@ -52,6 +51,10 @@ typedef struct {
 	GtkWidget* cbx_slow;
 	GtkWidget* cbx_transport;
 	GtkWidget* cbx_autoreset;
+
+	GtkWidget* spn_radartime;
+	GtkWidget* lbl_radarunit;
+	GtkWidget* lbl_radarinfo;
 
 	GtkWidget* m0;
 	cairo_pattern_t * cpattern;
@@ -501,6 +504,13 @@ static gboolean cbx_lufs(GtkWidget *w, gpointer handle) {
 	return TRUE;
 }
 
+static gboolean spn_radartime(GtkSpinButton *w, gpointer handle) {
+	EBUrUI* ui = (EBUrUI*)handle;
+	 float v = gtk_spin_button_get_value(w);
+	forge_message_kv(ui, ui->uris.mtr_meters_cfg, CTL_RADARTIME, v);
+	return TRUE;
+}
+
 
 /******************************************************************************
  * LV2 callbacks
@@ -539,8 +549,6 @@ instantiate(const LV2UI_Descriptor*   descriptor,
 
 	ui->box = gtk_vbox_new(FALSE, 2);
 
-	ui->label = gtk_label_new("?");
-
 	ui->m0    = gtk_drawing_area_new();
 	gtk_drawing_area_size(GTK_DRAWING_AREA(ui->m0), 330, 400);
 	gtk_widget_set_size_request(ui->m0, 330, 400);
@@ -549,23 +557,27 @@ instantiate(const LV2UI_Descriptor*   descriptor,
 	ui->btn_start = gtk_toggle_button_new_with_label("start");
 	ui->btn_reset = gtk_button_new_with_label("reset");
 
-	ui->cbx_box = gtk_vbox_new(TRUE, 0);
+	ui->cbx_box = gtk_table_new(4, 3, FALSE);
 	ui->cbx_lufs      = gtk_check_button_new_with_label("display LUFS");
-	ui->cbx_slow      = gtk_check_button_new_with_label("display data from 'slow' integration as default");
+	ui->cbx_slow      = gtk_check_button_new_with_label("'slow' main display");
 	ui->cbx_transport = gtk_check_button_new_with_label("use host's transport");
 	ui->cbx_autoreset = gtk_check_button_new_with_label("reset when starting");
-
-	//gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(ui->btn_pause), TRUE);
+	ui->spn_radartime = gtk_spin_button_new_with_range(30, 600, 15);
+	ui->lbl_radarinfo = gtk_label_new("Radar Time:");
+	ui->lbl_radarunit = gtk_label_new("sec");
 
 	gtk_box_pack_start(GTK_BOX(ui->btn_box), ui->btn_start, FALSE, FALSE, 2);
 	gtk_box_pack_start(GTK_BOX(ui->btn_box), ui->btn_reset, FALSE, FALSE, 2);
 
-	gtk_box_pack_start(GTK_BOX(ui->cbx_box), ui->cbx_lufs     , FALSE, FALSE, 0);
-	gtk_box_pack_start(GTK_BOX(ui->cbx_box), ui->cbx_slow     , FALSE, FALSE, 0);
-	gtk_box_pack_start(GTK_BOX(ui->cbx_box), ui->cbx_transport, FALSE, FALSE, 0);
-	gtk_box_pack_start(GTK_BOX(ui->cbx_box), ui->cbx_autoreset, FALSE, FALSE, 0);
+	gtk_table_attach_defaults(GTK_TABLE(ui->cbx_box), ui->cbx_lufs     , 0, 1, 0, 1);
+	gtk_table_attach_defaults(GTK_TABLE(ui->cbx_box), ui->cbx_slow     , 0, 1, 1, 2);
+	gtk_table_attach_defaults(GTK_TABLE(ui->cbx_box), ui->cbx_transport, 0, 1, 2, 3);
+	gtk_table_attach_defaults(GTK_TABLE(ui->cbx_box), ui->cbx_autoreset, 0, 1, 3, 4);
 
-	//gtk_box_pack_start(GTK_BOX(ui->box), ui->label, TRUE, TRUE, 2);
+	gtk_table_attach(GTK_TABLE(ui->cbx_box), ui->lbl_radarinfo, 1, 2, 1, 2, GTK_SHRINK, GTK_SHRINK, 0, 0);
+	gtk_table_attach_defaults(GTK_TABLE(ui->cbx_box), ui->spn_radartime, 1, 2, 2, 3);
+	gtk_table_attach(GTK_TABLE(ui->cbx_box), ui->lbl_radarunit, 2, 3, 2, 3, GTK_SHRINK, GTK_SHRINK, 4, 0);
+
 	gtk_box_pack_start(GTK_BOX(ui->box), ui->m0, FALSE, FALSE, 0);
 	gtk_box_pack_start(GTK_BOX(ui->box), ui->cbx_box, FALSE, FALSE, 2);
 	gtk_box_pack_start(GTK_BOX(ui->box), ui->btn_box, FALSE, FALSE, 2);
@@ -577,6 +589,7 @@ instantiate(const LV2UI_Descriptor*   descriptor,
 	g_signal_connect (G_OBJECT (ui->cbx_slow),  "toggled", G_CALLBACK (cbx_lufs), ui);
 	g_signal_connect (G_OBJECT (ui->cbx_transport), "toggled", G_CALLBACK (cbx_transport), ui);
 	g_signal_connect (G_OBJECT (ui->cbx_autoreset), "toggled", G_CALLBACK (cbx_autoreset), ui);
+	g_signal_connect (G_OBJECT (ui->spn_radartime), "value-changed", G_CALLBACK (spn_radartime), ui);
 
 	gtk_widget_show_all(ui->box);
 	*widget = ui->box;
@@ -594,24 +607,6 @@ cleanup(LV2UI_Handle handle)
 		cairo_pattern_destroy (ui->cpattern);
 	}
 	free(ui);
-}
-
-
-static void update_display(EBUrUI* ui) {
-	// TODO queue gtk redraw only
-	bool lufs = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(ui->cbx_lufs));
-	char buf[1024];
-	sprintf(buf,
-			"EBU R128 - GUI work in progress\n\n"
-			"---Mid---\nLVL: %.3f\nMAX: %.3f\n"
-			"---Slow---\nLVL: %.3f\nMAX: %.3f\n"
-			"---Integ---\nLVL: %.3f\nRange: %.3f..%.3f\nRange: %.3f\n",
-			LUFS(ui->lm), LUFS(ui->mm),
-			LUFS(ui->ls), LUFS(ui->ms),
-			LUFS(ui->il),
-			LUFS(ui->rn), LUFS(ui->rx), (ui->rx - ui->rn)
-			);
-	gtk_label_set_text(GTK_LABEL(ui->label), buf);
 }
 
 #define PARSE_A_FLOAT(var, dest) \
@@ -726,7 +721,6 @@ port_event(LV2UI_Handle handle,
 			LV2_Atom_Object* obj = (LV2_Atom_Object*)atom;
 			if (obj->body.otype == uris->mtr_ebulevels) {
 				parse_ebulevels(ui, obj);
-				//update_display(ui);
 				gtk_widget_queue_draw(ui->m0);
 			} else if (obj->body.otype == uris->mtr_control) {
 				int k; float v;
@@ -736,6 +730,10 @@ port_event(LV2UI_Handle handle,
 					ui->disable_signals = true;
 					gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(ui->cbx_autoreset), (vv&2)==2);
 					gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(ui->cbx_transport), (vv&1)==1);
+					ui->disable_signals = false;
+				} else if (k == CTL_LV2_RADARTIME) {
+					ui->disable_signals = true;
+					gtk_spin_button_set_value(GTK_SPIN_BUTTON(ui->spn_radartime), v);
 					ui->disable_signals = false;
 				}
 			} else if (obj->body.otype == uris->rdr_radarpoint) {

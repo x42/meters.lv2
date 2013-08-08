@@ -47,8 +47,8 @@ static void ebu_integrate(LV2meter* self, bool on) {
 }
 
 static void ebu_set_radarspeed(LV2meter* self, float seconds) {
-	self->radar_spd_max = seconds * self->rate / self->radar_pos_max;
-	if (self->radar_spd_max < 8192) self->radar_spd_max = 8192; // XXX should be >> n_samples;
+	self->radar_spd_max = rint(seconds * self->rate / self->radar_pos_max);
+	if (self->radar_spd_max < 4096) self->radar_spd_max = 4096;
 }
 
 /**
@@ -195,6 +195,8 @@ ebur128_run(LV2_Handle instance, uint32_t n_samples)
 				else if (obj->body.otype == self->uris.mtr_meters_on) {
 					self->ui_active = true;
 					forge_kvcontrolmessage(&self->forge, &self->uris, self->uris.mtr_control, CTL_LV2_FTM, self->follow_transport_mode);
+					forge_kvcontrolmessage(&self->forge, &self->uris, self->uris.mtr_control, CTL_LV2_RADARTIME, 
+							(self->radar_pos_max * self->radar_spd_max / self->rate));
 					self->radar_resync = 0;
 				}
 				else if (obj->body.otype == self->uris.mtr_meters_off) {
@@ -230,6 +232,14 @@ ebur128_run(LV2_Handle instance, uint32_t n_samples)
 							} else {
 								self->follow_transport_mode&=~2;
 							}
+							break;
+						case CTL_RADARTIME:
+							if (v >= 30 && v <= 600) {
+								ebu_set_radarspeed(self, v);
+								if (self->radar_spd_max < 2 * n_samples) self->radar_spd_max = 2 * n_samples;
+							}
+							forge_kvcontrolmessage(&self->forge, &self->uris, self->uris.mtr_control, CTL_LV2_RADARTIME, 
+									(self->radar_pos_max * self->radar_spd_max / self->rate));
 							break;
 						default:
 							break;
