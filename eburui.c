@@ -194,13 +194,13 @@ static cairo_pattern_t * radar_pattern(cairo_t* cr, float cx, float cy, float ra
 	cairo_pattern_t * pat = cairo_pattern_create_radial(cx, cy, 0, cx, cy, rad);
 	cairo_pattern_add_color_stop_rgba(pat, 0.0 ,  .0, .0, .0, 1.0);
 	cairo_pattern_add_color_stop_rgba(pat, 0.10,  .0, .0, .0, 1.0);
-	cairo_pattern_add_color_stop_rgba(pat, radar_deflect(-45, 1.0),  .0, .0, .5, 1.0);
-	cairo_pattern_add_color_stop_rgba(pat, radar_deflect(-35, 1.0),  .0, .0, .9, 1.0);
-	//cairo_pattern_add_color_stop_rgba(pat, radar_deflect(-30, 1.0),  .0, .6, .0, 1.0);
-	cairo_pattern_add_color_stop_rgba(pat, radar_deflect(-23, 1.0),  .0, .9, .0, 1.0);
-	cairo_pattern_add_color_stop_rgba(pat, radar_deflect(-17, 1.0), .75,.75, .0, 1.0);
-	cairo_pattern_add_color_stop_rgba(pat, radar_deflect(-12, 1.0),  .8, .4, .0, 1.0);
-	cairo_pattern_add_color_stop_rgba(pat, radar_deflect( -3, 1.0),  .8, .0, .0, 1.0);
+	cairo_pattern_add_color_stop_rgba(pat, radar_deflect(-50, 1.0),  .0, .0, .5, 1.0);
+	cairo_pattern_add_color_stop_rgba(pat, radar_deflect(-41, 1.0),  .0, .0, .9, 1.0);
+	cairo_pattern_add_color_stop_rgba(pat, radar_deflect(-31, 1.0),  .0, .7, .0, 1.0);
+	cairo_pattern_add_color_stop_rgba(pat, radar_deflect(-25, 1.0),  .0, .9, .0, 1.0);
+	cairo_pattern_add_color_stop_rgba(pat, radar_deflect(-22, 1.0), .75,.75, .0, 1.0);
+	cairo_pattern_add_color_stop_rgba(pat, radar_deflect(-11.5, 1.0),  .8, .4, .0, 1.0);
+	cairo_pattern_add_color_stop_rgba(pat, radar_deflect( -4, 1.0),  .8, .0, .0, 1.0);
 	cairo_pattern_add_color_stop_rgba(pat, 1.0 ,  .9, .0, .0, 1.0);
 
 	return pat;
