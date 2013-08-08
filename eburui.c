@@ -408,7 +408,7 @@ static gboolean expose_event(GtkWidget *w, GdkEventExpose *event, gpointer handl
 			write_text(pc, cr, buf, "Sans 9", 15 , wh - 25, 0,  6, c_wht);
 		}
 
-		if (ui->rx > -60 && (ui->rx - ui->rn) > 0) {
+		if (ui->rx > -60.0 && ui->rn > -60.0) {
 			sprintf(buf, "Range: %+5.1f..%+5.1f %s (%4.1f)",
 					LUFS(ui->rn), LUFS(ui->rx), lufs ? "LUFS" : "LU", (ui->rx - ui->rn));
 			write_text(pc, cr, buf, "Mono 9", 15 , wh - 10, 0,  6, c_wht);
