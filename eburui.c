@@ -18,6 +18,7 @@
  */
 
 #define _XOPEN_SOURCE
+#define USE_PATTERN
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -53,6 +54,7 @@ typedef struct {
 	GtkWidget* cbx_autoreset;
 
 	GtkWidget* m0;
+	cairo_pattern_t * cpattern;
 
 	bool disable_signals;
 
@@ -158,6 +160,7 @@ static float radar_deflect(const float v, const float r) {
 	if (v > 0) return r;
 	return (v + 60.0) * r / 60.0;
 }
+
 static void radar_color(cairo_t* cr, const float v, float alpha) {
 	if (alpha > 0.9) alpha = 0.9;
 	else if (alpha < 0) alpha = 1.0;
@@ -182,6 +185,21 @@ static void radar_color(cairo_t* cr, const float v, float alpha) {
 		cairo_set_source_rgba (cr, 1.0, .0, .0, alpha);
 	}
 }
+static cairo_pattern_t * radar_pattern(cairo_t* cr, float cx, float cy, float rad) {
+	cairo_pattern_t * pat = cairo_pattern_create_radial(cx, cy, 0, cx, cy, rad);
+	cairo_pattern_add_color_stop_rgba(pat, 0.0 ,  .0, .0, .0, 1.0);
+	cairo_pattern_add_color_stop_rgba(pat, 0.10,  .0, .0, .0, 1.0);
+	cairo_pattern_add_color_stop_rgba(pat, radar_deflect(-45, 1.0),  .0, .0, .5, 1.0);
+	cairo_pattern_add_color_stop_rgba(pat, radar_deflect(-35, 1.0),  .0, .0, .9, 1.0);
+	cairo_pattern_add_color_stop_rgba(pat, radar_deflect(-33, 1.0),  .0, .6, .0, 1.0);
+	cairo_pattern_add_color_stop_rgba(pat, radar_deflect(-23, 1.0),  .0, .9, .0, 1.0);
+	cairo_pattern_add_color_stop_rgba(pat, radar_deflect(-17, 1.0), .75,.75, .0, 1.0);
+	cairo_pattern_add_color_stop_rgba(pat, radar_deflect(-12, 1.0),  .8, .4, .0, 1.0);
+	cairo_pattern_add_color_stop_rgba(pat, radar_deflect( -3, 1.0),  .8, .0, .0, 1.0);
+	cairo_pattern_add_color_stop_rgba(pat, 1.0 ,  .9, .0, .0, 1.0);
+
+	return pat;
+}
 
 static gboolean expose_event(GtkWidget *w, GdkEventExpose *event, gpointer handle) {
 	EBUrUI* ui = (EBUrUI*)handle;
@@ -195,6 +213,10 @@ static gboolean expose_event(GtkWidget *w, GdkEventExpose *event, gpointer handl
 	gint ww, wh;
 	gtk_widget_get_size_request(w, &ww, &wh);
 
+	const float radius = 120.0;
+	const float cx = ww/2.0;
+	const float cy = 190;
+
 	/* fill background */
 	cairo_rectangle (cr, 0, 0, ww, wh);
 	cairo_set_source_rgba (cr, .0, .0, .0, 1.0);
@@ -202,59 +224,68 @@ static gboolean expose_event(GtkWidget *w, GdkEventExpose *event, gpointer handl
 
 	write_text(pc, cr, "EBU R128 LV2", "Sans 8", 2 , 5, 1.5 * M_PI, 7, c_gry);
 
+	/* big level as text */
+	sprintf(buf, "%+6.2f %s", LUFS( slow? ui->ls : ui->lm), lufs ? "LUFS" : "LU");
+	write_text(pc, cr, buf, "Mono 14", ww/2 , 10, 0, 8, c_wht);
+
+	/* max level background */
 	int trw = lufs ? 92 : 80;
 	cairo_set_source_rgba (cr, .2, .2, .2, 1.0);
 	rounded_rectangle (cr, ww-trw-5, 5, trw, 38, 10);
 	cairo_fill (cr);
 
-	/* display current level as text */
-	sprintf(buf, "%+6.2f %s", LUFS( slow? ui->ls : ui->lm), lufs ? "LUFS" : "LU");
-	write_text(pc, cr, buf, "Mono 14", ww/2 , 10, 0, 8, c_wht);
-
+	/* display max level as text */
 	sprintf(buf, "Max:\n%+6.2f %s", LUFS( slow ? ui->ms: ui->mm), lufs ? "LUFS" : "LU");
 	write_text(pc, cr, buf, "Mono 9", ww-15, 10, 0, 7, c_wht);
 
-	/* radar background */
-	const float radius = 120.0;
-	const float cx = ww/2.0;
-	const float cy = 190;
+#if 1 // radar..
+	if (!ui->cpattern) {
+		ui->cpattern = radar_pattern(cr, cx, cy, radius);
+	}
 
-	cairo_set_source_rgba (cr, .1, .1, .1, 1.0);
+	/* radar background */
+	cairo_set_source_rgba (cr, .05, .05, .05, 1.0);
 	cairo_arc (cr, cx, cy, radius, 0, 2.0 * M_PI);
 	cairo_fill (cr);
-
-	cairo_set_line_width(cr, 1.5);
-	cairo_arc (cr, cx, cy, radar_deflect(-23, radius), 0, 2.0 * M_PI);
-	cairo_stroke (cr);
-
-	cairo_set_line_width(cr, 1.0);
-	cairo_set_source_rgba (cr, .3, .3, .3, 1.0);
-	cairo_arc (cr, cx, cy, radar_deflect(-35, radius), 0, 2.0 * M_PI);
-	cairo_stroke (cr);
-	cairo_arc (cr, cx, cy, radar_deflect(-15, radius), 0, 2.0 * M_PI);
-	cairo_stroke (cr);
-	cairo_arc (cr, cx, cy, radar_deflect(-8, radius), 0, 2.0 * M_PI);
-	cairo_stroke (cr);
-	cairo_arc (cr, cx, cy, radar_deflect( 0, radius), 0, 2.0 * M_PI);
-	cairo_stroke (cr);
 
 	if ( ui->radar_pos_max > 0) {
 		float *rdr = slow ? ui->radarS : ui->radarM;
 
+#ifndef USE_PATTERN
 		cairo_set_antialias(cr, CAIRO_ANTIALIAS_NONE);
+#endif
 		const double astep = 2.0 * M_PI / (double) ui->radar_pos_max;
 		for (int ang = 0; ang < ui->radar_pos_max; ++ang) {
+#ifndef USE_PATTERN
 			int age = (ui->radar_pos_max + ang - ui->radar_pos_cur) % ui->radar_pos_max;
-
 			radar_color(cr, rdr[ang], .05 + 3.0 * age / (double) ui->radar_pos_max);
+#endif
 
 			cairo_move_to(cr, cx, cy);
 			cairo_arc (cr, cx, cy, radar_deflect(rdr[ang], radius),
 					(double) ang * astep, (ang+1.0) * astep);
 			cairo_line_to(cr, cx, cy);
-			cairo_fill(cr); // TODO use pattern, fill after loop.
+#ifndef USE_PATTERN
+			cairo_fill(cr);
+#endif
 		}
+#ifdef USE_PATTERN
+		cairo_set_source (cr, ui->cpattern);
+		cairo_fill(cr);
+
+		// shade
+		for (int p = 0; p < 12; ++p) {
+			float pos = ui->radar_pos_cur + 1 + p;
+			cairo_set_source_rgba (cr, .0, .0, .0, 1.0 - ((p+1.0)/12.0));
+			cairo_move_to(cr, cx, cy);
+			cairo_arc (cr, cx, cy, radius,
+						pos * astep, (pos + 1.0) * astep);
+			cairo_fill(cr);
+		}
+
+#else
 		cairo_set_antialias(cr, CAIRO_ANTIALIAS_DEFAULT);
+#endif
 
 		// current position
 		cairo_set_source_rgba (cr, .7, .7, .7, 0.3);
@@ -265,22 +296,53 @@ static gboolean expose_event(GtkWidget *w, GdkEventExpose *event, gpointer handl
 		cairo_stroke (cr);
 	}
 
-	/* circular Level display */
+	/* lines */
+	cairo_set_source_rgba (cr, .5, .5, .8, 0.75);
+	cairo_set_line_width(cr, 1.5);
+	cairo_arc (cr, cx, cy, radar_deflect(-23, radius), 0, 2.0 * M_PI);
+	cairo_stroke (cr);
+
+	cairo_set_line_width(cr, 1.0);
+	cairo_set_source_rgba (cr, .5, .5, .8, 0.75);
+	cairo_arc (cr, cx, cy, radar_deflect(-45, radius), 0, 2.0 * M_PI);
+	cairo_stroke (cr);
+	cairo_arc (cr, cx, cy, radar_deflect(-35, radius), 0, 2.0 * M_PI);
+	cairo_stroke (cr);
+	cairo_arc (cr, cx, cy, radar_deflect(-15, radius), 0, 2.0 * M_PI);
+	cairo_stroke (cr);
+	cairo_arc (cr, cx, cy, radar_deflect(-8, radius), 0, 2.0 * M_PI);
+	cairo_stroke (cr);
+	cairo_arc (cr, cx, cy, radar_deflect( 0, radius), 0, 2.0 * M_PI);
+	cairo_stroke (cr);
+
+	float innercircle = radar_deflect(-45, radius);
+	for (int i = 0; i < 12; ++i) {
+		const float ang = .5235994f * i;
+		float cc = sinf(ang);
+		float sc = cosf(ang);
+		cairo_move_to(cr, cx + innercircle * sc, cy + innercircle * cc);
+		cairo_line_to(cr, cx + radius * sc, cy + radius * cc);
+		cairo_stroke (cr);
+	}
+
+#endif
+
+#if 1 /* circular Level display */
 	cairo_set_line_width(cr, 2.5);
 	cairo_set_line_cap(cr, CAIRO_LINE_CAP_ROUND);
-	cairo_set_source_rgba (cr, .3, .3, .3, 1.0);
 
 	const float cl = slow ? ui->ls : ui->lm;
 	const float cm = slow ? ui->ms : ui->mm;
 	bool maxed = false;
-	for (float val = -69; val <= 0; val+=.5) {
-		const double ang = val * 2.0 * 3.0 * M_PI / 69.0 / 4.0;
-		cairo_save(cr);
+	for (float val = -69; val <= 0; val += 0.69) {
 		if (val < cl) {
 			radar_color(cr, val, -1);
 		} else {
 			cairo_set_source_rgba (cr, .3, .3, .3, 1.0);
 		}
+#if 0
+		const float ang = .0682954f * val; // val * 2.0 * 3.0 * M_PI / 69.0 / 4.0;
+		cairo_save(cr);
 		cairo_translate (cr, cx, cy);
 		cairo_rotate (cr, ang);
 		cairo_translate (cr, radius + 10.0, 0);
@@ -293,13 +355,21 @@ static gboolean expose_event(GtkWidget *w, GdkEventExpose *event, gpointer handl
 			cairo_line_to(cr,  9.5, 0);
 		}
 		cairo_stroke (cr);
-#if 0
-		if ((val+63) %10 == 0) {
-			sprintf(buf, "%d", val);
-			write_text(pc, cr, buf, "Mono 8", 14, 0, -ang, 3, c_gry);
-		}
-#endif
 		cairo_restore(cr);
+#else
+		const float ang = .0682954f * val;
+		float cc = sinf(ang);
+		float sc = cosf(ang);
+		cairo_move_to(cr, cx + (radius + 10) * sc, cy + (radius + 10)  * cc);
+		if (!maxed && cm > -69 && (val >= cm || (val >= -.1 && cm >= 0))) {
+			radar_color(cr, val, -1);
+			cairo_line_to(cr, cx + (radius + 22) * sc, cy + (radius + 22) * cc);
+			maxed = true;
+		} else {
+			cairo_line_to(cr, cx + (radius + 19) * sc, cy + (radius + 19) * cc);
+		}
+		cairo_stroke (cr);
+#endif
 	}
 
 	sprintf(buf, "%+.0f", LUFS(-69));
@@ -313,8 +383,10 @@ static gboolean expose_event(GtkWidget *w, GdkEventExpose *event, gpointer handl
 
 	sprintf(buf, "%+.0f", LUFS(-46));
 	write_text(pc, cr, buf, "Mono 8", cx - radius - 23, cy, 0, 1, c_gry);
+#endif
 
 	int myoff = 50;
+	/* integrated level text display */
 	if (ui->il > -60 || gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(ui->btn_start))) {
 		cairo_set_source_rgba (cr, .1, .1, .1, 1.0);
 		rounded_rectangle (cr, 15, wh-65, 40, 30, 10);
@@ -344,21 +416,20 @@ static gboolean expose_event(GtkWidget *w, GdkEventExpose *event, gpointer handl
 		myoff = 0;
 	}
 
-	if (1) {
-		trw = lufs ? 122 : 110;
-		cairo_set_source_rgba (cr, .1, .1, .1, 1.0);
-		rounded_rectangle (cr, ww-55, 285+myoff, 40, 30, 10);
-		cairo_fill (cr);
-		cairo_set_source_rgba (cr, .2, .2, .2, 1.0);
-		rounded_rectangle (cr, ww-trw-5, 305+myoff, trw, 40, 10);
-		cairo_fill (cr);
+	/* bottom level text display */
+	trw = lufs ? 122 : 110;
+	cairo_set_source_rgba (cr, .1, .1, .1, 1.0);
+	rounded_rectangle (cr, ww-55, 285+myoff, 40, 30, 10);
+	cairo_fill (cr);
+	cairo_set_source_rgba (cr, .2, .2, .2, 1.0);
+	rounded_rectangle (cr, ww-trw-5, 305+myoff, trw, 40, 10);
+	cairo_fill (cr);
 
-		write_text(pc, cr, slow?"Slow":"Med", "Sans 8", ww-35, 290+myoff, 0, 8, c_wht);
-		sprintf(buf, "%+6.2f %s", LUFS(!slow? ui->ls : ui->lm), lufs ? "LUFS" : "LU");
-		write_text(pc, cr, buf, "Mono 9", ww-15, 310+myoff, 0, 7, c_wht);
-		sprintf(buf, "Max:%+6.2f %s", LUFS(!slow ? ui->ms: ui->mm), lufs ? "LUFS" : "LU");
-		write_text(pc, cr, buf, "Mono 9", ww-15, 325+myoff, 0, 7, c_wht);
-	}
+	write_text(pc, cr, slow?"Slow":"Med", "Sans 8", ww-35, 290+myoff, 0, 8, c_wht);
+	sprintf(buf, "%+6.2f %s", LUFS(!slow? ui->ls : ui->lm), lufs ? "LUFS" : "LU");
+	write_text(pc, cr, buf, "Mono 9", ww-15, 310+myoff, 0, 7, c_wht);
+	sprintf(buf, "Max:%+6.2f %s", LUFS(!slow ? ui->ms: ui->mm), lufs ? "LUFS" : "LU");
+	write_text(pc, cr, buf, "Mono 9", ww-15, 325+myoff, 0, 7, c_wht);
 
 
 	cairo_destroy (cr);
@@ -519,7 +590,9 @@ cleanup(LV2UI_Handle handle)
 {
 	EBUrUI* ui = (EBUrUI*)handle;
   forge_message_kv(ui, ui->uris.mtr_meters_off, 0, 0);
-	// TODO clean up gtk widgets..
+	if (ui->cpattern) {
+		cairo_pattern_destroy (ui->cpattern);
+	}
 	free(ui);
 }
 
