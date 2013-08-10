@@ -322,12 +322,14 @@ static gboolean mousedown(GtkWidget *w, GdkEventButton *event, gpointer handle) 
 	ui->drag_x = event->x;
 	ui->drag_y = event->y;
 	ui->drag_cal = ui->cal;
+	gtk_widget_queue_draw(ui->m0);
 	return TRUE;
 }
 
 static gboolean mouseup(GtkWidget *w, GdkEventButton *event, gpointer handle) {
 	MetersLV2UI* ui = (MetersLV2UI*)handle;
 	ui->drag_x = ui->drag_y = -1;
+	gtk_widget_queue_draw(ui->m0);
 	return TRUE;
 }
 
