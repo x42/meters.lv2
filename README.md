@@ -35,3 +35,9 @@ gtk+2.0, libpango and libcairo.
 Note to packagers: The Makefile honors `PREFIX` and `DESTDIR` variables as well
 as `CFLAGS`, `LDFLAGS` and `OPTIMIZATIONS` (additions to `CFLAGS`).
 
+Screenshots
+-----------
+
+![screenshot](https://raw.github.com/x42/meters.lv2/master/doc/LV2ebur128.png "EBU R128 Meter GUI")
+![screenshot](https://raw.github.com/x42/meters.lv2/master/doc/LV2meters.png "Various Needle Meters in Ardour")
+
