@@ -601,11 +601,11 @@ static gboolean expose_event(GtkWidget *w, GdkEventExpose *ev, gpointer handle) 
 	return TRUE;
 }
 
-void invalidate_changed(EBUrUI* ui, bool all) {
+void invalidate_changed(EBUrUI* ui, int what) {
 	GdkRectangle rect;
 	GdkRegion *tmp = 0;
 
-	if (all) {
+	if (what == -1) {
 		gtk_widget_queue_draw(ui->m0);
 		return;
 	}
@@ -631,7 +631,7 @@ void invalidate_changed(EBUrUI* ui, bool all) {
 	INVALIDATE_RECT(208, 308, 117, 40) // bottom side
 	INVALIDATE_RECT(275, 287, 40, 30)  // bottom side tab
 
-	if (ui->radar_pos_cur != ui->radar_pos_disp) {
+	if ((what & 1) || ui->radar_pos_cur != ui->radar_pos_disp) {
 		GdkRegion* rr = gdk_region_polygon(polygon_radar, 12, GDK_EVEN_ODD_RULE);
 
 #define MIN2(A,B) ( (A) < (B) ? (A) : (B) )
@@ -640,7 +640,7 @@ void invalidate_changed(EBUrUI* ui, bool all) {
 #define MAX3(A,B,C) (  (A) > (B)  ? MAX2 (A,C) : MAX2 (B,C) )
 
 #if 1 /* invalidate changed part of radar only */
-		if (ui->radar_pos_max > 0) {
+		if ((what & 2) == 0 && ui->radar_pos_max > 0) {
 			float ang0 = 2.0 * M_PI * (ui->radar_pos_cur - 1) / (float) ui->radar_pos_max;
 			int dx0 = rintf(165.0f + 125.0f * cosf(ang0));
 			int dy0 = rintf(190.0f + 125.0f * sinf(ang0));
@@ -704,7 +704,7 @@ static gboolean btn_start(GtkWidget *w, gpointer handle) {
 		gtk_tool_button_set_stock_id(GTK_TOOL_BUTTON(ui->btn_start), GTK_STOCK_MEDIA_PLAY);
 		forge_message_kv(ui, ui->uris.mtr_meters_cfg, CTL_PAUSE, 0);
 	}
-	invalidate_changed(ui, true);
+	invalidate_changed(ui, -1);
 	return TRUE;
 }
 
@@ -744,7 +744,7 @@ static gboolean cbx_lufs(GtkWidget *w, gpointer handle) {
 	v |= gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(ui->cbx_ring_short)) ? 4 : 0;
 	v |= gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(ui->cbx_hist_short)) ? 8 : 0;
 	forge_message_kv(ui, ui->uris.mtr_meters_cfg, CTL_UISETTINGS, (float)v);
-	invalidate_changed(ui, true);
+	invalidate_changed(ui, -1);
 	return TRUE;
 }
 
@@ -1028,7 +1028,7 @@ port_event(LV2UI_Handle handle,
 			LV2_Atom_Object* obj = (LV2_Atom_Object*)atom;
 			if (obj->body.otype == uris->mtr_ebulevels) {
 				parse_ebulevels(ui, obj);
-				invalidate_changed(ui, false);
+				invalidate_changed(ui, 0);
 			} else if (obj->body.otype == uris->mtr_control) {
 				int k; float v;
 				get_cc_key_value(&ui->uris, obj, &k, &v);
@@ -1047,7 +1047,7 @@ port_event(LV2UI_Handle handle,
 						ui->radarS[i] = -INFINITY;
 						ui->radarM[i] = -INFINITY;
 					}
-					invalidate_changed(ui, true);
+					invalidate_changed(ui, -1);
 				} else if (k == CTL_UISETTINGS) {
 					uint32_t vv = v;
 					ui->disable_signals = true;
@@ -1075,7 +1075,7 @@ port_event(LV2UI_Handle handle,
 				}
 			} else if (obj->body.otype == uris->rdr_radarpoint) {
 				parse_radarinfo(ui, obj);
-				invalidate_changed(ui, false);
+				invalidate_changed(ui, 0);
 			} else {
 				fprintf(stderr, "UI: Unknown control message.\n");
 			}
