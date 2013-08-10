@@ -1,0 +1,73 @@
+@prefix lv2:  <http://lv2plug.in/ns/lv2core#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix ui:   <http://lv2plug.in/ns/extensions/ui#> .
+
+<http://gareus.org/oss/lv2/@LV2NAME@#VUmono>
+	a lv2:Plugin ;
+	lv2:binary <@LV2NAME@@LIB_EXT@> ;
+	rdfs:seeAlso <@LV2NAME@.ttl> .
+
+<http://gareus.org/oss/lv2/@LV2NAME@#VUstereo>
+	a lv2:Plugin ;
+	lv2:binary <@LV2NAME@@LIB_EXT@> ;
+	rdfs:seeAlso <@LV2NAME@.ttl> .
+
+<http://gareus.org/oss/lv2/@LV2NAME@#BBCmono>
+	a lv2:Plugin ;
+	lv2:binary <@LV2NAME@@LIB_EXT@> ;
+	rdfs:seeAlso <@LV2NAME@.ttl> .
+
+<http://gareus.org/oss/lv2/@LV2NAME@#BBCstereo>
+	a lv2:Plugin ;
+	lv2:binary <@LV2NAME@@LIB_EXT@> ;
+	rdfs:seeAlso <@LV2NAME@.ttl> .
+
+<http://gareus.org/oss/lv2/@LV2NAME@#EBUmono>
+	a lv2:Plugin ;
+	lv2:binary <@LV2NAME@@LIB_EXT@> ;
+	rdfs:seeAlso <@LV2NAME@.ttl> .
+
+<http://gareus.org/oss/lv2/@LV2NAME@#EBUstereo>
+	a lv2:Plugin ;
+	lv2:binary <@LV2NAME@@LIB_EXT@> ;
+	rdfs:seeAlso <@LV2NAME@.ttl> .
+
+<http://gareus.org/oss/lv2/@LV2NAME@#DINmono>
+	a lv2:Plugin ;
+	lv2:binary <@LV2NAME@@LIB_EXT@> ;
+	rdfs:seeAlso <@LV2NAME@.ttl> .
+
+<http://gareus.org/oss/lv2/@LV2NAME@#DINstereo>
+	a lv2:Plugin ;
+	lv2:binary <@LV2NAME@@LIB_EXT@> ;
+	rdfs:seeAlso <@LV2NAME@.ttl> .
+
+<http://gareus.org/oss/lv2/@LV2NAME@#NORmono>
+	a lv2:Plugin ;
+	lv2:binary <@LV2NAME@@LIB_EXT@> ;
+	rdfs:seeAlso <@LV2NAME@.ttl> .
+
+<http://gareus.org/oss/lv2/@LV2NAME@#NORstereo>
+	a lv2:Plugin ;
+	lv2:binary <@LV2NAME@@LIB_EXT@> ;
+	rdfs:seeAlso <@LV2NAME@.ttl> .
+
+<http://gareus.org/oss/lv2/@LV2NAME@#COR>
+	a lv2:Plugin ;
+	lv2:binary <@LV2NAME@@LIB_EXT@> ;
+	rdfs:seeAlso <@LV2NAME@.ttl> .
+
+<http://gareus.org/oss/lv2/@LV2NAME@#EBUr128>
+	a lv2:Plugin ;
+	lv2:binary <@LV2NAME@@LIB_EXT@> ;
+	rdfs:seeAlso <@LV2NAME@.ttl> .
+
+<http://gareus.org/oss/lv2/@LV2NAME@#ui>
+	a ui:GtkUI ;
+	ui:binary <@LV2GUI@@LIB_EXT@> ;
+	rdfs:seeAlso <@LV2NAME@.ttl> .
+
+<http://gareus.org/oss/lv2/@LV2NAME@#eburui>
+	a ui:GtkUI ;
+	ui:binary <@LV2GUI2@@LIB_EXT@> ;
+	rdfs:seeAlso <@LV2NAME@.ttl> .
