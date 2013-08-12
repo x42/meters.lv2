@@ -404,15 +404,15 @@ ebur128_run(LV2_Handle instance, uint32_t n_samples)
 		LV2_Atom_Forge_Frame frame;
 		lv2_atom_forge_frame_time(&self->forge, 0);
 		lv2_atom_forge_blank(&self->forge, &frame, 1, self->uris.mtr_ebulevels);
-		lv2_atom_forge_property_head(&self->forge, self->uris.ebu_loudnessM, 0);  lv2_atom_forge_float(&self->forge, lm);
-		lv2_atom_forge_property_head(&self->forge, self->uris.ebu_maxloudnM, 0);  lv2_atom_forge_float(&self->forge, mm);
-		lv2_atom_forge_property_head(&self->forge, self->uris.ebu_loudnessS, 0);  lv2_atom_forge_float(&self->forge, ls);
-		lv2_atom_forge_property_head(&self->forge, self->uris.ebu_maxloudnS, 0);  lv2_atom_forge_float(&self->forge, ms);
-		lv2_atom_forge_property_head(&self->forge, self->uris.ebu_integrated, 0); lv2_atom_forge_float(&self->forge, il);
-		lv2_atom_forge_property_head(&self->forge, self->uris.ebu_range_min, 0);  lv2_atom_forge_float(&self->forge, rn);
-		lv2_atom_forge_property_head(&self->forge, self->uris.ebu_range_max, 0);  lv2_atom_forge_float(&self->forge, rx);
-		lv2_atom_forge_property_head(&self->forge, self->uris.ebu_integrating, 0);  lv2_atom_forge_bool(&self->forge, self->ebu_integrating);
-		lv2_atom_forge_property_head(&self->forge, self->uris.ebu_integr_time, 0);  lv2_atom_forge_float(&self->forge, (self->integration_time/ self->rate));
+		lv2_atom_forge_property_head(&self->forge, self->uris.ebu_loudnessM, 0);   lv2_atom_forge_float(&self->forge, lm);
+		lv2_atom_forge_property_head(&self->forge, self->uris.ebu_maxloudnM, 0);   lv2_atom_forge_float(&self->forge, mm);
+		lv2_atom_forge_property_head(&self->forge, self->uris.ebu_loudnessS, 0);   lv2_atom_forge_float(&self->forge, ls);
+		lv2_atom_forge_property_head(&self->forge, self->uris.ebu_maxloudnS, 0);   lv2_atom_forge_float(&self->forge, ms);
+		lv2_atom_forge_property_head(&self->forge, self->uris.ebu_integrated, 0);  lv2_atom_forge_float(&self->forge, il);
+		lv2_atom_forge_property_head(&self->forge, self->uris.ebu_range_min, 0);   lv2_atom_forge_float(&self->forge, rn);
+		lv2_atom_forge_property_head(&self->forge, self->uris.ebu_range_max, 0);   lv2_atom_forge_float(&self->forge, rx);
+		lv2_atom_forge_property_head(&self->forge, self->uris.ebu_integrating, 0); lv2_atom_forge_bool(&self->forge, self->ebu_integrating);
+		lv2_atom_forge_property_head(&self->forge, self->uris.ebu_integr_time, 0); lv2_atom_forge_float(&self->forge, (self->integration_time/ self->rate));
 
 		lv2_atom_forge_pop(&self->forge, &frame);
 	}
