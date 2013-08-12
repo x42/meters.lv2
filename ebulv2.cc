@@ -167,6 +167,7 @@ ebur128_instantiate(
 
 	self->ebu = new Ebu_r128_proc();
 	self->ebu->init (2, rate);
+	ebu_reset(self);
 	return (LV2_Handle)self;
 }
 
@@ -219,6 +220,13 @@ ebur128_run(LV2_Handle instance, uint32_t n_samples)
 					self->ui_active = true;
 					self->send_state_to_ui = true;
 					self->radar_resync = 0;
+					/* resync histogram */
+					for (int i=0; i < HIST_LEN; ++i) {
+						self->histM[i] = 0;
+						self->histS[i] = 0;
+					}
+					self->hist_maxM = 0;
+					self->hist_maxS = 0;
 				}
 				else if (obj->body.otype == self->uris.mtr_meters_off) {
 					self->ui_active = false;
@@ -235,6 +243,7 @@ ebur128_run(LV2_Handle instance, uint32_t n_samples)
 							ebu_integrate(self, false);
 							break;
 						case CTL_RESET:
+							printf("UI ISSUES RESET\n");
 							ebu_reset(self);
 							break;
 						case CTL_TRANSPORTSYNC:
@@ -303,11 +312,11 @@ ebur128_run(LV2_Handle instance, uint32_t n_samples)
 		forge_kvcontrolmessage(&self->forge, &self->uris, self->uris.mtr_control, CTL_LV2_RADARTIME,
 				(self->radar_pos_max * self->radar_spd_max / self->rate));
 		forge_kvcontrolmessage(&self->forge, &self->uris, self->uris.mtr_control, CTL_UISETTINGS, self->ui_settings);
-		ebu_reset(self); // may not be allocated, yet, resync will catch that
 	}
 	
 	if (self->radar_resync >= 0) {
-		const int batch = (capacity - 256) / 160; // TODO verify alignment & padding,
+		int batch = (capacity - 256) / 160; // TODO verify alignment & padding,
+		if (batch > 5) batch = 5; // limit max data transfer
 		for (int i=0; i < batch; i++, self->radar_resync++) {
 			if (self->radar_resync >= self->radar_pos_max) {
 				self->radar_resync = -1;
