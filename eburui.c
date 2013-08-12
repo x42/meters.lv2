@@ -992,13 +992,13 @@ instantiate(const LV2UI_Descriptor*   descriptor,
 	ui->cbx_box = gtk_table_new(/*rows*/5, /*cols*/ 5, FALSE);
 	ui->cbx_lu         = gtk_radio_button_new_with_label(NULL, "LU");
 	ui->cbx_lufs       = gtk_radio_button_new_with_label_from_widget(GTK_RADIO_BUTTON (ui->cbx_lu), "LUFS");
-	ui->cbx_ring_mom   = gtk_radio_button_new_with_label(NULL, "Moment.");
+	ui->cbx_ring_mom   = gtk_radio_button_new_with_label(NULL, "Momentary");
 	ui->cbx_ring_short = gtk_radio_button_new_with_label_from_widget(GTK_RADIO_BUTTON(ui->cbx_ring_mom), "Short");
 	ui->cbx_hist_short = gtk_radio_button_new_with_label(NULL, "Short");
 	ui->cbx_hist_mom   = gtk_radio_button_new_with_label_from_widget(GTK_RADIO_BUTTON(ui->cbx_hist_short), "Momentary");
-	ui->cbx_sc18       = gtk_radio_button_new_with_label(NULL, "+18");
-	ui->cbx_sc9        = gtk_radio_button_new_with_label_from_widget(GTK_RADIO_BUTTON (ui->cbx_sc18), "+9");
-	ui->cbx_transport  = gtk_check_button_new_with_label("Use Host Transport");
+	ui->cbx_sc18       = gtk_radio_button_new_with_label(NULL, "-36..+18LU");
+	ui->cbx_sc9        = gtk_radio_button_new_with_label_from_widget(GTK_RADIO_BUTTON (ui->cbx_sc18), "-18..+9LU");
+	ui->cbx_transport  = gtk_check_button_new_with_label("Host Transport");
 	ui->cbx_autoreset  = gtk_check_button_new_with_label("Reset on Start");
 	ui->spn_radartime  = gtk_spin_button_new_with_range(30, 600, 15);
 	ui->lbl_radarinfo  = gtk_label_new("History Length [s]:");
@@ -1018,24 +1018,24 @@ instantiate(const LV2UI_Descriptor*   descriptor,
 	gtk_table_attach_defaults(GTK_TABLE(ui->cbx_box), ui->cbx_lufs     , 1, 2, 1, 2);
 	gtk_table_attach_defaults(GTK_TABLE(ui->cbx_box), ui->cbx_sc18     , 0, 1, 2, 3);
 	gtk_table_attach_defaults(GTK_TABLE(ui->cbx_box), ui->cbx_sc9      , 1, 2, 2, 3);
-	gtk_table_attach_defaults(GTK_TABLE(ui->cbx_box), ui->cbx_ring_mom  , 0, 1, 3, 4);
-	gtk_table_attach_defaults(GTK_TABLE(ui->cbx_box), ui->cbx_ring_short, 1, 2, 3, 4);
+	gtk_table_attach_defaults(GTK_TABLE(ui->cbx_box), ui->cbx_ring_mom  , 0, 1, 4, 5);
+	gtk_table_attach_defaults(GTK_TABLE(ui->cbx_box), ui->cbx_ring_short, 1, 2, 4, 5);
 
 	gtk_table_attach_defaults(GTK_TABLE(ui->cbx_box), ui->sep_v0, 2, 3, 0, 5);
 
-	gtk_table_attach(GTK_TABLE(ui->cbx_box), ui->lbl_radarinfo, 3, 4, 0, 1, GTK_FILL, GTK_SHRINK, 3, 0);
-	gtk_table_attach(GTK_TABLE(ui->cbx_box), ui->spn_radartime, 4, 5, 0, 1, GTK_EXPAND | GTK_FILL, GTK_EXPAND, 0, 0);
+	gtk_table_attach_defaults(GTK_TABLE(ui->cbx_box), ui->cbx_radar     , 4, 5, 0, 1);
+	gtk_table_attach_defaults(GTK_TABLE(ui->cbx_box), ui->cbx_histogram , 3, 4, 0, 1);
 
-	gtk_table_attach_defaults(GTK_TABLE(ui->cbx_box), ui->cbx_autoreset, 3, 4, 1, 2);
-	gtk_table_attach_defaults(GTK_TABLE(ui->cbx_box), ui->cbx_transport, 3, 4, 2, 3);
+	gtk_table_attach(GTK_TABLE(ui->cbx_box), ui->lbl_radarinfo, 3, 4, 1, 2, GTK_FILL, GTK_SHRINK, 3, 0);
+	gtk_table_attach(GTK_TABLE(ui->cbx_box), ui->spn_radartime, 4, 5, 1, 2, GTK_EXPAND | GTK_FILL, GTK_EXPAND, 3, 0);
 
-	gtk_table_attach_defaults(GTK_TABLE(ui->cbx_box), ui->cbx_hist_mom  , 3, 4, 3, 4);
-	gtk_table_attach_defaults(GTK_TABLE(ui->cbx_box), ui->cbx_hist_short, 4, 5, 3, 4);
+	gtk_table_attach_defaults(GTK_TABLE(ui->cbx_box), ui->cbx_autoreset, 3, 4, 2, 3);
+	gtk_table_attach_defaults(GTK_TABLE(ui->cbx_box), ui->cbx_transport, 3, 4, 3, 4);
 
-	gtk_table_attach(GTK_TABLE(ui->cbx_box), ui->btn_box, 4, 5, 1, 3, GTK_EXPAND | GTK_FILL, GTK_EXPAND, 0, 0);
+	gtk_table_attach_defaults(GTK_TABLE(ui->cbx_box), ui->cbx_hist_mom  , 3, 4, 4, 5);
+	gtk_table_attach_defaults(GTK_TABLE(ui->cbx_box), ui->cbx_hist_short, 4, 5, 4, 5);
 
-	gtk_table_attach_defaults(GTK_TABLE(ui->cbx_box), ui->cbx_radar     , 3, 4, 4, 5);
-	gtk_table_attach_defaults(GTK_TABLE(ui->cbx_box), ui->cbx_histogram , 4, 5, 4, 5);
+	gtk_table_attach(GTK_TABLE(ui->cbx_box), ui->btn_box, 4, 5, 2, 4, GTK_EXPAND | GTK_FILL, GTK_EXPAND|GTK_FILL, 3, 1);
 
 	/* global packing */
 	gtk_box_pack_start(GTK_BOX(ui->box), ui->m0, FALSE, FALSE, 0);
