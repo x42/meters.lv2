@@ -60,6 +60,7 @@ typedef struct {
 	GtkWidget* cbx_lu;
 	GtkWidget* cbx_sc9;
 	GtkWidget* cbx_sc18;
+	GtkWidget* cbx_sc24;
 	GtkWidget* cbx_ring_short;
 	GtkWidget* cbx_ring_mom;
 	GtkWidget* cbx_hist_short;
@@ -286,7 +287,7 @@ static GdkRegion * make_polygon_radar() {
 }
 
 static GdkRegion * make_polygon_meter() {
-	const GdkPoint polygon_meter[24] = {
+	const GdkPoint polygon_meter[26] = {
 		{ 37, 190}, // 1
 		{ 55, 124},
 		{ 98,  80},
@@ -294,8 +295,11 @@ static GdkRegion * make_polygon_meter() {
 		{231,  80}, // 5
 		{276, 126},
 		{292, 190},
-
 		{292, 200}, // 7B
+
+		{268, 268}, //8
+		{315, 268}, //8A
+
 		{330, 200}, // 7A
 		{330, 185}, // 7C
 		{310, 112}, // 6A
@@ -314,7 +318,7 @@ static GdkRegion * make_polygon_meter() {
 		{101, 301}, //11
 		{ 54, 254}  //12
 	};
-	return gdk_region_polygon(polygon_meter, 24, GDK_EVEN_ODD_RULE);
+	return gdk_region_polygon(polygon_meter, 26, GDK_EVEN_ODD_RULE);
 }
 
 static int check_overlap(EBUrUI* ui, const GdkRegion *r) {
@@ -359,6 +363,7 @@ static gboolean expose_event(GtkWidget *w, GdkEventExpose *ev, gpointer handle) 
 	const bool rings = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(ui->cbx_ring_short));
 	const bool hists = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(ui->cbx_hist_short));
 	const bool plus9 = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(ui->cbx_sc9));
+	const bool plus24= gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(ui->cbx_sc24));
 
 	cairo_t* cr = gdk_cairo_create(GDK_DRAWABLE(w->window));
 	PangoContext * pc = gtk_widget_get_pango_context(w);
@@ -599,7 +604,9 @@ static gboolean expose_event(GtkWidget *w, GdkEventExpose *ev, gpointer handle) 
 		cairo_set_line_cap(cr, CAIRO_LINE_CAP_ROUND);
 
 		bool maxed = false; // peak
-		for (int rng = 0; rng <= 108; ++rng) {
+		int ulp = plus24 ? 120 : 108;
+
+		for (int rng = 0; rng <= ulp; ++rng) {
 			const float ang = 0.043633231 * rng + 1.570796327;
 			float val;
 			if (plus9) {
@@ -618,7 +625,7 @@ static gboolean expose_event(GtkWidget *w, GdkEventExpose *ev, gpointer handle) 
 			cairo_rotate (cr, ang);
 			cairo_translate (cr, RADIUS10, 0);
 			cairo_move_to(cr,  0.5, 0);
-			if (!maxed && cm > 0 && (rng >= cm || (rng == 108 && cm >= 108))) {
+			if (!maxed && cm > 0 && (rng >= cm || (rng == ulp && cm >= ulp))) {
 				radar_color(cr, val, -1);
 				cairo_line_to(cr, 12.5, 0);
 				maxed = true;
@@ -633,7 +640,7 @@ static gboolean expose_event(GtkWidget *w, GdkEventExpose *ev, gpointer handle) 
 			cairo_move_to(cr,   CX + RADIUS10 * sc, CY + RADIUS10 * cc);
 
 			/* highligh peak */
-			if (!maxed && cm > 0 && (rng >= cm || (rng == 108 && cm >= 108))) {
+			if (!maxed && cm > 0 && (rng >= cm || (rng == ulp && cm >= ulp))) {
 				radar_color(cr, val, -1);
 				cairo_line_to(cr, CX + RADIUS22 * sc, CY + RADIUS22 * cc);
 				maxed = true;
@@ -671,6 +678,9 @@ static gboolean expose_event(GtkWidget *w, GdkEventExpose *ev, gpointer handle) 
 			CLABEL(-17,    0.5,-SIN60, 6)
 			CLABEL(-11,  SIN60,  -0.5, 3)
 			CLABEL( -5,    1.0,   0.0, 3)
+			if (plus24) {
+				CLABEL(1,  SIN60,   0.5, 3)
+			}
 		}
 	}
 #endif
@@ -925,6 +935,7 @@ static gboolean cbx_lufs(GtkWidget *w, gpointer handle) {
 	uint32_t v = 0;
 	v |= gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(ui->cbx_lufs)) ? 1 : 0;
 	v |= gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(ui->cbx_sc9)) ? 2 : 0;
+	v |= gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(ui->cbx_sc24)) ? 32 : 0;
 	v |= gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(ui->cbx_ring_short)) ? 4 : 0;
 	v |= gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(ui->cbx_hist_short)) ? 8 : 0;
 	v |= gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(ui->cbx_histogram)) ? 16 : 0;
@@ -998,6 +1009,7 @@ instantiate(const LV2UI_Descriptor*   descriptor,
 	ui->cbx_hist_mom   = gtk_radio_button_new_with_label_from_widget(GTK_RADIO_BUTTON(ui->cbx_hist_short), "Momentary");
 	ui->cbx_sc18       = gtk_radio_button_new_with_label(NULL, "-36..+18LU");
 	ui->cbx_sc9        = gtk_radio_button_new_with_label_from_widget(GTK_RADIO_BUTTON (ui->cbx_sc18), "-18..+9LU");
+	ui->cbx_sc24       = gtk_radio_button_new_with_label_from_widget(GTK_RADIO_BUTTON (ui->cbx_sc18), "-36..+24LU");
 	ui->cbx_transport  = gtk_check_button_new_with_label("Host Transport");
 	ui->cbx_autoreset  = gtk_check_button_new_with_label("Reset on Start");
 	ui->spn_radartime  = gtk_spin_button_new_with_range(30, 600, 15);
@@ -1018,6 +1030,9 @@ instantiate(const LV2UI_Descriptor*   descriptor,
 	gtk_table_attach_defaults(GTK_TABLE(ui->cbx_box), ui->cbx_lufs     , 1, 2, 1, 2);
 	gtk_table_attach_defaults(GTK_TABLE(ui->cbx_box), ui->cbx_sc18     , 0, 1, 2, 3);
 	gtk_table_attach_defaults(GTK_TABLE(ui->cbx_box), ui->cbx_sc9      , 1, 2, 2, 3);
+#ifdef EASTER_EGG
+	gtk_table_attach_defaults(GTK_TABLE(ui->cbx_box), ui->cbx_sc24     , 0, 1, 3, 4);
+#endif
 	gtk_table_attach_defaults(GTK_TABLE(ui->cbx_box), ui->cbx_ring_mom  , 0, 1, 4, 5);
 	gtk_table_attach_defaults(GTK_TABLE(ui->cbx_box), ui->cbx_ring_short, 1, 2, 4, 5);
 
@@ -1094,6 +1109,7 @@ cleanup(LV2UI_Handle handle)
 	gtk_widget_destroy(ui->cbx_lu);
 	gtk_widget_destroy(ui->cbx_sc9);
 	gtk_widget_destroy(ui->cbx_sc18);
+	gtk_widget_destroy(ui->cbx_sc24);
 	gtk_widget_destroy(ui->cbx_ring_short);
 	gtk_widget_destroy(ui->cbx_ring_mom);
 	gtk_widget_destroy(ui->cbx_hist_short);
@@ -1296,7 +1312,15 @@ port_event(LV2UI_Handle handle,
 					if ((vv & 2)) {
 						gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(ui->cbx_sc9), true);
 					} else {
+#ifdef EASTER_EGG
+						if ((vv & 32)) {
+							gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(ui->cbx_sc24), true);
+						} else {
+							gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(ui->cbx_sc18), true);
+						}
+#else
 						gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(ui->cbx_sc18), true);
+#endif
 					}
 					if ((vv & 4)) {
 						gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(ui->cbx_ring_short), true);
