@@ -1302,6 +1302,8 @@ port_event(LV2UI_Handle handle,
 						ui->histLenS = 0;
 					}
 					invalidate_changed(ui, -1);
+				} else if (k == CTL_LV2_RESYNCDONE) {
+					invalidate_changed(ui, -1);
 				} else if (k == CTL_UISETTINGS) {
 					uint32_t vv = v;
 					ui->disable_signals = true;

@@ -177,7 +177,6 @@ ebur128_instantiate(
 
 	self->ebu = new Ebu_r128_proc();
 	self->ebu->init (2, rate);
-	ebu_reset(self);
 	return (LV2_Handle)self;
 }
 
@@ -330,6 +329,7 @@ ebur128_run(LV2_Handle instance, uint32_t n_samples)
 		for (int i=0; i < batch; i++, self->radar_resync++) {
 			if (self->radar_resync >= self->radar_pos_max) {
 				self->radar_resync = -1;
+				forge_kvcontrolmessage(&self->forge, &self->uris, self->uris.mtr_control, CTL_LV2_RESYNCDONE, 0);
 				break;
 			}
 			LV2_Atom_Forge_Frame frame;
