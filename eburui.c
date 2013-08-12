@@ -67,6 +67,9 @@ typedef struct {
 	GtkWidget* cbx_transport;
 	GtkWidget* cbx_autoreset;
 
+	GtkWidget* cbx_radar;
+	GtkWidget* cbx_histogram;
+
 	GtkWidget* spn_radartime;
 	GtkWidget* lbl_ringinfo;
 	GtkWidget* lbl_radarinfo;
@@ -74,6 +77,7 @@ typedef struct {
 
 	GtkWidget* m0;
 	cairo_pattern_t * cpattern;
+	cairo_pattern_t * hpattern;
 
 	bool fontcache;
 	PangoFontDescription *font[6];
@@ -88,6 +92,11 @@ typedef struct {
 	int radar_pos_cur;
 	int radar_pos_max;
 
+	int histS[HIST_LEN];
+	int histM[HIST_LEN];
+	int histLenS;
+	int histLenM;
+
 	/* displayed data */
 	int radar_pos_disp;
 	int circ_max;
@@ -95,12 +104,64 @@ typedef struct {
 
 } EBUrUI;
 
+static inline float fast_log2 (float val)
+{
+	union {float f; int i;} t;
+	t.f = val;
+	int * const    exp_ptr =  &t.i;
+	int            x = *exp_ptr;
+	const int      log_2 = ((x >> 23) & 255) - 128;
+	x &= ~(255 << 23);
+	x += 127 << 23;
+	*exp_ptr = x;
+
+	val = ((-1.0f/3) * t.f + 2) * t.f - 2.0f/3;
+
+	return (val + log_2);
+}
+
+static inline float fast_log10 (const float val)
+{
+	return fast_log2(val) * 0.301029996f;
+}
+
+
+static float radar_deflect(const float v, const float r) {
+	if (v < -60) return 0;
+	if (v > 0) return r;
+	return (v + 60.0) * r / 60.0;
+}
+
+static void radar_color(cairo_t* cr, const float v, float alpha) {
+	if (alpha > 0.9) alpha = 0.9;
+	else if (alpha < 0) alpha = 1.0;
+
+	if (v < -70) {
+		cairo_set_source_rgba (cr, .3, .3, .3, alpha);
+	} else if (v < -53) {
+		cairo_set_source_rgba (cr, .0, .0, .5, alpha);
+	} else if (v < -47) {
+		cairo_set_source_rgba (cr, .0, .0, .9, alpha);
+	} else if (v < -35) {
+		cairo_set_source_rgba (cr, .0, .6, .0, alpha);
+	} else if (v < -23) {
+		cairo_set_source_rgba (cr, .0, .9, .0, alpha);
+	} else if (v < -11) {
+		cairo_set_source_rgba (cr, .75, .75, .0, alpha);
+	} else if (v < -7) {
+		cairo_set_source_rgba (cr, .8, .4, .0, alpha);
+	} else if (v < -3.5) {
+		cairo_set_source_rgba (cr, .75, .0, .0, alpha);
+	} else {
+		cairo_set_source_rgba (cr, 1.0, .0, .0, alpha);
+	}
+}
+
 /******************************************************************************
  * custom visuals
  */
 
 #define LUFS(V) ((V) < -100 ? -INFINITY : (lufs ? (V) : (V) + 23.0))
-
 #define FONT(A) ui->font[(A)]
 
 /* colors */
@@ -175,42 +236,10 @@ void rounded_rectangle (cairo_t* cr, double x, double y, double w, double h, dou
   cairo_close_path (cr);
 }
 
-
-static float radar_deflect(const float v, const float r) {
-	if (v < -60) return 0;
-	if (v > 0) return r;
-	return (v + 60.0) * r / 60.0;
-}
-
-static void radar_color(cairo_t* cr, const float v, float alpha) {
-	if (alpha > 0.9) alpha = 0.9;
-	else if (alpha < 0) alpha = 1.0;
-
-	if (v < -70) {
-		cairo_set_source_rgba (cr, .3, .3, .3, alpha);
-	} else if (v < -53) {
-		cairo_set_source_rgba (cr, .0, .0, .5, alpha);
-	} else if (v < -47) {
-		cairo_set_source_rgba (cr, .0, .0, .9, alpha);
-	} else if (v < -35) {
-		cairo_set_source_rgba (cr, .0, .6, .0, alpha);
-	} else if (v < -23) {
-		cairo_set_source_rgba (cr, .0, .9, .0, alpha);
-	} else if (v < -11) {
-		cairo_set_source_rgba (cr, .75, .75, .0, alpha);
-	} else if (v < -7) {
-		cairo_set_source_rgba (cr, .8, .4, .0, alpha);
-	} else if (v < -3.5) {
-		cairo_set_source_rgba (cr, .75, .0, .0, alpha);
-	} else {
-		cairo_set_source_rgba (cr, 1.0, .0, .0, alpha);
-	}
-}
-
 static cairo_pattern_t * radar_pattern(cairo_t* cr, float cx, float cy, float rad) {
 	cairo_pattern_t * pat = cairo_pattern_create_radial(cx, cy, 0, cx, cy, rad);
 	cairo_pattern_add_color_stop_rgba(pat, 0.0 ,  .0, .0, .0, 0.0);
-	cairo_pattern_add_color_stop_rgba(pat, 0.10,  .0, .0, .0, 5.0);
+	cairo_pattern_add_color_stop_rgba(pat, 0.10,  .0, .0, .0, 1.0);
 	cairo_pattern_add_color_stop_rgba(pat, radar_deflect(-50, 1.0),  .0, .0, .5, 1.0);
 	cairo_pattern_add_color_stop_rgba(pat, radar_deflect(-47, 1.0),  .0, .0, .8, 1.0);
 	cairo_pattern_add_color_stop_rgba(pat, radar_deflect(-41, 1.0),  .0, .5, .2, 1.0);
@@ -224,6 +253,19 @@ static cairo_pattern_t * radar_pattern(cairo_t* cr, float cx, float cy, float ra
 	return pat;
 }
 
+static cairo_pattern_t * histogram_pattern(cairo_t* cr, float cx, float cy, float rad) {
+	cairo_pattern_t * pat = cairo_pattern_create_radial(cx, cy, 0, cx, cy, rad);
+	cairo_pattern_add_color_stop_rgba(pat, 0.00,  .0, .0, .0, 0.0);
+	cairo_pattern_add_color_stop_rgba(pat, 0.06,  .0, .0, .0, 0.0);
+	cairo_pattern_add_color_stop_rgba(pat, 0.09,  .1, .1, .1, 1.0);
+	cairo_pattern_add_color_stop_rgba(pat, 0.20,  .3, .3, .9, 1.0);
+	cairo_pattern_add_color_stop_rgba(pat, 0.50,  .3, .9, .3, 1.0);
+	cairo_pattern_add_color_stop_rgba(pat, 1.0 , 1.0, .1, .2, 1.0);
+
+	return pat;
+}
+
+// TODO statically allocate GdkRegion's for these ploygons
 static const GdkPoint
 polygon_radar[12] = {
 	{ 39, 190},
@@ -319,9 +361,10 @@ static gboolean expose_event(GtkWidget *w, GdkEventExpose *ev, gpointer handle) 
 	char buf[128];
 	int redraw_part = 0;
 
-#define CX  (165.0f)
-#define CY  (190.0f)
-#define RADIUS (120.0f)
+#define CX  (165.5f)
+#define CY  (190.5f)
+#define RADIUS   (120.0f)
+#define RADIUS5  (125.0f)
 #define RADIUS10 (130.0f)
 #define RADIUS19 (139.0f)
 #define RADIUS22 (142.0f)
@@ -329,6 +372,9 @@ static gboolean expose_event(GtkWidget *w, GdkEventExpose *ev, gpointer handle) 
 
 	if (!ui->cpattern) {
 		ui->cpattern = radar_pattern(cr, CX, CY, RADIUS);
+	}
+	if (!ui->hpattern) {
+		ui->hpattern = histogram_pattern(cr, CX, CY, RADIUS);
 	}
 	if (!ui->fontcache) {
 		initialize_font_cache(ui);
@@ -355,7 +401,7 @@ static gboolean expose_event(GtkWidget *w, GdkEventExpose *ev, gpointer handle) 
 
 	/* big level as text */
 	sprintf(buf, "%+5.1f %s", LUFS( rings ? ui->ls : ui->lm), lufs ? "LUFS" : "LU");
-	write_text(pc, cr, buf, FONT(FONT_M14), 165 , 10, 0, 8, c_wht);
+	write_text(pc, cr, buf, FONT(FONT_M14), CX , 10, 0, 8, c_wht);
 
 	/* max level background */
 	int trw = lufs ? 87 : 75;
@@ -372,7 +418,105 @@ static gboolean expose_event(GtkWidget *w, GdkEventExpose *ev, gpointer handle) 
 	write_text(pc, cr, buf, FONT(FONT_M09), 315, 10, 0, 7, c_wht);
 
 #if 1 /* Radar */
-	if (redraw_part & 2) {
+
+	if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(ui->cbx_histogram)) && (redraw_part & 2) == 2) {
+		/* ----- Histogram ----- */
+		const int *rdr = hists ? ui->histS : ui->histM;
+		const int  len = hists ? ui->histLenS : ui->histLenM;
+
+		/* histogram background */
+		if (len > 0) {
+			cairo_set_source_rgba (cr, .05, .05, .05, 1.0);
+		} else {
+			cairo_set_source_rgba (cr, .25, .00, .00, 1.0);
+		}
+		cairo_arc (cr, CX, CY, RADIUS, 0, 2.0 * M_PI);
+		cairo_fill (cr);
+
+		if (len > 0) {
+			int amin, amax;
+			//  lvlFS = (0.1f * (ang - 700))
+			//  lvlFS =  .1 * ang - 70
+			if (plus9) { // -41 .. -14 LUFS
+				amin = 290; // -41LUFS
+				amax = 560; // -14LUFS
+			} else { // -59 .. -5 LUFS
+				amin = 110; // -59LUFS
+				amax = 650; // -5LUFS
+			}
+			const double astep = 1.5 * M_PI / (double) (amax - amin);
+			const double aoff = (M_PI / 2.0) - amin * astep;
+
+			for (int ang = amin; ang < amax; ++ang) {
+				if (rdr[ang] <= 0) continue;
+				const float rad = (float) RADIUS * (1.0 + fast_log10(rdr[ang] / (float) len));
+				if (rad < 5) continue;
+
+				cairo_move_to(cr, CX, CY);
+				cairo_arc (cr, CX, CY, rad,
+						(double) ang * astep + aoff, (ang+1.0) * astep + aoff);
+				cairo_line_to(cr, CX, CY);
+			}
+			/* draw data path */
+			cairo_set_line_cap(cr, CAIRO_LINE_CAP_ROUND);
+			cairo_set_line_width(cr, .7);
+			cairo_set_source (cr, ui->hpattern);
+			cairo_stroke_preserve(cr);
+			cairo_fill(cr);
+			cairo_set_line_cap(cr, CAIRO_LINE_CAP_BUTT);
+
+			/* outer circle */
+			cairo_set_line_width(cr, 1.0);
+			cairo_set_source_rgba (cr, .2, .2, .2, 1.0);
+			cairo_arc (cr, CX, CY, RADIUS, 0.5 * M_PI, 2.0 * M_PI);
+			cairo_stroke (cr);
+
+			cairo_set_source_rgba (cr, .5, .5, .5, 0.5);
+
+#define CIRCLABEL(RDS,LBL) \
+	{ \
+	cairo_arc (cr, CX, CY, RADIUS * RDS, 0.5 * M_PI, 2.0 * M_PI); \
+	cairo_stroke (cr); \
+	write_text(pc, cr, LBL, FONT(FONT_M08), CX + RADIUS * RDS, CY + 14, M_PI * -.5, 2, c_gry);\
+	}
+			// POS = fast_log10(VAL) + 1;
+			CIRCLABEL(.301, "20%")
+			CIRCLABEL(.602, "40%")
+			CIRCLABEL(.903, "80%")
+		} else {
+			write_text(pc, cr, "No integration\ndata available.", FONT(FONT_S08), CX + RADIUS / 2, CY + 5, 0, 8, c_gry);
+		}
+
+		/* center circle */
+		const float innercircle = 6;
+		cairo_set_line_width(cr, 1.0);
+		cairo_set_source_rgba (cr, .0, .0, .0, 1.0);
+		cairo_arc (cr, CX, CY, innercircle, 0, 2.0 * M_PI);
+		cairo_fill_preserve (cr);
+		cairo_set_source_rgba (cr, .5, .5, .5, 0.5);
+		cairo_stroke(cr);
+
+		cairo_arc (cr, CX, CY, innercircle + 3, .5 * M_PI, 2.0 * M_PI);
+		cairo_stroke(cr);
+
+		/* gain lines */
+		const double dashed[] = {3.0, 5.0};
+		cairo_save(cr);
+		cairo_set_dash(cr, dashed, 2, 4.0);
+		cairo_set_line_width(cr, 1.5);
+		cairo_set_line_cap(cr, CAIRO_LINE_CAP_ROUND);
+		for (int i = 3; i <= 12; ++i) {
+			const float ang = .5235994f * i;
+			float cc = sinf(ang);
+			float sc = cosf(ang);
+			cairo_move_to(cr, CX + innercircle * sc, CY + innercircle * cc);
+			cairo_line_to(cr, CX + RADIUS5 * sc, CY + RADIUS5 * cc);
+			cairo_stroke (cr);
+		}
+		cairo_restore(cr);
+
+	} else if (redraw_part & 2) {
+		/* ----- History ----- */
 			ui->radar_pos_disp = ui->radar_pos_cur;
 
 		/* radar background */
@@ -429,7 +573,7 @@ static gboolean expose_event(GtkWidget *w, GdkEventExpose *ev, gpointer handle) 
 		cairo_arc (cr, CX, CY, radar_deflect( 0, RADIUS), 0, 2.0 * M_PI);
 		cairo_stroke (cr);
 
-		float innercircle = radar_deflect(-47, RADIUS);
+		const float innercircle = radar_deflect(-47, RADIUS);
 		for (int i = 0; i < 12; ++i) {
 			const float ang = .5235994f * i;
 			float cc = sinf(ang);
@@ -631,7 +775,9 @@ void invalidate_changed(EBUrUI* ui, int what) {
 	INVALIDATE_RECT(208, 308, 117, 40) // bottom side
 	INVALIDATE_RECT(275, 287, 40, 30)  // bottom side tab
 
-	if ((what & 1) || ui->radar_pos_cur != ui->radar_pos_disp) {
+	if ((what & 1) ||
+			(gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(ui->cbx_radar)) &&
+			ui->radar_pos_cur != ui->radar_pos_disp)) {
 		GdkRegion* rr = gdk_region_polygon(polygon_radar, 12, GDK_EVEN_ODD_RULE);
 
 #define MIN2(A,B) ( (A) < (B) ? (A) : (B) )
@@ -642,18 +788,18 @@ void invalidate_changed(EBUrUI* ui, int what) {
 #if 1 /* invalidate changed part of radar only */
 		if ((what & 2) == 0 && ui->radar_pos_max > 0) {
 			float ang0 = 2.0 * M_PI * (ui->radar_pos_cur - 1) / (float) ui->radar_pos_max;
-			int dx0 = rintf(165.0f + 125.0f * cosf(ang0));
-			int dy0 = rintf(190.0f + 125.0f * sinf(ang0));
+			int dx0 = rintf(CX + RADIUS5 * cosf(ang0));
+			int dy0 = rintf(CY + RADIUS5 * sinf(ang0));
 
 			float ang1 = 2.0 * M_PI * (ui->radar_pos_cur + 13) / (float) ui->radar_pos_max;
-			int dx1 = rint(165.0f + 125.0f * cosf(ang1));
-			int dy1 = rint(190.0f + 125.0f * sinf(ang1));
+			int dx1 = rint(CX + RADIUS5 * cosf(ang1));
+			int dy1 = rint(CY + RADIUS5 * sinf(ang1));
 
-			rect.x = MIN3(165, dx0, dx1) -1;
-			rect.y = MIN3(190, dy0, dy1) -1;
+			rect.x = MIN3(CX, dx0, dx1) -1;
+			rect.y = MIN3(CY, dy0, dy1) -1;
 
-			rect.width  = 2 + MAX3(165, dx0, dx1) - rect.x;
-			rect.height = 2 + MAX3(190, dy0, dy1) - rect.y;
+			rect.width  = 2 + MAX3(CX, dx0, dx1) - rect.x;
+			rect.height = 2 + MAX3(CY, dy0, dy1) - rect.y;
 
 			tmp = gdk_region_rectangle (&rect);
 			gdk_region_intersect(rr, tmp);
@@ -675,6 +821,43 @@ void invalidate_changed(EBUrUI* ui, int what) {
 	}
 
 	gdk_window_invalidate_region (ui->m0->window, region, true);
+}
+
+void invalidate_histogram_line(EBUrUI* ui, int p) {
+	const bool plus9 = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(ui->cbx_sc9));
+	GdkRectangle rect;
+	GdkRegion *tmp = 0;
+
+	// dup from expose_event()
+	int amin, amax;
+	if (plus9) {
+		amin = 290;
+		amax = 560;
+	} else {
+		amin = 110;
+		amax = 650;
+	}
+	const double astep = 1.5 * M_PI / (double) (amax - amin);
+	const double aoff = (M_PI / 2.0) - amin * astep;
+
+	float ang0 = (float) (p-1) * astep + aoff;
+	float ang1 = (float) (p+1) * astep + aoff;
+
+	// see also "invalidate changed part of radar only" above
+	int dx0 = rintf(CX + RADIUS5 * cosf(ang0));
+	int dy0 = rintf(CY + RADIUS5 * sinf(ang0));
+	int dx1 = rint(CX + RADIUS5 * cosf(ang1));
+	int dy1 = rint(CY + RADIUS5 * sinf(ang1));
+
+	rect.x = MIN3(CX, dx0, dx1) -1;
+	rect.y = MIN3(CY, dy0, dy1) -1;
+
+	rect.width  = 2 + MAX3(CX, dx0, dx1) - rect.x;
+	rect.height = 2 + MAX3(CY, dy0, dy1) - rect.y;
+
+	tmp = gdk_region_rectangle (&rect);
+	gdk_window_invalidate_region (ui->m0->window, tmp, true);
+	gdk_region_destroy(tmp);
 }
 
 
@@ -743,6 +926,7 @@ static gboolean cbx_lufs(GtkWidget *w, gpointer handle) {
 	v |= gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(ui->cbx_sc9)) ? 2 : 0;
 	v |= gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(ui->cbx_ring_short)) ? 4 : 0;
 	v |= gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(ui->cbx_hist_short)) ? 8 : 0;
+	v |= gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(ui->cbx_histogram)) ? 16 : 0;
 	forge_message_kv(ui, ui->uris.mtr_meters_cfg, CTL_UISETTINGS, (float)v);
 	invalidate_changed(ui, -1);
 	return TRUE;
@@ -804,7 +988,7 @@ instantiate(const LV2UI_Descriptor*   descriptor,
 	gtk_toolbar_set_icon_size (GTK_TOOLBAR(ui->btn_box), GTK_ICON_SIZE_MENU);
 	gtk_toolbar_set_style (GTK_TOOLBAR(ui->btn_box), GTK_TOOLBAR_ICONS);
 
-	ui->cbx_box = gtk_table_new(/*rows*/4, /*cols*/ 5, FALSE);
+	ui->cbx_box = gtk_table_new(/*rows*/5, /*cols*/ 5, FALSE);
 	ui->cbx_lu         = gtk_radio_button_new_with_label(NULL, "LU");
 	ui->cbx_lufs       = gtk_radio_button_new_with_label_from_widget(GTK_RADIO_BUTTON (ui->cbx_lu), "LUFS");
 	ui->cbx_ring_mom   = gtk_radio_button_new_with_label(NULL, "Moment.");
@@ -816,9 +1000,12 @@ instantiate(const LV2UI_Descriptor*   descriptor,
 	ui->cbx_transport  = gtk_check_button_new_with_label("Use Host Transport");
 	ui->cbx_autoreset  = gtk_check_button_new_with_label("Reset on Start");
 	ui->spn_radartime  = gtk_spin_button_new_with_range(30, 600, 15);
-	ui->lbl_radarinfo  = gtk_label_new("History || Length [s]:");
+	ui->lbl_radarinfo  = gtk_label_new("History Length [s]:");
 	ui->lbl_ringinfo   = gtk_label_new("Level Diplay");
 	ui->sep_v0         = gtk_vseparator_new();
+
+	ui->cbx_radar      = gtk_radio_button_new_with_label(NULL, "History");
+	ui->cbx_histogram  = gtk_radio_button_new_with_label_from_widget(GTK_RADIO_BUTTON(ui->cbx_radar), "Histogram");
 
 	gtk_misc_set_alignment(GTK_MISC(ui->lbl_radarinfo), 0.0f, 0.5f);
 
@@ -833,17 +1020,21 @@ instantiate(const LV2UI_Descriptor*   descriptor,
 	gtk_table_attach_defaults(GTK_TABLE(ui->cbx_box), ui->cbx_ring_mom  , 0, 1, 3, 4);
 	gtk_table_attach_defaults(GTK_TABLE(ui->cbx_box), ui->cbx_ring_short, 1, 2, 3, 4);
 
-	gtk_table_attach_defaults(GTK_TABLE(ui->cbx_box), ui->sep_v0, 2, 3, 0, 4);
+	gtk_table_attach_defaults(GTK_TABLE(ui->cbx_box), ui->sep_v0, 2, 3, 0, 5);
+
+	gtk_table_attach(GTK_TABLE(ui->cbx_box), ui->lbl_radarinfo, 3, 4, 0, 1, GTK_FILL, GTK_SHRINK, 3, 0);
+	gtk_table_attach(GTK_TABLE(ui->cbx_box), ui->spn_radartime, 4, 5, 0, 1, GTK_EXPAND | GTK_FILL, GTK_EXPAND, 0, 0);
 
 	gtk_table_attach_defaults(GTK_TABLE(ui->cbx_box), ui->cbx_autoreset, 3, 4, 1, 2);
 	gtk_table_attach_defaults(GTK_TABLE(ui->cbx_box), ui->cbx_transport, 3, 4, 2, 3);
 
-	gtk_table_attach(GTK_TABLE(ui->cbx_box), ui->lbl_radarinfo, 3, 4, 0, 1, GTK_FILL, GTK_SHRINK, 3, 0);
-	gtk_table_attach(GTK_TABLE(ui->cbx_box), ui->spn_radartime, 4, 5, 0, 1, GTK_EXPAND | GTK_FILL, GTK_EXPAND, 0, 0);
 	gtk_table_attach_defaults(GTK_TABLE(ui->cbx_box), ui->cbx_hist_mom  , 3, 4, 3, 4);
 	gtk_table_attach_defaults(GTK_TABLE(ui->cbx_box), ui->cbx_hist_short, 4, 5, 3, 4);
 
 	gtk_table_attach(GTK_TABLE(ui->cbx_box), ui->btn_box, 4, 5, 1, 3, GTK_EXPAND | GTK_FILL, GTK_EXPAND, 0, 0);
+
+	gtk_table_attach_defaults(GTK_TABLE(ui->cbx_box), ui->cbx_radar     , 3, 4, 4, 5);
+	gtk_table_attach_defaults(GTK_TABLE(ui->cbx_box), ui->cbx_histogram , 4, 5, 4, 5);
 
 	/* global packing */
 	gtk_box_pack_start(GTK_BOX(ui->box), ui->m0, FALSE, FALSE, 0);
@@ -856,6 +1047,7 @@ instantiate(const LV2UI_Descriptor*   descriptor,
 	g_signal_connect (G_OBJECT (ui->cbx_hist_short), "toggled", G_CALLBACK (cbx_lufs), ui);
 	g_signal_connect (G_OBJECT (ui->cbx_ring_short), "toggled", G_CALLBACK (cbx_lufs), ui);
 	g_signal_connect (G_OBJECT (ui->cbx_sc18),  "toggled", G_CALLBACK (cbx_lufs), ui);
+	g_signal_connect (G_OBJECT (ui->cbx_histogram), "toggled", G_CALLBACK (cbx_lufs), ui);
 	g_signal_connect (G_OBJECT (ui->cbx_transport), "toggled", G_CALLBACK (cbx_transport), ui);
 	g_signal_connect (G_OBJECT (ui->cbx_autoreset), "toggled", G_CALLBACK (cbx_autoreset), ui);
 	g_signal_connect (G_OBJECT (ui->spn_radartime), "value-changed", G_CALLBACK (spn_radartime), ui);
@@ -874,6 +1066,9 @@ cleanup(LV2UI_Handle handle)
   forge_message_kv(ui, ui->uris.mtr_meters_off, 0, 0);
 	if (ui->cpattern) {
 		cairo_pattern_destroy (ui->cpattern);
+	}
+	if (ui->hpattern) {
+		cairo_pattern_destroy (ui->hpattern);
 	}
 	if (ui->fontcache) {
 		for (int i=0; i < 6; ++i) {
@@ -1011,6 +1206,30 @@ static void parse_radarinfo(EBUrUI* ui, const LV2_Atom_Object* obj) {
 	ui->radar_pos_cur = c;
 }
 
+static void parse_histogram(EBUrUI* ui, const LV2_Atom_Object* obj) {
+	const EBULV2URIs* uris = &ui->uris;
+	LV2_Atom *lm = NULL;
+	LV2_Atom *ls = NULL;
+	LV2_Atom *pp = NULL;
+
+	int p = -1;
+
+	lv2_atom_object_get(obj,
+			uris->ebu_loudnessM, &lm,
+			uris->ebu_loudnessS, &ls,
+			uris->rdr_pointpos, &pp,
+			NULL
+			);
+
+	PARSE_A_INT(pp, p);
+	if (p < 0 || p > HIST_LEN) return;
+	PARSE_A_INT(lm, ui->histM[p]);
+	PARSE_A_INT(ls, ui->histS[p]);
+
+	invalidate_histogram_line(ui, p);
+}
+
+
 static void
 port_event(LV2UI_Handle handle,
            uint32_t     port_index,
@@ -1047,6 +1266,12 @@ port_event(LV2UI_Handle handle,
 						ui->radarS[i] = -INFINITY;
 						ui->radarM[i] = -INFINITY;
 					}
+					for (int i=0; i < HIST_LEN; ++i) {
+						ui->histM[i] = 0;
+						ui->histS[i] = 0;
+						ui->histLenM = 0;
+						ui->histLenS = 0;
+					}
 					invalidate_changed(ui, -1);
 				} else if (k == CTL_UISETTINGS) {
 					uint32_t vv = v;
@@ -1071,11 +1296,33 @@ port_event(LV2UI_Handle handle,
 					} else {
 						gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(ui->cbx_hist_mom), true);
 					}
+					if ((vv & 16)) {
+						gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(ui->cbx_histogram), true);
+					} else {
+						gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(ui->cbx_radar), true);
+					}
 					ui->disable_signals = false;
 				}
 			} else if (obj->body.otype == uris->rdr_radarpoint) {
 				parse_radarinfo(ui, obj);
-				invalidate_changed(ui, 0);
+				if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(ui->cbx_radar))) {
+					invalidate_changed(ui, 0);
+				}
+			} else if (obj->body.otype == uris->rdr_histpoint) {
+				parse_histogram(ui, obj);
+			} else if (obj->body.otype == uris->rdr_histogram) {
+				LV2_Atom *lm = NULL;
+				LV2_Atom *ls = NULL;
+				lv2_atom_object_get(obj,
+						uris->ebu_loudnessM, &lm,
+						uris->ebu_loudnessS, &ls,
+				NULL
+				);
+				PARSE_A_INT(lm, ui->histLenM);
+				PARSE_A_INT(ls, ui->histLenS);
+				if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(ui->cbx_histogram))) {
+					invalidate_changed(ui, 3);
+				}
 			} else {
 				fprintf(stderr, "UI: Unknown control message.\n");
 			}

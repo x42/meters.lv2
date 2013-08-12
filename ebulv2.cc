@@ -45,8 +45,14 @@ static void ebu_reset(LV2meter* self) {
 		self->radarS[i] = -INFINITY;
 		self->radarM[i] = -INFINITY;
 	}
+	for (int i=0; i < HIST_LEN; ++i) {
+		self->histM[i] = 0;
+		self->histS[i] = 0;
+	}
 	self->radar_pos_cur = 0;
 	self->integration_time = 0;
+	self->hist_maxM = 0;
+	self->hist_maxS = 0;
 }
 
 static void ebu_integrate(LV2meter* self, bool on) {
@@ -350,6 +356,47 @@ ebur128_run(LV2_Handle instance, uint32_t n_samples)
 		self->radar_spd_cur = self->radar_spd_cur % self->radar_spd_max;
 		self->radar_pos_cur = (self->radar_pos_cur + 1) % self->radar_pos_max;
 		self->radarSC = self->radarMC = -INFINITY;
+	}
+
+	if (self->ui_active) {
+		int countM = self->ebu->hist_M_count();
+		int countS = self->ebu->hist_S_count();
+		if (countM > 10 && countS > 10) {
+			const int *histM = self->ebu->histogram_M();
+			const int *histS = self->ebu->histogram_S();
+			bool max_changed = false;
+			// TODO limit data-array from HIST_LEN to visible area only
+			for (int i = 110; i < 650; i++) {
+				const int vm = histM [i];
+				const int vs = histS [i];
+				if (capacity - self->notify->atom.size < 256) {
+					// printf("LV2-ebu histogram debug: hit bufsize limit\n");
+					break;
+				}
+				if (self->histM[i] != vm || self->histS[i] != vs) {
+					self->histM[i] = vm;
+					self->histS[i] = vs;
+					LV2_Atom_Forge_Frame frame;
+					lv2_atom_forge_frame_time(&self->forge, 0);
+					lv2_atom_forge_blank(&self->forge, &frame, 1, self->uris.rdr_histpoint);
+					lv2_atom_forge_property_head(&self->forge, self->uris.ebu_loudnessM, 0);  lv2_atom_forge_int(&self->forge, vm);
+					lv2_atom_forge_property_head(&self->forge, self->uris.ebu_loudnessS, 0);  lv2_atom_forge_int(&self->forge, vs);
+					lv2_atom_forge_property_head(&self->forge, self->uris.rdr_pointpos, 0); lv2_atom_forge_int(&self->forge, i);
+					lv2_atom_forge_pop(&self->forge, &frame);
+				}
+				if (vm > self->hist_maxM) { self->hist_maxM = vm; max_changed = true; }
+				if (vs > self->hist_maxS) { self->hist_maxS = vs; max_changed = true; }
+				//printf ("%5.1lf %8.6lf %8.6lf\n", (0.1f * (i - 700)), vm / countM, vs / countS);
+			}
+			if (max_changed) {
+				LV2_Atom_Forge_Frame frame;
+				lv2_atom_forge_frame_time(&self->forge, 0);
+				lv2_atom_forge_blank(&self->forge, &frame, 1, self->uris.rdr_histogram);
+				lv2_atom_forge_property_head(&self->forge, self->uris.ebu_loudnessM, 0); lv2_atom_forge_int(&self->forge, self->hist_maxM);
+				lv2_atom_forge_property_head(&self->forge, self->uris.ebu_loudnessS, 0); lv2_atom_forge_int(&self->forge, self->hist_maxS);
+				lv2_atom_forge_pop(&self->forge, &frame);
+			}
+		}
 	}
 
 	/* report values to UI - TODO only if changed*/

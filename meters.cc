@@ -84,6 +84,11 @@ typedef struct {
 	bool send_state_to_ui;
 	uint32_t ui_settings;
 
+	int histM[HIST_LEN];
+	int histS[HIST_LEN];
+	int hist_maxM;
+	int hist_maxS;
+
 } LV2meter;
 
 

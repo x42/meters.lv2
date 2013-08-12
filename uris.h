@@ -28,6 +28,8 @@
 
 #define MTR_URI "http://gareus.org/oss/lv2/meters#"
 
+#define HIST_LEN (751)
+
 #define MTR__ebulevels        MTR_URI "ebulevels"
 #define MTR_ebu_loudnessM     MTR_URI "ebu_loudnessM"
 #define MTR_ebu_maxloudnM     MTR_URI "ebu_maxloudnM"
@@ -41,6 +43,8 @@
 
 #define MTR_ebu_state         MTR_URI "ebu_state"
 
+#define MTR__rdr_histogram    MTR_URI "rdr_histogram"
+#define MTR__rdr_histpoint    MTR_URI "rdr_histpoint"
 #define MTR__rdr_radarpoint   MTR_URI "rdr_radarpoint"
 #define MTR__rdr_pointpos     MTR_URI "rdr_pointpos"
 #define MTR__rdr_pos_cur      MTR_URI "rdr_pos_cur"
@@ -87,6 +91,8 @@ typedef struct {
 
 	LV2_URID ebu_state;
 
+	LV2_URID rdr_histogram;
+	LV2_URID rdr_histpoint;
 	LV2_URID rdr_radarpoint;
 	LV2_URID rdr_pointpos;
 	LV2_URID rdr_pos_cur;
@@ -139,6 +145,8 @@ map_eburlv2_uris(LV2_URID_Map* map, EBULV2URIs* uris)
 
 	uris->ebu_state           = map->map(map->handle, MTR_ebu_state);
 
+	uris->rdr_histogram       = map->map(map->handle, MTR__rdr_histogram);
+	uris->rdr_histpoint       = map->map(map->handle, MTR__rdr_histpoint);
 	uris->rdr_radarpoint      = map->map(map->handle, MTR__rdr_radarpoint);
 	uris->rdr_pointpos        = map->map(map->handle, MTR__rdr_pointpos);
 	uris->rdr_pos_cur         = map->map(map->handle, MTR__rdr_pos_cur);
