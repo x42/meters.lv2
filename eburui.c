@@ -261,9 +261,10 @@ static cairo_pattern_t * histogram_pattern(cairo_t* cr, float cx, float cy, floa
 	cairo_pattern_add_color_stop_rgba(pat, 0.00,  .0, .0, .0, 0.0);
 	cairo_pattern_add_color_stop_rgba(pat, 0.06,  .0, .0, .0, 0.0);
 	cairo_pattern_add_color_stop_rgba(pat, 0.09,  .1, .1, .1, 1.0);
-	cairo_pattern_add_color_stop_rgba(pat, 0.20,  .3, .3, .9, 1.0);
-	cairo_pattern_add_color_stop_rgba(pat, 0.50,  .3, .9, .3, 1.0);
-	cairo_pattern_add_color_stop_rgba(pat, 1.0 , 1.0, .1, .2, 1.0);
+	cairo_pattern_add_color_stop_rgba(pat, 0.20,  .5, .5, .6, 1.0);
+	cairo_pattern_add_color_stop_rgba(pat, 0.50,  .5, .6, .5, 1.0);
+	cairo_pattern_add_color_stop_rgba(pat, 0.90,  .6, .5, .5, 1.0);
+	cairo_pattern_add_color_stop_rgba(pat, 1.0 , 1.0, .2, .2, 1.0);
 
 	return pat;
 }
@@ -466,7 +467,7 @@ static gboolean expose_event(GtkWidget *w, GdkEventExpose *ev, gpointer handle) 
 			}
 			/* draw data path */
 			cairo_set_line_cap(cr, CAIRO_LINE_CAP_ROUND);
-			cairo_set_line_width(cr, .7);
+			cairo_set_line_width(cr, 0.75);
 			cairo_set_source (cr, ui->hpattern);
 			cairo_stroke_preserve(cr);
 			cairo_fill(cr);
