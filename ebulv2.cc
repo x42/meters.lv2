@@ -165,6 +165,16 @@ ebur128_instantiate(
 
 	ebu_set_radarspeed(self, 2.0 * 60.0);
 
+	for (int i=0; i < HIST_LEN; ++i) {
+		self->histM[i] = 0;
+		self->histS[i] = 0;
+	}
+
+	self->radar_pos_cur = 0;
+	self->integration_time = 0;
+	self->hist_maxM = 0;
+	self->hist_maxS = 0;
+
 	self->ebu = new Ebu_r128_proc();
 	self->ebu->init (2, rate);
 	ebu_reset(self);
@@ -316,7 +326,7 @@ ebur128_run(LV2_Handle instance, uint32_t n_samples)
 	
 	if (self->radar_resync >= 0) {
 		int batch = (capacity - 256) / 160; // TODO verify alignment & padding,
-		if (batch > 5) batch = 5; // limit max data transfer
+		if (batch > 6) batch = 6; // limit max data transfer
 		for (int i=0; i < batch; i++, self->radar_resync++) {
 			if (self->radar_resync >= self->radar_pos_max) {
 				self->radar_resync = -1;
@@ -368,6 +378,7 @@ ebur128_run(LV2_Handle instance, uint32_t n_samples)
 	}
 
 	if (self->ui_active) {
+		int msgtx = 0;
 		int countM = self->ebu->hist_M_count();
 		int countS = self->ebu->hist_S_count();
 		if (countM > 10 && countS > 10) {
@@ -379,10 +390,10 @@ ebur128_run(LV2_Handle instance, uint32_t n_samples)
 				const int vm = histM [i];
 				const int vs = histS [i];
 				if (capacity - self->notify->atom.size < 256) {
-					// printf("LV2-ebu histogram debug: hit bufsize limit\n");
 					break;
 				}
 				if (self->histM[i] != vm || self->histS[i] != vs) {
+					if (msgtx++ > 6) { break; } // limit max data-rate
 					self->histM[i] = vm;
 					self->histS[i] = vs;
 					LV2_Atom_Forge_Frame frame;
