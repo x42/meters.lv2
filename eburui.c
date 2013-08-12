@@ -78,6 +78,8 @@ typedef struct {
 	GtkWidget* m0;
 	cairo_pattern_t * cpattern;
 	cairo_pattern_t * hpattern;
+	GdkRegion * polygon_radar;
+	GdkRegion * polygon_meter;
 
 	bool fontcache;
 	PangoFontDescription *font[6];
@@ -265,63 +267,66 @@ static cairo_pattern_t * histogram_pattern(cairo_t* cr, float cx, float cy, floa
 	return pat;
 }
 
-// TODO statically allocate GdkRegion's for these ploygons
-static const GdkPoint
-polygon_radar[12] = {
-	{ 39, 190},
-	{ 56, 126}, // 2
-	{101,  82},
-	{165,  63},
-	{230,  81}, // 5
-	{272, 126},
-	{291, 190},
-	{272, 255}, // 8
-	{229, 298},
-	{165, 315},
-	{101, 298}, //10
-	{ 56, 254}
-};
+static GdkRegion * make_polygon_radar() {
+	const GdkPoint polygon_radar[12] = {
+		{ 39, 190},
+		{ 56, 126}, // 2
+		{101,  82},
+		{165,  63},
+		{230,  81}, // 5
+		{272, 126},
+		{291, 190},
+		{272, 255}, // 8
+		{229, 298},
+		{165, 315},
+		{101, 298}, //10
+		{ 56, 254}
+	};
+	return gdk_region_polygon(polygon_radar, 12, GDK_EVEN_ODD_RULE);
+}
 
-static const GdkPoint
-polygon_meter[24] = {
-	{ 37, 190}, // 1
-	{ 55, 124},
-	{ 98,  80},
-	{165,  61},
-	{231,  80}, // 5
-	{276, 126},
-	{292, 190},
+static GdkRegion * make_polygon_meter() {
+	const GdkPoint polygon_meter[24] = {
+		{ 37, 190}, // 1
+		{ 55, 124},
+		{ 98,  80},
+		{165,  61},
+		{231,  80}, // 5
+		{276, 126},
+		{292, 190},
 
-	{292, 200}, // 7B
-	{330, 200}, // 7A
-	{330, 185}, // 7C
-	{310, 112}, // 6A
-	{242,  47}, // 5A
-	{165,  33}, // 4A
-	{ 87,  47}, // 3A
-	{ 20, 113}, // 2A
-	{  0, 190}, // 1A
-	{ 25, 267}, //12A
-	{ 80, 332}, //11A
-	{165, 345}, //10A
-	{180, 345}, //10B
-	{180, 315}, //10B
+		{292, 200}, // 7B
+		{330, 200}, // 7A
+		{330, 185}, // 7C
+		{310, 112}, // 6A
+		{242,  47}, // 5A
+		{165,  33}, // 4A
+		{ 87,  47}, // 3A
+		{ 20, 113}, // 2A
+		{  0, 190}, // 1A
+		{ 25, 267}, //12A
+		{ 80, 332}, //11A
+		{165, 345}, //10A
+		{180, 345}, //10B
+		{180, 315}, //10B
 
-	{160, 316}, //10
-	{101, 301}, //11
-	{ 54, 254}  //12
-};
+		{160, 316}, //10
+		{101, 301}, //11
+		{ 54, 254}  //12
+	};
+	return gdk_region_polygon(polygon_meter, 24, GDK_EVEN_ODD_RULE);
+}
 
-static int check_overlap(const GdkRegion *r) {
+static int check_overlap(EBUrUI* ui, const GdkRegion *r) {
 	int rv = 0;
 	GdkRegion* rr;
 
-	rr = gdk_region_polygon(polygon_meter, 24, GDK_EVEN_ODD_RULE);
+	rr = gdk_region_copy (ui->polygon_meter);
 	gdk_region_intersect(rr, r);
 	rv |= gdk_region_empty (rr) ? 0 : 1;
 	gdk_region_destroy(rr);
 
-	rr = gdk_region_polygon(polygon_radar, 12, GDK_EVEN_ODD_RULE);
+	rr = gdk_region_copy (ui->polygon_radar);
 	gdk_region_intersect(rr, r);
 	rv |= gdk_region_empty (rr) ? 0 : 2;
 	gdk_region_destroy(rr);
@@ -376,9 +381,6 @@ static gboolean expose_event(GtkWidget *w, GdkEventExpose *ev, gpointer handle) 
 	if (!ui->hpattern) {
 		ui->hpattern = histogram_pattern(cr, CX, CY, RADIUS);
 	}
-	if (!ui->fontcache) {
-		initialize_font_cache(ui);
-	}
 
 #if 0 // DEBUG
 	printf("IS: %dx%d+%d+%d %d\n", ev->area.x, ev->area.y, ev->area.width, ev->area.height,
@@ -388,7 +390,7 @@ static gboolean expose_event(GtkWidget *w, GdkEventExpose *ev, gpointer handle) 
 	if (ev->area.x == 0 && ev->area.y == 0 && ev->area.width == 330 && ev->area.height == 400) {
 		redraw_part = 3;
 	} else {
-		redraw_part = check_overlap(ev->region);
+		redraw_part = check_overlap(ui, ev->region);
 		cairo_rectangle (cr, ev->area.x, ev->area.y, ev->area.width, ev->area.height);
 		cairo_clip (cr);
 	}
@@ -776,9 +778,10 @@ void invalidate_changed(EBUrUI* ui, int what) {
 	INVALIDATE_RECT(275, 287, 40, 30)  // bottom side tab
 
 	if ((what & 1) ||
-			(gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(ui->cbx_radar)) &&
-			ui->radar_pos_cur != ui->radar_pos_disp)) {
-		GdkRegion* rr = gdk_region_polygon(polygon_radar, 12, GDK_EVEN_ODD_RULE);
+			(gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(ui->cbx_radar))
+			 && ui->radar_pos_cur != ui->radar_pos_disp)) {
+
+		GdkRegion* rr = gdk_region_copy(ui->polygon_radar);
 
 #define MIN2(A,B) ( (A) < (B) ? (A) : (B) )
 #define MAX2(A,B) ( (A) > (B) ? (A) : (B) )
@@ -815,9 +818,7 @@ void invalidate_changed(EBUrUI* ui, int what) {
 	ring_leds(ui, &cl, &cm);
 
 	if (ui->circ_max != cm || ui->circ_val != cl) {
-		GdkRegion* rr = gdk_region_polygon(polygon_meter, 24, GDK_EVEN_ODD_RULE);
-		gdk_region_union(region, rr);
-		gdk_region_destroy(rr);
+		gdk_region_union(region, ui->polygon_meter);
 	}
 
 	gdk_window_invalidate_region (ui->m0->window, region, true);
@@ -1055,6 +1056,10 @@ instantiate(const LV2UI_Descriptor*   descriptor,
 	gtk_widget_show_all(ui->box);
 	*widget = ui->box;
 
+	ui->polygon_meter = make_polygon_meter();
+	ui->polygon_radar = make_polygon_radar();
+	initialize_font_cache(ui);
+
   forge_message_kv(ui, ui->uris.mtr_meters_on, 0, 0);
 	return ui;
 }
@@ -1075,6 +1080,13 @@ cleanup(LV2UI_Handle handle)
 			pango_font_description_free(ui->font[i]);
 		}
 	}
+	if (ui->polygon_meter) {
+		gdk_region_destroy(ui->polygon_meter);
+	}
+	if (ui->polygon_radar) {
+		gdk_region_destroy(ui->polygon_radar);
+	}
+
 	free(ui->radarS);
 	free(ui->radarM);
 
