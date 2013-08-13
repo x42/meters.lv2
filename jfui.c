@@ -18,6 +18,7 @@
  */
 
 #define _XOPEN_SOURCE
+//#define DRAW_POINTS
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -139,7 +140,8 @@ void draw_rb(JFUI* ui, jfringbuf *rb) {
 	cairo_arc (cr, JF_CENTER, JF_CENTER, JF_RADIUS, 0, 2.0 * M_PI);
 	cairo_clip(cr);
 
-	cairo_set_line_width(cr, 1.0);
+	//cairo_set_tolerance(cr, 1.0); // default .1
+
 	cairo_set_source_rgba (cr, .0, 1.0, .0, 1.0);
 	cairo_move_to(cr, ui->last_x, ui->last_y);
 
@@ -147,7 +149,13 @@ void draw_rb(JFUI* ui, jfringbuf *rb) {
 	float d0, d1;
 	int cnt = 0;
 
+#ifdef DRAW_POINTS
+	cairo_set_line_width(cr, 1.5);
+	cairo_set_line_cap(cr, CAIRO_LINE_CAP_ROUND);
+#else
+	cairo_set_line_width(cr, 1.0);
 	cairo_move_to(cr, ui->last_x, ui->last_y);
+#endif
 	for (uint32_t i=0; i < n_samples; ++i, ++ui->fade_c) {
 
 		if (ui->fade_c > ui->fade_m) {
@@ -179,7 +187,12 @@ void draw_rb(JFUI* ui, jfringbuf *rb) {
 
 		ui->last_x = JF_CENTER - (ui->lp0 - ui->lp1) * JR_RAD2;
 		ui->last_y = JF_CENTER - (ui->lp0 + ui->lp1) * JR_RAD2;
+#ifdef DRAW_POINTS
+		cairo_move_to(cr, ui->last_x, ui->last_y);
+		cairo_close_path (cr);
+#else
 		cairo_line_to(cr, ui->last_x, ui->last_y);
+#endif
 		cnt++;
 	}
 
