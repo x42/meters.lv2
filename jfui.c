@@ -60,7 +60,7 @@ typedef struct {
 	uint32_t fade_m;
 } JFUI;
 
-void alloc_sf(JFUI* ui) {
+static void alloc_sf(JFUI* ui) {
 	ui->sf = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, JF_BOUNDS, JF_BOUNDS);
 	cairo_t* cr = cairo_create (ui->sf);
 	cairo_set_source_rgba (cr, .0, .0, .0, 1.0);
@@ -69,7 +69,7 @@ void alloc_sf(JFUI* ui) {
 	cairo_destroy(cr);
 }
 
-void alloc_bg(JFUI* ui) {
+static void alloc_bg(JFUI* ui) {
 	ui->bg = cairo_image_surface_create (CAIRO_FORMAT_RGB24, JF_BOUNDS, JF_BOUNDS);
 	cairo_t* cr = cairo_create (ui->bg);
 
@@ -134,7 +134,7 @@ void alloc_bg(JFUI* ui) {
 	cairo_destroy(cr);
 }
 
-void draw_rb(JFUI* ui, jfringbuf *rb) {
+static void draw_rb(JFUI* ui, jfringbuf *rb) {
 	cairo_t* cr = cairo_create (ui->sf);
 
 	cairo_arc (cr, JF_CENTER, JF_CENTER, JF_RADIUS, 0, 2.0 * M_PI);
@@ -174,7 +174,7 @@ void draw_rb(JFUI* ui, jfringbuf *rb) {
 			cairo_set_source_rgba (cr, .0, 1.0, .0, 1.0);
 		}
 
-		jfrb_read_one(rb, &d0, &d1);
+		if (jfrb_read_one(rb, &d0, &d1)) break;
 
 #if 1
 		/* low pass filter */

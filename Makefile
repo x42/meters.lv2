@@ -6,7 +6,7 @@
 #
 OPTIMIZATIONS ?= -msse -msse2 -mfpmath=sse -ffast-math -fomit-frame-pointer -O3 -fno-finite-math-only
 PREFIX ?= /usr/local
-CFLAGS ?= $(OPTIMIZATIONS) -Wall
+CFLAGS ?= $(OPTIMIZATIONS) -Wall -Wno-unused-function
 LIBDIR ?= lib
 
 ###############################################################################
@@ -109,6 +109,6 @@ uninstall:
 	-rmdir $(DESTDIR)$(LV2DIR)/$(BUNDLE)
 
 clean:
-	rm -f manifest.ttl $(LV2NAME).ttl $(LV2NAME)$(LIB_EXT) $(LV2GUI)$(LIB_EXT) $(LV2GUI2)$(LIB_EXT)
+	rm -f manifest.ttl $(LV2NAME).ttl $(LV2NAME)$(LIB_EXT) $(LV2GUI)$(LIB_EXT) $(LV2GUI2)$(LIB_EXT) $(LV2GUI3)$(LIB_EXT)
 
 .PHONY: clean all install uninstall

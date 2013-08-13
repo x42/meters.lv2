@@ -33,7 +33,7 @@ typedef struct {
 	size_t len;
 } jfringbuf;
 
-jfringbuf * jfrb_alloc(size_t siz) {
+static jfringbuf * jfrb_alloc(size_t siz) {
 	jfringbuf *rb  = (jfringbuf*) malloc(sizeof(jfringbuf));
 	rb->c0 = (float*) malloc(siz * sizeof(float));
 	rb->c1 = (float*) malloc(siz * sizeof(float));
@@ -43,22 +43,22 @@ jfringbuf * jfrb_alloc(size_t siz) {
 	return rb;
 }
 
-void jfrb_free(jfringbuf *rb) {
+static void jfrb_free(jfringbuf *rb) {
 	free(rb->c0);
 	free(rb->c1);
 	free(rb);
 }
 
-size_t jfrb_write_space(jfringbuf *rb) {
+static size_t jfrb_write_space(jfringbuf *rb) {
 	if (rb->rp == rb->wp) return (rb->len -1);
 	return ((rb->len + rb->rp - rb->wp) % rb->len) -1;
 }
 
-size_t jfrb_read_space(jfringbuf *rb) {
+static size_t jfrb_read_space(jfringbuf *rb) {
 	return ((rb->len + rb->wp - rb->rp) % rb->len);
 }
 
-int jfrb_read_one(jfringbuf *rb, float *c0, float *c1) {
+static int jfrb_read_one(jfringbuf *rb, float *c0, float *c1) {
 	if (jfrb_read_space(rb) < 1) return -1;
 	*c0 = rb->c0[rb->rp];
 	*c1 = rb->c1[rb->rp];
@@ -66,7 +66,7 @@ int jfrb_read_one(jfringbuf *rb, float *c0, float *c1) {
 	return 0;
 }
 
-int jfrb_write(jfringbuf *rb, float *c0, float *c1, size_t len) {
+static int jfrb_write(jfringbuf *rb, float *c0, float *c1, size_t len) {
 	if (jfrb_write_space(rb) < len) return -1;
 	if (rb->wp + len <= rb->len) {
 		memcpy((void*) &rb->c0[rb->wp], (void*) c0, len * sizeof(float));
@@ -85,7 +85,7 @@ int jfrb_write(jfringbuf *rb, float *c0, float *c1, size_t len) {
 	return 0;
 }
 
-void jfrb_read_clear(jfringbuf *rb) {
+static void jfrb_read_clear(jfringbuf *rb) {
 	rb->rp = rb->wp;
 }
 
