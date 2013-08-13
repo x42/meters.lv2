@@ -27,6 +27,7 @@
 
 #include <gtk/gtk.h>
 #include <cairo/cairo.h>
+#include <pango/pango.h>
 
 #include "lv2/lv2plug.in/ns/extensions/ui/ui.h"
 #include "jf.h"
@@ -70,6 +71,28 @@ static void alloc_sf(JFUI* ui) {
 	cairo_destroy(cr);
 }
 
+void write_text(
+		PangoContext * pc, cairo_t* cr,
+		const char *txt,
+		const float x, const float y) {
+	int tw, th;
+	cairo_save(cr);
+
+	PangoLayout * pl = pango_layout_new (pc);
+	PangoFontDescription *font = pango_font_description_from_string("Mono 16");
+	pango_layout_set_font_description(pl, font);
+	pango_font_description_free(font);
+	cairo_set_source_rgba (cr, .5, .5, .6, 1.0);
+	pango_layout_set_text(pl, txt, -1);
+	pango_layout_get_pixel_size(pl, &tw, &th);
+	cairo_translate (cr, x, y);
+	cairo_translate (cr, -tw/2.0 - 0.5, -th/2.0);
+	pango_cairo_layout_path(cr, pl);
+	pango_cairo_show_layout(cr, pl);
+	g_object_unref(pl);
+	cairo_restore(cr);
+	cairo_new_path (cr);
+}
 
 static void draw_rb(JFUI* ui, jfringbuf *rb) {
 	cairo_t* cr = cairo_create (ui->sf);
@@ -77,9 +100,7 @@ static void draw_rb(JFUI* ui, jfringbuf *rb) {
 	cairo_rectangle (cr, 0, 0, JF_BOUNDS, JF_BOUNDS);
 	cairo_clip(cr);
 
-	//cairo_set_tolerance(cr, 1.0); // default .1
-
-	cairo_set_source_rgba (cr, .0, 1.0, .0, 1.0);
+	cairo_set_source_rgba (cr, .8, .8, .2, 1.0);
 	cairo_move_to(cr, ui->last_x, ui->last_y);
 
 	size_t n_samples = jfrb_read_space(rb);
@@ -108,7 +129,7 @@ static void draw_rb(JFUI* ui, jfringbuf *rb) {
 			cairo_rectangle (cr, 0, 0, JF_BOUNDS, JF_BOUNDS);
 			cairo_fill (cr);
 			cairo_move_to(cr, ui->last_x, ui->last_y);
-			cairo_set_source_rgba (cr, .0, 1.0, .0, 1.0);
+			cairo_set_source_rgba (cr, .8, .8, .2, 1.0);
 		}
 
 		if (jfrb_read_one(rb, &d0, &d1)) break;
@@ -153,34 +174,37 @@ static gboolean expose_event(GtkWidget *w, GdkEventExpose *ev, gpointer handle) 
 	draw_rb(ui, self->rb);
 
 	cairo_t* cr = gdk_cairo_create(GDK_DRAWABLE(w->window));
-
 	cairo_rectangle (cr, ev->area.x, ev->area.y, ev->area.width, ev->area.height);
 	cairo_clip (cr);
 
+	cairo_set_operator (cr, CAIRO_OPERATOR_SOURCE);
 	cairo_set_source_surface(cr, ui->sf, 0, 0);
 	cairo_paint (cr);
 
-	/* draw annotations */
-	const double dashed[] = {2.0, 3.0};
-	cairo_set_line_width(cr, 2.0);
-	cairo_set_source_rgba (cr, .8, .0, .8, .8);
-	cairo_set_line_cap(cr, CAIRO_LINE_CAP_ROUND);
+	cairo_set_operator (cr, CAIRO_OPERATOR_SCREEN);
 
-	cairo_save(cr);
+	/* draw labels */
+	// TODO: cache text as pattern
+	PangoContext * pc = gtk_widget_get_pango_context(w);
+	write_text(pc, cr, "L", JF_CENTER - JR_RAD2, JF_CENTER - JR_RAD2);
+	write_text(pc, cr, "R", JF_CENTER + JR_RAD2, JF_CENTER - JR_RAD2);
+	write_text(pc, cr, "Mono", JF_CENTER, JF_CENTER*1/4 - 12);
+	write_text(pc, cr, "+S", JF_CENTER*1/4 - 15 , JF_CENTER);
+	write_text(pc, cr, "-S", JF_CENTER*7/4 + 15 , JF_CENTER);
+
+	/* draw annotations */
+	const double dashed[] = {1.0, 2.0};
+	cairo_set_line_width(cr, 3.5);
+	cairo_set_source_rgba (cr, .5, .5, .6, 1.0);
+	cairo_set_line_cap(cr, CAIRO_LINE_CAP_BUTT);
+
 	cairo_set_dash(cr, dashed, 2, 0);
 	cairo_move_to(cr, JF_CENTER*1/4, JF_CENTER);
 	cairo_line_to(cr, JF_CENTER*7/4, JF_CENTER);
 	cairo_stroke(cr);
-	cairo_restore(cr);
 
-	cairo_set_line_width(cr, 7.0);
-
-	cairo_move_to(cr, JF_CENTER - JR_RAD2, JF_CENTER - JR_RAD2);
-	cairo_close_path (cr);
-	cairo_stroke(cr);
-
-	cairo_move_to(cr, JF_CENTER + JR_RAD2, JF_CENTER - JR_RAD2);
-	cairo_close_path (cr);
+	cairo_move_to(cr, JF_CENTER, JF_CENTER*1/4);
+	cairo_line_to(cr, JF_CENTER, JF_CENTER*7/4);
 	cairo_stroke(cr);
 
 	cairo_destroy (cr);
