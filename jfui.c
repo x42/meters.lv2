@@ -61,7 +61,7 @@ typedef struct {
 } JFUI;
 
 static void alloc_sf(JFUI* ui) {
-	ui->sf = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, JF_BOUNDS, JF_BOUNDS);
+	ui->sf = cairo_image_surface_create (CAIRO_FORMAT_RGB24, JF_BOUNDS, JF_BOUNDS);
 	cairo_t* cr = cairo_create (ui->sf);
 	cairo_set_source_rgba (cr, .0, .0, .0, 1.0);
 	cairo_rectangle (cr, 0, 0, JF_BOUNDS, JF_BOUNDS);
@@ -69,19 +69,7 @@ static void alloc_sf(JFUI* ui) {
 	cairo_destroy(cr);
 }
 
-static void alloc_bg(JFUI* ui) {
-	ui->bg = cairo_image_surface_create (CAIRO_FORMAT_RGB24, JF_BOUNDS, JF_BOUNDS);
-	cairo_t* cr = cairo_create (ui->bg);
-
-	/* background */
-	cairo_rectangle (cr, 0, 0, JF_BOUNDS, JF_BOUNDS);
-	cairo_set_source_rgba (cr, .1, .1, .1, 1.0);
-	cairo_fill (cr);
-
-	cairo_arc (cr, JF_CENTER, JF_CENTER, JF_RADIUS, 0, 2.0 * M_PI);
-	cairo_set_source_rgba (cr, .0, .0, .0, 1.0);
-	cairo_fill(cr);
-
+static void draw_bg(cairo_t* cr) {
 	/* rings */
 	cairo_set_source_rgba (cr, .5, .5, .5, 1.0);
 
@@ -130,9 +118,26 @@ static void alloc_bg(JFUI* ui) {
 	cairo_move_to(cr, 0, JF_CENTER);
 	cairo_line_to(cr, JF_BOUNDS, JF_CENTER);
 	cairo_stroke (cr);
+}
+
+static void alloc_bg(JFUI* ui) {
+	ui->bg = cairo_image_surface_create (CAIRO_FORMAT_RGB24, JF_BOUNDS, JF_BOUNDS);
+	cairo_t* cr = cairo_create (ui->bg);
+
+	/* background */
+	cairo_rectangle (cr, 0, 0, JF_BOUNDS, JF_BOUNDS);
+	cairo_set_source_rgba (cr, .1, .1, .1, 1.0);
+	cairo_fill (cr);
+
+	cairo_arc (cr, JF_CENTER, JF_CENTER, JF_RADIUS, 0, 2.0 * M_PI);
+	cairo_set_source_rgba (cr, .0, .0, .0, 1.0);
+	cairo_fill(cr);
+
+	draw_bg(cr);
 
 	cairo_destroy(cr);
 }
+
 
 static void draw_rb(JFUI* ui, jfringbuf *rb) {
 	cairo_t* cr = cairo_create (ui->sf);
@@ -140,7 +145,7 @@ static void draw_rb(JFUI* ui, jfringbuf *rb) {
 	cairo_arc (cr, JF_CENTER, JF_CENTER, JF_RADIUS, 0, 2.0 * M_PI);
 	cairo_clip(cr);
 
-	//cairo_set_tolerance(cr, 1.0); // default .1
+	cairo_set_tolerance(cr, 1.0); // default .1
 
 	cairo_set_source_rgba (cr, .0, 1.0, .0, 1.0);
 	cairo_move_to(cr, ui->last_x, ui->last_y);
@@ -212,12 +217,25 @@ static gboolean expose_event(GtkWidget *w, GdkEventExpose *ev, gpointer handle) 
 
 	cairo_t* cr = gdk_cairo_create(GDK_DRAWABLE(w->window));
 
+	cairo_rectangle (cr, ev->area.x, ev->area.y, ev->area.width, ev->area.height);
+	cairo_clip (cr);
+
+#if 1
+	cairo_set_operator (cr, CAIRO_OPERATOR_SOURCE);
 	cairo_set_source_surface(cr, ui->bg, 0, 0);
 	cairo_paint (cr);
-
 	cairo_set_operator(cr, CAIRO_OPERATOR_ADD);
+#else
+	cairo_set_operator (cr, CAIRO_OPERATOR_SOURCE);
+#endif
+
 	cairo_set_source_surface(cr, ui->sf, 0, 0);
 	cairo_paint (cr);
+
+#if 0
+	cairo_set_operator(cr, CAIRO_OPERATOR_ADD);
+	draw_bg(cr);
+#endif
 
 	cairo_destroy (cr);
 
