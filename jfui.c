@@ -36,6 +36,11 @@
 #define JF_RADIUS (100.0f)
 #define JR_RAD2   (50.0f)
 
+/* CRT luminosity persistency
+ * fade to FADE_ALPHA black every <sample-rate> / FADE_FREQ samples
+ */
+#define FADE_ALPHA (0.08)
+#define FADE_FREQ  (30)
 
 typedef struct {
 	LV2_Handle instance;
@@ -62,7 +67,7 @@ void alloc_sf(JFUI* ui) {
 }
 
 void alloc_bg(JFUI* ui) {
-	ui->bg = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, JF_BOUNDS, JF_BOUNDS);
+	ui->bg = cairo_image_surface_create (CAIRO_FORMAT_RGB24, JF_BOUNDS, JF_BOUNDS);
 	cairo_t* cr = cairo_create (ui->bg);
 
 	/* background */
@@ -132,7 +137,7 @@ void draw_rb(JFUI* ui, jfringbuf *rb) {
 	cairo_arc (cr, JF_CENTER, JF_CENTER, JF_RADIUS, 0, 2.0 * M_PI);
 	cairo_clip(cr);
 
-	cairo_set_line_width(cr, 1.1);
+	cairo_set_line_width(cr, 1.0);
 	cairo_set_source_rgba (cr, .0, 1.0, .0, 1.0);
 	cairo_move_to(cr, ui->last_x, ui->last_y);
 
@@ -151,7 +156,8 @@ void draw_rb(JFUI* ui, jfringbuf *rb) {
 				cnt = 0;
 			}
 
-			cairo_set_source_rgba (cr, .0, .0, .0, 0.05);
+			/* fade luminosity */
+			cairo_set_source_rgba (cr, .0, .0, .0, FADE_ALPHA);
 			cairo_rectangle (cr, 0, 0, JF_BOUNDS, JF_BOUNDS);
 			cairo_fill (cr);
 			cairo_move_to(cr, ui->last_x, ui->last_y);
@@ -180,8 +186,6 @@ static gboolean expose_event(GtkWidget *w, GdkEventExpose *ev, gpointer handle) 
 	draw_rb(ui, self->rb);
 
 	cairo_t* cr = gdk_cairo_create(GDK_DRAWABLE(w->window));
-	cairo_rectangle (cr, 0, 0, JF_BOUNDS, JF_BOUNDS);
-	cairo_clip(cr);
 
 	cairo_set_source_surface(cr, ui->bg, 0, 0);
 	cairo_paint (cr);
@@ -231,7 +235,7 @@ instantiate(const LV2UI_Descriptor*   descriptor,
 	ui->last_x = (JF_CENTER);
 	ui->last_y = (JF_CENTER);
 	ui->fade_c = 0;
-	ui->fade_m = self->rate / 30;
+	ui->fade_m = self->rate / FADE_FREQ;
 
 	ui->box = gtk_alignment_new(.5, .5, 0, 0);
 	ui->m0  = gtk_drawing_area_new();
