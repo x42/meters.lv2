@@ -62,6 +62,11 @@
 	lv2:binary <@LV2NAME@@LIB_EXT@> ;
 	rdfs:seeAlso <@LV2NAME@.ttl> .
 
+<http://gareus.org/oss/lv2/@LV2NAME@#jf>
+	a lv2:Plugin ;
+	lv2:binary <@LV2NAME@@LIB_EXT@> ;
+	rdfs:seeAlso <@LV2NAME@.ttl> .
+
 <http://gareus.org/oss/lv2/@LV2NAME@#ui>
 	a ui:GtkUI ;
 	ui:binary <@LV2GUI@@LIB_EXT@> ;
@@ -70,4 +75,9 @@
 <http://gareus.org/oss/lv2/@LV2NAME@#eburui>
 	a ui:GtkUI ;
 	ui:binary <@LV2GUI2@@LIB_EXT@> ;
+	rdfs:seeAlso <@LV2NAME@.ttl> .
+
+<http://gareus.org/oss/lv2/@LV2NAME@#jfui>
+	a ui:GtkUI ;
+	ui:binary <@LV2GUI3@@LIB_EXT@> ;
 	rdfs:seeAlso <@LV2NAME@.ttl> .

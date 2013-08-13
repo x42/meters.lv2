@@ -1,17 +1,18 @@
-@prefix atom: <http://lv2plug.in/ns/ext/atom#> .
-@prefix doap: <http://usefulinc.com/ns/doap#> .
-@prefix foaf: <http://xmlns.com/foaf/0.1/> .
-@prefix lv2:  <http://lv2plug.in/ns/lv2core#> .
+@prefix atom:  <http://lv2plug.in/ns/ext/atom#> .
+@prefix doap:  <http://usefulinc.com/ns/doap#> .
+@prefix foaf:  <http://xmlns.com/foaf/0.1/> .
+@prefix lv2:   <http://lv2plug.in/ns/lv2core#> .
 @prefix units: <http://lv2plug.in/ns/extensions/units#> .
-@prefix rdf:  <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
-@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
-@prefix ui:   <http://lv2plug.in/ns/extensions/ui#> .
+@prefix rdf:   <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs:  <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix ui:    <http://lv2plug.in/ns/extensions/ui#> .
 @prefix urid:  <http://lv2plug.in/ns/ext/urid#> .
 @prefix pg:    <http://lv2plug.in/ns/ext/port-groups#> .
 @prefix rsz:   <http://lv2plug.in/ns/ext/resize-port#> .
 @prefix time:  <http://lv2plug.in/ns/ext/time#> .
 @prefix state: <http://lv2plug.in/ns/ext/state#> .
-@prefix mtr:  <http://gareus.org/oss/lv2/meters#> .
+@prefix pprop: <http://lv2plug.in/ns/ext/port-props#> .
+@prefix mtr:   <http://gareus.org/oss/lv2/meters#> .
 
 <http://gareus.org/rgareus#me>
 	a foaf:Person ;
@@ -25,6 +26,10 @@
 	doap:name "LV2 meters" .
 
 mtr:ui
+	a ui:GtkUI ;
+	.
+
+mtr:jfui
 	a ui:GtkUI ;
 	.
 
@@ -615,5 +620,52 @@ mtr:EBUr128
 		lv2:symbol "outR" ;
 		lv2:name "OutR" ;
 		lv2:designation pg:right ;
+	] ;
+	.
+
+
+mtr:jf
+	a lv2:Plugin, lv2:AnalyserPlugin, doap:Project ;
+	doap:license <http://usefulinc.com/doap/licenses/gpl> ;
+	doap:name "GonioMeter";
+	lv2:project <http://gareus.org/oss/lv2/meters> ;
+	lv2:optionalFeature lv2:hardRTCapable ;
+	lv2:requiredFeature <http://lv2plug.in/ns/ext/instance-access>;
+	ui:ui mtr:jfui;
+	lv2:port [
+		a lv2:AudioPort ,
+			lv2:InputPort ;
+		lv2:index 0 ;
+		lv2:symbol "inL" ;
+		lv2:name "InL" ;
+		lv2:designation pg:left ;
+	] , [
+		a lv2:AudioPort ,
+			lv2:OutputPort ;
+		lv2:index 1 ;
+		lv2:symbol "outL" ;
+		lv2:name "OutL";
+		lv2:designation pg:left ;
+	] , [
+		a lv2:AudioPort ,
+			lv2:InputPort ;
+		lv2:index 2 ;
+		lv2:symbol "inR" ;
+		lv2:name "InR" ;
+		lv2:designation pg:right ;
+	] , [
+		a lv2:AudioPort ,
+			lv2:OutputPort ;
+		lv2:index 3 ;
+		lv2:symbol "outR" ;
+		lv2:name "OutR" ;
+		lv2:designation pg:right ;
+	] , [
+		a lv2:ControlPort ,
+			lv2:OutputPort ;
+		lv2:index 4 ;
+		lv2:symbol "UInotify" ;
+		lv2:name "UI notify" ;
+		lv2:portProperty pprop:notOnGUI ;
 	] ;
 	.
