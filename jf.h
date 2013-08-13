@@ -100,7 +100,10 @@ typedef struct {
 
 	double rate;
 	bool ui_active;
-	int ntfy;
+
+	uint32_t ntfy;
+	uint32_t apv;
+	uint32_t sample_cnt;
 
 	/* shared with ui */
 	jfringbuf *rb;

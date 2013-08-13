@@ -64,7 +64,15 @@ goniometer_instantiate(
 	self->rate = rate;
 	self->ui_active = false;
 
-	self->rb = jfrb_alloc(self->rate);
+	self->apv = rint(rate / 15.0);
+	self->sample_cnt = 0;
+	self->ntfy = 0;
+
+	uint32_t rbsize = self->rate / 4;
+	if (rbsize < 8192u) rbsize = 8192u;
+	if (rbsize < 2 * self->apv) rbsize = 2 * self->apv;
+
+	self->rb = jfrb_alloc(rbsize);
 
 	return (LV2_Handle)self;
 }
@@ -101,7 +109,11 @@ goniometer_run(LV2_Handle instance, uint32_t n_samples)
 		jfrb_write(self->rb, self->input[0], self->input[1], n_samples);
 
 		/* notify UI by creating a port-event */
-		self->ntfy = (self->ntfy + 1) % 10000;
+		self->sample_cnt += n_samples;
+		if (self->sample_cnt >= self->apv) {
+			self->ntfy = (self->ntfy + 1) % 10000;
+			self->sample_cnt = self->sample_cnt % self->apv;
+		}
 		*self->notify = self->ntfy;
 	}
 
