@@ -18,7 +18,7 @@
  */
 
 #define _XOPEN_SOURCE
-//#define DRAW_POINTS
+#define DRAW_POINTS
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -31,17 +31,19 @@
 #include "lv2/lv2plug.in/ns/extensions/ui/ui.h"
 #include "jf.h"
 
-#define JF_BOUNDS (205.0f)
-#define JF_CENTER (102.5f)
+#define JF_BOUNDS (405.0f)
+#define JF_CENTER (202.5f)
 
-#define JF_RADIUS (100.0f)
-#define JR_RAD2   (50.0f)
+#define JF_RADIUS (200.0f)
+#define JR_RAD2   (100.0f)
 
 /* CRT luminosity persistency
  * fade to FADE_ALPHA black every <sample-rate> / FADE_FREQ samples
  */
-#define FADE_ALPHA (0.08)
-#define FADE_FREQ  (30)
+#define FADE_ALPHA (0.22)
+#define FADE_FREQ  (15)
+
+#define MAX_CAIRO_PATH 100
 
 typedef struct {
 	LV2_Handle instance;
@@ -50,7 +52,6 @@ typedef struct {
 	GtkWidget* m0;
 
 	cairo_surface_t* sf;
-	cairo_surface_t* bg;
 
 	float last_x, last_y;
 	float lp0, lp1;
@@ -69,91 +70,22 @@ static void alloc_sf(JFUI* ui) {
 	cairo_destroy(cr);
 }
 
-static void draw_bg(cairo_t* cr) {
-	/* rings */
-	cairo_set_source_rgba (cr, .5, .5, .5, 1.0);
-
-	cairo_set_line_width(cr, 1.5);
-	cairo_arc (cr, JF_CENTER, JF_CENTER, JF_RADIUS, 0, 2.0 * M_PI);
-	cairo_stroke (cr);
-
-	cairo_set_line_width(cr, 1.5);
-	cairo_arc (cr, JF_CENTER, JF_CENTER, JF_RADIUS *.707, 0, 2.0 * M_PI);
-	cairo_stroke (cr);
-
-	cairo_set_line_width(cr, 1.0);
-	cairo_arc (cr, JF_CENTER, JF_CENTER, JF_RADIUS * 0.5, 0, 2.0 * M_PI);
-	cairo_stroke (cr);
-
-	cairo_arc (cr, JF_CENTER, JF_CENTER, JF_RADIUS * 0.354, 0, 2.0 * M_PI);
-	cairo_stroke (cr);
-
-	cairo_arc (cr, JF_CENTER, JF_CENTER, JF_RADIUS * 0.1257f, 0, 2.0 * M_PI);
-	cairo_stroke (cr);
-
-	cairo_arc (cr, JF_CENTER, JF_CENTER, JF_RADIUS * 0.089f, 0, 2.0 * M_PI);
-	cairo_stroke (cr);
-
-	/* cross */
-	cairo_arc (cr, JF_CENTER, JF_CENTER, JF_RADIUS, 0, 2.0 * M_PI);
-	cairo_clip(cr);
-
-	cairo_set_source_rgba (cr, .6, .6, .6, 1.0);
-	cairo_set_line_width(cr, 1.0);
-
-	cairo_move_to(cr, 0.5, 0.5);
-	cairo_line_to(cr, JF_BOUNDS - .5, JF_BOUNDS - .5);
-	cairo_stroke (cr);
-
-	cairo_move_to(cr, 0.5, JF_BOUNDS - .5);
-	cairo_line_to(cr, JF_BOUNDS - .5, 0.5);
-	cairo_stroke (cr);
-
-	cairo_set_source_rgba (cr, .5, .5, .5, 1.0);
-
-	cairo_move_to(cr, JF_CENTER, 0);
-	cairo_line_to(cr, JF_CENTER, JF_BOUNDS);
-	cairo_stroke (cr);
-
-	cairo_move_to(cr, 0, JF_CENTER);
-	cairo_line_to(cr, JF_BOUNDS, JF_CENTER);
-	cairo_stroke (cr);
-}
-
-static void alloc_bg(JFUI* ui) {
-	ui->bg = cairo_image_surface_create (CAIRO_FORMAT_RGB24, JF_BOUNDS, JF_BOUNDS);
-	cairo_t* cr = cairo_create (ui->bg);
-
-	/* background */
-	cairo_rectangle (cr, 0, 0, JF_BOUNDS, JF_BOUNDS);
-	cairo_set_source_rgba (cr, .1, .1, .1, 1.0);
-	cairo_fill (cr);
-
-	cairo_arc (cr, JF_CENTER, JF_CENTER, JF_RADIUS, 0, 2.0 * M_PI);
-	cairo_set_source_rgba (cr, .0, .0, .0, 1.0);
-	cairo_fill(cr);
-
-	draw_bg(cr);
-
-	cairo_destroy(cr);
-}
-
 
 static void draw_rb(JFUI* ui, jfringbuf *rb) {
 	cairo_t* cr = cairo_create (ui->sf);
 
-	cairo_arc (cr, JF_CENTER, JF_CENTER, JF_RADIUS, 0, 2.0 * M_PI);
+	cairo_rectangle (cr, 0, 0, JF_BOUNDS, JF_BOUNDS);
 	cairo_clip(cr);
 
-	cairo_set_tolerance(cr, 1.0); // default .1
+	//cairo_set_tolerance(cr, 1.0); // default .1
 
 	cairo_set_source_rgba (cr, .0, 1.0, .0, 1.0);
 	cairo_move_to(cr, ui->last_x, ui->last_y);
 
 	size_t n_samples = jfrb_read_space(rb);
 	float d0, d1;
-	int cnt = 0;
 
+	int cnt = 0;
 #ifdef DRAW_POINTS
 	cairo_set_line_width(cr, 1.5);
 	cairo_set_line_cap(cr, CAIRO_LINE_CAP_ROUND);
@@ -199,6 +131,11 @@ static void draw_rb(JFUI* ui, jfringbuf *rb) {
 		cairo_line_to(cr, ui->last_x, ui->last_y);
 #endif
 		cnt++;
+
+		if (cnt > MAX_CAIRO_PATH) {
+			cnt = 0;
+			cairo_stroke(cr);
+		}
 	}
 
 	if (cnt > 0) {
@@ -220,22 +157,31 @@ static gboolean expose_event(GtkWidget *w, GdkEventExpose *ev, gpointer handle) 
 	cairo_rectangle (cr, ev->area.x, ev->area.y, ev->area.width, ev->area.height);
 	cairo_clip (cr);
 
-#if 1
-	cairo_set_operator (cr, CAIRO_OPERATOR_SOURCE);
-	cairo_set_source_surface(cr, ui->bg, 0, 0);
-	cairo_paint (cr);
-	cairo_set_operator(cr, CAIRO_OPERATOR_ADD);
-#else
-	cairo_set_operator (cr, CAIRO_OPERATOR_SOURCE);
-#endif
-
 	cairo_set_source_surface(cr, ui->sf, 0, 0);
 	cairo_paint (cr);
 
-#if 0
-	cairo_set_operator(cr, CAIRO_OPERATOR_ADD);
-	draw_bg(cr);
-#endif
+	/* draw annotations */
+	const double dashed[] = {2.0, 3.0};
+	cairo_set_line_width(cr, 2.0);
+	cairo_set_source_rgba (cr, .8, .0, .8, .8);
+	cairo_set_line_cap(cr, CAIRO_LINE_CAP_ROUND);
+
+	cairo_save(cr);
+	cairo_set_dash(cr, dashed, 2, 0);
+	cairo_move_to(cr, JF_CENTER*1/4, JF_CENTER);
+	cairo_line_to(cr, JF_CENTER*7/4, JF_CENTER);
+	cairo_stroke(cr);
+	cairo_restore(cr);
+
+	cairo_set_line_width(cr, 7.0);
+
+	cairo_move_to(cr, JF_CENTER - JR_RAD2, JF_CENTER - JR_RAD2);
+	cairo_close_path (cr);
+	cairo_stroke(cr);
+
+	cairo_move_to(cr, JF_CENTER + JR_RAD2, JF_CENTER - JR_RAD2);
+	cairo_close_path (cr);
+	cairo_stroke(cr);
 
 	cairo_destroy (cr);
 
@@ -273,7 +219,6 @@ instantiate(const LV2UI_Descriptor*   descriptor,
 	LV2jf* self = (LV2jf*) ui->instance;
 
 	alloc_sf(ui);
-	alloc_bg(ui);
 
 	ui->last_x = (JF_CENTER);
 	ui->last_y = (JF_CENTER);
@@ -309,8 +254,6 @@ cleanup(LV2UI_Handle handle)
 	i->ui_active = false;
 
 	cairo_surface_destroy(ui->sf);
-	cairo_surface_destroy(ui->bg);
-
 	gtk_widget_destroy(ui->m0);
 
 	free(ui);
