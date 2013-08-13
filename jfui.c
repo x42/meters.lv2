@@ -52,6 +52,8 @@ typedef struct {
 	cairo_surface_t* bg;
 
 	float last_x, last_y;
+	float lp0, lp1;
+	float lpw;
 
 	uint32_t fade_c;
 	uint32_t fade_m;
@@ -165,8 +167,18 @@ void draw_rb(JFUI* ui, jfringbuf *rb) {
 		}
 
 		jfrb_read_one(rb, &d0, &d1);
-		ui->last_x = JF_CENTER - (d0 - d1) * JR_RAD2;
-		ui->last_y = JF_CENTER - (d0 + d1) * JR_RAD2;
+
+#if 1
+		/* low pass filter */
+		ui->lp0 += ui->lpw * (d0 - ui->lp0);
+		ui->lp1 += ui->lpw * (d1 - ui->lp1);
+#else
+		ui->lp0 = d0;
+		ui->lp1 = d1;
+#endif
+
+		ui->last_x = JF_CENTER - (ui->lp0 - ui->lp1) * JR_RAD2;
+		ui->last_y = JF_CENTER - (ui->lp0 + ui->lp1) * JR_RAD2;
 		cairo_line_to(cr, ui->last_x, ui->last_y);
 		cnt++;
 	}
@@ -236,6 +248,9 @@ instantiate(const LV2UI_Descriptor*   descriptor,
 	ui->last_y = (JF_CENTER);
 	ui->fade_c = 0;
 	ui->fade_m = self->rate / FADE_FREQ;
+	ui->lp0 = 0;
+	ui->lp1 = 0;
+	ui->lpw = expf(-2.0 * M_PI * 80 / self->rate);
 
 	ui->box = gtk_alignment_new(.5, .5, 0, 0);
 	ui->m0  = gtk_drawing_area_new();
