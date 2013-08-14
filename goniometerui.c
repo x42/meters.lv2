@@ -488,7 +488,6 @@ port_event(LV2UI_Handle handle,
 	if (format != 0) return;
 	if (port_index == 4) {
 		float v = *(float *)buffer;
-		printf("SET GAIN %f\n", v);
 		if (v >= 0 && v <= 6.0) {
 			ui->disable_signals = true;
 			gtk_range_set_value(GTK_RANGE(ui->fader), v);
