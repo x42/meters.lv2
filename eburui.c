@@ -131,7 +131,7 @@ static inline float fast_log10 (const float val)
 
 static inline float coef_to_db (const float val) {
 	if (val == 0) return -INFINITY;
-#if 0
+#if 1
 	return 20.0 * log10f(val);
 #else
 	return 20.0 * fast_log10(val);
