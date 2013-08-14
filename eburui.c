@@ -89,7 +89,7 @@ typedef struct {
 	bool disable_signals;
 
 	/* current data */
-	float lm, mm, ls, ms, il, rn, rx, it;
+	float lm, mm, ls, ms, il, rn, rx, it, tp;
 
 	float *radarS;
 	float *radarM;
@@ -127,6 +127,15 @@ static inline float fast_log2 (float val)
 static inline float fast_log10 (const float val)
 {
 	return fast_log2(val) * 0.301029996f;
+}
+
+static inline float coef_to_db (const float val) {
+	if (val == 0) return -INFINITY;
+#if 0
+	return 20.0 * log10f(val);
+#else
+	return 20.0 * fast_log10(val);
+#endif
 }
 
 
@@ -425,6 +434,26 @@ static gboolean expose_event(GtkWidget *w, GdkEventExpose *ev, gpointer handle) 
 	write_text(pc, cr, !rings ? "Mom":"Short", FONT(FONT_S08), 295, 45, 0, 8, c_wht);
 	sprintf(buf, "Max:\n%+5.1f %s", LUFS( rings ? ui->ms: ui->mm), lufs ? "LUFS" : "LU");
 	write_text(pc, cr, buf, FONT(FONT_M09), 315, 10, 0, 7, c_wht);
+
+#ifdef EBU_TRUEPEAK
+	/* true peak level */
+	cairo_set_source_rgba (cr, .1, .1, .1, 1.0);
+	rounded_rectangle (cr, 35, 30, 40, 30, 10);
+	cairo_fill (cr);
+	if (ui->tp >= 0.8912f) { // -1dBFS
+		cairo_set_source_rgba (cr, .8, .2, .2, 1.0);
+	} else {
+		cairo_set_source_rgba (cr, .2, .2, .2, 1.0);
+	}
+	rounded_rectangle (cr, 25, 5, 75, 38, 10);
+	cairo_fill (cr);
+
+	/* true-peak val */
+	sprintf(buf, "%+5.1f", coef_to_db(ui->tp));
+	write_text(pc, cr, buf, FONT(FONT_M09), 90, 10, 0, 7, c_wht);
+	write_text(pc, cr, "dBFS", FONT(FONT_M09), 90, 24, 0, 7, c_wht);
+	write_text(pc, cr, "True", FONT(FONT_S08), 55, 45, 0, 8, c_wht);
+#endif
 
 #if 1 /* Radar */
 
@@ -796,6 +825,11 @@ void invalidate_changed(EBUrUI* ui, int what) {
 	tmp = gdk_region_rectangle (&rect); \
 	gdk_region_union(region, tmp); \
 	gdk_region_destroy(tmp);
+
+#ifdef EBU_TRUEPEAK
+	INVALIDATE_RECT(25, 5, 75, 38)    // top left side
+	INVALIDATE_RECT(35, 30, 40, 30)   // top left side tab
+#endif
 
 	INVALIDATE_RECT(243, 5, 87, 38)    // top side
 	INVALIDATE_RECT(275, 30, 30, 30)   // top side tab
@@ -1175,6 +1209,7 @@ static void parse_ebulevels(EBUrUI* ui, const LV2_Atom_Object* obj) {
 	LV2_Atom *rx = NULL;
 	LV2_Atom *ii = NULL;
 	LV2_Atom *it = NULL;
+	LV2_Atom *tp = NULL;
 
 	lv2_atom_object_get(obj,
 			uris->ebu_loudnessM, &lm,
@@ -1184,6 +1219,7 @@ static void parse_ebulevels(EBUrUI* ui, const LV2_Atom_Object* obj) {
 			uris->ebu_integrated, &il,
 			uris->ebu_range_min, &rn,
 			uris->ebu_range_max, &rx,
+			uris->mtr_truepeak, &tp,
 			uris->ebu_integrating, &ii,
 			uris->ebu_integr_time, &it,
 			NULL
@@ -1196,6 +1232,7 @@ static void parse_ebulevels(EBUrUI* ui, const LV2_Atom_Object* obj) {
 	PARSE_A_FLOAT(il, ui->il)
 	PARSE_A_FLOAT(rn, ui->rn)
 	PARSE_A_FLOAT(rx, ui->rx)
+	PARSE_A_FLOAT(tp, ui->tp)
 	PARSE_A_FLOAT(it, ui->it)
 
 	if (ii && ii->type == uris->atom_Bool) {

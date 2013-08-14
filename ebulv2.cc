@@ -53,6 +53,7 @@ static void ebu_reset(LV2meter* self) {
 	self->integration_time = 0;
 	self->hist_maxM = 0;
 	self->hist_maxS = 0;
+	self->tp_max = 0;
 }
 
 static void ebu_integrate(LV2meter* self, bool on) {
@@ -174,9 +175,18 @@ ebur128_instantiate(
 	self->integration_time = 0;
 	self->hist_maxM = 0;
 	self->hist_maxS = 0;
+	self->tp_max = 0;
 
 	self->ebu = new Ebu_r128_proc();
 	self->ebu->init (2, rate);
+
+#ifdef EBU_TRUEPEAK
+	self->mtr[0] = new TruePeakdsp();
+	self->mtr[1] = new TruePeakdsp();
+	static_cast<TruePeakdsp *>(self->mtr[0])->init(rate);
+	static_cast<TruePeakdsp *>(self->mtr[1])->init(rate);
+#endif
+
 	return (LV2_Handle)self;
 }
 
@@ -252,7 +262,6 @@ ebur128_run(LV2_Handle instance, uint32_t n_samples)
 							ebu_integrate(self, false);
 							break;
 						case CTL_RESET:
-							printf("UI ISSUES RESET\n");
 							ebu_reset(self);
 							break;
 						case CTL_TRANSPORTSYNC:
@@ -303,17 +312,28 @@ ebur128_run(LV2_Handle instance, uint32_t n_samples)
 	float *input [] = {self->input[0], self->input[1]};
 	self->ebu->process(n_samples, input);
 
+#ifdef EBU_TRUEPEAK
+	self->mtr[0]->process(self->input[0], n_samples);
+	self->mtr[1]->process(self->input[1], n_samples);
+#endif
 
 	/* get processed data */
-	float lm = self->ebu->loudness_M();
-	float mm = self->ebu->maxloudn_M();
+	const float lm = self->ebu->loudness_M();
+	const float mm = self->ebu->maxloudn_M();
 
-	float ls = self->ebu->loudness_S();
+	const float ls = self->ebu->loudness_S();
 	float ms = self->ebu->maxloudn_S();
 
-	float il = self->ebu->integrated();
-	float rn = self->ebu->range_min();
-	float rx = self->ebu->range_max();
+	const float il = self->ebu->integrated();
+	const float rn = self->ebu->range_min();
+	const float rx = self->ebu->range_max();
+
+#ifdef EBU_TRUEPEAK
+	const float tp0 = self->mtr[0]->read();
+	const float tp1 = self->mtr[1]->read();
+	const float tp = tp0 > tp1 ? tp0 : tp1;
+	if (tp > self->tp_max) self->tp_max = tp;
+#endif
 
 	if (self->send_state_to_ui && self->ui_active) {
 		self->send_state_to_ui = false;
@@ -431,6 +451,7 @@ ebur128_run(LV2_Handle instance, uint32_t n_samples)
 		lv2_atom_forge_property_head(&self->forge, self->uris.ebu_integrated, 0);  lv2_atom_forge_float(&self->forge, il);
 		lv2_atom_forge_property_head(&self->forge, self->uris.ebu_range_min, 0);   lv2_atom_forge_float(&self->forge, rn);
 		lv2_atom_forge_property_head(&self->forge, self->uris.ebu_range_max, 0);   lv2_atom_forge_float(&self->forge, rx);
+		lv2_atom_forge_property_head(&self->forge, self->uris.mtr_truepeak, 0);    lv2_atom_forge_float(&self->forge, self->tp_max);
 		lv2_atom_forge_property_head(&self->forge, self->uris.ebu_integrating, 0); lv2_atom_forge_bool(&self->forge, self->ebu_integrating);
 		lv2_atom_forge_property_head(&self->forge, self->uris.ebu_integr_time, 0); lv2_atom_forge_float(&self->forge, (self->integration_time/ self->rate));
 
@@ -460,6 +481,10 @@ ebur128_cleanup(LV2_Handle instance)
 	free(self->radarS);
 	free(self->radarM);
 	delete self->ebu;
+#ifdef EBU_TRUEPEAK
+	delete self->mtr[0];
+	delete self->mtr[1];
+#endif
 	free(instance);
 }
 

@@ -28,6 +28,7 @@
 #include "jmeters/iec1ppmdsp.h"
 #include "jmeters/iec2ppmdsp.h"
 #include "jmeters/stcorrdsp.h"
+#include "jmeters/truepeakdsp.h"
 #include "ebumeter/ebu_r128_proc.h"
 
 #include "uris.h"
@@ -83,6 +84,7 @@ typedef struct {
 	uint64_t integration_time;
 	bool send_state_to_ui;
 	uint32_t ui_settings;
+	float tp_max;
 
 	int histM[HIST_LEN];
 	int histS[HIST_LEN];
