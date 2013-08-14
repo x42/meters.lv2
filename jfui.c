@@ -42,7 +42,7 @@
  * fade to FADE_ALPHA black every <sample-rate> / FADE_FREQ samples
  */
 #define FADE_ALPHA (0.22)
-#define FADE_FREQ  (15)
+#define FADE_FREQ  (30)
 
 #define MAX_CAIRO_PATH 100
 
@@ -53,6 +53,7 @@ typedef struct {
 	GtkWidget* m0;
 
 	cairo_surface_t* sf;
+	cairo_surface_t* an[5];
 
 	float last_x, last_y;
 	float lp0, lp1;
@@ -62,23 +63,14 @@ typedef struct {
 	uint32_t fade_m;
 } JFUI;
 
-static void alloc_sf(JFUI* ui) {
-	ui->sf = cairo_image_surface_create (CAIRO_FORMAT_RGB24, JF_BOUNDS, JF_BOUNDS);
-	cairo_t* cr = cairo_create (ui->sf);
-	cairo_set_source_rgba (cr, .0, .0, .0, 1.0);
-	cairo_rectangle (cr, 0, 0, JF_BOUNDS, JF_BOUNDS);
-	cairo_fill (cr);
-	cairo_destroy(cr);
-}
-
-void write_text(
-		PangoContext * pc, cairo_t* cr,
+static void write_text(
+		cairo_t* cr,
 		const char *txt,
 		const float x, const float y) {
 	int tw, th;
 	cairo_save(cr);
 
-	PangoLayout * pl = pango_layout_new (pc);
+	PangoLayout * pl = pango_cairo_create_layout(cr);
 	PangoFontDescription *font = pango_font_description_from_string("Mono 16");
 	pango_layout_set_font_description(pl, font);
 	pango_font_description_free(font);
@@ -93,6 +85,48 @@ void write_text(
 	cairo_restore(cr);
 	cairo_new_path (cr);
 }
+
+static void alloc_annotations(JFUI* ui) {
+
+#define INIT_BLACK_BG(ID, WIDTH, HEIGHT) \
+	ui->an[ID] = cairo_image_surface_create (CAIRO_FORMAT_RGB24, WIDTH, HEIGHT); \
+	cr = cairo_create (ui->an[ID]); \
+	cairo_set_source_rgb (cr, .0, .0, .0); \
+	cairo_rectangle (cr, 0, 0, WIDTH, WIDTH); \
+	cairo_fill (cr);
+
+	cairo_t* cr;
+
+	INIT_BLACK_BG(0, 32, 32)
+	write_text(cr, "L", 16, 16);
+	cairo_destroy (cr);
+
+	INIT_BLACK_BG(1, 32, 32)
+	write_text(cr, "R", 16, 16);
+	cairo_destroy (cr);
+
+	INIT_BLACK_BG(2, 64, 32)
+	write_text(cr, "Mono", 32, 16);
+	cairo_destroy (cr);
+
+	INIT_BLACK_BG(3, 32, 32)
+	write_text(cr, "+S", 16, 16);
+	cairo_destroy (cr);
+
+	INIT_BLACK_BG(4, 32, 32)
+	write_text(cr, "-S", 16, 16);
+	cairo_destroy (cr);
+}
+
+static void alloc_sf(JFUI* ui) {
+	ui->sf = cairo_image_surface_create (CAIRO_FORMAT_RGB24, JF_BOUNDS, JF_BOUNDS);
+	cairo_t* cr = cairo_create (ui->sf);
+	cairo_set_source_rgba (cr, .0, .0, .0, 1.0);
+	cairo_rectangle (cr, 0, 0, JF_BOUNDS, JF_BOUNDS);
+	cairo_fill (cr);
+	cairo_destroy(cr);
+}
+
 
 static void draw_rb(JFUI* ui, jfringbuf *rb) {
 	cairo_t* cr = cairo_create (ui->sf);
@@ -151,9 +185,7 @@ static void draw_rb(JFUI* ui, jfringbuf *rb) {
 #else
 		cairo_line_to(cr, ui->last_x, ui->last_y);
 #endif
-		cnt++;
-
-		if (cnt > MAX_CAIRO_PATH) {
+		if (++cnt > MAX_CAIRO_PATH) {
 			cnt = 0;
 			cairo_stroke(cr);
 		}
@@ -165,7 +197,6 @@ static void draw_rb(JFUI* ui, jfringbuf *rb) {
 
 	cairo_destroy(cr);
 }
-
 
 static gboolean expose_event(GtkWidget *w, GdkEventExpose *ev, gpointer handle) {
 	JFUI* ui = (JFUI*)handle;
@@ -184,13 +215,14 @@ static gboolean expose_event(GtkWidget *w, GdkEventExpose *ev, gpointer handle) 
 	cairo_set_operator (cr, CAIRO_OPERATOR_SCREEN);
 
 	/* draw labels */
-	// TODO: cache text as pattern
-	PangoContext * pc = gtk_widget_get_pango_context(w);
-	write_text(pc, cr, "L", JF_CENTER - JR_RAD2, JF_CENTER - JR_RAD2);
-	write_text(pc, cr, "R", JF_CENTER + JR_RAD2, JF_CENTER - JR_RAD2);
-	write_text(pc, cr, "Mono", JF_CENTER, JF_CENTER*1/4 - 12);
-	write_text(pc, cr, "+S", JF_CENTER*1/4 - 15 , JF_CENTER);
-	write_text(pc, cr, "-S", JF_CENTER*7/4 + 15 , JF_CENTER);
+#define DRAW_LABEL(ID, XPOS, YPOS) \
+	cairo_set_source_surface(cr, ui->an[ID], (XPOS)-16, (YPOS)-16); cairo_paint (cr);
+
+	DRAW_LABEL(0, JF_CENTER - JR_RAD2, JF_CENTER - JR_RAD2)
+	DRAW_LABEL(1, JF_CENTER + JR_RAD2, JF_CENTER - JR_RAD2);
+	DRAW_LABEL(2, JF_CENTER - 16, JF_CENTER * 1/4 - 12);
+	DRAW_LABEL(3, JF_CENTER * 1/4 - 15 , JF_CENTER - 3);
+	DRAW_LABEL(4, JF_CENTER * 7/4 + 15 , JF_CENTER - 3);
 
 	/* draw annotations */
 	const double dashed[] = {1.0, 2.0};
@@ -243,6 +275,7 @@ instantiate(const LV2UI_Descriptor*   descriptor,
 	LV2jf* self = (LV2jf*) ui->instance;
 
 	alloc_sf(ui);
+	alloc_annotations(ui);
 
 	ui->last_x = (JF_CENTER);
 	ui->last_y = (JF_CENTER);
@@ -278,6 +311,9 @@ cleanup(LV2UI_Handle handle)
 	i->ui_active = false;
 
 	cairo_surface_destroy(ui->sf);
+	for (int i=0; i < 5 ; ++i) {
+		cairo_surface_destroy(ui->an[i]);
+	}
 	gtk_widget_destroy(ui->m0);
 
 	free(ui);
