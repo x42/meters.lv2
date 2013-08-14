@@ -30,7 +30,7 @@ typedef enum {
 	JF_NOTIFY   = 4,
 } JFPortIndex;
 
-#include "jf.h"
+#include "goniometer.h"
 
 /******************************************************************************
  * LV2 callbacks
@@ -43,7 +43,7 @@ goniometer_instantiate(
 		const char*               bundle_path,
 		const LV2_Feature* const* features)
 {
-	if (strcmp(descriptor->URI, MTR_URI "jf")) {
+	if (strcmp(descriptor->URI, MTR_URI "goniometer")) {
 		return NULL;
 	}
 
@@ -58,7 +58,7 @@ goniometer_instantiate(
 		return NULL;
 	}
 
-	LV2jf* self = (LV2jf*)calloc(1, sizeof(LV2jf));
+	LV2gm* self = (LV2gm*)calloc(1, sizeof(LV2gm));
 	if (!self) return NULL;
 
 	self->rate = rate;
@@ -72,7 +72,7 @@ goniometer_instantiate(
 	if (rbsize < 8192u) rbsize = 8192u;
 	if (rbsize < 2 * self->apv) rbsize = 2 * self->apv;
 
-	self->rb = jfrb_alloc(rbsize);
+	self->rb = gmrb_alloc(rbsize);
 
 	return (LV2_Handle)self;
 }
@@ -80,7 +80,7 @@ goniometer_instantiate(
 static void
 goniometer_connect_port(LV2_Handle instance, uint32_t port, void* data)
 {
-	LV2jf* self = (LV2jf*)instance;
+	LV2gm* self = (LV2gm*)instance;
 	switch ((JFPortIndex)port) {
 	case JF_INPUT0:
 		self->input[0] = (float*) data;
@@ -103,10 +103,10 @@ goniometer_connect_port(LV2_Handle instance, uint32_t port, void* data)
 static void
 goniometer_run(LV2_Handle instance, uint32_t n_samples)
 {
-	LV2jf* self = (LV2jf*)instance;
+	LV2gm* self = (LV2gm*)instance;
 
 	if (self->ui_active) {
-		jfrb_write(self->rb, self->input[0], self->input[1], n_samples);
+		gmrb_write(self->rb, self->input[0], self->input[1], n_samples);
 
 		/* notify UI by creating a port-event */
 		self->sample_cnt += n_samples;
@@ -128,13 +128,13 @@ goniometer_run(LV2_Handle instance, uint32_t n_samples)
 static void
 goniometer_cleanup(LV2_Handle instance)
 {
-	LV2jf* self = (LV2jf*)instance;
-	jfrb_free(self->rb);
+	LV2gm* self = (LV2gm*)instance;
+	gmrb_free(self->rb);
 	free(instance);
 }
 
 static const LV2_Descriptor descriptorGoniometer = {
-	MTR_URI "jf",
+	MTR_URI "goniometer",
 	goniometer_instantiate,
 	goniometer_connect_port,
 	NULL,

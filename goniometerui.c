@@ -30,13 +30,13 @@
 #include <pango/pango.h>
 
 #include "lv2/lv2plug.in/ns/extensions/ui/ui.h"
-#include "jf.h"
+#include "goniometer.h"
 
-#define JF_BOUNDS (405.0f)
-#define JF_CENTER (202.5f)
+#define GM_BOUNDS (405.0f)
+#define GM_CENTER (202.5f)
 
-#define JF_RADIUS (200.0f)
-#define JR_RAD2   (100.0f)
+#define GM_RADIUS (200.0f)
+#define GM_RAD2   (100.0f)
 
 /* CRT luminosity persistency
  * fade to FADE_ALPHA black every <sample-rate> / FADE_FREQ samples
@@ -61,7 +61,9 @@ typedef struct {
 
 	uint32_t fade_c;
 	uint32_t fade_m;
-} JFUI;
+
+	float gain;
+} GMUI;
 
 static void write_text(
 		cairo_t* cr,
@@ -86,7 +88,7 @@ static void write_text(
 	cairo_new_path (cr);
 }
 
-static void alloc_annotations(JFUI* ui) {
+static void alloc_annotations(GMUI* ui) {
 
 #define INIT_BLACK_BG(ID, WIDTH, HEIGHT) \
 	ui->an[ID] = cairo_image_surface_create (CAIRO_FORMAT_RGB24, WIDTH, HEIGHT); \
@@ -118,26 +120,26 @@ static void alloc_annotations(JFUI* ui) {
 	cairo_destroy (cr);
 }
 
-static void alloc_sf(JFUI* ui) {
-	ui->sf = cairo_image_surface_create (CAIRO_FORMAT_RGB24, JF_BOUNDS, JF_BOUNDS);
+static void alloc_sf(GMUI* ui) {
+	ui->sf = cairo_image_surface_create (CAIRO_FORMAT_RGB24, GM_BOUNDS, GM_BOUNDS);
 	cairo_t* cr = cairo_create (ui->sf);
 	cairo_set_source_rgba (cr, .0, .0, .0, 1.0);
-	cairo_rectangle (cr, 0, 0, JF_BOUNDS, JF_BOUNDS);
+	cairo_rectangle (cr, 0, 0, GM_BOUNDS, GM_BOUNDS);
 	cairo_fill (cr);
 	cairo_destroy(cr);
 }
 
 
-static void draw_rb(JFUI* ui, jfringbuf *rb) {
+static void draw_rb(GMUI* ui, gmringbuf *rb) {
 	cairo_t* cr = cairo_create (ui->sf);
 
-	cairo_rectangle (cr, 0, 0, JF_BOUNDS, JF_BOUNDS);
+	cairo_rectangle (cr, 0, 0, GM_BOUNDS, GM_BOUNDS);
 	cairo_clip(cr);
 
 	cairo_set_source_rgba (cr, .8, .8, .2, 1.0);
 	cairo_move_to(cr, ui->last_x, ui->last_y);
 
-	size_t n_samples = jfrb_read_space(rb);
+	size_t n_samples = gmrb_read_space(rb);
 	float d0, d1;
 
 	int cnt = 0;
@@ -160,13 +162,13 @@ static void draw_rb(JFUI* ui, jfringbuf *rb) {
 
 			/* fade luminosity */
 			cairo_set_source_rgba (cr, .0, .0, .0, FADE_ALPHA);
-			cairo_rectangle (cr, 0, 0, JF_BOUNDS, JF_BOUNDS);
+			cairo_rectangle (cr, 0, 0, GM_BOUNDS, GM_BOUNDS);
 			cairo_fill (cr);
 			cairo_move_to(cr, ui->last_x, ui->last_y);
 			cairo_set_source_rgba (cr, .8, .8, .2, 1.0);
 		}
 
-		if (jfrb_read_one(rb, &d0, &d1)) break;
+		if (gmrb_read_one(rb, &d0, &d1)) break;
 
 #if 1
 		/* low pass filter */
@@ -177,8 +179,8 @@ static void draw_rb(JFUI* ui, jfringbuf *rb) {
 		ui->lp1 = d1;
 #endif
 
-		ui->last_x = JF_CENTER - (ui->lp0 - ui->lp1) * JR_RAD2;
-		ui->last_y = JF_CENTER - (ui->lp0 + ui->lp1) * JR_RAD2;
+		ui->last_x = GM_CENTER - ui->gain * (ui->lp0 - ui->lp1) * GM_RAD2;
+		ui->last_y = GM_CENTER - ui->gain * (ui->lp0 + ui->lp1) * GM_RAD2;
 #ifdef DRAW_POINTS
 		cairo_move_to(cr, ui->last_x, ui->last_y);
 		cairo_close_path (cr);
@@ -199,8 +201,8 @@ static void draw_rb(JFUI* ui, jfringbuf *rb) {
 }
 
 static gboolean expose_event(GtkWidget *w, GdkEventExpose *ev, gpointer handle) {
-	JFUI* ui = (JFUI*)handle;
-	LV2jf* self = (LV2jf*) ui->instance;
+	GMUI* ui = (GMUI*)handle;
+	LV2gm* self = (LV2gm*) ui->instance;
 
 	draw_rb(ui, self->rb);
 
@@ -218,11 +220,12 @@ static gboolean expose_event(GtkWidget *w, GdkEventExpose *ev, gpointer handle) 
 #define DRAW_LABEL(ID, XPOS, YPOS) \
 	cairo_set_source_surface(cr, ui->an[ID], (XPOS)-16, (YPOS)-16); cairo_paint (cr);
 
-	DRAW_LABEL(0, JF_CENTER - JR_RAD2, JF_CENTER - JR_RAD2)
-	DRAW_LABEL(1, JF_CENTER + JR_RAD2, JF_CENTER - JR_RAD2);
-	DRAW_LABEL(2, JF_CENTER - 16, JF_CENTER * 1/4 - 12);
-	DRAW_LABEL(3, JF_CENTER * 1/4 - 15 , JF_CENTER - 3);
-	DRAW_LABEL(4, JF_CENTER * 7/4 + 15 , JF_CENTER - 3);
+	DRAW_LABEL(0, GM_CENTER - GM_RAD2, GM_CENTER - GM_RAD2)
+	DRAW_LABEL(1, GM_CENTER + GM_RAD2, GM_CENTER - GM_RAD2);
+
+	DRAW_LABEL(2, GM_CENTER - 16, GM_CENTER - GM_RADIUS * 3/4 - 12);
+	DRAW_LABEL(3, GM_CENTER - GM_RADIUS * 3/4 - 12 , GM_CENTER - 1);
+	DRAW_LABEL(4, GM_CENTER + GM_RADIUS * 3/4 + 12 , GM_CENTER - 1);
 
 	/* draw annotations */
 	const double dashed[] = {1.0, 2.0};
@@ -231,12 +234,12 @@ static gboolean expose_event(GtkWidget *w, GdkEventExpose *ev, gpointer handle) 
 	cairo_set_line_cap(cr, CAIRO_LINE_CAP_BUTT);
 
 	cairo_set_dash(cr, dashed, 2, 0);
-	cairo_move_to(cr, JF_CENTER*1/4, JF_CENTER);
-	cairo_line_to(cr, JF_CENTER*7/4, JF_CENTER);
+	cairo_move_to(cr, GM_CENTER - GM_RADIUS * 0.7079, GM_CENTER);
+	cairo_line_to(cr, GM_CENTER + GM_RADIUS * 0.7079, GM_CENTER);
 	cairo_stroke(cr);
 
-	cairo_move_to(cr, JF_CENTER, JF_CENTER*1/4);
-	cairo_line_to(cr, JF_CENTER, JF_CENTER*7/4);
+	cairo_move_to(cr, GM_CENTER, GM_CENTER - GM_RADIUS * 0.7079);
+	cairo_line_to(cr, GM_CENTER, GM_CENTER + GM_RADIUS * 0.7079);
 	cairo_stroke(cr);
 
 	cairo_destroy (cr);
@@ -257,7 +260,7 @@ instantiate(const LV2UI_Descriptor*   descriptor,
             LV2UI_Widget*             widget,
             const LV2_Feature* const* features)
 {
-	JFUI* ui = (JFUI*) calloc(1,sizeof(JFUI));
+	GMUI* ui = (GMUI*) calloc(1,sizeof(GMUI));
 	*widget = NULL;
 
 	for (int i = 0; features[i]; ++i) {
@@ -272,32 +275,34 @@ instantiate(const LV2UI_Descriptor*   descriptor,
 		return NULL;
 	}
 
-	LV2jf* self = (LV2jf*) ui->instance;
+	LV2gm* self = (LV2gm*) ui->instance;
 
 	alloc_sf(ui);
 	alloc_annotations(ui);
 
-	ui->last_x = (JF_CENTER);
-	ui->last_y = (JF_CENTER);
+	ui->last_x = (GM_CENTER);
+	ui->last_y = (GM_CENTER);
 	ui->fade_c = 0;
 	ui->fade_m = self->rate / FADE_FREQ;
 	ui->lp0 = 0;
 	ui->lp1 = 0;
 	ui->lpw = expf(-2.0 * M_PI * 80 / self->rate);
+	ui->gain = 1.0;
 
 	ui->box = gtk_alignment_new(.5, .5, 0, 0);
 	ui->m0  = gtk_drawing_area_new();
 
-	gtk_drawing_area_size(GTK_DRAWING_AREA(ui->m0), JF_BOUNDS, JF_BOUNDS);
-	gtk_widget_set_size_request(ui->m0, JF_BOUNDS, JF_BOUNDS);
+	gtk_drawing_area_size(GTK_DRAWING_AREA(ui->m0), GM_BOUNDS, GM_BOUNDS);
+	gtk_widget_set_size_request(ui->m0, GM_BOUNDS, GM_BOUNDS);
 	gtk_widget_set_redraw_on_allocate(ui->m0, TRUE);
+
 	g_signal_connect (G_OBJECT (ui->m0), "expose_event", G_CALLBACK (expose_event), ui);
 
 	gtk_container_add(GTK_CONTAINER(ui->box), ui->m0);
 	gtk_widget_show_all(ui->box);
 	*widget = ui->box;
 
-	jfrb_read_clear(self->rb);
+	gmrb_read_clear(self->rb);
 	self->ui_active = true;
 	return ui;
 }
@@ -305,8 +310,8 @@ instantiate(const LV2UI_Descriptor*   descriptor,
 static void
 cleanup(LV2UI_Handle handle)
 {
-	JFUI* ui = (JFUI*)handle;
-	LV2jf* i = (LV2jf*)ui->instance;
+	GMUI* ui = (GMUI*)handle;
+	LV2gm* i = (LV2gm*)ui->instance;
 
 	i->ui_active = false;
 
@@ -330,7 +335,7 @@ port_event(LV2UI_Handle handle,
            uint32_t     format,
            const void*  buffer)
 {
-	JFUI* ui = (JFUI*)handle;
+	GMUI* ui = (GMUI*)handle;
 	gtk_widget_queue_draw(ui->m0);
 }
 
@@ -345,7 +350,7 @@ extension_data(const char* uri)
 }
 
 static const LV2UI_Descriptor descriptor = {
-	"http://gareus.org/oss/lv2/meters#jfui",
+	"http://gareus.org/oss/lv2/meters#goniometerui",
 	instantiate,
 	cleanup,
 	port_event,

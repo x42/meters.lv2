@@ -17,7 +17,7 @@ LOADLIBES=-lm
 LV2NAME=meters
 LV2GUI=metersUI
 LV2GUI2=eburUI
-LV2GUI3=jfUI
+LV2GUI3=goniometerUI
 BUNDLE=meters.lv2
 
 UNAME=$(shell uname)
@@ -69,7 +69,7 @@ manifest.ttl: manifest.ttl.in
 $(LV2NAME).ttl: $(LV2NAME).ttl.in
 	cat $(LV2NAME).ttl.in > $(LV2NAME).ttl
 
-$(LV2NAME)$(LIB_EXT): $(LV2NAME).cc $(DSPDEPS) ebulv2.cc uris.h jflv2.c jf.h
+$(LV2NAME)$(LIB_EXT): $(LV2NAME).cc $(DSPDEPS) ebulv2.cc uris.h goniometerlv2.c goniometer.h
 	$(CXX) $(CPPFLAGS) $(CFLAGS) $(CXXFLAGS) \
 	  -o $(LV2NAME)$(LIB_EXT) $(LV2NAME).cc $(DSPSRC) \
 	  -shared $(LV2LDFLAGS) $(LDFLAGS) $(LOADLIBES)
@@ -84,9 +84,9 @@ $(LV2GUI2)$(LIB_EXT): eburui.c $(UIDEPS)
 		-o $(LV2GUI2)$(LIB_EXT) eburui.c \
 		-shared $(LV2LDFLAGS) $(LDFLAGS) $(UILIBS)
 
-$(LV2GUI3)$(LIB_EXT): jfui.c jf.h $(UIDEPS)
+$(LV2GUI3)$(LIB_EXT): goniometerui.c goniometer.h $(UIDEPS)
 	$(CC) $(CPPFLAGS) $(CFLAGS) -std=c99 $(UICFLAGS) \
-		-o $(LV2GUI3)$(LIB_EXT) jfui.c \
+		-o $(LV2GUI3)$(LIB_EXT) goniometerui.c \
 		-shared $(LV2LDFLAGS) $(LDFLAGS) $(UILIBS)
 
 # install/uninstall/clean target definitions

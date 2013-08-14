@@ -237,7 +237,7 @@ extension_data(const char* uri)
 }
 
 #include "ebulv2.cc"
-#include "jflv2.c"
+#include "goniometerlv2.c"
 
 #define mkdesc(ID, NAME) \
 static const LV2_Descriptor descriptor ## ID = { \

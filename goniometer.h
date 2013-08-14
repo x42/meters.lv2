@@ -31,10 +31,10 @@ typedef struct {
 	size_t rp;
 	size_t wp;
 	size_t len;
-} jfringbuf;
+} gmringbuf;
 
-static jfringbuf * jfrb_alloc(size_t siz) {
-	jfringbuf *rb  = (jfringbuf*) malloc(sizeof(jfringbuf));
+static gmringbuf * gmrb_alloc(size_t siz) {
+	gmringbuf *rb  = (gmringbuf*) malloc(sizeof(gmringbuf));
 	rb->c0 = (float*) malloc(siz * sizeof(float));
 	rb->c1 = (float*) malloc(siz * sizeof(float));
 	rb->len = siz;
@@ -43,31 +43,31 @@ static jfringbuf * jfrb_alloc(size_t siz) {
 	return rb;
 }
 
-static void jfrb_free(jfringbuf *rb) {
+static void gmrb_free(gmringbuf *rb) {
 	free(rb->c0);
 	free(rb->c1);
 	free(rb);
 }
 
-static size_t jfrb_write_space(jfringbuf *rb) {
+static size_t gmrb_write_space(gmringbuf *rb) {
 	if (rb->rp == rb->wp) return (rb->len -1);
 	return ((rb->len + rb->rp - rb->wp) % rb->len) -1;
 }
 
-static size_t jfrb_read_space(jfringbuf *rb) {
+static size_t gmrb_read_space(gmringbuf *rb) {
 	return ((rb->len + rb->wp - rb->rp) % rb->len);
 }
 
-static int jfrb_read_one(jfringbuf *rb, float *c0, float *c1) {
-	if (jfrb_read_space(rb) < 1) return -1;
+static int gmrb_read_one(gmringbuf *rb, float *c0, float *c1) {
+	if (gmrb_read_space(rb) < 1) return -1;
 	*c0 = rb->c0[rb->rp];
 	*c1 = rb->c1[rb->rp];
 	rb->rp = (rb->rp + 1) % rb->len;
 	return 0;
 }
 
-static int jfrb_write(jfringbuf *rb, float *c0, float *c1, size_t len) {
-	if (jfrb_write_space(rb) < len) return -1;
+static int gmrb_write(gmringbuf *rb, float *c0, float *c1, size_t len) {
+	if (gmrb_write_space(rb) < len) return -1;
 	if (rb->wp + len <= rb->len) {
 		memcpy((void*) &rb->c0[rb->wp], (void*) c0, len * sizeof(float));
 		memcpy((void*) &rb->c1[rb->wp], (void*) c1, len * sizeof(float));
@@ -85,7 +85,7 @@ static int jfrb_write(jfringbuf *rb, float *c0, float *c1, size_t len) {
 	return 0;
 }
 
-static void jfrb_read_clear(jfringbuf *rb) {
+static void gmrb_read_clear(gmringbuf *rb) {
 	rb->rp = rb->wp;
 }
 
@@ -106,6 +106,6 @@ typedef struct {
 	uint32_t sample_cnt;
 
 	/* shared with ui */
-	jfringbuf *rb;
+	gmringbuf *rb;
 
-} LV2jf;
+} LV2gm;

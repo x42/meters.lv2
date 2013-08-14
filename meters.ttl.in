@@ -29,7 +29,7 @@ mtr:ui
 	a ui:GtkUI ;
 	.
 
-mtr:jfui
+mtr:goniometerui
 	a ui:GtkUI ;
 	.
 
@@ -624,14 +624,14 @@ mtr:EBUr128
 	.
 
 
-mtr:jf
+mtr:goniometer
 	a lv2:Plugin, lv2:AnalyserPlugin, doap:Project ;
 	doap:license <http://usefulinc.com/doap/licenses/gpl> ;
 	doap:name "GonioMeter";
 	lv2:project <http://gareus.org/oss/lv2/meters> ;
 	lv2:optionalFeature lv2:hardRTCapable ;
 	lv2:requiredFeature <http://lv2plug.in/ns/ext/instance-access>;
-	ui:ui mtr:jfui;
+	ui:ui mtr:goniometerui;
 	lv2:port [
 		a lv2:AudioPort ,
 			lv2:InputPort ;

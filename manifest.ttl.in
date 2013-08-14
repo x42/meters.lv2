@@ -62,7 +62,7 @@
 	lv2:binary <@LV2NAME@@LIB_EXT@> ;
 	rdfs:seeAlso <@LV2NAME@.ttl> .
 
-<http://gareus.org/oss/lv2/@LV2NAME@#jf>
+<http://gareus.org/oss/lv2/@LV2NAME@#goniometer>
 	a lv2:Plugin ;
 	lv2:binary <@LV2NAME@@LIB_EXT@> ;
 	rdfs:seeAlso <@LV2NAME@.ttl> .
@@ -77,7 +77,7 @@
 	ui:binary <@LV2GUI2@@LIB_EXT@> ;
 	rdfs:seeAlso <@LV2NAME@.ttl> .
 
-<http://gareus.org/oss/lv2/@LV2NAME@#jfui>
+<http://gareus.org/oss/lv2/@LV2NAME@#goniometerui>
 	a ui:GtkUI ;
 	ui:binary <@LV2GUI3@@LIB_EXT@> ;
 	rdfs:seeAlso <@LV2NAME@.ttl> .
