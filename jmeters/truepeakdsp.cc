@@ -72,7 +72,7 @@ float TruePeakdsp::read (void)
 
 void TruePeakdsp::init (float fsamp)
 {
-	_src.setup(fsamp, fsamp * 4.0, 1, 32);
+	_src.setup(fsamp, fsamp * 4.0, 1, 24, 1.0);
 	_buf = (float*) malloc(32768 * sizeof(float));
 
 	/* q/d initialize */

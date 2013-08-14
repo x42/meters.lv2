@@ -451,7 +451,7 @@ static gboolean expose_event(GtkWidget *w, GdkEventExpose *ev, gpointer handle) 
 	/* true-peak val */
 	sprintf(buf, "%+5.1f", coef_to_db(ui->tp));
 	write_text(pc, cr, buf, FONT(FONT_M09), 90, 10, 0, 7, c_wht);
-	write_text(pc, cr, "dBFS", FONT(FONT_M09), 90, 24, 0, 7, c_wht);
+	write_text(pc, cr, "dBTP", FONT(FONT_M09), 90, 24, 0, 7, c_wht);
 	write_text(pc, cr, "True", FONT(FONT_S08), 55, 45, 0, 8, c_wht);
 #endif
 
