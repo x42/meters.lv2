@@ -18,20 +18,26 @@
  */
 
 #define _XOPEN_SOURCE
-//#define DRAW_POINTS
+
+#define DRAW_POINTS
+#define OVERSAMPLE 4
+//define COMPOSIT_IMAGE
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
 #include <string.h>
+#include <assert.h>
 
 #include <gtk/gtk.h>
 #include <cairo/cairo.h>
 #include <pango/pango.h>
 
+
 typedef void Stcorrdsp;
 
 #include "lv2/lv2plug.in/ns/extensions/ui/ui.h"
+#include "zita-resampler/resampler.h"
 #include "goniometer.h"
 
 #define PC_BOUNDS ( 40.0f)
@@ -49,6 +55,8 @@ typedef void Stcorrdsp;
 #define GM_RAD2   (100.0f)
 
 #define MAX_CAIRO_PATH 100
+
+using namespace LV2M;
 
 typedef struct {
 	LV2_Handle instance;
@@ -74,6 +82,12 @@ typedef struct {
 
 	float gain;
 	bool disable_signals;
+
+#ifdef OVERSAMPLE
+	Resampler src;
+	float *scratch;
+	float *resampl;
+#endif
 } GMUI;
 
 static void write_text(
@@ -173,8 +187,16 @@ static void alloc_sf(GMUI* ui) {
 
 
 static void draw_rb(GMUI* ui, gmringbuf *rb) {
+	float d0, d1;
+	size_t n_samples = gmrb_read_space(rb);
+	if (n_samples < 64) return;
+
+#ifdef COMPOSIT_IMAGE
 	ui->sfb = ! ui->sfb;
 	cairo_t* cr = cairo_create (ui->sfb ? ui->sf0 : ui->sf1);
+#else
+	cairo_t* cr = cairo_create (ui->sf0);
+#endif
 
 	cairo_rectangle (cr, 0, 0, GM_BOUNDS, GM_BOUNDS);
 	cairo_clip(cr);
@@ -187,8 +209,6 @@ static void draw_rb(GMUI* ui, gmringbuf *rb) {
 
 	cairo_set_source_rgb (cr, .8, .8, .2);
 
-	size_t n_samples = gmrb_read_space(rb);
-	float d0, d1;
 
 	int cnt = 0;
 #ifdef DRAW_POINTS
@@ -199,9 +219,31 @@ static void draw_rb(GMUI* ui, gmringbuf *rb) {
 	cairo_move_to(cr, ui->last_x, ui->last_y);
 #endif
 
-	for (uint32_t i=0; i < n_samples; ++i) {
+#ifdef OVERSAMPLE
+	assert (n_samples <= 32768);
+	uint32_t j=0;
+	for (j=0; j < n_samples; ++j) {
+		if (gmrb_read_one(rb, &ui->scratch[2*j], &ui->scratch[2*j+1])) break;
+	}
 
+	assert (j == n_samples);
+	assert (n_samples > 0);
+
+	ui->src.inp_count = n_samples;
+	ui->src.inp_data = ui->scratch;
+	ui->src.out_count = n_samples * OVERSAMPLE;
+	ui->src.out_data = ui->resampl;
+	ui->src.process ();
+	n_samples *= OVERSAMPLE;
+#endif
+
+	for (uint32_t i=0; i < n_samples; ++i) {
+#ifdef OVERSAMPLE
+		d0 = ui->resampl[2*i];
+		d1 = ui->resampl[2*i+1];
+#else
 		if (gmrb_read_one(rb, &d0, &d1)) break;
+#endif
 
 #if 1 /* high pass filter */
 		ui->lp0 += ui->hpw * (d0 - ui->lp0);
@@ -312,15 +354,16 @@ static gboolean expose_event(GtkWidget *w, GdkEventExpose *ev, gpointer handle) 
 	cairo_set_operator (cr, CAIRO_OPERATOR_SOURCE);
 	cairo_set_source_surface(cr, ui->sf0, PC_BOUNDS, 0);
 	cairo_paint (cr);
+#ifdef COMPOSIT_IMAGE
 	cairo_set_operator (cr, CAIRO_OPERATOR_ADD);
 	cairo_set_source_surface(cr, ui->sf1, PC_BOUNDS, 0);
 	cairo_paint (cr);
-
-	cairo_set_operator (cr, CAIRO_OPERATOR_OVER);
+#endif
 
 	draw_gm_labels(ui, cr);
 
 	/* display phase-correlation */
+	cairo_set_operator (cr, CAIRO_OPERATOR_OVER);
 
 	/* PC meter backgroud */
 	cairo_set_source_rgba (cr, .2, .2, .2, 1.0);
@@ -403,6 +446,19 @@ instantiate(const LV2UI_Descriptor*   descriptor,
 	ui->ntfy_u = 1;
 	ui->disable_signals = false;
 
+#ifdef OVERSAMPLE
+	ui->src.setup(self->rate, self->rate * OVERSAMPLE, 2, 32);
+
+	ui->scratch = (float*) calloc(32768 * 2, sizeof(float));
+	ui->resampl = (float*) calloc(32768 * OVERSAMPLE * 2, sizeof(float));
+	/* q/d initialize */
+	ui->src.inp_count = 8192;
+	ui->src.inp_data = ui->scratch;
+	ui->src.out_count = 8192 * OVERSAMPLE;
+	ui->src.out_data = ui->resampl;
+	ui->src.process ();
+#endif
+
 	ui->box   = gtk_vbox_new(FALSE, 2);
 	ui->align = gtk_alignment_new(.5, .5, 0, 0);
 	ui->m0    = gtk_drawing_area_new();
@@ -456,6 +512,10 @@ cleanup(LV2UI_Handle handle)
 		cairo_surface_destroy(ui->an[i]);
 	}
 	gtk_widget_destroy(ui->m0);
+#ifdef OVERSAMPLE
+	free(ui->scratch);
+	free(ui->resampl);
+#endif
 
 	free(ui);
 }
