@@ -100,6 +100,7 @@ static void img2surf (struct MyGimpImage const * img, cairo_surface_t **s, unsig
 	(*s) = cairo_image_surface_create_for_data(*d,
 			CAIRO_FORMAT_ARGB32, img->width, img->height, stride);
 
+	cairo_surface_flush (*s);
 	for (y = 0; y < img->height; ++y) {
 		const int y0 = y * stride;
 		const int ys = y * img->width * img->bytes_per_pixel;
@@ -117,6 +118,7 @@ static void img2surf (struct MyGimpImage const * img, cairo_surface_t **s, unsig
 			(*d)[y0 + xd + 0] = img->pixel_data[ys + xs + 2]; // B
 		}
 	}
+	cairo_surface_mark_dirty (*s);
 }
 
 static void setup_images (MetersLV2UI* ui) {
