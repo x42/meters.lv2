@@ -22,6 +22,8 @@
  * broken out goniometer related LV2 functions
  */
 
+#define UPDATE_FPS (30.0)
+
 typedef enum {
 	JF_INPUT0   = 0,
 	JF_OUTPUT0  = 1,
@@ -69,7 +71,7 @@ goniometer_instantiate(
 	self->rate = rate;
 	self->ui_active = false;
 
-	self->apv = rint(rate / 25.0);
+	self->apv = rint(rate / UPDATE_FPS);
 	self->sample_cnt = 0;
 	self->ntfy = 0;
 

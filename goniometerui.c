@@ -60,7 +60,9 @@ typedef struct {
 	GtkWidget* fader;
 	GtkWidget* m0;
 
-	cairo_surface_t* sf;
+	bool sfb;
+	cairo_surface_t* sf0;
+	cairo_surface_t* sf1;
 	cairo_surface_t* an[7];
 
 	float last_x, last_y;
@@ -152,9 +154,18 @@ static void alloc_annotations(GMUI* ui) {
 }
 
 static void alloc_sf(GMUI* ui) {
-	ui->sf = cairo_image_surface_create (CAIRO_FORMAT_RGB24, GM_BOUNDS, GM_BOUNDS);
-	cairo_t* cr = cairo_create (ui->sf);
-	cairo_set_source_rgba (cr, .0, .0, .0, 1.0);
+	ui->sf0 = cairo_image_surface_create (CAIRO_FORMAT_RGB24, GM_BOUNDS, GM_BOUNDS);
+	cairo_t* cr = cairo_create (ui->sf0);
+	cairo_set_source_rgb (cr, .0, .0, .0);
+	cairo_set_operator (cr, CAIRO_OPERATOR_CLEAR);
+	cairo_rectangle (cr, 0, 0, GM_BOUNDS, GM_BOUNDS);
+	cairo_fill (cr);
+	cairo_destroy(cr);
+
+	ui->sf1 = cairo_image_surface_create (CAIRO_FORMAT_RGB24, GM_BOUNDS, GM_BOUNDS);
+	cr = cairo_create (ui->sf1);
+	cairo_set_source_rgb (cr, .0, .0, .0);
+	cairo_set_operator (cr, CAIRO_OPERATOR_CLEAR);
 	cairo_rectangle (cr, 0, 0, GM_BOUNDS, GM_BOUNDS);
 	cairo_fill (cr);
 	cairo_destroy(cr);
@@ -162,16 +173,19 @@ static void alloc_sf(GMUI* ui) {
 
 
 static void draw_rb(GMUI* ui, gmringbuf *rb) {
-	cairo_t* cr = cairo_create (ui->sf);
+	ui->sfb = ! ui->sfb;
+	cairo_t* cr = cairo_create (ui->sfb ? ui->sf0 : ui->sf1);
 
 	cairo_rectangle (cr, 0, 0, GM_BOUNDS, GM_BOUNDS);
 	cairo_clip(cr);
 
-	cairo_set_source_rgba (cr, .0, .0, .0, 1.0);
+	cairo_set_source_rgb (cr, .0, .0, .0);
+	cairo_set_operator (cr, CAIRO_OPERATOR_CLEAR);
 	cairo_rectangle (cr, 0, 0, GM_BOUNDS, GM_BOUNDS);
 	cairo_fill (cr);
+	cairo_set_operator (cr, CAIRO_OPERATOR_OVER);
 
-	cairo_set_source_rgba (cr, .8, .8, .2, 1.0);
+	cairo_set_source_rgb (cr, .8, .8, .2);
 
 	size_t n_samples = gmrb_read_space(rb);
 	float d0, d1;
@@ -296,8 +310,14 @@ static gboolean expose_event(GtkWidget *w, GdkEventExpose *ev, gpointer handle) 
 
 	/* display goniometer */
 	cairo_set_operator (cr, CAIRO_OPERATOR_SOURCE);
-	cairo_set_source_surface(cr, ui->sf, PC_BOUNDS, 0);
+	cairo_set_source_surface(cr, ui->sf0, PC_BOUNDS, 0);
 	cairo_paint (cr);
+	cairo_set_operator (cr, CAIRO_OPERATOR_ADD);
+	cairo_set_source_surface(cr, ui->sf1, PC_BOUNDS, 0);
+	cairo_paint (cr);
+
+	cairo_set_operator (cr, CAIRO_OPERATOR_OVER);
+
 	draw_gm_labels(ui, cr);
 
 	/* display phase-correlation */
@@ -430,7 +450,8 @@ cleanup(LV2UI_Handle handle)
 
 	i->ui_active = false;
 
-	cairo_surface_destroy(ui->sf);
+	cairo_surface_destroy(ui->sf0);
+	cairo_surface_destroy(ui->sf1);
 	for (int i=0; i < 7 ; ++i) {
 		cairo_surface_destroy(ui->an[i]);
 	}
