@@ -93,19 +93,24 @@ static void gmrb_read_clear(gmringbuf *rb) {
 /* goniometer shared instance struct */
 
 typedef struct {
+	/* shared with ui */
+	gmringbuf *rb;
+	bool ui_active;
+
 	/* private */
 	float* input[2];
 	float* output[2];
+
+	float* gain;
 	float* notify;
+	float* correlation;
 
 	double rate;
-	bool ui_active;
 
 	uint32_t ntfy;
 	uint32_t apv;
 	uint32_t sample_cnt;
 
-	/* shared with ui */
-	gmringbuf *rb;
+	Stcorrdsp *cor;
 
 } LV2gm;

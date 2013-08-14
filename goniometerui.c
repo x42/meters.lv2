@@ -29,8 +29,18 @@
 #include <cairo/cairo.h>
 #include <pango/pango.h>
 
+typedef void Stcorrdsp;
+
 #include "lv2/lv2plug.in/ns/extensions/ui/ui.h"
 #include "goniometer.h"
+
+#define PC_BOUNDS ( 40.0f)
+
+#define PC_TOP    ( 12.5f)
+#define PC_BLOCK  (  8.0f)
+#define PC_LEFT   ( 10.0f)
+#define PC_WIDTH  ( 20.0f)
+#define PC_HEIGHT (380.0f)
 
 #define GM_BOUNDS (405.0f)
 #define GM_CENTER (202.5f)
@@ -48,6 +58,8 @@
 
 typedef struct {
 	LV2_Handle instance;
+	LV2UI_Write_Function write;
+	LV2UI_Controller     controller;
 
 	GtkWidget* box;
 	GtkWidget* align;
@@ -55,29 +67,33 @@ typedef struct {
 	GtkWidget* m0;
 
 	cairo_surface_t* sf;
-	cairo_surface_t* an[5];
+	cairo_surface_t* an[7];
 
 	float last_x, last_y;
 	float lp0, lp1;
 	float lpw;
 
+	float cor, cor_u;
+	uint32_t ntfy_u, ntfy_b;
+
 	uint32_t fade_c;
 	uint32_t fade_m;
 
 	float gain;
+	bool disable_signals;
 } GMUI;
 
 static void write_text(
 		cairo_t* cr,
-		const char *txt,
+		const char *txt, const char * font,
 		const float x, const float y) {
 	int tw, th;
 	cairo_save(cr);
 
 	PangoLayout * pl = pango_cairo_create_layout(cr);
-	PangoFontDescription *font = pango_font_description_from_string("Mono 16");
-	pango_layout_set_font_description(pl, font);
-	pango_font_description_free(font);
+	PangoFontDescription *fd = pango_font_description_from_string(font);
+	pango_layout_set_font_description(pl, fd);
+	pango_font_description_free(fd);
 	cairo_set_source_rgba (cr, .5, .5, .6, 1.0);
 	pango_layout_set_text(pl, txt, -1);
 	pango_layout_get_pixel_size(pl, &tw, &th);
@@ -90,7 +106,21 @@ static void write_text(
 	cairo_new_path (cr);
 }
 
+void rounded_rectangle (cairo_t* cr, double x, double y, double w, double h, double r)
+{
+  double degrees = M_PI / 180.0;
+
+  cairo_new_sub_path (cr);
+  cairo_arc (cr, x + w - r, y + r, r, -90 * degrees, 0 * degrees);
+  cairo_arc (cr, x + w - r, y + h - r, r, 0 * degrees, 90 * degrees);
+  cairo_arc (cr, x + r, y + h - r, r, 90 * degrees, 180 * degrees);
+  cairo_arc (cr, x + r, y + r, r, 180 * degrees, 270 * degrees);
+  cairo_close_path (cr);
+}
+
 static void alloc_annotations(GMUI* ui) {
+#define FONT_GM "Mono 16"
+#define FONT_PC "Mono 10"
 
 #define INIT_BLACK_BG(ID, WIDTH, HEIGHT) \
 	ui->an[ID] = cairo_image_surface_create (CAIRO_FORMAT_RGB24, WIDTH, HEIGHT); \
@@ -102,23 +132,31 @@ static void alloc_annotations(GMUI* ui) {
 	cairo_t* cr;
 
 	INIT_BLACK_BG(0, 32, 32)
-	write_text(cr, "L", 16, 16);
+	write_text(cr, "L", FONT_GM, 16, 16);
 	cairo_destroy (cr);
 
 	INIT_BLACK_BG(1, 32, 32)
-	write_text(cr, "R", 16, 16);
+	write_text(cr, "R", FONT_GM, 16, 16);
 	cairo_destroy (cr);
 
 	INIT_BLACK_BG(2, 64, 32)
-	write_text(cr, "Mono", 32, 16);
+	write_text(cr, "Mono", FONT_GM, 32, 16);
 	cairo_destroy (cr);
 
 	INIT_BLACK_BG(3, 32, 32)
-	write_text(cr, "+S", 16, 16);
+	write_text(cr, "+S", FONT_GM, 16, 16);
 	cairo_destroy (cr);
 
 	INIT_BLACK_BG(4, 32, 32)
-	write_text(cr, "-S", 16, 16);
+	write_text(cr, "-S", FONT_GM, 16, 16);
+	cairo_destroy (cr);
+
+	INIT_BLACK_BG(5, 32, 32)
+	write_text(cr, "+1", FONT_PC, 10, 10);
+	cairo_destroy (cr);
+
+	INIT_BLACK_BG(6, 32, 32)
+	write_text(cr, "-1", FONT_PC, 10, 10);
 	cairo_destroy (cr);
 }
 
@@ -202,23 +240,11 @@ static void draw_rb(GMUI* ui, gmringbuf *rb) {
 	cairo_destroy(cr);
 }
 
-static gboolean expose_event(GtkWidget *w, GdkEventExpose *ev, gpointer handle) {
-	GMUI* ui = (GMUI*)handle;
-	LV2gm* self = (LV2gm*) ui->instance;
-
-	draw_rb(ui, self->rb);
-
-	cairo_t* cr = gdk_cairo_create(GDK_DRAWABLE(w->window));
-	cairo_rectangle (cr, ev->area.x, ev->area.y, ev->area.width, ev->area.height);
-	cairo_clip (cr);
-
-	cairo_set_operator (cr, CAIRO_OPERATOR_SOURCE);
-	cairo_set_source_surface(cr, ui->sf, 0, 0);
-	cairo_paint (cr);
-
+static void draw_gm_labels(GMUI* ui, cairo_t* cr) {
+	cairo_save(cr);
+	cairo_translate(cr, PC_BOUNDS, 0);
 	cairo_set_operator (cr, CAIRO_OPERATOR_SCREEN);
 
-	/* draw labels */
 #define DRAW_LABEL(ID, XPOS, YPOS) \
 	cairo_set_source_surface(cr, ui->an[ID], (XPOS)-16, (YPOS)-16); cairo_paint (cr);
 
@@ -229,7 +255,6 @@ static gboolean expose_event(GtkWidget *w, GdkEventExpose *ev, gpointer handle) 
 	DRAW_LABEL(3, GM_CENTER - GM_RADIUS * 3/4 - 12 , GM_CENTER - 1);
 	DRAW_LABEL(4, GM_CENTER + GM_RADIUS * 3/4 + 12 , GM_CENTER - 1);
 
-	/* draw annotations */
 	const double dashed[] = {1.0, 2.0};
 	cairo_set_line_width(cr, 3.5);
 	cairo_set_source_rgba (cr, .5, .5, .6, 1.0);
@@ -244,6 +269,76 @@ static gboolean expose_event(GtkWidget *w, GdkEventExpose *ev, gpointer handle) 
 	cairo_line_to(cr, GM_CENTER, GM_CENTER + GM_RADIUS * 0.7079);
 	cairo_stroke(cr);
 
+	cairo_restore(cr);
+}
+
+static void draw_pc_annotation(GMUI* ui, cairo_t* cr) {
+	cairo_set_operator (cr, CAIRO_OPERATOR_SCREEN);
+	cairo_set_source_rgba (cr, .5, .5, .6, 1.0);
+	cairo_set_line_width(cr, 1.5);
+
+#define PC_ANNOTATION(YPOS) \
+	cairo_move_to(cr, PC_LEFT + 2.0, PC_TOP + YPOS); \
+	cairo_line_to(cr, PC_LEFT + PC_WIDTH - 2.0, PC_TOP + YPOS);\
+	cairo_stroke(cr);
+
+	PC_ANNOTATION(PC_HEIGHT * 0.1);
+	PC_ANNOTATION(PC_HEIGHT * 0.2);
+	PC_ANNOTATION(PC_HEIGHT * 0.3);
+	PC_ANNOTATION(PC_HEIGHT * 0.4);
+	PC_ANNOTATION(PC_HEIGHT * 0.6);
+	PC_ANNOTATION(PC_HEIGHT * 0.7);
+	PC_ANNOTATION(PC_HEIGHT * 0.8);
+	PC_ANNOTATION(PC_HEIGHT * 0.9);
+
+	DRAW_LABEL(5, PC_LEFT + 16, PC_TOP + 14);
+	DRAW_LABEL(6, PC_LEFT + 16, PC_TOP + PC_HEIGHT - 2);
+
+	cairo_set_line_width(cr, 2.0);
+	cairo_set_source_rgba (cr, .7, .7, .8, 1.0);
+	PC_ANNOTATION(PC_HEIGHT * 0.5);
+}
+
+static gboolean expose_event(GtkWidget *w, GdkEventExpose *ev, gpointer handle) {
+	GMUI* ui = (GMUI*)handle;
+	LV2gm* self = (LV2gm*) ui->instance;
+
+	/* process and draw goniometer data */
+	if (ui->ntfy_b != ui->ntfy_u) {
+		ui->ntfy_u = ui->ntfy_b;
+		draw_rb(ui, self->rb);
+	}
+
+	cairo_t* cr = gdk_cairo_create(GDK_DRAWABLE(w->window));
+	cairo_rectangle (cr, ev->area.x, ev->area.y, ev->area.width, ev->area.height);
+	cairo_clip (cr);
+
+	/* display goniometer */
+	cairo_set_operator (cr, CAIRO_OPERATOR_SOURCE);
+	cairo_set_source_surface(cr, ui->sf, PC_BOUNDS, 0);
+	cairo_paint (cr);
+	draw_gm_labels(ui, cr);
+
+	/* display phase-correlation */
+
+	/* PC meter backgroud */
+	cairo_set_source_rgba (cr, .2, .2, .2, 1.0);
+	cairo_rectangle (cr, 0, 0, PC_BOUNDS, GM_BOUNDS);
+	cairo_fill(cr);
+
+	cairo_set_source_rgba (cr, 0, 0, 0, 1.0);
+	cairo_set_line_width(cr, 1.0);
+	rounded_rectangle (cr, PC_LEFT -1.0, PC_TOP - 2.0 , PC_WIDTH + 2.0, PC_HEIGHT + 4.0, 6);
+	cairo_fill(cr);
+
+	/* value */
+	cairo_set_source_rgba (cr, .8, .8, .2, 1.0);
+	const float c = (PC_HEIGHT - PC_BLOCK) * ui->cor;
+	rounded_rectangle (cr, PC_LEFT, PC_TOP + c, PC_WIDTH, PC_BLOCK, 2);
+	cairo_fill(cr);
+
+	draw_pc_annotation(ui, cr);
+
 	cairo_destroy (cr);
 
 	return TRUE;
@@ -252,6 +347,9 @@ static gboolean expose_event(GtkWidget *w, GdkEventExpose *ev, gpointer handle) 
 static gboolean set_gain(GtkRange* r, gpointer handle) {
 	GMUI* ui = (GMUI*)handle;
 	ui->gain = gtk_range_get_value(r);
+	if (!ui->disable_signals) {
+		ui->write(ui->controller, 4, sizeof(float), 0, (const void*) &ui->gain);
+	}
 	return TRUE;
 }
 
@@ -285,6 +383,9 @@ instantiate(const LV2UI_Descriptor*   descriptor,
 
 	LV2gm* self = (LV2gm*) ui->instance;
 
+	ui->write      = write_function;
+	ui->controller = controller;
+
 	alloc_sf(ui);
 	alloc_annotations(ui);
 
@@ -297,6 +398,12 @@ instantiate(const LV2UI_Descriptor*   descriptor,
 	ui->lpw = expf(-2.0 * M_PI * 80 / self->rate);
 	ui->gain = 1.0;
 
+	ui->cor = 0.5;
+	ui->cor_u = 0.5;
+	ui->ntfy_b = 0;
+	ui->ntfy_u = 1;
+	ui->disable_signals = false;
+
 	ui->box   = gtk_vbox_new(FALSE, 2);
 	ui->align = gtk_alignment_new(.5, .5, 0, 0);
 	ui->m0    = gtk_drawing_area_new();
@@ -304,21 +411,21 @@ instantiate(const LV2UI_Descriptor*   descriptor,
 
 	gtk_scale_set_draw_value(GTK_SCALE(ui->fader), FALSE);
 	gtk_range_set_value(GTK_RANGE(ui->fader), 1.0);
-	gtk_scale_add_mark(GTK_SCALE(ui->fader), 5.6234, GTK_POS_TOP, "+15dB");
+	gtk_scale_add_mark(GTK_SCALE(ui->fader), 5.6234, GTK_POS_BOTTOM, "+15dB");
 	gtk_scale_add_mark(GTK_SCALE(ui->fader), 3.9810, GTK_POS_TOP, "+12dB");
-	gtk_scale_add_mark(GTK_SCALE(ui->fader), 2.8183, GTK_POS_TOP, "+9dB");
+	gtk_scale_add_mark(GTK_SCALE(ui->fader), 2.8183, GTK_POS_BOTTOM, "+9dB");
 	gtk_scale_add_mark(GTK_SCALE(ui->fader), 1.9952, GTK_POS_TOP, "+6dB");
-	gtk_scale_add_mark(GTK_SCALE(ui->fader), 1.4125, GTK_POS_TOP, "+3dB");
+	gtk_scale_add_mark(GTK_SCALE(ui->fader), 1.4125, GTK_POS_BOTTOM, "+3dB");
 	gtk_scale_add_mark(GTK_SCALE(ui->fader), 1.0000, GTK_POS_TOP, "0dB");
-	gtk_scale_add_mark(GTK_SCALE(ui->fader), 0.7079, GTK_POS_TOP, "-3dB");
-	gtk_scale_add_mark(GTK_SCALE(ui->fader), 0.5012, GTK_POS_TOP, ""); // -6dB
-	gtk_scale_add_mark(GTK_SCALE(ui->fader), 0.3548, GTK_POS_TOP, ""); // -9dB
-	gtk_scale_add_mark(GTK_SCALE(ui->fader), 0.2511, GTK_POS_TOP, ""); // -12dB
-	gtk_scale_add_mark(GTK_SCALE(ui->fader), 0.1778, GTK_POS_TOP, ""); // -15dB
-	//gtk_scale_add_mark(GTK_SCALE(ui->fader), 0.0,    GTK_POS_TOP, ""); // -inf
+	gtk_scale_add_mark(GTK_SCALE(ui->fader), 0.7079, GTK_POS_BOTTOM, "-3dB");
+	gtk_scale_add_mark(GTK_SCALE(ui->fader), 0.5012, GTK_POS_TOP, "-6dB");
+	gtk_scale_add_mark(GTK_SCALE(ui->fader), 0.3548, GTK_POS_BOTTOM, "-9dB");
+	gtk_scale_add_mark(GTK_SCALE(ui->fader), 0.2511, GTK_POS_TOP, "-12dB");
+	gtk_scale_add_mark(GTK_SCALE(ui->fader), 0.1778, GTK_POS_BOTTOM, "-15dB");
+	//gtk_scale_add_mark(GTK_SCALE(ui->fader), 0.0,  GTK_POS_BOTTOM, ""); // -inf
 
-	gtk_drawing_area_size(GTK_DRAWING_AREA(ui->m0), GM_BOUNDS, GM_BOUNDS);
-	gtk_widget_set_size_request(ui->m0, GM_BOUNDS, GM_BOUNDS);
+	gtk_drawing_area_size(GTK_DRAWING_AREA(ui->m0), PC_BOUNDS + GM_BOUNDS, GM_BOUNDS);
+	gtk_widget_set_size_request(ui->m0, PC_BOUNDS + GM_BOUNDS, GM_BOUNDS);
 	gtk_widget_set_redraw_on_allocate(ui->m0, TRUE);
 
 	g_signal_connect (G_OBJECT (ui->m0), "expose_event", G_CALLBACK (expose_event), ui);
@@ -345,12 +452,25 @@ cleanup(LV2UI_Handle handle)
 	i->ui_active = false;
 
 	cairo_surface_destroy(ui->sf);
-	for (int i=0; i < 5 ; ++i) {
+	for (int i=0; i < 7 ; ++i) {
 		cairo_surface_destroy(ui->an[i]);
 	}
 	gtk_widget_destroy(ui->m0);
 
 	free(ui);
+}
+
+static void invalidate_gm(GMUI* ui) {
+	gtk_widget_queue_draw_area(ui->m0, PC_BOUNDS, 0, GM_BOUNDS, GM_BOUNDS);
+}
+
+static void invalidate_pc(GMUI* ui) {
+	float c;
+	c = (PC_HEIGHT - PC_BLOCK) * ui->cor_u;
+	gtk_widget_queue_draw_area(ui->m0, PC_LEFT, PC_TOP + c -1 , PC_WIDTH, PC_BLOCK + 2);
+	ui->cor_u = ui->cor;
+	c = (PC_HEIGHT - PC_BLOCK) * ui->cor_u;
+	gtk_widget_queue_draw_area(ui->m0, PC_LEFT, PC_TOP + c -1 , PC_WIDTH, PC_BLOCK + 2);
 }
 
 /******************************************************************************
@@ -365,7 +485,24 @@ port_event(LV2UI_Handle handle,
            const void*  buffer)
 {
 	GMUI* ui = (GMUI*)handle;
-	gtk_widget_queue_draw(ui->m0);
+	if (format != 0) return;
+	if (port_index == 4) {
+		float v = *(float *)buffer;
+		printf("SET GAIN %f\n", v);
+		if (v >= 0 && v <= 6.0) {
+			ui->disable_signals = true;
+			gtk_range_set_value(GTK_RANGE(ui->fader), v);
+			ui->disable_signals = false;
+		}
+	} else
+	if (port_index == 5) {
+		ui->cor = 0.5f * (1.0f - *(float *)buffer);
+		invalidate_pc(ui);
+	} else
+	if (port_index == 6) {
+		ui->ntfy_b = (uint32_t) (*(float *)buffer);
+		invalidate_gm(ui);
+	}
 }
 
 /******************************************************************************
