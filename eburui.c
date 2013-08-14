@@ -19,6 +19,7 @@
  */
 
 #define _XOPEN_SOURCE
+#define MAX_CAIRO_PATH 100
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -455,6 +456,11 @@ static gboolean expose_event(GtkWidget *w, GdkEventExpose *ev, gpointer handle) 
 			const double astep = 1.5 * M_PI / (double) (amax - amin);
 			const double aoff = (M_PI / 2.0) - amin * astep;
 
+			cairo_set_line_cap(cr, CAIRO_LINE_CAP_ROUND);
+			cairo_set_line_width(cr, 0.75);
+			cairo_set_source (cr, ui->hpattern);
+
+			int cnt = 0;
 			for (int ang = amin; ang < amax; ++ang) {
 				if (rdr[ang] <= 0) continue;
 				const float rad = (float) RADIUS * (1.0 + fast_log10(rdr[ang] / (float) len));
@@ -464,13 +470,18 @@ static gboolean expose_event(GtkWidget *w, GdkEventExpose *ev, gpointer handle) 
 				cairo_arc (cr, CX, CY, rad,
 						(double) ang * astep + aoff, (ang+1.0) * astep + aoff);
 				cairo_line_to(cr, CX, CY);
+
+				if (++cnt > MAX_CAIRO_PATH) {
+					cnt = 0;
+					cairo_stroke_preserve(cr);
+					cairo_fill(cr);
+				}
 			}
-			/* draw data path */
-			cairo_set_line_cap(cr, CAIRO_LINE_CAP_ROUND);
-			cairo_set_line_width(cr, 0.75);
-			cairo_set_source (cr, ui->hpattern);
-			cairo_stroke_preserve(cr);
-			cairo_fill(cr);
+			if (cnt > 0) {
+				cairo_stroke_preserve(cr);
+				cairo_fill(cr);
+			}
+
 			cairo_set_line_cap(cr, CAIRO_LINE_CAP_BUTT);
 
 			/* outer circle */
@@ -532,6 +543,9 @@ static gboolean expose_event(GtkWidget *w, GdkEventExpose *ev, gpointer handle) 
 		cairo_arc (cr, CX, CY, RADIUS, 0, 2.0 * M_PI);
 		cairo_fill (cr);
 
+		cairo_set_line_width(cr, 1.0);
+		cairo_set_source (cr, ui->cpattern);
+		int cnt = 0;
 		if (ui->radar_pos_max > 0) {
 			float *rdr = hists ? ui->radarS : ui->radarM;
 			const double astep = 2.0 * M_PI / (double) ui->radar_pos_max;
@@ -541,9 +555,14 @@ static gboolean expose_event(GtkWidget *w, GdkEventExpose *ev, gpointer handle) 
 				cairo_arc (cr, CX, CY, radar_deflect(rdr[ang], RADIUS),
 						(double) ang * astep, (ang+1.0) * astep);
 				cairo_line_to(cr, CX, CY);
+				if (++cnt > MAX_CAIRO_PATH) {
+					cnt = 0;
+					cairo_fill(cr);
+				}
 			}
-			cairo_set_source (cr, ui->cpattern);
-			cairo_fill(cr);
+			if (cnt > 0) {
+				cairo_fill(cr);
+			}
 
 			/* shade */
 			for (int p = 0; p < 12; ++p) {
