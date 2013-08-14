@@ -50,6 +50,8 @@ typedef struct {
 	LV2_Handle instance;
 
 	GtkWidget* box;
+	GtkWidget* align;
+	GtkWidget* fader;
 	GtkWidget* m0;
 
 	cairo_surface_t* sf;
@@ -247,6 +249,12 @@ static gboolean expose_event(GtkWidget *w, GdkEventExpose *ev, gpointer handle) 
 	return TRUE;
 }
 
+static gboolean set_gain(GtkRange* r, gpointer handle) {
+	GMUI* ui = (GMUI*)handle;
+	ui->gain = gtk_range_get_value(r);
+	return TRUE;
+}
+
 /******************************************************************************
  * LV2 callbacks
  */
@@ -289,16 +297,37 @@ instantiate(const LV2UI_Descriptor*   descriptor,
 	ui->lpw = expf(-2.0 * M_PI * 80 / self->rate);
 	ui->gain = 1.0;
 
-	ui->box = gtk_alignment_new(.5, .5, 0, 0);
-	ui->m0  = gtk_drawing_area_new();
+	ui->box   = gtk_vbox_new(FALSE, 2);
+	ui->align = gtk_alignment_new(.5, .5, 0, 0);
+	ui->m0    = gtk_drawing_area_new();
+	ui->fader = gtk_hscale_new_with_range(0, 6.0, .001);
+
+	gtk_scale_set_draw_value(GTK_SCALE(ui->fader), FALSE);
+	gtk_range_set_value(GTK_RANGE(ui->fader), 1.0);
+	gtk_scale_add_mark(GTK_SCALE(ui->fader), 5.6234, GTK_POS_TOP, "+15dB");
+	gtk_scale_add_mark(GTK_SCALE(ui->fader), 3.9810, GTK_POS_TOP, "+12dB");
+	gtk_scale_add_mark(GTK_SCALE(ui->fader), 2.8183, GTK_POS_TOP, "+9dB");
+	gtk_scale_add_mark(GTK_SCALE(ui->fader), 1.9952, GTK_POS_TOP, "+6dB");
+	gtk_scale_add_mark(GTK_SCALE(ui->fader), 1.4125, GTK_POS_TOP, "+3dB");
+	gtk_scale_add_mark(GTK_SCALE(ui->fader), 1.0000, GTK_POS_TOP, "0dB");
+	gtk_scale_add_mark(GTK_SCALE(ui->fader), 0.7079, GTK_POS_TOP, "-3dB");
+	gtk_scale_add_mark(GTK_SCALE(ui->fader), 0.5012, GTK_POS_TOP, ""); // -6dB
+	gtk_scale_add_mark(GTK_SCALE(ui->fader), 0.3548, GTK_POS_TOP, ""); // -9dB
+	gtk_scale_add_mark(GTK_SCALE(ui->fader), 0.2511, GTK_POS_TOP, ""); // -12dB
+	gtk_scale_add_mark(GTK_SCALE(ui->fader), 0.1778, GTK_POS_TOP, ""); // -15dB
+	//gtk_scale_add_mark(GTK_SCALE(ui->fader), 0.0,    GTK_POS_TOP, ""); // -inf
 
 	gtk_drawing_area_size(GTK_DRAWING_AREA(ui->m0), GM_BOUNDS, GM_BOUNDS);
 	gtk_widget_set_size_request(ui->m0, GM_BOUNDS, GM_BOUNDS);
 	gtk_widget_set_redraw_on_allocate(ui->m0, TRUE);
 
 	g_signal_connect (G_OBJECT (ui->m0), "expose_event", G_CALLBACK (expose_event), ui);
+	g_signal_connect (G_OBJECT (ui->fader), "value-changed", G_CALLBACK (set_gain), ui);
 
-	gtk_container_add(GTK_CONTAINER(ui->box), ui->m0);
+	gtk_container_add(GTK_CONTAINER(ui->align), ui->m0);
+	gtk_box_pack_start(GTK_BOX(ui->box), ui->align, FALSE, FALSE, 0);
+	gtk_box_pack_start(GTK_BOX(ui->box), ui->fader, FALSE, FALSE, 0);
+
 	gtk_widget_show_all(ui->box);
 	*widget = ui->box;
 
