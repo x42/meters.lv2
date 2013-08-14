@@ -69,7 +69,7 @@ goniometer_instantiate(
 	self->rate = rate;
 	self->ui_active = false;
 
-	self->apv = rint(rate / 15.0);
+	self->apv = rint(rate / 25.0);
 	self->sample_cnt = 0;
 	self->ntfy = 0;
 

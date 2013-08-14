@@ -18,7 +18,7 @@
  */
 
 #define _XOPEN_SOURCE
-#define DRAW_POINTS
+//#define DRAW_POINTS
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -48,12 +48,6 @@ typedef void Stcorrdsp;
 #define GM_RADIUS (200.0f)
 #define GM_RAD2   (100.0f)
 
-/* CRT luminosity persistency
- * fade to FADE_ALPHA black every <sample-rate> / FADE_FREQ samples
- */
-#define FADE_ALPHA (0.22)
-#define FADE_FREQ  (30)
-
 #define MAX_CAIRO_PATH 100
 
 typedef struct {
@@ -75,9 +69,6 @@ typedef struct {
 
 	float cor, cor_u;
 	uint32_t ntfy_u, ntfy_b;
-
-	uint32_t fade_c;
-	uint32_t fade_m;
 
 	float gain;
 	bool disable_signals;
@@ -176,8 +167,11 @@ static void draw_rb(GMUI* ui, gmringbuf *rb) {
 	cairo_rectangle (cr, 0, 0, GM_BOUNDS, GM_BOUNDS);
 	cairo_clip(cr);
 
+	cairo_set_source_rgba (cr, .0, .0, .0, 1.0);
+	cairo_rectangle (cr, 0, 0, GM_BOUNDS, GM_BOUNDS);
+	cairo_fill (cr);
+
 	cairo_set_source_rgba (cr, .8, .8, .2, 1.0);
-	cairo_move_to(cr, ui->last_x, ui->last_y);
 
 	size_t n_samples = gmrb_read_space(rb);
 	float d0, d1;
@@ -190,23 +184,8 @@ static void draw_rb(GMUI* ui, gmringbuf *rb) {
 	cairo_set_line_width(cr, 1.0);
 	cairo_move_to(cr, ui->last_x, ui->last_y);
 #endif
-	for (uint32_t i=0; i < n_samples; ++i, ++ui->fade_c) {
 
-		if (ui->fade_c > ui->fade_m) {
-			ui->fade_c = 0;
-
-			if (cnt > 0) {
-				cairo_stroke(cr);
-				cnt = 0;
-			}
-
-			/* fade luminosity */
-			cairo_set_source_rgba (cr, .0, .0, .0, FADE_ALPHA);
-			cairo_rectangle (cr, 0, 0, GM_BOUNDS, GM_BOUNDS);
-			cairo_fill (cr);
-			cairo_move_to(cr, ui->last_x, ui->last_y);
-			cairo_set_source_rgba (cr, .8, .8, .2, 1.0);
-		}
+	for (uint32_t i=0; i < n_samples; ++i) {
 
 		if (gmrb_read_one(rb, &d0, &d1)) break;
 
@@ -393,8 +372,6 @@ instantiate(const LV2UI_Descriptor*   descriptor,
 
 	ui->last_x = (GM_CENTER);
 	ui->last_y = (GM_CENTER);
-	ui->fade_c = 0;
-	ui->fade_m = self->rate / FADE_FREQ;
 	ui->lp0 = 0;
 	ui->lp1 = 0;
 	ui->hpw = expf(-2.0 * M_PI * 20 / self->rate);
