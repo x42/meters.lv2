@@ -71,7 +71,7 @@ typedef struct {
 
 	float last_x, last_y;
 	float lp0, lp1;
-	float lpw;
+	float hpw;
 
 	float cor, cor_u;
 	uint32_t ntfy_u, ntfy_b;
@@ -210,10 +210,12 @@ static void draw_rb(GMUI* ui, gmringbuf *rb) {
 
 		if (gmrb_read_one(rb, &d0, &d1)) break;
 
-#if 1
-		/* low pass filter */
-		ui->lp0 += ui->lpw * (d0 - ui->lp0);
-		ui->lp1 += ui->lpw * (d1 - ui->lp1);
+#if 1 /* high pass filter */
+		ui->lp0 += ui->hpw * (d0 - ui->lp0);
+		ui->lp1 += ui->hpw * (d1 - ui->lp1);
+		/* prevent denormals */
+		ui->lp0 += 1e-12f;
+		ui->lp1 += 1e-12f;
 #else
 		ui->lp0 = d0;
 		ui->lp1 = d1;
@@ -395,7 +397,7 @@ instantiate(const LV2UI_Descriptor*   descriptor,
 	ui->fade_m = self->rate / FADE_FREQ;
 	ui->lp0 = 0;
 	ui->lp1 = 0;
-	ui->lpw = expf(-2.0 * M_PI * 80 / self->rate);
+	ui->hpw = expf(-2.0 * M_PI * 20 / self->rate);
 	ui->gain = 1.0;
 
 	ui->cor = 0.5;
