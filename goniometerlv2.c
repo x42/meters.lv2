@@ -22,7 +22,7 @@
  * broken out goniometer related LV2 functions
  */
 
-#define UPDATE_FPS (25.0)
+#define UPDATE_FPS (50.0)
 
 typedef enum {
 	JF_INPUT0   = 0,

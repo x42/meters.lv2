@@ -19,9 +19,9 @@
 
 #define _XOPEN_SOURCE
 
-#define DRAW_POINTS
+//#define DRAW_POINTS
 #define OVERSAMPLE 4
-//define COMPOSIT_IMAGE
+#define COMPOSIT_IMAGE
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -68,9 +68,8 @@ typedef struct {
 	GtkWidget* fader;
 	GtkWidget* m0;
 
-	bool sfb;
-	cairo_surface_t* sf0;
-	cairo_surface_t* sf1;
+	int sfc;
+	cairo_surface_t* sf[3];
 	cairo_surface_t* an[7];
 
 	float last_x, last_y;
@@ -168,21 +167,21 @@ static void alloc_annotations(GMUI* ui) {
 }
 
 static void alloc_sf(GMUI* ui) {
-	ui->sf0 = cairo_image_surface_create (CAIRO_FORMAT_RGB24, GM_BOUNDS, GM_BOUNDS);
-	cairo_t* cr = cairo_create (ui->sf0);
-	cairo_set_source_rgb (cr, .0, .0, .0);
-	cairo_set_operator (cr, CAIRO_OPERATOR_CLEAR);
-	cairo_rectangle (cr, 0, 0, GM_BOUNDS, GM_BOUNDS);
-	cairo_fill (cr);
+	cairo_t* cr;
+#define ALLOC_SF(VAR) \
+	VAR = cairo_image_surface_create (CAIRO_FORMAT_RGB24, GM_BOUNDS, GM_BOUNDS);\
+	cr = cairo_create (VAR);\
+	cairo_set_source_rgb (cr, .0, .0, .0);\
+	cairo_set_operator (cr, CAIRO_OPERATOR_CLEAR);\
+	cairo_rectangle (cr, 0, 0, GM_BOUNDS, GM_BOUNDS);\
+	cairo_fill (cr);\
 	cairo_destroy(cr);
 
-	ui->sf1 = cairo_image_surface_create (CAIRO_FORMAT_RGB24, GM_BOUNDS, GM_BOUNDS);
-	cr = cairo_create (ui->sf1);
-	cairo_set_source_rgb (cr, .0, .0, .0);
-	cairo_set_operator (cr, CAIRO_OPERATOR_CLEAR);
-	cairo_rectangle (cr, 0, 0, GM_BOUNDS, GM_BOUNDS);
-	cairo_fill (cr);
-	cairo_destroy(cr);
+	ALLOC_SF(ui->sf[0])
+#ifdef COMPOSIT_IMAGE
+	ALLOC_SF(ui->sf[1])
+	ALLOC_SF(ui->sf[2])
+#endif
 }
 
 
@@ -192,27 +191,40 @@ static void draw_rb(GMUI* ui, gmringbuf *rb) {
 	if (n_samples < 64) return;
 
 #ifdef COMPOSIT_IMAGE
-	ui->sfb = ! ui->sfb;
-	cairo_t* cr = cairo_create (ui->sfb ? ui->sf0 : ui->sf1);
+#if 0
+		cairo_t* cr = cairo_create (ui->sfb ? ui->sf0 : ui->sf1);
+		cairo_set_source_rgba (cr, .0, .0, .0, .10);
+		cairo_rectangle (cr, 0, 0, GM_BOUNDS, GM_BOUNDS);
+		cairo_fill (cr);
+		cairo_destroy(cr);
+#endif
+
+	ui->sfc = (ui->sfc + 1) %3;
+	cairo_t* cr = cairo_create (ui->sf[ui->sfc]);
 #else
-	cairo_t* cr = cairo_create (ui->sf0);
+	cairo_t* cr = cairo_create (ui->sf[0]);
 #endif
 
 	cairo_rectangle (cr, 0, 0, GM_BOUNDS, GM_BOUNDS);
 	cairo_clip(cr);
 
+#if 1
 	cairo_set_source_rgb (cr, .0, .0, .0);
 	cairo_set_operator (cr, CAIRO_OPERATOR_CLEAR);
 	cairo_rectangle (cr, 0, 0, GM_BOUNDS, GM_BOUNDS);
 	cairo_fill (cr);
+#else
+	cairo_set_source_rgba (cr, .0, .0, .0, .96);
+	cairo_rectangle (cr, 0, 0, GM_BOUNDS, GM_BOUNDS);
+	cairo_fill (cr);
+#endif
+
 	cairo_set_operator (cr, CAIRO_OPERATOR_OVER);
-
-	cairo_set_source_rgb (cr, .8, .8, .2);
-
+	cairo_set_source_rgb (cr, .75, .75, .2);
 
 	int cnt = 0;
 #ifdef DRAW_POINTS
-	cairo_set_line_width(cr, 1.5);
+	cairo_set_line_width(cr, 2.0);
 	cairo_set_line_cap(cr, CAIRO_LINE_CAP_ROUND);
 #else
 	cairo_set_line_width(cr, 1.0);
@@ -351,12 +363,31 @@ static gboolean expose_event(GtkWidget *w, GdkEventExpose *ev, gpointer handle) 
 	cairo_clip (cr);
 
 	/* display goniometer */
+#ifndef COMPOSIT_IMAGE
 	cairo_set_operator (cr, CAIRO_OPERATOR_SOURCE);
-	cairo_set_source_surface(cr, ui->sf0, PC_BOUNDS, 0);
+	cairo_set_source_surface(cr, ui->sf[0], PC_BOUNDS, 0);
 	cairo_paint (cr);
-#ifdef COMPOSIT_IMAGE
+#else
+	cairo_set_operator (cr, CAIRO_OPERATOR_SOURCE);
+	cairo_set_source_surface(cr, ui->sf[(ui->sfc + 1)%3], PC_BOUNDS, 0);
+	cairo_paint (cr);
+
+	cairo_set_operator (cr, CAIRO_OPERATOR_OVER);
+	cairo_set_source_rgba (cr, .0, .0, .0, .6);
+	cairo_rectangle (cr, PC_BOUNDS, 0, GM_BOUNDS, GM_BOUNDS);
+	cairo_fill (cr);
+
 	cairo_set_operator (cr, CAIRO_OPERATOR_ADD);
-	cairo_set_source_surface(cr, ui->sf1, PC_BOUNDS, 0);
+	cairo_set_source_surface(cr, ui->sf[(ui->sfc)%3], PC_BOUNDS, 0);
+	cairo_paint (cr);
+
+	cairo_set_operator (cr, CAIRO_OPERATOR_OVER);
+	cairo_set_source_rgba (cr, .0, .0, .0, .4);
+	cairo_rectangle (cr, PC_BOUNDS, 0, GM_BOUNDS, GM_BOUNDS);
+	cairo_fill (cr);
+
+	cairo_set_operator (cr, CAIRO_OPERATOR_ADD);
+	cairo_set_source_surface(cr, ui->sf[(ui->sfc + 2)%3], PC_BOUNDS, 0);
 	cairo_paint (cr);
 #endif
 
@@ -447,7 +478,7 @@ instantiate(const LV2UI_Descriptor*   descriptor,
 	ui->disable_signals = false;
 
 #ifdef OVERSAMPLE
-	ui->src.setup(self->rate, self->rate * OVERSAMPLE, 2, 32);
+	ui->src.setup(self->rate, self->rate * OVERSAMPLE, 2, 24);
 
 	ui->scratch = (float*) calloc(32768 * 2, sizeof(float));
 	ui->resampl = (float*) calloc(32768 * OVERSAMPLE * 2, sizeof(float));
@@ -506,8 +537,14 @@ cleanup(LV2UI_Handle handle)
 
 	i->ui_active = false;
 
-	cairo_surface_destroy(ui->sf0);
-	cairo_surface_destroy(ui->sf1);
+#define COMPOSIT_IMAGE
+	for (int i=0; i < 3 ; ++i) {
+		cairo_surface_destroy(ui->sf[i]);
+	}
+#else
+	cairo_surface_destroy(ui->sf[0]);
+#endif
+
 	for (int i=0; i < 7 ; ++i) {
 		cairo_surface_destroy(ui->an[i]);
 	}
