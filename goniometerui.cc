@@ -537,7 +537,7 @@ cleanup(LV2UI_Handle handle)
 
 	i->ui_active = false;
 
-#define COMPOSIT_IMAGE
+#ifdef COMPOSIT_IMAGE
 	for (int i=0; i < 3 ; ++i) {
 		cairo_surface_destroy(ui->sf[i]);
 	}
