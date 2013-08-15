@@ -22,7 +22,7 @@
  * broken out goniometer related LV2 functions
  */
 
-#define UPDATE_FPS (50.0)
+#define UPDATE_FPS (25.0)
 
 typedef enum {
 	JF_INPUT0   = 0,
@@ -75,7 +75,7 @@ goniometer_instantiate(
 	self->sample_cnt = 0;
 	self->ntfy = 0;
 
-	uint32_t rbsize = self->rate / 4;
+	uint32_t rbsize = self->rate / 5;
 	if (rbsize < 8192u) rbsize = 8192u;
 	if (rbsize < 2 * self->apv) rbsize = 2 * self->apv;
 

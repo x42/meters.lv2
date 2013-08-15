@@ -19,10 +19,6 @@
 
 #define _XOPEN_SOURCE
 
-//#define DRAW_POINTS
-#define OVERSAMPLE 4
-#define COMPOSIT_IMAGE
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
@@ -54,7 +50,7 @@ typedef void Stcorrdsp;
 #define GM_RADIUS (200.0f)
 #define GM_RAD2   (100.0f)
 
-#define MAX_CAIRO_PATH 100
+#define MAX_CAIRO_PATH 32
 
 using namespace LV2M;
 
@@ -65,8 +61,33 @@ typedef struct {
 
 	GtkWidget* box;
 	GtkWidget* align;
-	GtkWidget* fader;
 	GtkWidget* m0;
+
+	GtkWidget* c_tbl;
+
+	GtkWidget* cbx_src;
+	GtkWidget* spn_src_fact;
+	GtkWidget* spn_src_hlen;
+	GtkWidget* spn_src_frel;
+
+	GtkWidget* cbx_lines;
+	GtkWidget* cbx_xfade;
+	GtkWidget* spn_psize;
+	GtkWidget* spn_vfreq;
+	GtkWidget* spn_alpha;
+
+	GtkWidget* sep_h0;
+	GtkWidget* sep_h1;
+	GtkWidget* sep_v0;
+
+	GtkWidget* lbl_src_fact;
+	GtkWidget* lbl_src_hlen;
+	GtkWidget* lbl_src_frel;
+	GtkWidget* lbl_psize;
+	GtkWidget* lbl_vfreq;
+	GtkWidget* lbl_alpha;
+
+	GtkWidget* fader;
 
 	int sfc;
 	cairo_surface_t* sf[3];
@@ -82,12 +103,48 @@ typedef struct {
 	float gain;
 	bool disable_signals;
 
-#ifdef OVERSAMPLE
-	Resampler src;
+	Resampler *src;
 	float *scratch;
 	float *resampl;
-#endif
+	float src_fact;
 } GMUI;
+
+static void setup_src(GMUI* ui, float oversample, int hlen, float frel) {
+	if (ui->src != 0) {
+		delete ui->src;
+		free(ui->scratch);
+		free(ui->resampl);
+		ui->src = 0;
+		ui->scratch = 0;
+		ui->resampl = 0;
+	}
+
+	if (oversample <= 1) {
+		ui->src_fact = 1;
+		return;
+	}
+
+	LV2gm* self = (LV2gm*) ui->instance;
+	uint32_t bsiz = self->rate * 2;
+
+	ui->src_fact = oversample;
+	ui->src = new Resampler();
+	ui->src->setup(self->rate, self->rate * oversample, 2, hlen, frel);
+
+	ui->scratch = (float*) calloc(bsiz, sizeof(float));
+	ui->resampl = (float*) malloc(bsiz * oversample * sizeof(float));
+
+	/* q/d initialize */
+	ui->src->inp_count = 8192;
+	ui->src->inp_data = ui->scratch;
+	ui->src->out_count = 8192 * oversample;
+	ui->src->out_data = ui->resampl;
+	ui->src->process ();
+}
+
+/*****
+ * drawing helpers
+ */
 
 static void write_text(
 		cairo_t* cr,
@@ -169,7 +226,7 @@ static void alloc_annotations(GMUI* ui) {
 static void alloc_sf(GMUI* ui) {
 	cairo_t* cr;
 #define ALLOC_SF(VAR) \
-	VAR = cairo_image_surface_create (CAIRO_FORMAT_RGB24, GM_BOUNDS, GM_BOUNDS);\
+	VAR = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, GM_BOUNDS, GM_BOUNDS);\
 	cr = cairo_create (VAR);\
 	cairo_set_source_rgb (cr, .0, .0, .0);\
 	cairo_set_operator (cr, CAIRO_OPERATOR_CLEAR);\
@@ -178,10 +235,8 @@ static void alloc_sf(GMUI* ui) {
 	cairo_destroy(cr);
 
 	ALLOC_SF(ui->sf[0])
-#ifdef COMPOSIT_IMAGE
 	ALLOC_SF(ui->sf[1])
 	ALLOC_SF(ui->sf[2])
-#endif
 }
 
 
@@ -190,72 +245,76 @@ static void draw_rb(GMUI* ui, gmringbuf *rb) {
 	size_t n_samples = gmrb_read_space(rb);
 	if (n_samples < 64) return;
 
-#ifdef COMPOSIT_IMAGE
-#if 0
-		cairo_t* cr = cairo_create (ui->sfb ? ui->sf0 : ui->sf1);
-		cairo_set_source_rgba (cr, .0, .0, .0, .10);
+	const bool composit = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(ui->cbx_xfade));
+	const bool lines = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(ui->cbx_lines));
+	const float persist = gtk_spin_button_get_value(GTK_SPIN_BUTTON(ui->spn_alpha));
+	const float line_width = gtk_spin_button_get_value(GTK_SPIN_BUTTON(ui->spn_psize));
+
+	if (composit) {
+		ui->sfc = (ui->sfc + 1) % 3;
+	}
+	cairo_t* cr = cairo_create (ui->sf[ui->sfc]);
+
+	if (composit) {
+		cairo_set_operator (cr, CAIRO_OPERATOR_SOURCE);
+		cairo_set_source_rgba (cr, .0, .0, .0, 1.0-persist);
 		cairo_rectangle (cr, 0, 0, GM_BOUNDS, GM_BOUNDS);
 		cairo_fill (cr);
-		cairo_destroy(cr);
-#endif
-
-	ui->sfc = (ui->sfc + 1) %3;
-	cairo_t* cr = cairo_create (ui->sf[ui->sfc]);
-#else
-	cairo_t* cr = cairo_create (ui->sf[0]);
-#endif
+	} else if (persist >= 1.0) {
+		;
+	} else if (persist > 0.01) {
+		cairo_set_operator (cr, CAIRO_OPERATOR_OVER);
+		cairo_set_source_rgba (cr, .0, .0, .0, 1.0-persist);
+		cairo_rectangle (cr, 0, 0, GM_BOUNDS, GM_BOUNDS);
+		cairo_fill (cr);
+	} else {
+		cairo_set_operator (cr, CAIRO_OPERATOR_CLEAR);
+		cairo_rectangle (cr, 0, 0, GM_BOUNDS, GM_BOUNDS);
+		cairo_fill (cr);
+	}
 
 	cairo_rectangle (cr, 0, 0, GM_BOUNDS, GM_BOUNDS);
 	cairo_clip(cr);
 
-#if 1
-	cairo_set_source_rgb (cr, .0, .0, .0);
-	cairo_set_operator (cr, CAIRO_OPERATOR_CLEAR);
-	cairo_rectangle (cr, 0, 0, GM_BOUNDS, GM_BOUNDS);
-	cairo_fill (cr);
-#else
-	cairo_set_source_rgba (cr, .0, .0, .0, .96);
-	cairo_rectangle (cr, 0, 0, GM_BOUNDS, GM_BOUNDS);
-	cairo_fill (cr);
-#endif
-
 	cairo_set_operator (cr, CAIRO_OPERATOR_OVER);
-	cairo_set_source_rgb (cr, .75, .75, .2);
+	cairo_set_source_rgba (cr, .88, .88, .15, .8); // GM COLOR
 
 	int cnt = 0;
-#ifdef DRAW_POINTS
-	cairo_set_line_width(cr, 2.0);
-	cairo_set_line_cap(cr, CAIRO_LINE_CAP_ROUND);
-#else
-	cairo_set_line_width(cr, 1.0);
-	cairo_move_to(cr, ui->last_x, ui->last_y);
-#endif
-
-#ifdef OVERSAMPLE
-	assert (n_samples <= 32768);
-	uint32_t j=0;
-	for (j=0; j < n_samples; ++j) {
-		if (gmrb_read_one(rb, &ui->scratch[2*j], &ui->scratch[2*j+1])) break;
+	if (lines) {
+		//cairo_set_tolerance(cr, 1.0); // default .1
+		cairo_set_line_width(cr, line_width);
+		cairo_move_to(cr, ui->last_x, ui->last_y);
+	} else {
+		cairo_set_line_width(cr, line_width);
+		cairo_set_line_cap(cr, CAIRO_LINE_CAP_ROUND);
 	}
 
-	assert (j == n_samples);
-	assert (n_samples > 0);
+	bool os = false;
+	if (ui->src_fact > 1) {
+		uint32_t j=0;
+		for (j=0; j < n_samples; ++j) {
+			if (gmrb_read_one(rb, &ui->scratch[2*j], &ui->scratch[2*j+1])) break;
+		}
 
-	ui->src.inp_count = n_samples;
-	ui->src.inp_data = ui->scratch;
-	ui->src.out_count = n_samples * OVERSAMPLE;
-	ui->src.out_data = ui->resampl;
-	ui->src.process ();
-	n_samples *= OVERSAMPLE;
-#endif
+		assert (j == n_samples);
+		assert (n_samples > 0);
+
+		ui->src->inp_count = n_samples;
+		ui->src->inp_data = ui->scratch;
+		ui->src->out_count = n_samples * ui->src_fact;
+		ui->src->out_data = ui->resampl;
+		ui->src->process ();
+		n_samples *= ui->src_fact;
+		os = true;
+	}
 
 	for (uint32_t i=0; i < n_samples; ++i) {
-#ifdef OVERSAMPLE
-		d0 = ui->resampl[2*i];
-		d1 = ui->resampl[2*i+1];
-#else
-		if (gmrb_read_one(rb, &d0, &d1)) break;
-#endif
+		if (os) {
+			d0 = ui->resampl[2*i];
+			d1 = ui->resampl[2*i+1];
+		} else {
+			if (gmrb_read_one(rb, &d0, &d1)) break;
+		}
 
 #if 1 /* high pass filter */
 		ui->lp0 += ui->hpw * (d0 - ui->lp0);
@@ -268,17 +327,27 @@ static void draw_rb(GMUI* ui, gmringbuf *rb) {
 		ui->lp1 = d1;
 #endif
 
-		ui->last_x = GM_CENTER - ui->gain * (ui->lp0 - ui->lp1) * GM_RAD2;
-		ui->last_y = GM_CENTER - ui->gain * (ui->lp0 + ui->lp1) * GM_RAD2;
-#ifdef DRAW_POINTS
-		cairo_move_to(cr, ui->last_x, ui->last_y);
-		cairo_close_path (cr);
-#else
-		cairo_line_to(cr, ui->last_x, ui->last_y);
-#endif
+		const float x = GM_CENTER - ui->gain * (ui->lp0 - ui->lp1) * GM_RAD2;
+		const float y = GM_CENTER - ui->gain * (ui->lp0 + ui->lp1) * GM_RAD2;
+
+		if ( (ui->last_x - x) * (ui->last_x - x) + (ui->last_y - y) * (ui->last_y - y) < 2.0) continue;
+
+		ui->last_x = x;
+		ui->last_y = y;
+
+		if (lines) {
+			cairo_line_to(cr, ui->last_x, ui->last_y);
+		} else {
+			cairo_move_to(cr, ui->last_x, ui->last_y);
+			cairo_close_path (cr);
+		}
+
 		if (++cnt > MAX_CAIRO_PATH) {
 			cnt = 0;
 			cairo_stroke(cr);
+			if (lines) {
+				cairo_move_to(cr, ui->last_x, ui->last_y);
+			}
 		}
 	}
 
@@ -354,6 +423,7 @@ static gboolean expose_event(GtkWidget *w, GdkEventExpose *ev, gpointer handle) 
 
 	/* process and draw goniometer data */
 	if (ui->ntfy_b != ui->ntfy_u) {
+		//printf("%d -> %d\n", ui->ntfy_u, ui->ntfy_b);
 		ui->ntfy_u = ui->ntfy_b;
 		draw_rb(ui, self->rb);
 	}
@@ -363,33 +433,26 @@ static gboolean expose_event(GtkWidget *w, GdkEventExpose *ev, gpointer handle) 
 	cairo_clip (cr);
 
 	/* display goniometer */
-#ifndef COMPOSIT_IMAGE
-	cairo_set_operator (cr, CAIRO_OPERATOR_SOURCE);
-	cairo_set_source_surface(cr, ui->sf[0], PC_BOUNDS, 0);
-	cairo_paint (cr);
-#else
-	cairo_set_operator (cr, CAIRO_OPERATOR_SOURCE);
-	cairo_set_source_surface(cr, ui->sf[(ui->sfc + 1)%3], PC_BOUNDS, 0);
-	cairo_paint (cr);
+	const bool composit = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(ui->cbx_xfade));
+	if (!composit) {
+		cairo_set_operator (cr, CAIRO_OPERATOR_SOURCE);
+		cairo_set_source_surface(cr, ui->sf[ui->sfc], PC_BOUNDS, 0);
+		cairo_paint (cr);
+	} else {
+		// TODO tweak and optimize overlay compositing
 
-	cairo_set_operator (cr, CAIRO_OPERATOR_OVER);
-	cairo_set_source_rgba (cr, .0, .0, .0, .6);
-	cairo_rectangle (cr, PC_BOUNDS, 0, GM_BOUNDS, GM_BOUNDS);
-	cairo_fill (cr);
+		cairo_set_operator (cr, CAIRO_OPERATOR_SOURCE);
+		cairo_set_source_surface(cr, ui->sf[(ui->sfc + 1)%3], PC_BOUNDS, 0);
+		cairo_paint (cr);
 
-	cairo_set_operator (cr, CAIRO_OPERATOR_ADD);
-	cairo_set_source_surface(cr, ui->sf[(ui->sfc)%3], PC_BOUNDS, 0);
-	cairo_paint (cr);
+		cairo_set_operator (cr, CAIRO_OPERATOR_OVER);
 
-	cairo_set_operator (cr, CAIRO_OPERATOR_OVER);
-	cairo_set_source_rgba (cr, .0, .0, .0, .4);
-	cairo_rectangle (cr, PC_BOUNDS, 0, GM_BOUNDS, GM_BOUNDS);
-	cairo_fill (cr);
+		cairo_set_source_surface(cr, ui->sf[(ui->sfc + 0)%3], PC_BOUNDS, 0);
+		cairo_paint (cr);
 
-	cairo_set_operator (cr, CAIRO_OPERATOR_ADD);
-	cairo_set_source_surface(cr, ui->sf[(ui->sfc + 2)%3], PC_BOUNDS, 0);
-	cairo_paint (cr);
-#endif
+		cairo_set_source_surface(cr, ui->sf[(ui->sfc + 2)%3], PC_BOUNDS, 0);
+		cairo_paint (cr);
+	}
 
 	draw_gm_labels(ui, cr);
 
@@ -407,7 +470,7 @@ static gboolean expose_event(GtkWidget *w, GdkEventExpose *ev, gpointer handle) 
 	cairo_fill(cr);
 
 	/* value */
-	cairo_set_source_rgba (cr, .8, .8, .2, 1.0);
+	cairo_set_source_rgba (cr, .7, .7, .1, 1.0); // PC COLOR
 	const float c = (PC_HEIGHT - PC_BLOCK) * ui->cor;
 	rounded_rectangle (cr, PC_LEFT, PC_TOP + c, PC_WIDTH, PC_BLOCK, 2);
 	cairo_fill(cr);
@@ -419,11 +482,63 @@ static gboolean expose_event(GtkWidget *w, GdkEventExpose *ev, gpointer handle) 
 	return TRUE;
 }
 
+/******************************************************************************
+ * UI callbacks
+ */
+
 static gboolean set_gain(GtkRange* r, gpointer handle) {
 	GMUI* ui = (GMUI*)handle;
 	ui->gain = gtk_range_get_value(r);
 	if (!ui->disable_signals) {
 		ui->write(ui->controller, 4, sizeof(float), 0, (const void*) &ui->gain);
+	}
+	return TRUE;
+}
+
+static gboolean cb_expose(GtkWidget *w, gpointer handle) {
+	GMUI* ui = (GMUI*)handle;
+	gtk_widget_queue_draw(ui->m0);
+	return TRUE;
+}
+
+static gboolean cb_xfade(GtkWidget *w, gpointer handle) {
+	GMUI* ui = (GMUI*)handle;
+	if(gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(ui->cbx_xfade))) {
+		gtk_label_set_text(GTK_LABEL(ui->lbl_alpha), "XX-Fade Alpha:");
+	} else {
+		gtk_label_set_text(GTK_LABEL(ui->lbl_alpha), "Persistency:");
+	}
+	return cb_expose(w, handle);
+}
+
+static gboolean cb_vfreq(GtkWidget *w, gpointer handle) {
+	GMUI* ui = (GMUI*)handle;
+	LV2gm* self = (LV2gm*) ui->instance;
+	float v = gtk_spin_button_get_value(GTK_SPIN_BUTTON(ui->spn_vfreq));
+	if (v < 10) {
+		gtk_spin_button_set_value(GTK_SPIN_BUTTON(ui->spn_vfreq), 10);
+		return TRUE;
+	}
+	if (v > 100) {
+		gtk_spin_button_set_value(GTK_SPIN_BUTTON(ui->spn_vfreq), 100);
+		return TRUE;
+	}
+
+	v = rint(self->rate / v);
+
+	self->apv = v;
+	return TRUE;
+}
+
+static gboolean cb_src(GtkWidget *w, gpointer handle) {
+	GMUI* ui = (GMUI*)handle;
+	if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(ui->cbx_src))) {
+		setup_src(ui,
+				gtk_spin_button_get_value(GTK_SPIN_BUTTON(ui->spn_src_fact)),
+				gtk_spin_button_get_value(GTK_SPIN_BUTTON(ui->spn_src_hlen)),
+				.973 - .3 * gtk_spin_button_get_value(GTK_SPIN_BUTTON(ui->spn_src_frel)));
+	} else {
+		setup_src(ui, 0, 0, 0);
 	}
 	return TRUE;
 }
@@ -477,24 +592,47 @@ instantiate(const LV2UI_Descriptor*   descriptor,
 	ui->ntfy_u = 1;
 	ui->disable_signals = false;
 
-#ifdef OVERSAMPLE
-	ui->src.setup(self->rate, self->rate * OVERSAMPLE, 2, 24);
-
-	ui->scratch = (float*) calloc(32768 * 2, sizeof(float));
-	ui->resampl = (float*) calloc(32768 * OVERSAMPLE * 2, sizeof(float));
-	/* q/d initialize */
-	ui->src.inp_count = 8192;
-	ui->src.inp_data = ui->scratch;
-	ui->src.out_count = 8192 * OVERSAMPLE;
-	ui->src.out_data = ui->resampl;
-	ui->src.process ();
-#endif
+	ui->src_fact = 1;
+	//setup_src(ui, 3, 8, .5);
 
 	ui->box   = gtk_vbox_new(FALSE, 2);
 	ui->align = gtk_alignment_new(.5, .5, 0, 0);
 	ui->m0    = gtk_drawing_area_new();
 	ui->fader = gtk_hscale_new_with_range(0, 6.0, .001);
 
+	ui->c_tbl        = gtk_table_new(/*rows*/7, /*cols*/ 5, FALSE);
+	ui->cbx_src      = gtk_check_button_new_with_label("Oversample");
+	ui->spn_src_fact = gtk_spin_button_new_with_range(1, 32, 1);
+	ui->spn_src_hlen = gtk_spin_button_new_with_range(8, 96, 4);
+	ui->spn_src_frel = gtk_spin_button_new_with_range(0.0, 1.0, .05);
+
+	ui->cbx_lines    = gtk_check_button_new_with_label("Draw Lines");
+	ui->cbx_xfade    = gtk_check_button_new_with_label("XX-Fade Display");
+	ui->spn_psize    = gtk_spin_button_new_with_range(.25, 5.25, .25);
+
+	ui->spn_vfreq    = gtk_spin_button_new_with_range(10, 100, 5);
+	ui->spn_alpha    = gtk_spin_button_new_with_range(.0, 1.0, .01);
+
+	gtk_spin_button_set_value(GTK_SPIN_BUTTON(ui->spn_src_fact), 3);
+	gtk_spin_button_set_value(GTK_SPIN_BUTTON(ui->spn_src_hlen), 8);
+	gtk_spin_button_set_value(GTK_SPIN_BUTTON(ui->spn_src_frel), 1.0);
+	gtk_spin_button_set_value(GTK_SPIN_BUTTON(ui->spn_psize), 1.25);
+	gtk_spin_button_set_value(GTK_SPIN_BUTTON(ui->spn_vfreq), 25);
+	gtk_spin_button_set_value(GTK_SPIN_BUTTON(ui->spn_alpha), 0);
+	gtk_spin_button_set_digits(GTK_SPIN_BUTTON(ui->spn_psize), 2);
+
+	ui->sep_h0        = gtk_hseparator_new();
+	ui->sep_h1        = gtk_hseparator_new();
+	ui->sep_v0        = gtk_vseparator_new();
+
+	ui->lbl_src_fact  = gtk_label_new("Factor:");
+	ui->lbl_src_hlen  = gtk_label_new("Table-Size:");
+	ui->lbl_src_frel  = gtk_label_new("Smooth:");
+	ui->lbl_psize     = gtk_label_new("Point or Line Width:");
+	ui->lbl_vfreq     = gtk_label_new("Max. Update Freq:");
+	ui->lbl_alpha     = gtk_label_new("Persistency:");
+
+	/* fader init */
 	gtk_scale_set_draw_value(GTK_SCALE(ui->fader), FALSE);
 	gtk_range_set_value(GTK_RANGE(ui->fader), 1.0);
 	gtk_scale_add_mark(GTK_SCALE(ui->fader), 5.6234, GTK_POS_BOTTOM, "+15dB");
@@ -514,12 +652,50 @@ instantiate(const LV2UI_Descriptor*   descriptor,
 	gtk_widget_set_size_request(ui->m0, PC_BOUNDS + GM_BOUNDS, GM_BOUNDS);
 	gtk_widget_set_redraw_on_allocate(ui->m0, TRUE);
 
-	g_signal_connect (G_OBJECT (ui->m0), "expose_event", G_CALLBACK (expose_event), ui);
-	g_signal_connect (G_OBJECT (ui->fader), "value-changed", G_CALLBACK (set_gain), ui);
+	/* layout */
+	gtk_table_attach_defaults(GTK_TABLE(ui->c_tbl), ui->fader       , 0, 5, 0, 1);
+	gtk_table_attach(GTK_TABLE(ui->c_tbl), ui->sep_h0, 0, 5, 1, 2, (GtkAttachOptions) (GTK_EXPAND | GTK_FILL), GTK_SHRINK, 0, 4);
+
+	gtk_table_attach_defaults(GTK_TABLE(ui->c_tbl), ui->lbl_src_fact, 2, 3, 2, 3);
+	gtk_table_attach_defaults(GTK_TABLE(ui->c_tbl), ui->lbl_src_hlen, 3, 4, 2, 3);
+	gtk_table_attach_defaults(GTK_TABLE(ui->c_tbl), ui->lbl_src_frel, 4, 5, 2, 3);
+
+	gtk_table_attach_defaults(GTK_TABLE(ui->c_tbl), ui->cbx_src     , 0, 1, 3, 4);
+	gtk_table_attach_defaults(GTK_TABLE(ui->c_tbl), ui->spn_src_fact, 2, 3, 3, 4);
+	gtk_table_attach_defaults(GTK_TABLE(ui->c_tbl), ui->spn_src_hlen, 3, 4, 3, 4);
+	gtk_table_attach_defaults(GTK_TABLE(ui->c_tbl), ui->spn_src_frel, 4, 5, 3, 4);
+
+	gtk_table_attach(GTK_TABLE(ui->c_tbl), ui->sep_h1, 0, 5, 4, 5, (GtkAttachOptions) (GTK_EXPAND | GTK_FILL), GTK_SHRINK, 0, 4);
+
+	gtk_table_attach_defaults(GTK_TABLE(ui->c_tbl), ui->cbx_lines   , 0, 1, 5, 6);
+	gtk_table_attach_defaults(GTK_TABLE(ui->c_tbl), ui->cbx_xfade   , 0, 1, 6, 7);
+
+	gtk_table_attach(GTK_TABLE(ui->c_tbl), ui->sep_v0, 1, 2, 5, 7, GTK_SHRINK, (GtkAttachOptions) (GTK_EXPAND | GTK_FILL), 4, 0);
+
+	gtk_table_attach_defaults(GTK_TABLE(ui->c_tbl), ui->lbl_psize   , 2, 3, 5, 6);
+	gtk_table_attach_defaults(GTK_TABLE(ui->c_tbl), ui->lbl_alpha   , 3, 4, 5, 6);
+	gtk_table_attach_defaults(GTK_TABLE(ui->c_tbl), ui->lbl_vfreq   , 4, 5, 5, 6);
+
+	gtk_table_attach_defaults(GTK_TABLE(ui->c_tbl), ui->spn_psize   , 2, 3, 6, 7);
+	gtk_table_attach_defaults(GTK_TABLE(ui->c_tbl), ui->spn_alpha   , 3, 4, 6, 7);
+	gtk_table_attach_defaults(GTK_TABLE(ui->c_tbl), ui->spn_vfreq   , 4, 5, 6, 7);
 
 	gtk_container_add(GTK_CONTAINER(ui->align), ui->m0);
 	gtk_box_pack_start(GTK_BOX(ui->box), ui->align, FALSE, FALSE, 0);
-	gtk_box_pack_start(GTK_BOX(ui->box), ui->fader, FALSE, FALSE, 0);
+	gtk_box_pack_start(GTK_BOX(ui->box), ui->c_tbl, FALSE, FALSE, 0);
+
+	g_signal_connect (G_OBJECT (ui->m0), "expose_event", G_CALLBACK (expose_event), ui);
+	g_signal_connect (G_OBJECT (ui->fader), "value-changed", G_CALLBACK (set_gain), ui);
+
+	g_signal_connect (G_OBJECT (ui->cbx_src), "toggled", G_CALLBACK (cb_src), ui);
+	g_signal_connect (G_OBJECT (ui->spn_src_fact), "value-changed", G_CALLBACK (cb_src), ui);
+	g_signal_connect (G_OBJECT (ui->spn_src_hlen), "value-changed", G_CALLBACK (cb_src), ui);
+	g_signal_connect (G_OBJECT (ui->spn_src_frel), "value-changed", G_CALLBACK (cb_src), ui);
+
+	g_signal_connect (G_OBJECT (ui->cbx_lines), "toggled", G_CALLBACK (cb_expose), ui);
+	g_signal_connect (G_OBJECT (ui->cbx_xfade), "toggled", G_CALLBACK (cb_xfade), ui);
+	g_signal_connect (G_OBJECT (ui->spn_psize), "value-changed", G_CALLBACK (cb_expose), ui);
+	g_signal_connect (G_OBJECT (ui->spn_vfreq), "value-changed", G_CALLBACK (cb_vfreq), ui);
 
 	gtk_widget_show_all(ui->box);
 	*widget = ui->box;
@@ -537,22 +713,37 @@ cleanup(LV2UI_Handle handle)
 
 	i->ui_active = false;
 
-#ifdef COMPOSIT_IMAGE
 	for (int i=0; i < 3 ; ++i) {
 		cairo_surface_destroy(ui->sf[i]);
 	}
-#else
-	cairo_surface_destroy(ui->sf[0]);
-#endif
 
 	for (int i=0; i < 7 ; ++i) {
 		cairo_surface_destroy(ui->an[i]);
 	}
 	gtk_widget_destroy(ui->m0);
-#ifdef OVERSAMPLE
+	gtk_widget_destroy(ui->fader);
+	gtk_widget_destroy(ui->cbx_src);
+	gtk_widget_destroy(ui->spn_src_fact);
+	gtk_widget_destroy(ui->spn_src_hlen);
+	gtk_widget_destroy(ui->spn_src_frel);
+	gtk_widget_destroy(ui->cbx_lines);
+	gtk_widget_destroy(ui->cbx_xfade);
+	gtk_widget_destroy(ui->spn_psize);
+	gtk_widget_destroy(ui->spn_vfreq);
+	gtk_widget_destroy(ui->spn_alpha);
+	gtk_widget_destroy(ui->lbl_src_fact);
+	gtk_widget_destroy(ui->lbl_src_hlen);
+	gtk_widget_destroy(ui->lbl_src_frel);
+	gtk_widget_destroy(ui->lbl_psize);
+	gtk_widget_destroy(ui->lbl_vfreq);
+	gtk_widget_destroy(ui->lbl_alpha);
+	gtk_widget_destroy(ui->sep_h0);
+	gtk_widget_destroy(ui->sep_h1);
+	gtk_widget_destroy(ui->sep_v0);
+
+	delete ui->src;
 	free(ui->scratch);
 	free(ui->resampl);
-#endif
 
 	free(ui);
 }

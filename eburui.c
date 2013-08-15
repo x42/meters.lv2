@@ -19,7 +19,7 @@
  */
 
 #define _XOPEN_SOURCE
-#define MAX_CAIRO_PATH 100
+#define MAX_CAIRO_PATH 32
 
 #include <stdio.h>
 #include <stdlib.h>
