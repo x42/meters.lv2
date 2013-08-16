@@ -147,6 +147,7 @@ ebur128_instantiate(
 	self->follow_transport_mode = 0; // 3
 	self->tranport_rolling = false;
 	self->ebu_integrating = false;
+	self->dbtp_enable = false;
 
 	self->radar_pos_max = 360;
 	self->radar_resync = -1;
@@ -180,12 +181,10 @@ ebur128_instantiate(
 	self->ebu = new Ebu_r128_proc();
 	self->ebu->init (2, rate);
 
-#ifdef EBU_TRUEPEAK
 	self->mtr[0] = new TruePeakdsp();
 	self->mtr[1] = new TruePeakdsp();
 	static_cast<TruePeakdsp *>(self->mtr[0])->init(rate);
 	static_cast<TruePeakdsp *>(self->mtr[1])->init(rate);
-#endif
 
 	return (LV2_Handle)self;
 }
@@ -291,6 +290,7 @@ ebur128_run(LV2_Handle instance, uint32_t n_samples)
 							break;
 						case CTL_UISETTINGS:
 							self->ui_settings = (uint32_t) v;
+							self->dbtp_enable = (self->ui_settings & 32) ? true : false;
 							break;
 						default:
 							break;
@@ -312,10 +312,10 @@ ebur128_run(LV2_Handle instance, uint32_t n_samples)
 	float *input [] = {self->input[0], self->input[1]};
 	self->ebu->process(n_samples, input);
 
-#ifdef EBU_TRUEPEAK
-	static_cast<TruePeakdsp*>(self->mtr[0])->process_max(self->input[0], n_samples);
-	static_cast<TruePeakdsp*>(self->mtr[1])->process_max(self->input[1], n_samples);
-#endif
+	if (self->dbtp_enable) {
+		static_cast<TruePeakdsp*>(self->mtr[0])->process_max(self->input[0], n_samples);
+		static_cast<TruePeakdsp*>(self->mtr[1])->process_max(self->input[1], n_samples);
+	}
 
 	/* get processed data */
 	const float lm = self->ebu->loudness_M();
@@ -328,12 +328,14 @@ ebur128_run(LV2_Handle instance, uint32_t n_samples)
 	const float rn = self->ebu->range_min();
 	const float rx = self->ebu->range_max();
 
-#ifdef EBU_TRUEPEAK
-	const float tp0 = self->mtr[0]->read();
-	const float tp1 = self->mtr[1]->read();
-	const float tp = tp0 > tp1 ? tp0 : tp1;
-	if (tp > self->tp_max) self->tp_max = tp;
-#endif
+	if (self->dbtp_enable) {
+		const float tp0 = self->mtr[0]->read();
+		const float tp1 = self->mtr[1]->read();
+		const float tp = tp0 > tp1 ? tp0 : tp1;
+		if (tp > self->tp_max) self->tp_max = tp;
+	} else {
+		self->tp_max = 0;
+	}
 
 	if (self->send_state_to_ui && self->ui_active) {
 		self->send_state_to_ui = false;
@@ -481,10 +483,8 @@ ebur128_cleanup(LV2_Handle instance)
 	free(self->radarS);
 	free(self->radarM);
 	delete self->ebu;
-#ifdef EBU_TRUEPEAK
 	delete self->mtr[0];
 	delete self->mtr[1];
-#endif
 	free(instance);
 }
 
@@ -524,6 +524,7 @@ restore(LV2_Handle                  instance,
 		self->follow_transport_mode = (cfg >> 8) & 0x3;
 		self->radar_spd_max = cfg >> 16;
 		self->send_state_to_ui = true;
+		self->dbtp_enable = (self->ui_settings & 32) ? true : false;
 	}
   return LV2_STATE_SUCCESS;
 }

@@ -78,6 +78,7 @@ typedef struct {
 
 	bool tranport_rolling;
 	bool ebu_integrating;
+	bool dbtp_enable;
 
 	float *radarS, radarSC;
 	float *radarM, radarMC;

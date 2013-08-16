@@ -68,6 +68,7 @@ typedef struct {
 	GtkWidget* cbx_hist_mom;
 	GtkWidget* cbx_transport;
 	GtkWidget* cbx_autoreset;
+	GtkWidget* cbx_truepeak;
 
 	GtkWidget* cbx_radar;
 	GtkWidget* cbx_histogram;
@@ -375,6 +376,7 @@ static gboolean expose_event(GtkWidget *w, GdkEventExpose *ev, gpointer handle) 
 	const bool hists = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(ui->cbx_hist_short));
 	const bool plus9 = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(ui->cbx_sc9));
 	const bool plus24= gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(ui->cbx_sc24));
+	const bool dbtp  = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(ui->cbx_truepeak));
 
 	cairo_t* cr = gdk_cairo_create(GDK_DRAWABLE(w->window));
 	PangoContext * pc = gtk_widget_get_pango_context(w);
@@ -435,25 +437,25 @@ static gboolean expose_event(GtkWidget *w, GdkEventExpose *ev, gpointer handle) 
 	sprintf(buf, "Max:\n%+5.1f %s", LUFS( rings ? ui->ms: ui->mm), lufs ? "LUFS" : "LU");
 	write_text(pc, cr, buf, FONT(FONT_M09), 315, 10, 0, 7, c_wht);
 
-#ifdef EBU_TRUEPEAK
-	/* true peak level */
-	cairo_set_source_rgba (cr, .1, .1, .1, 1.0);
-	rounded_rectangle (cr, 35, 30, 40, 30, 10);
-	cairo_fill (cr);
-	if (ui->tp >= 0.8912f) { // -1dBFS
-		cairo_set_source_rgba (cr, .8, .2, .2, 1.0);
-	} else {
-		cairo_set_source_rgba (cr, .2, .2, .2, 1.0);
-	}
-	rounded_rectangle (cr, 25, 5, 75, 38, 10);
-	cairo_fill (cr);
+	if (dbtp) {
+		/* true peak level */
+		cairo_set_source_rgba (cr, .1, .1, .1, 1.0);
+		rounded_rectangle (cr, 35, 30, 40, 30, 10);
+		cairo_fill (cr);
+		if (ui->tp >= 0.8912f) { // -1dBFS
+			cairo_set_source_rgba (cr, .8, .2, .2, 1.0);
+		} else {
+			cairo_set_source_rgba (cr, .2, .2, .2, 1.0);
+		}
+		rounded_rectangle (cr, 25, 5, 75, 38, 10);
+		cairo_fill (cr);
 
-	/* true-peak val */
-	sprintf(buf, "%+5.1f", coef_to_db(ui->tp));
-	write_text(pc, cr, buf, FONT(FONT_M09), 90, 10, 0, 7, c_wht);
-	write_text(pc, cr, "dBTP", FONT(FONT_M09), 90, 24, 0, 7, c_wht);
-	write_text(pc, cr, "True", FONT(FONT_S08), 55, 45, 0, 8, c_wht);
-#endif
+		/* true-peak val */
+		sprintf(buf, "%+5.1f", coef_to_db(ui->tp));
+		write_text(pc, cr, buf, FONT(FONT_M09), 90, 10, 0, 7, c_wht);
+		write_text(pc, cr, "dBTP", FONT(FONT_M09), 90, 24, 0, 7, c_wht);
+		write_text(pc, cr, "True", FONT(FONT_S08), 55, 45, 0, 8, c_wht);
+	}
 
 #if 1 /* Radar */
 
@@ -826,10 +828,10 @@ void invalidate_changed(EBUrUI* ui, int what) {
 	gdk_region_union(region, tmp); \
 	gdk_region_destroy(tmp);
 
-#ifdef EBU_TRUEPEAK
-	INVALIDATE_RECT(25, 5, 75, 38)    // top left side
-	INVALIDATE_RECT(35, 30, 40, 30)   // top left side tab
-#endif
+	if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(ui->cbx_truepeak))) {
+		INVALIDATE_RECT(25, 5, 75, 38)    // top left side
+		INVALIDATE_RECT(35, 30, 40, 30)   // top left side tab
+	}
 
 	INVALIDATE_RECT(243, 5, 87, 38)    // top side
 	INVALIDATE_RECT(275, 30, 30, 30)   // top side tab
@@ -993,6 +995,7 @@ static gboolean cbx_lufs(GtkWidget *w, gpointer handle) {
 	v |= gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(ui->cbx_ring_short)) ? 4 : 0;
 	v |= gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(ui->cbx_hist_short)) ? 8 : 0;
 	v |= gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(ui->cbx_histogram)) ? 16 : 0;
+	v |= gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(ui->cbx_truepeak)) ? 32 : 0;
 	forge_message_kv(ui, ui->uris.mtr_meters_cfg, CTL_UISETTINGS, (float)v);
 	invalidate_changed(ui, -1);
 	return TRUE;
@@ -1069,6 +1072,7 @@ instantiate(const LV2UI_Descriptor*   descriptor,
 	ui->spn_radartime  = gtk_spin_button_new_with_range(30, 600, 15);
 	ui->lbl_radarinfo  = gtk_label_new("History Length [s]:");
 	ui->lbl_ringinfo   = gtk_label_new("Level Diplay");
+	ui->cbx_truepeak   = gtk_check_button_new_with_label("Compute True-Peak");
 	ui->sep_v0         = gtk_vseparator_new();
 
 	ui->cbx_radar      = gtk_radio_button_new_with_label(NULL, "History");
@@ -1085,7 +1089,10 @@ instantiate(const LV2UI_Descriptor*   descriptor,
 	gtk_table_attach_defaults(GTK_TABLE(ui->cbx_box), ui->cbx_sc18     , 0, 1, 2, 3);
 	gtk_table_attach_defaults(GTK_TABLE(ui->cbx_box), ui->cbx_sc9      , 1, 2, 2, 3);
 #ifdef EASTER_EGG
-	gtk_table_attach_defaults(GTK_TABLE(ui->cbx_box), ui->cbx_sc24     , 0, 1, 3, 4);
+	gtk_table_attach_defaults(GTK_TABLE(ui->cbx_box), ui->cbx_sc24     , 1, 2, 3, 4);
+	gtk_table_attach_defaults(GTK_TABLE(ui->cbx_box), ui->cbx_truepeak , 0, 1, 3, 4);
+#else
+	gtk_table_attach_defaults(GTK_TABLE(ui->cbx_box), ui->cbx_truepeak , 0, 2, 3, 4);
 #endif
 	gtk_table_attach_defaults(GTK_TABLE(ui->cbx_box), ui->cbx_ring_mom  , 0, 1, 4, 5);
 	gtk_table_attach_defaults(GTK_TABLE(ui->cbx_box), ui->cbx_ring_short, 1, 2, 4, 5);
@@ -1121,6 +1128,7 @@ instantiate(const LV2UI_Descriptor*   descriptor,
 	g_signal_connect (G_OBJECT (ui->cbx_transport), "toggled", G_CALLBACK (cbx_transport), ui);
 	g_signal_connect (G_OBJECT (ui->cbx_autoreset), "toggled", G_CALLBACK (cbx_autoreset), ui);
 	g_signal_connect (G_OBJECT (ui->spn_radartime), "value-changed", G_CALLBACK (spn_radartime), ui);
+	g_signal_connect (G_OBJECT (ui->cbx_truepeak), "toggled", G_CALLBACK (cbx_lufs), ui);
 
 	gtk_widget_show_all(ui->box);
 	*widget = ui->box;
@@ -1174,6 +1182,7 @@ cleanup(LV2UI_Handle handle)
 	gtk_widget_destroy(ui->lbl_ringinfo);
 	gtk_widget_destroy(ui->lbl_radarinfo);
 	gtk_widget_destroy(ui->sep_v0);
+	gtk_widget_destroy(ui->cbx_truepeak);
 	gtk_widget_destroy(ui->m0);
 
 	/* IA__gtk_widget_destroy: assertion `GTK_IS_WIDGET (widget)' fail: */
