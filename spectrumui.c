@@ -681,21 +681,28 @@ static void handle_spectrum_connections(SAUI* ui, uint32_t port_index, float v) 
 static void handle_meter_connections(SAUI* ui, uint32_t port_index, float v) {
 	v = v > .000316f ? 20.0 * log10f(v) : -70.0;
 	if (port_index == 3) {
-		if (v > ui->peak_val[0]) { ui->peak_val[0] = v; }
 		invalidate_meter(ui, 0, v, ui->peak_val[0]);
 	}
 	else if (port_index == 6) {
-		if (v > ui->peak_val[1]) { ui->peak_val[1] = v; }
 		invalidate_meter(ui, 1, v, ui->peak_val[1]);
 	}
-#if 0 // TODO handle max from backend mono vs stereo
-	else if (port_index == 7) {
-		invalidate_meter(ui, 0, ui->val[0], v);
+
+	/* peak data from backend */
+	if (ui->num_meters == 1) {
+		if (port_index == 4) {
+			if (v > ui->peak_val[0]) { ui->peak_val[0] = v; }
+			invalidate_meter(ui, 0, ui->val[0], ui->peak_val[0]);
+		}
+	} else if (ui->num_meters == 2) {
+		if (port_index == 7) {
+			if (v > ui->peak_val[0]) { ui->peak_val[0] = v; }
+			invalidate_meter(ui, 0, ui->val[0], ui->peak_val[0]);
+		}
+		else if (port_index == 8) {
+			if (v > ui->peak_val[1]) { ui->peak_val[1] = v; }
+			invalidate_meter(ui, 1, ui->val[1], ui->peak_val[1]);
+		}
 	}
-	else if (port_index == 8) {
-		invalidate_meter(ui, 1, ui->val[1], v);
-	}
-#endif
 }
 
 static void

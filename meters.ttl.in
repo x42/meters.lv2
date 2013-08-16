@@ -1053,6 +1053,13 @@ mtr:dBTPmono
 		lv2:index 3 ;
 		lv2:symbol "level1" ;
 		lv2:name "Level1"
+	] , [
+		a lv2:ControlPort ,
+			lv2:OutputPort ;
+		lv2:index 4 ;
+		lv2:symbol "peak" ;
+		lv2:name "peak"
+		lv2:portProperty pprop:notOnGUI ;
 	] ;
 	.
 
@@ -1109,5 +1116,19 @@ mtr:dBTPstereo
 		lv2:index 6 ;
 		lv2:symbol "levelR" ;
 		lv2:name "LevelR"
+	] , [
+		a lv2:ControlPort ,
+			lv2:OutputPort ;
+		lv2:index 7 ;
+		lv2:symbol "peakR" ;
+		lv2:name "peakR"
+		lv2:portProperty pprop:notOnGUI ;
+	] , [
+		a lv2:ControlPort ,
+			lv2:OutputPort ;
+		lv2:index 8 ;
+		lv2:symbol "peakR" ;
+		lv2:name "peakR"
+		lv2:portProperty pprop:notOnGUI ;
 	] ;
 	.

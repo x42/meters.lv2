@@ -42,7 +42,9 @@ typedef enum {
 	MTR_LEVEL0   = 3,
 	MTR_INPUT1   = 4,
 	MTR_OUTPUT1  = 5,
-	MTR_LEVEL1   = 6
+	MTR_LEVEL1   = 6,
+	MTR_PEAK0    = 7,
+	MTR_PEAK1    = 8
 } PortIndex;
 
 typedef struct {
@@ -57,6 +59,7 @@ typedef struct {
 	float* level[2];
 	float* input[2];
 	float* output[2];
+	float* peak[2];
 
 	int chn;
 
@@ -168,6 +171,12 @@ connect_port(LV2_Handle instance,
 	case MTR_LEVEL1:
 		self->level[1] = (float*) data;
 		break;
+	case MTR_PEAK0:
+		self->peak[0] = (float*) data;
+		break;
+	case MTR_PEAK1:
+		self->peak[1] = (float*) data;
+		break;
 	}
 }
 
@@ -208,6 +217,45 @@ cleanup(LV2_Handle instance)
 	free(instance);
 }
 
+static void
+dbtp_run(LV2_Handle instance, uint32_t n_samples)
+{
+	LV2meter* self = (LV2meter*)instance;
+
+	if (self->p_refl != *self->reflvl) {
+		self->p_refl = *self->reflvl;
+		self->rlgain = powf (10.0f, 0.05f * (self->p_refl + 18.0));
+	}
+
+	int c;
+	for (c = 0; c < self->chn; ++c) {
+
+		float* const input  = self->input[c];
+		float* const output = self->output[c];
+
+		self->mtr[c]->process(input, n_samples);
+
+		if (input != output) {
+			memcpy(output, input, sizeof(float) * n_samples);
+		}
+	}
+
+	if (self->chn == 1) {
+		float m, p;
+		static_cast<TruePeakdsp*>(self->mtr[0])->read(&m, &p);
+		*self->input[1] = self->rlgain * p; // port index 4
+		*self->level[0] = self->rlgain * m;
+	} else if (self->chn == 2) {
+		float m, p;
+		static_cast<TruePeakdsp*>(self->mtr[0])->read(&m, &p);
+		*self->peak[0] = p;
+		*self->level[0] = self->rlgain * m;
+		static_cast<TruePeakdsp*>(self->mtr[1])->read(&m, &p);
+		*self->peak[1] = p;
+		*self->level[1] = self->rlgain * m;
+	}
+}
+
 
 static void
 cor_run(LV2_Handle instance, uint32_t n_samples)
@@ -244,31 +292,31 @@ extension_data(const char* uri)
 #include "goniometerlv2.c"
 #include "spectrumlv2.c"
 
-#define mkdesc(ID, NAME) \
+#define mkdesc(ID, NAME, RUN) \
 static const LV2_Descriptor descriptor ## ID = { \
 	MTR_URI NAME, \
 	instantiate, \
 	connect_port, \
 	NULL, \
-	run, \
+	RUN, \
 	NULL, \
 	cleanup, \
 	extension_data \
 };
 
-mkdesc(0, "VUmono")
-mkdesc(1, "VUstereo")
-mkdesc(2, "BBCmono")
-mkdesc(3, "BBCstereo")
-mkdesc(4, "EBUmono")
-mkdesc(5, "EBUstereo")
-mkdesc(6, "DINmono")
-mkdesc(7, "DINstereo")
-mkdesc(8, "NORmono")
-mkdesc(9, "NORstereo")
+mkdesc(0, "VUmono",   run)
+mkdesc(1, "VUstereo", run)
+mkdesc(2, "BBCmono",  run)
+mkdesc(3, "BBCstereo",run)
+mkdesc(4, "EBUmono",  run)
+mkdesc(5, "EBUstereo",run)
+mkdesc(6, "DINmono",  run)
+mkdesc(7, "DINstereo",run)
+mkdesc(8, "NORmono",  run)
+mkdesc(9, "NORstereo",run)
 
-mkdesc(14,"dBTPmono")
-mkdesc(15,"dBTPstereo")
+mkdesc(14,"dBTPmono",   dbtp_run)
+mkdesc(15,"dBTPstereo", dbtp_run)
 
 static const LV2_Descriptor descriptorCor = {
 	MTR_URI "COR",
