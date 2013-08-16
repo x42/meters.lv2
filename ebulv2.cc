@@ -344,7 +344,7 @@ ebur128_run(LV2_Handle instance, uint32_t n_samples)
 	}
 	
 	if (self->radar_resync >= 0) {
-		int batch = (capacity - 256) / 160; // TODO verify alignment & padding,
+		int batch = (capacity - 320) / 160; // TODO verify alignment & padding,
 		if (batch > 6) batch = 6; // limit max data transfer
 		for (int i=0; i < batch; i++, self->radar_resync++) {
 			if (self->radar_resync >= self->radar_pos_max) {
@@ -409,7 +409,7 @@ ebur128_run(LV2_Handle instance, uint32_t n_samples)
 			for (int i = 110; i < 650; i++) {
 				const int vm = histM [i];
 				const int vs = histS [i];
-				if (capacity - self->notify->atom.size < 256) {
+				if (capacity - self->notify->atom.size < 320) {
 					break;
 				}
 				if (self->histM[i] != vm || self->histS[i] != vs) {
