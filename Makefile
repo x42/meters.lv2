@@ -6,8 +6,10 @@
 #
 OPTIMIZATIONS ?= -msse -msse2 -mfpmath=sse -ffast-math -fomit-frame-pointer -O3 -fno-finite-math-only
 PREFIX ?= /usr/local
-CFLAGS ?= $(OPTIMIZATIONS) -Wall -Wno-unused-function
+CFLAGS ?= -Wall -Wno-unused-function
 LIBDIR ?= lib
+
+override CFLAGS += $(OPTIMIZATIONS)
 
 ###############################################################################
 LIB_EXT=.so
