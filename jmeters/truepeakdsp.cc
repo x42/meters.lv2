@@ -37,7 +37,67 @@ TruePeakdsp::~TruePeakdsp (void)
 }
 
 
-void TruePeakdsp::process (float *p, int n)
+void TruePeakdsp::process (float *data, int n)
+{
+	assert (n > 0);
+	assert (n <= 8192);
+	_src.inp_count = n;
+	_src.inp_data = data;
+	_src.out_count = n * 4;
+	_src.out_data = _buf;
+	_src.process ();
+
+	float v;
+	float m = _res ? 0: _m;
+	float p = _res ? 0: _p;
+	float z1 = _z1;
+	float z2 = _z2;
+	float *b = _buf;
+
+	while (n--) {
+		z1 *= _w3;
+		z2 *= _w3;
+
+		v = fabsf(*b++);
+		if (v > z1) z1 += _w1 * (v - z1);
+		if (v > z2) z2 += _w2 * (v - z2);
+		if (v > p) p = v;
+
+		v = fabsf(*b++);
+		if (v > z1) z1 += _w1 * (v - z1);
+		if (v > z2) z2 += _w2 * (v - z2);
+		if (v > p) p = v;
+
+		v = fabsf(*b++);
+		if (v > z1) z1 += _w1 * (v - z1);
+		if (v > z2) z2 += _w2 * (v - z2);
+		if (v > p) p = v;
+
+		v = fabsf(*b++);
+		if (v > z1) z1 += _w1 * (v - z1);
+		if (v > z2) z2 += _w2 * (v - z2);
+		if (v > p) p = v;
+
+		v = z1 + z2;
+		if (v > m) m = v;
+	}
+
+	_z1 = z1 + 1e-20f;
+	_z2 = z2 + 1e-20f;
+
+	m *= _g;
+
+	if (_res) {
+		_m = m;
+		_p = p;
+		_res = false;
+	} else {
+		if (m > _m) { _m = m; }
+		if (p > _p) { _p = p; }
+	}
+}
+
+void TruePeakdsp::process_max (float *p, int n)
 {
 	assert (n <= 8192);
 	_src.inp_count = n;
@@ -69,11 +129,24 @@ float TruePeakdsp::read (void)
     return _m;
 }
 
+void TruePeakdsp::read (float *m, float *p)
+{
+    _res = true;
+		*m = _m;
+		*p = _p;
+}
+
 
 void TruePeakdsp::init (float fsamp)
 {
 	_src.setup(fsamp, fsamp * 4.0, 1, 24, 1.0);
 	_buf = (float*) malloc(32768 * sizeof(float));
+
+	_z1 = _z2 = .0f;
+	_w1 = 450.0f / fsamp;
+	_w2 = 1300.0f / fsamp;
+	_w3 = 1.0f - 4.0f / fsamp;
+	_g = 0.5108f;
 
 	/* q/d initialize */
 	float zero[8192];

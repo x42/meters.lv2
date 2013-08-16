@@ -313,8 +313,8 @@ ebur128_run(LV2_Handle instance, uint32_t n_samples)
 	self->ebu->process(n_samples, input);
 
 #ifdef EBU_TRUEPEAK
-	self->mtr[0]->process(self->input[0], n_samples);
-	self->mtr[1]->process(self->input[1], n_samples);
+	static_cast<TruePeakdsp*>(self->mtr[0])->process_max(self->input[0], n_samples);
+	static_cast<TruePeakdsp*>(self->mtr[1])->process_max(self->input[1], n_samples);
 #endif
 
 	/* get processed data */

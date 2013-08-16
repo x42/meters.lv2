@@ -33,16 +33,26 @@ public:
     ~TruePeakdsp (void);
 
     void process (float *p, int n);
+    void process_max (float *p, int n);
     float read (void);
+    void  read (float *m, float *p);
 
     void init (float fsamp);
 
 private:
 
     float      _m;
+    float      _p;
+    float      _z1;
+    float      _z2;
     bool       _res;
 		float     *_buf;
 		Resampler  _src;
+
+    float   _w1;  // attack filter coefficient
+    float   _w2;  // attack filter coefficient
+    float   _w3;  // release filter coefficient
+    float   _g;   // gain factor
 };
 
 };

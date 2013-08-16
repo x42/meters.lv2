@@ -105,6 +105,7 @@ typedef struct {
 		self->mtr[0] = new CLASS(); \
 		self->mtr[1] = new CLASS(); \
 		static_cast<CLASS *>(self->mtr[0])->init(rate); \
+		static_cast<CLASS *>(self->mtr[1])->init(rate); \
 	}
 
 static LV2_Handle
@@ -126,6 +127,7 @@ instantiate(const LV2_Descriptor*     descriptor,
 	MTRDEF("EBU", Iec2ppmdsp)
 	MTRDEF("DIN", Iec1ppmdsp)
 	MTRDEF("NOR", Iec1ppmdsp)
+	MTRDEF("dBTP", TruePeakdsp)
 	else {
 		free(self);
 		return NULL;
@@ -265,6 +267,9 @@ mkdesc(7, "DINstereo")
 mkdesc(8, "NORmono")
 mkdesc(9, "NORstereo")
 
+mkdesc(14,"dBTPmono")
+mkdesc(15,"dBTPstereo")
+
 static const LV2_Descriptor descriptorCor = {
 	MTR_URI "COR",
 	instantiate,
@@ -295,6 +300,8 @@ lv2_descriptor(uint32_t index)
 	case 11: return &descriptorEBUr128;
 	case 12: return &descriptorGoniometer;
 	case 13: return &descriptorSpectrum;
+	case 14: return &descriptor14;
+	case 15: return &descriptor15;
 	default: return NULL;
 	}
 }

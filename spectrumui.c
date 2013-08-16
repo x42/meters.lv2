@@ -30,6 +30,7 @@
 #include <pango/pango.h>
 
 #include "lv2/lv2plug.in/ns/extensions/ui/ui.h"
+#define MTR_URI "http://gareus.org/oss/lv2/meters#"
 
 #define GM_TOP    ( 12.5f)
 #define GM_LEFT   (  5.5f)
@@ -37,13 +38,13 @@
 #define GM_WIDTH  ( 20.0f)
 
 #define GM_HEIGHT (400.0f)
-#define GM_TXT    (GM_HEIGHT - 52.0f)
+#define GM_TXT    (GM_HEIGHT - (ui->display_freq ? 52.0f : 16.0f))
 #define GM_SCALE  (GM_TXT - GM_TOP - GM_TOP + 2.0)
 
 #define MA_WIDTH  (25.0f)
 
 #define MAX_CAIRO_PATH 32
-#define NUM_METERS 31
+#define MAX_METERS 31
 
 #define	TOF ((GM_TOP           ) / GM_HEIGHT)
 #define	BOF ((GM_TOP + GM_SCALE) / GM_HEIGHT)
@@ -54,7 +55,7 @@
 #define UINT_TO_RGBA(u,r,g,b,a) { UINT_TO_RGB(((u)>>8),r,g,b); (*(a)) = (u)&0xff; }
 
 
-static const char *freq_table [NUM_METERS] = {
+static const char *freq_table [] = {
 	" 20 Hz",   " 25 Hz",  "31.5 Hz",
 	" 40 Hz",   " 50 Hz",   " 63 Hz", " 80 Hz",
 	"100 Hz",   "125 Hz",   "160 Hz",
@@ -77,19 +78,21 @@ typedef struct {
 	GtkWidget* m0;
 	GtkWidget* fader;
 
-	cairo_surface_t* sf[NUM_METERS];
-	cairo_surface_t* an[NUM_METERS];
+	cairo_surface_t* sf[MAX_METERS];
+	cairo_surface_t* an[MAX_METERS];
 	cairo_surface_t* ma[2];
 	cairo_pattern_t* mpat;
 
-	float val[NUM_METERS];
-	float vui[NUM_METERS];
+	float val[MAX_METERS];
+	float vui[MAX_METERS];
 
-	float peak_val[NUM_METERS];
-	int   peak_hold[NUM_METERS];
+	float peak_val[MAX_METERS];
+	int   peak_hold[MAX_METERS];
 
 	bool disable_signals;
 	float gain;
+	uint32_t num_meters;
+	bool display_freq;
 
 } SAUI;
 
@@ -125,11 +128,11 @@ log_meter (float db)
 	    endpoint for our scaling.
 	 */
 
-  return GM_SCALE * (def/115.0f);
+  return (def/115.0f);
 }
 
-static int deflect(float val) {
-	int lvl = rint(log_meter(val));
+static int deflect(SAUI* ui, float val) {
+	int lvl = rint(GM_SCALE * log_meter(val));
 	if (lvl < 2) lvl = 2;
 	if (lvl >= GM_SCALE) lvl = GM_SCALE;
 	return lvl;
@@ -147,10 +150,10 @@ static void create_meter_pattern(SAUI* ui) {
 	int clr[10];
 	float stp[4];
 
-	stp[3] = deflect(0);
-	stp[2] = deflect(-3);
-	stp[1] = deflect(-9);
-	stp[0] = deflect(-18);
+	stp[3] = deflect(ui, 0);
+	stp[2] = deflect(ui, -3);
+	stp[1] = deflect(ui, -9);
+	stp[0] = deflect(ui, -18);
 
 	clr[0]=0x001188ff; clr[1]=0x00aa00ff;
 	clr[2]=0x00ff00ff; clr[3]=0x00ff00ff;
@@ -320,14 +323,26 @@ static void alloc_annotations(SAUI* ui) {
 	cairo_fill (cr);
 
 	cairo_t* cr;
-	for (int i = 0; i < NUM_METERS; ++i) {
-		INIT_BLACK_BG(ui->an[i], 24, 64)
-		write_text(cr, freq_table[i], FONT_LBL, -M_PI/2, 4, 0);
-		cairo_destroy (cr);
+	if (ui->display_freq) {
+		/* frequecy table */
+		for (int i = 0; i < ui->num_meters; ++i) {
+			INIT_BLACK_BG(ui->an[i], 24, 64)
+			write_text(cr, freq_table[i], FONT_LBL, -M_PI/2, 4, 0);
+			cairo_destroy (cr);
+		}
+	} else {
+		char buf[16];
+		for (int i = 0; i < ui->num_meters; ++i) {
+			INIT_BLACK_BG(ui->an[i], 24, 64)
+			sprintf(buf, "%3d\n", i+1);
+			write_text(cr, buf, FONT_LBL, -M_PI/2, 4, 0);
+			cairo_destroy (cr);
+		}
 	}
 
+	/* metric areas */
 #define DO_THE_METER(DB, TXT) \
-	write_text(cr,  TXT , FONT_MTR, 0, MA_WIDTH - 2, YPOS(deflect(DB)));
+	write_text(cr,  TXT , FONT_MTR, 0, MA_WIDTH - 2, YPOS(deflect(ui, DB)));
 
 #define DO_THE_METRICS \
 	DO_THE_METER(   3,  "+3dB") \
@@ -348,7 +363,7 @@ static void alloc_annotations(SAUI* ui) {
 	cairo_rectangle (cr, 0, 0, MA_WIDTH, GM_HEIGHT);
 	cairo_fill (cr);
 	DO_THE_METRICS
-	write_text(cr,  "dBFS" , FONT_MTR, 0, MA_WIDTH - 2, GM_TXT);
+	write_text(cr,  ui->display_freq ? "dBFS" : "dBTP", FONT_MTR, 0, MA_WIDTH - 2, GM_TXT);
 	cairo_destroy (cr);
 
 	INIT_ANN_BG(ui->ma[1], MA_WIDTH, GM_HEIGHT)
@@ -356,7 +371,7 @@ static void alloc_annotations(SAUI* ui) {
 	cairo_rectangle (cr, 0, 0, MA_WIDTH, GM_HEIGHT);
 	cairo_fill (cr);
 	DO_THE_METRICS
-	write_text(cr,  "dBFS" , FONT_MTR, 0, MA_WIDTH - 2, GM_TXT);
+	write_text(cr,  ui->display_freq ? "dBFS" : "dBTP", FONT_MTR, 0, MA_WIDTH - 2, GM_TXT);
 	cairo_destroy (cr);
 }
 
@@ -371,14 +386,16 @@ static void alloc_sf(SAUI* ui) {
 	cairo_fill (cr);
 
 #define GAINLINE(DB) { \
-		const float yoff = GM_TOP + GM_SCALE - deflect(DB); \
+		const float yoff = GM_TOP + GM_SCALE - deflect(ui, DB); \
 		cairo_move_to(cr, 0, yoff); \
 		cairo_line_to(cr, GM_WIDTH, yoff); \
 		cairo_stroke(cr); \
 }
 
-	for (int i = 0; i < NUM_METERS; ++i) {
+	for (int i = 0; i < ui->num_meters; ++i) {
 		ALLOC_SF(ui->sf[i])
+
+		/* metric background */
 		cairo_set_operator (cr, CAIRO_OPERATOR_OVER);
 		cairo_set_line_width(cr, 1.0);
 		cairo_set_source_rgba (cr, .8, .8, .8, 1.0);
@@ -395,6 +412,7 @@ static void alloc_sf(SAUI* ui) {
 		GAINLINE(-50);
 		GAINLINE(-60);
 		cairo_destroy(cr);
+
 		render_meter(ui, i, GM_SCALE, 2);
 		ui->vui[i] = 2;
 	}
@@ -454,9 +472,9 @@ static gboolean expose_event(GtkWidget *w, GdkEventExpose *ev, gpointer handle) 
 	cairo_rectangle (cr, ev->area.x, ev->area.y, ev->area.width, ev->area.height);
 	cairo_clip (cr);
 
-	for (int i = 0; i < NUM_METERS ; ++i) {
+	for (int i = 0; i < ui->num_meters ; ++i) {
 		const int old = ui->vui[i];
-		const int new = deflect(ui->val[i]);
+		const int new = deflect(ui, ui->val[i]);
 		if (old == new) { continue; }
 		ui->vui[i] = new;
 		render_meter(ui, i, old, new);
@@ -467,18 +485,18 @@ static gboolean expose_event(GtkWidget *w, GdkEventExpose *ev, gpointer handle) 
 	/* metric areas */
 	cairo_set_source_surface(cr, ui->ma[0], 0, 0);
 	cairo_paint (cr);
-	cairo_set_source_surface(cr, ui->ma[1], MA_WIDTH + GM_WIDTH * NUM_METERS, 0);
+	cairo_set_source_surface(cr, ui->ma[1], MA_WIDTH + GM_WIDTH * ui->num_meters, 0);
 	cairo_paint (cr);
 
 	/* meters */
-	for (int i = 0; i < NUM_METERS ; ++i) {
+	for (int i = 0; i < ui->num_meters ; ++i) {
 		cairo_set_source_surface(cr, ui->sf[i], MA_WIDTH + GM_WIDTH * i, 0);
 		cairo_paint (cr);
 	}
 
 	/* labels */
 	cairo_set_operator (cr, CAIRO_OPERATOR_SCREEN);
-	for (int i = 0; i < NUM_METERS ; ++i) {
+	for (int i = 0; i < ui->num_meters ; ++i) {
 		cairo_set_source_surface(cr, ui->an[i], MA_WIDTH + GM_WIDTH * i, GM_TXT);
 		cairo_paint (cr);
 	}
@@ -524,6 +542,13 @@ instantiate(const LV2UI_Descriptor*   descriptor,
 	SAUI* ui = (SAUI*) calloc(1,sizeof(SAUI));
 	*widget = NULL;
 
+	if      (!strcmp(plugin_uri, MTR_URI "spectrum")) { ui->num_meters = 31; ui->display_freq = true; }
+	else if (!strcmp(plugin_uri, MTR_URI "dBTPmono")) { ui->num_meters = 1; ui->display_freq = false; }
+	else if (!strcmp(plugin_uri, MTR_URI "dBTPstereo")) { ui->num_meters = 2; ui->display_freq = false; }
+	else {
+		free(ui);
+		return NULL;
+	}
 	ui->write      = write_function;
 	ui->controller = controller;
 
@@ -531,7 +556,7 @@ instantiate(const LV2UI_Descriptor*   descriptor,
 	create_meter_pattern(ui);
 	alloc_sf(ui);
 
-	for (int i=0; i < NUM_METERS ; ++i) {
+	for (int i=0; i < ui->num_meters ; ++i) {
 		ui->val[i] = -70.0;
 	}
 
@@ -558,14 +583,16 @@ instantiate(const LV2UI_Descriptor*   descriptor,
 	gtk_scale_add_mark(GTK_SCALE(ui->fader),4.0 - 2.8183, GTK_POS_RIGHT, "" /* "+9dB" */);
 	gtk_scale_add_mark(GTK_SCALE(ui->fader),4.0 - 3.9810, GTK_POS_RIGHT, "+12dB");
 
-	gtk_drawing_area_size(GTK_DRAWING_AREA(ui->m0), 2.0 * MA_WIDTH + NUM_METERS * GM_WIDTH, GM_HEIGHT);
-	gtk_widget_set_size_request(ui->m0, 2.0 * MA_WIDTH + NUM_METERS * GM_WIDTH, GM_HEIGHT);
+	gtk_drawing_area_size(GTK_DRAWING_AREA(ui->m0), 2.0 * MA_WIDTH + ui->num_meters * GM_WIDTH, GM_HEIGHT);
+	gtk_widget_set_size_request(ui->m0, 2.0 * MA_WIDTH + ui->num_meters * GM_WIDTH, GM_HEIGHT);
 	gtk_widget_set_redraw_on_allocate(ui->m0, TRUE);
 
 	/* layout */
 	gtk_container_add(GTK_CONTAINER(ui->align), ui->m0);
 	gtk_box_pack_start(GTK_BOX(ui->box), ui->align, FALSE, FALSE, 0);
-	gtk_box_pack_start(GTK_BOX(ui->box), ui->fader, FALSE, FALSE, 0);
+	if (ui->display_freq) {
+		gtk_box_pack_start(GTK_BOX(ui->box), ui->fader, FALSE, FALSE, 0);
+	}
 
 	g_signal_connect (G_OBJECT (ui->m0), "expose_event", G_CALLBACK (expose_event), ui);
 	g_signal_connect (G_OBJECT (ui->fader), "value-changed", G_CALLBACK (set_gain), ui);
@@ -580,7 +607,7 @@ static void
 cleanup(LV2UI_Handle handle)
 {
 	SAUI* ui = (SAUI*)handle;
-	for (int i=0; i < NUM_METERS ; ++i) {
+	for (int i=0; i < ui->num_meters ; ++i) {
 		cairo_surface_destroy(ui->sf[i]);
 		cairo_surface_destroy(ui->an[i]);
 	}
@@ -594,8 +621,8 @@ cleanup(LV2UI_Handle handle)
 }
 
 static void invalidate_meter(SAUI* ui, int mtr, float val) {
-	const int old = deflect(ui->val[mtr]);
-	const int new = deflect(val);
+	const int old = deflect(ui, ui->val[mtr]);
+	const int new = deflect(ui, val);
 	if (old == new) {
 		return;
 	}
@@ -619,6 +646,29 @@ static void invalidate_meter(SAUI* ui, int mtr, float val) {
  * handle data from backend
  */
 
+static void handle_spectrum_connections(SAUI* ui, uint32_t port_index, float v) {
+	if (port_index == 4) {
+		if (v >= 0 && v <= 4.0) {
+			ui->disable_signals = true;
+			gtk_range_set_value(GTK_RANGE(ui->fader), 4.0 - v);
+			ui->disable_signals = false;
+		}
+	} else
+	if (port_index > 4 && port_index < 5 + ui->num_meters) {
+		invalidate_meter(ui, port_index -5, v);
+	}
+}
+
+static void handle_meter_connections(SAUI* ui, uint32_t port_index, float v) {
+	v = v > .000316f ? 20.0 * log10f(v) : -70.0;
+	if (port_index == 3) {
+		invalidate_meter(ui, 0, v);
+	}
+	else if (port_index == 6) {
+		invalidate_meter(ui, 1, v);
+	}
+}
+
 static void
 port_event(LV2UI_Handle handle,
            uint32_t     port_index,
@@ -628,17 +678,12 @@ port_event(LV2UI_Handle handle,
 {
 	SAUI* ui = (SAUI*)handle;
 	if (format != 0) return;
-	if (port_index == 4) {
-		float v = *(float *)buffer;
-		if (v >= 0 && v <= 4.0) {
-			ui->disable_signals = true;
-			gtk_range_set_value(GTK_RANGE(ui->fader), 4.0 - v);
-			ui->disable_signals = false;
-		}
-	} else
-	if (port_index > 4 && port_index < 5 + NUM_METERS) {
-		invalidate_meter(ui, port_index -5, *(float *)buffer);
+	if (ui->display_freq) {
+		handle_spectrum_connections(ui, port_index, *(float *)buffer);
+	} else {
+		handle_meter_connections(ui, port_index, *(float *)buffer);
 	}
+
 }
 
 /******************************************************************************
@@ -652,7 +697,7 @@ extension_data(const char* uri)
 }
 
 static const LV2UI_Descriptor descriptor = {
-	"http://gareus.org/oss/lv2/meters#spectrumui",
+	"http://gareus.org/oss/lv2/meters#dpmui",
 	instantiate,
 	cleanup,
 	port_event,
