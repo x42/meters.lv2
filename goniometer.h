@@ -66,6 +66,24 @@ static int gmrb_read_one(gmringbuf *rb, float *c0, float *c1) {
 	return 0;
 }
 
+static int gmrb_read(gmringbuf *rb, float *c0, float *c1, size_t len) {
+	if (gmrb_read_space(rb) < len) return -1;
+	if (rb->rp + len <= rb->len) {
+		memcpy((void*) c0, (void*) &rb->c0[rb->rp], len * sizeof (float));
+		memcpy((void*) c1, (void*) &rb->c1[rb->rp], len * sizeof (float));
+	} else {
+		int part = rb->len - rb->rp;
+		int remn = len - part;
+		memcpy((void*) c0, (void*) &rb->c0[rb->rp], part * sizeof (float));
+		memcpy((void*) c1, (void*) &rb->c1[rb->rp], part * sizeof (float));
+		memcpy((void*) &c0[part], (void*) rb->c0, remn * sizeof (float));
+		memcpy((void*) &c1[part], (void*) rb->c1, remn * sizeof (float));
+	}
+	rb->rp = (rb->rp + len) % rb->len;
+	return 0;
+}
+
+
 static int gmrb_write(gmringbuf *rb, float *c0, float *c1, size_t len) {
 	if (gmrb_write_space(rb) < len) return -1;
 	if (rb->wp + len <= rb->len) {
