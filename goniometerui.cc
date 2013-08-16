@@ -88,6 +88,7 @@ typedef struct {
 	GtkWidget* lbl_alpha;
 
 	GtkWidget* fader;
+	GtkWidget* cbx_autogain;
 
 	int sfc;
 	cairo_surface_t* sf[3];
@@ -101,6 +102,8 @@ typedef struct {
 	uint32_t ntfy_u, ntfy_b;
 
 	float gain;
+	float ag_xmax, ag_xmin;
+	float ag_ymax, ag_ymin;
 	bool disable_signals;
 
 	Resampler *src;
@@ -246,6 +249,7 @@ static void draw_rb(GMUI* ui, gmringbuf *rb) {
 	if (n_samples < 64) return;
 
 	const bool composit = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(ui->cbx_xfade));
+	const bool autogain = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(ui->cbx_autogain));
 	const bool lines = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(ui->cbx_lines));
 	const float persist = gtk_spin_button_get_value(GTK_SPIN_BUTTON(ui->spn_alpha));
 	const float line_width = gtk_spin_button_get_value(GTK_SPIN_BUTTON(ui->spn_psize));
@@ -290,8 +294,9 @@ static void draw_rb(GMUI* ui, gmringbuf *rb) {
 	}
 
 	bool os = false;
+	size_t n_points = n_samples;
 	if (ui->src_fact > 1) {
-		uint32_t j=0;
+		size_t j=0;
 		for (j=0; j < n_samples; ++j) {
 			if (gmrb_read_one(rb, &ui->scratch[2*j], &ui->scratch[2*j+1])) break;
 		}
@@ -304,11 +309,11 @@ static void draw_rb(GMUI* ui, gmringbuf *rb) {
 		ui->src->out_count = n_samples * ui->src_fact;
 		ui->src->out_data = ui->resampl;
 		ui->src->process ();
-		n_samples *= ui->src_fact;
+		n_points *= ui->src_fact;
 		os = true;
 	}
 
-	for (uint32_t i=0; i < n_samples; ++i) {
+	for (uint32_t i=0; i < n_points; ++i) {
 		if (os) {
 			d0 = ui->resampl[2*i];
 			d1 = ui->resampl[2*i+1];
@@ -326,9 +331,18 @@ static void draw_rb(GMUI* ui, gmringbuf *rb) {
 		ui->lp0 = d0;
 		ui->lp1 = d1;
 #endif
+		const float ax = (ui->lp0 - ui->lp1);
+		const float ay = (ui->lp0 + ui->lp1);
 
-		const float x = GM_CENTER - ui->gain * (ui->lp0 - ui->lp1) * GM_RAD2;
-		const float y = GM_CENTER - ui->gain * (ui->lp0 + ui->lp1) * GM_RAD2;
+		if (autogain) {
+			if (ax > ui->ag_xmax) ui->ag_xmax = ax;
+			if (ax < ui->ag_xmin) ui->ag_xmin = ax;
+			if (ay > ui->ag_ymax) ui->ag_ymax = ay;
+			if (ay < ui->ag_ymin) ui->ag_ymin = ay;
+		}
+
+		const float x = GM_CENTER - ui->gain * ax * GM_RAD2;
+		const float y = GM_CENTER - ui->gain * ay * GM_RAD2;
 
 		if ( (ui->last_x - x) * (ui->last_x - x) + (ui->last_y - y) * (ui->last_y - y) < 2.0) continue;
 
@@ -356,6 +370,41 @@ static void draw_rb(GMUI* ui, gmringbuf *rb) {
 	}
 
 	cairo_destroy(cr);
+
+	if (autogain) {
+		LV2gm* self = (LV2gm*) ui->instance;
+		float elapsed = n_samples / self->rate;
+		const float hold = 1.0 - 2.6 * elapsed * elapsed;
+#if 1
+		ui->ag_xmax = 1e-10f + ui->ag_xmax * hold;
+		ui->ag_xmin = 1e-10f + ui->ag_xmin * hold;
+		ui->ag_ymax = 1e-10f + ui->ag_ymax * hold;
+		ui->ag_ymin = 1e-10f + ui->ag_ymin * hold;
+
+		const float xdif = (ui->ag_xmax - ui->ag_xmin);
+		const float ydif = (ui->ag_ymax - ui->ag_ymin);
+		float max  = ydif > xdif ? ydif : xdif;
+#else
+		float max  = sqrt(xdif * xdif + ydif * ydif);
+#endif
+		max *= .707;
+
+		float gain;
+		if (max < .34) {
+			gain = 6.0;
+		} else if (max > 8.0) {
+			gain = .25;
+		} else {
+			gain = 2.0 / max;
+		}
+		float attack = gain < ui->gain ? /* attack */ (.62 + .2 * log10f(elapsed)) : /* decay */ (.04 + .01 * logf(elapsed));
+		//printf(" %.3f  %.3f [max: %f %f] %f\n", ui->gain, gain, xdif, ydif, max);
+		gain = ui->gain + attack * (gain - ui->gain);
+		if ( rint(50 * gain) != rint(50 * gtk_range_get_value(GTK_RANGE(ui->fader)))) {
+			gtk_range_set_value(GTK_RANGE(ui->fader), gain);
+		}
+		ui->gain = gain;
+	}
 }
 
 static void draw_gm_labels(GMUI* ui, cairo_t* cr) {
@@ -489,7 +538,20 @@ static gboolean expose_event(GtkWidget *w, GdkEventExpose *ev, gpointer handle) 
 static gboolean set_gain(GtkRange* r, gpointer handle) {
 	GMUI* ui = (GMUI*)handle;
 	ui->gain = gtk_range_get_value(r);
-	if (!ui->disable_signals) {
+	const bool autogain = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(ui->cbx_autogain));
+	if (!ui->disable_signals && !autogain) {
+		ui->write(ui->controller, 4, sizeof(float), 0, (const void*) &ui->gain);
+	}
+	return TRUE;
+}
+
+static gboolean cb_autogain(GtkWidget *w, gpointer handle) {
+	GMUI* ui = (GMUI*)handle;
+	const bool autogain = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(ui->cbx_autogain));
+	if (autogain) {
+		gtk_widget_set_sensitive(GTK_WIDGET(ui->fader), false);
+	} else {
+		gtk_widget_set_sensitive(GTK_WIDGET(ui->fader), true);
 		ui->write(ui->controller, 4, sizeof(float), 0, (const void*) &ui->gain);
 	}
 	return TRUE;
@@ -592,13 +654,16 @@ instantiate(const LV2UI_Descriptor*   descriptor,
 	ui->ntfy_u = 1;
 	ui->disable_signals = false;
 
+	ui->ag_xmax = ui->ag_xmin = 0;
+	ui->ag_ymax = ui->ag_ymin = 0;
+
 	ui->src_fact = 1;
-	//setup_src(ui, 3, 8, .5);
 
 	ui->box   = gtk_vbox_new(FALSE, 2);
 	ui->align = gtk_alignment_new(.5, .5, 0, 0);
 	ui->m0    = gtk_drawing_area_new();
 	ui->fader = gtk_hscale_new_with_range(0, 6.0, .001);
+	ui->cbx_autogain = gtk_check_button_new_with_label("Auto");
 
 	ui->c_tbl        = gtk_table_new(/*rows*/7, /*cols*/ 5, FALSE);
 	ui->cbx_src      = gtk_check_button_new_with_label("Oversample");
@@ -607,7 +672,7 @@ instantiate(const LV2UI_Descriptor*   descriptor,
 	ui->spn_src_frel = gtk_spin_button_new_with_range(0.0, 1.0, .05);
 
 	ui->cbx_lines    = gtk_check_button_new_with_label("Draw Lines");
-	ui->cbx_xfade    = gtk_check_button_new_with_label("XX-Fade Display");
+	ui->cbx_xfade    = gtk_check_button_new_with_label("XX-Fade");
 	ui->spn_psize    = gtk_spin_button_new_with_range(.25, 5.25, .25);
 
 	ui->spn_vfreq    = gtk_spin_button_new_with_range(10, 100, 5);
@@ -635,25 +700,40 @@ instantiate(const LV2UI_Descriptor*   descriptor,
 	/* fader init */
 	gtk_scale_set_draw_value(GTK_SCALE(ui->fader), FALSE);
 	gtk_range_set_value(GTK_RANGE(ui->fader), 1.0);
+#if 1
+	gtk_scale_add_mark(GTK_SCALE(ui->fader), 5.6234, GTK_POS_TOP, "" /* "+15dB"*/);
+	gtk_scale_add_mark(GTK_SCALE(ui->fader), 3.9810, GTK_POS_TOP, "+12dB");
+	gtk_scale_add_mark(GTK_SCALE(ui->fader), 2.8183, GTK_POS_TOP, "" /* "+9dB" */);
+	gtk_scale_add_mark(GTK_SCALE(ui->fader), 1.9952, GTK_POS_TOP, "+6dB");
+	gtk_scale_add_mark(GTK_SCALE(ui->fader), 1.4125, GTK_POS_TOP, "" /* "+3dB" */);
+	gtk_scale_add_mark(GTK_SCALE(ui->fader), 1.0000, GTK_POS_TOP, "0dB");
+	gtk_scale_add_mark(GTK_SCALE(ui->fader), 0.7079, GTK_POS_TOP, "" /* "-3dB" */);
+	gtk_scale_add_mark(GTK_SCALE(ui->fader), 0.5012, GTK_POS_TOP, "-6dB");
+	gtk_scale_add_mark(GTK_SCALE(ui->fader), 0.3548, GTK_POS_TOP, "" /* "-9dB" */);
+	gtk_scale_add_mark(GTK_SCALE(ui->fader), 0.2511, GTK_POS_TOP, "-12dB");
+	gtk_scale_add_mark(GTK_SCALE(ui->fader), 0.1778, GTK_POS_TOP, "" /* "-15dB"*/);
+#else
 	gtk_scale_add_mark(GTK_SCALE(ui->fader), 5.6234, GTK_POS_BOTTOM, "+15dB");
 	gtk_scale_add_mark(GTK_SCALE(ui->fader), 3.9810, GTK_POS_TOP, "+12dB");
-	gtk_scale_add_mark(GTK_SCALE(ui->fader), 2.8183, GTK_POS_BOTTOM, "+9dB");
+	gtk_scale_add_mark(GTK_SCALE(ui->fader), 2.8183, GTK_POS_BOTTOM, "+9dB" );
 	gtk_scale_add_mark(GTK_SCALE(ui->fader), 1.9952, GTK_POS_TOP, "+6dB");
-	gtk_scale_add_mark(GTK_SCALE(ui->fader), 1.4125, GTK_POS_BOTTOM, "+3dB");
-	gtk_scale_add_mark(GTK_SCALE(ui->fader), 1.0000, GTK_POS_TOP, "0dB");
-	gtk_scale_add_mark(GTK_SCALE(ui->fader), 0.7079, GTK_POS_BOTTOM, "-3dB");
+	gtk_scale_add_mark(GTK_SCALE(ui->fader), 1.4125, GTK_POS_BOTTOM, "+3dB" );
+	gtk_scale_add_mark(GTK_SCALE(ui->fader), 0.7079, GTK_POS_BOTTOM, "-3dB" );
 	gtk_scale_add_mark(GTK_SCALE(ui->fader), 0.5012, GTK_POS_TOP, "-6dB");
-	gtk_scale_add_mark(GTK_SCALE(ui->fader), 0.3548, GTK_POS_BOTTOM, "-9dB");
-	gtk_scale_add_mark(GTK_SCALE(ui->fader), 0.2511, GTK_POS_TOP, "-12dB");
+	gtk_scale_add_mark(GTK_SCALE(ui->fader), 0.3548, GTK_POS_BOTTOM, "-9dB" );
 	gtk_scale_add_mark(GTK_SCALE(ui->fader), 0.1778, GTK_POS_BOTTOM, "-15dB");
+	gtk_scale_add_mark(GTK_SCALE(ui->fader), 0.2511, GTK_POS_TOP, "-12dB");
 	//gtk_scale_add_mark(GTK_SCALE(ui->fader), 0.0,  GTK_POS_BOTTOM, ""); // -inf
+#endif
 
 	gtk_drawing_area_size(GTK_DRAWING_AREA(ui->m0), PC_BOUNDS + GM_BOUNDS, GM_BOUNDS);
 	gtk_widget_set_size_request(ui->m0, PC_BOUNDS + GM_BOUNDS, GM_BOUNDS);
 	gtk_widget_set_redraw_on_allocate(ui->m0, TRUE);
 
 	/* layout */
-	gtk_table_attach_defaults(GTK_TABLE(ui->c_tbl), ui->fader       , 0, 5, 0, 1);
+	gtk_table_attach_defaults(GTK_TABLE(ui->c_tbl), ui->cbx_autogain, 0, 1, 0, 1);
+	gtk_table_attach_defaults(GTK_TABLE(ui->c_tbl), ui->fader       , 1, 5, 0, 1);
+
 	gtk_table_attach(GTK_TABLE(ui->c_tbl), ui->sep_h0, 0, 5, 1, 2, (GtkAttachOptions) (GTK_EXPAND | GTK_FILL), GTK_SHRINK, 0, 4);
 
 	gtk_table_attach_defaults(GTK_TABLE(ui->c_tbl), ui->lbl_src_fact, 2, 3, 2, 3);
@@ -686,6 +766,7 @@ instantiate(const LV2UI_Descriptor*   descriptor,
 
 	g_signal_connect (G_OBJECT (ui->m0), "expose_event", G_CALLBACK (expose_event), ui);
 	g_signal_connect (G_OBJECT (ui->fader), "value-changed", G_CALLBACK (set_gain), ui);
+	g_signal_connect (G_OBJECT (ui->cbx_autogain), "toggled", G_CALLBACK (cb_autogain), ui);
 
 	g_signal_connect (G_OBJECT (ui->cbx_src), "toggled", G_CALLBACK (cb_src), ui);
 	g_signal_connect (G_OBJECT (ui->spn_src_fact), "value-changed", G_CALLBACK (cb_src), ui);
@@ -722,6 +803,7 @@ cleanup(LV2UI_Handle handle)
 	}
 	gtk_widget_destroy(ui->m0);
 	gtk_widget_destroy(ui->fader);
+	gtk_widget_destroy(ui->cbx_autogain);
 	gtk_widget_destroy(ui->cbx_src);
 	gtk_widget_destroy(ui->spn_src_fact);
 	gtk_widget_destroy(ui->spn_src_hlen);
