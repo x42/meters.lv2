@@ -67,6 +67,11 @@
 	lv2:binary <@LV2NAME@@LIB_EXT@> ;
 	rdfs:seeAlso <@LV2NAME@.ttl> .
 
+<http://gareus.org/oss/lv2/@LV2NAME@#spectrum>
+	a lv2:Plugin ;
+	lv2:binary <@LV2NAME@@LIB_EXT@> ;
+	rdfs:seeAlso <@LV2NAME@.ttl> .
+
 <http://gareus.org/oss/lv2/@LV2NAME@#ui>
 	a ui:GtkUI ;
 	ui:binary <@LV2GUI@@LIB_EXT@> ;
@@ -80,4 +85,9 @@
 <http://gareus.org/oss/lv2/@LV2NAME@#goniometerui>
 	a ui:GtkUI ;
 	ui:binary <@LV2GUI3@@LIB_EXT@> ;
+	rdfs:seeAlso <@LV2NAME@.ttl> .
+
+<http://gareus.org/oss/lv2/@LV2NAME@#spectrumui>
+	a ui:GtkUI ;
+	ui:binary <@LV2GUI4@@LIB_EXT@> ;
 	rdfs:seeAlso <@LV2NAME@.ttl> .

@@ -20,6 +20,7 @@ LV2NAME=meters
 LV2GUI=metersUI
 LV2GUI2=eburUI
 LV2GUI3=goniometerUI
+LV2GUI4=spectrumUI
 BUNDLE=meters.lv2
 
 UNAME=$(shell uname)
@@ -35,6 +36,7 @@ targets=$(LV2NAME)$(LIB_EXT)
 targets+=$(LV2GUI)$(LIB_EXT)
 targets+=$(LV2GUI2)$(LIB_EXT)
 targets+=$(LV2GUI3)$(LIB_EXT)
+targets+=$(LV2GUI4)$(LIB_EXT)
 
 # check for build-dependencies
 ifeq ($(shell pkg-config --exists lv2 || echo no), no)
@@ -71,13 +73,13 @@ default: all
 all: manifest.ttl $(LV2NAME).ttl $(targets)
 
 manifest.ttl: manifest.ttl.in
-	sed "s/@LV2NAME@/$(LV2NAME)/g;s/@LIB_EXT@/$(LIB_EXT)/g;s/@LV2GUI@/$(LV2GUI)/g;s/@LV2GUI2@/$(LV2GUI2)/g;s/@LV2GUI3@/$(LV2GUI3)/g" \
+	sed "s/@LV2NAME@/$(LV2NAME)/g;s/@LIB_EXT@/$(LIB_EXT)/g;s/@LV2GUI@/$(LV2GUI)/g;s/@LV2GUI2@/$(LV2GUI2)/g;s/@LV2GUI3@/$(LV2GUI3)/g;s/@LV2GUI4@/$(LV2GUI4)/g" \
 	  manifest.ttl.in > manifest.ttl
 
 $(LV2NAME).ttl: $(LV2NAME).ttl.in
 	cat $(LV2NAME).ttl.in > $(LV2NAME).ttl
 
-$(LV2NAME)$(LIB_EXT): $(LV2NAME).cc $(DSPDEPS) ebulv2.cc uris.h goniometerlv2.c goniometer.h
+$(LV2NAME)$(LIB_EXT): $(LV2NAME).cc $(DSPDEPS) ebulv2.cc uris.h goniometerlv2.c goniometer.h spectrumlv2.c
 	$(CXX) $(CPPFLAGS) $(CFLAGS) $(CXXFLAGS) \
 	  -o $(LV2NAME)$(LIB_EXT) $(LV2NAME).cc $(DSPSRC) \
 	  -shared $(LV2LDFLAGS) $(LDFLAGS) $(LOADLIBES)
@@ -100,6 +102,11 @@ $(LV2GUI3)$(LIB_EXT): goniometerui.cc goniometer.h $(UIDEPS) \
 		zita-resampler/resampler.cc zita-resampler/resampler-table.cc \
 		-shared $(LV2LDFLAGS) $(LDFLAGS) $(UILIBS)
 
+$(LV2GUI4)$(LIB_EXT): spectrumui.c $(UIDEPS)
+	$(CC) $(CPPFLAGS) $(CFLAGS) -std=c99 $(UICFLAGS) \
+		-o $(LV2GUI4)$(LIB_EXT) spectrumui.c \
+		-shared $(LV2LDFLAGS) $(LDFLAGS) $(UILIBS)
+
 # install/uninstall/clean target definitions
 
 install: all
@@ -109,6 +116,7 @@ install: all
 	install -m755 $(LV2GUI)$(LIB_EXT) $(DESTDIR)$(LV2DIR)/$(BUNDLE)
 	install -m755 $(LV2GUI2)$(LIB_EXT) $(DESTDIR)$(LV2DIR)/$(BUNDLE)
 	install -m755 $(LV2GUI3)$(LIB_EXT) $(DESTDIR)$(LV2DIR)/$(BUNDLE)
+	install -m755 $(LV2GUI4)$(LIB_EXT) $(DESTDIR)$(LV2DIR)/$(BUNDLE)
 
 uninstall:
 	rm -f $(DESTDIR)$(LV2DIR)/$(BUNDLE)/manifest.ttl
@@ -117,6 +125,7 @@ uninstall:
 	rm -f $(DESTDIR)$(LV2DIR)/$(BUNDLE)/$(LV2GUI)$(LIB_EXT)
 	rm -f $(DESTDIR)$(LV2DIR)/$(BUNDLE)/$(LV2GUI2)$(LIB_EXT)
 	rm -f $(DESTDIR)$(LV2DIR)/$(BUNDLE)/$(LV2GUI3)$(LIB_EXT)
+	rm -f $(DESTDIR)$(LV2DIR)/$(BUNDLE)/$(LV2GUI4)$(LIB_EXT)
 	-rmdir $(DESTDIR)$(LV2DIR)/$(BUNDLE)
 
 clean:

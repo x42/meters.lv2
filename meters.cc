@@ -240,6 +240,7 @@ extension_data(const char* uri)
 
 #include "ebulv2.cc"
 #include "goniometerlv2.c"
+#include "spectrumlv2.c"
 
 #define mkdesc(ID, NAME) \
 static const LV2_Descriptor descriptor ## ID = { \
@@ -293,6 +294,7 @@ lv2_descriptor(uint32_t index)
 	case 10: return &descriptorCor;
 	case 11: return &descriptorEBUr128;
 	case 12: return &descriptorGoniometer;
+	case 13: return &descriptorSpectrum;
 	default: return NULL;
 	}
 }
