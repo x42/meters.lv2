@@ -63,9 +63,9 @@ void Stcorrdsp::process (float *pl, float *pr, int n)
     }
     _zl = zl;
     _zr = zr;
-    _zlr = zlr;
-    _zll = zll;
-    _zrr = zrr;
+    _zlr = zlr + 1e-10f;
+    _zll = zll + 1e-10f;
+    _zrr = zrr + 1e-10f;
 }
 
 
