@@ -84,10 +84,10 @@ typedef struct {
 	cairo_pattern_t* mpat;
 
 	float val[MAX_METERS];
-	float vui[MAX_METERS];
+	int   vui[MAX_METERS];
 
 	float peak_val[MAX_METERS];
-	int   peak_hold[MAX_METERS];
+	int   peak_vis[MAX_METERS];
 
 	bool disable_signals;
 	float gain;
@@ -141,7 +141,7 @@ static int deflect(SAUI* ui, float val) {
 /******************************************************************************
  * drawing helpers
  */
-static void render_meter(SAUI*, int, int, int);
+static void render_meter(SAUI*, int, int, int, int, int);
 
 static void create_meter_pattern(SAUI* ui) {
 	const int width = GM_WIDTH;
@@ -413,27 +413,14 @@ static void alloc_sf(SAUI* ui) {
 		GAINLINE(-60);
 		cairo_destroy(cr);
 
-		render_meter(ui, i, GM_SCALE, 2);
+		render_meter(ui, i, GM_SCALE, 2, 0, 0);
 		ui->vui[i] = 2;
 	}
 }
 
-static void render_meter(SAUI* ui, int i, int old, int new) {
+static void render_meter(SAUI* ui, int i, int old, int new, int m_old, int m_new) {
 	cairo_t* cr = cairo_create (ui->sf[i]);
 	cairo_set_operator (cr, CAIRO_OPERATOR_SOURCE);
-
-#ifdef FIXED_CLIPPING // XXX
-	int t, h;
-	if (old > new) {
-		t = old;
-		h = old - new;
-	} else {
-		t = new;
-		h = new - old;
-	}
-	cairo_rectangle(cr, GM_LEFT -1 , GM_TOP + GM_SCALE - t - 2 , GM_GIRTH + 2, h+4);
-	cairo_clip(cr);
-#endif
 
 	cairo_set_source_rgb (cr, .0, .0, .0);
 	rounded_rectangle (cr, GM_LEFT-1, GM_TOP, GM_GIRTH+2, GM_SCALE, 6);
@@ -442,6 +429,13 @@ static void render_meter(SAUI* ui, int i, int old, int new) {
 
 	cairo_set_source(cr, ui->mpat);
 	cairo_rectangle (cr, GM_LEFT, GM_TOP + GM_SCALE - new - 1, GM_GIRTH, new + 1);
+	cairo_fill(cr);
+
+	/* peak hold */
+	cairo_set_operator (cr, CAIRO_OPERATOR_OVER);
+	cairo_rectangle (cr, GM_LEFT, GM_TOP + GM_SCALE - m_new - 1, GM_GIRTH, 2);
+	cairo_fill_preserve (cr);
+	cairo_set_source_rgba (cr, 1.0, 1.0, 1.0, 0.3);
 	cairo_fill(cr);
 
 	/* border */
@@ -455,10 +449,6 @@ static void render_meter(SAUI* ui, int i, int old, int new) {
 	cairo_line_to(cr, GM_LEFT + GM_GIRTH/2, GM_TOP + GM_SCALE + 8);
 	cairo_stroke(cr);
 
-#ifdef FIXED_CLIPPING // XXX
-	cairo_rectangle(cr, GM_LEFT -1 , GM_TOP + GM_SCALE - t - 2 , GM_GIRTH + 2, h+4);
-	cairo_clip(cr);
-#endif
 	rounded_rectangle (cr, GM_LEFT-1, GM_TOP, GM_GIRTH+2, GM_SCALE, 6);
 	cairo_stroke(cr);
 
@@ -475,9 +465,12 @@ static gboolean expose_event(GtkWidget *w, GdkEventExpose *ev, gpointer handle) 
 	for (int i = 0; i < ui->num_meters ; ++i) {
 		const int old = ui->vui[i];
 		const int new = deflect(ui, ui->val[i]);
-		if (old == new) { continue; }
+		const int m_old = ui->peak_vis[i];
+		const int m_new = deflect(ui, ui->peak_val[i]);
+		if (old == new && m_old == m_new) { continue; }
 		ui->vui[i] = new;
-		render_meter(ui, i, old, new);
+		ui->peak_vis[i] = m_new;
+		render_meter(ui, i, old, new, m_old, m_new);
 	}
 
 	cairo_set_operator (cr, CAIRO_OPERATOR_ATOP);
@@ -520,8 +513,11 @@ static gboolean set_gain(GtkRange* r, gpointer handle) {
 	return TRUE;
 }
 
-static gboolean cb_expose(GtkWidget *w, gpointer handle) {
+static gboolean cb_reset_peak(GtkWidget *w, GdkEventButton *event, gpointer handle) {
 	SAUI* ui = (SAUI*)handle;
+	for (int i=0; i < ui->num_meters ; ++i) {
+		ui->peak_val[i] = -70;
+	}
 	gtk_widget_queue_draw(ui->m0);
 	return TRUE;
 }
@@ -558,6 +554,7 @@ instantiate(const LV2UI_Descriptor*   descriptor,
 
 	for (int i=0; i < ui->num_meters ; ++i) {
 		ui->val[i] = -70.0;
+		ui->peak_val[i] = -70.0;
 	}
 
 	ui->disable_signals = false;
@@ -594,8 +591,11 @@ instantiate(const LV2UI_Descriptor*   descriptor,
 		gtk_box_pack_start(GTK_BOX(ui->box), ui->fader, FALSE, FALSE, 0);
 	}
 
+	gtk_widget_add_events(ui->m0, GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK);
+
 	g_signal_connect (G_OBJECT (ui->m0), "expose_event", G_CALLBACK (expose_event), ui);
 	g_signal_connect (G_OBJECT (ui->fader), "value-changed", G_CALLBACK (set_gain), ui);
+	g_signal_connect (G_OBJECT (ui->m0), "button-release-event", G_CALLBACK (cb_reset_peak), ui);
 
 	gtk_widget_show_all(ui->box);
 	*widget = ui->box;
@@ -620,13 +620,17 @@ cleanup(LV2UI_Handle handle)
 	free(ui);
 }
 
-static void invalidate_meter(SAUI* ui, int mtr, float val) {
+static void invalidate_meter(SAUI* ui, int mtr, float val, float peak) {
 	const int old = deflect(ui, ui->val[mtr]);
 	const int new = deflect(ui, val);
-	if (old == new) {
+	const int m_old = deflect(ui, ui->peak_val[mtr]);
+	const int m_new = deflect(ui, peak);
+	if (old == new && m_old == m_new) {
 		return;
 	}
 	ui->val[mtr] = val;
+	ui->peak_val[mtr] = peak;
+
 	int t, h;
 	if (old > new) {
 		t = old;
@@ -634,6 +638,19 @@ static void invalidate_meter(SAUI* ui, int mtr, float val) {
 	} else {
 		t = new;
 		h = new - old;
+	}
+
+	gtk_widget_queue_draw_area(ui->m0,
+			mtr * GM_WIDTH + MA_WIDTH + GM_LEFT - 1,
+			GM_TOP + GM_SCALE - t - 1,
+			GM_GIRTH + 2, h+3);
+
+	if (m_old > m_new) {
+		t = m_old;
+		h = m_old - m_new;
+	} else {
+		t = m_new;
+		h = m_new - m_old;
 	}
 
 	gtk_widget_queue_draw_area(ui->m0,
@@ -655,18 +672,30 @@ static void handle_spectrum_connections(SAUI* ui, uint32_t port_index, float v) 
 		}
 	} else
 	if (port_index > 4 && port_index < 5 + ui->num_meters) {
-		invalidate_meter(ui, port_index -5, v);
+		int pidx = port_index -5;
+		if (v > ui->peak_val[pidx]) { ui->peak_val[pidx] = v; }
+		invalidate_meter(ui, pidx, v, ui->peak_val[pidx]);
 	}
 }
 
 static void handle_meter_connections(SAUI* ui, uint32_t port_index, float v) {
 	v = v > .000316f ? 20.0 * log10f(v) : -70.0;
 	if (port_index == 3) {
-		invalidate_meter(ui, 0, v);
+		if (v > ui->peak_val[0]) { ui->peak_val[0] = v; }
+		invalidate_meter(ui, 0, v, ui->peak_val[0]);
 	}
 	else if (port_index == 6) {
-		invalidate_meter(ui, 1, v);
+		if (v > ui->peak_val[1]) { ui->peak_val[1] = v; }
+		invalidate_meter(ui, 1, v, ui->peak_val[1]);
 	}
+#if 0 // TODO handle max from backend mono vs stereo
+	else if (port_index == 7) {
+		invalidate_meter(ui, 0, ui->val[0], v);
+	}
+	else if (port_index == 8) {
+		invalidate_meter(ui, 1, ui->val[1], v);
+	}
+#endif
 }
 
 static void
