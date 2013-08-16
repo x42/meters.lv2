@@ -32,16 +32,16 @@
 #include "lv2/lv2plug.in/ns/extensions/ui/ui.h"
 #define MTR_URI "http://gareus.org/oss/lv2/meters#"
 
-#define GM_TOP    ( 12.5f)
-#define GM_LEFT   (  5.5f)
-#define GM_GIRTH  ( 10.0f)
-#define GM_WIDTH  ( 20.0f)
+#define GM_TOP    (12.5f)
+#define GM_LEFT   (ui->display_freq ?  1.5f :  5.5f)
+#define GM_GIRTH  (ui->display_freq ?  8.0f : 10.0f)
+#define GM_WIDTH  (ui->display_freq ? 13.0f : 20.0f)
 
 #define GM_HEIGHT (400.0f)
 #define GM_TXT    (GM_HEIGHT - (ui->display_freq ? 52.0f : 16.0f))
 #define GM_SCALE  (GM_TXT - GM_TOP - GM_TOP + 2.0)
 
-#define MA_WIDTH  (25.0f)
+#define MA_WIDTH  (30.0f)
 
 #define MAX_CAIRO_PATH 32
 #define MAX_METERS 31
@@ -54,6 +54,8 @@
 #define UINT_TO_RGB(u,r,g,b) { (*(r)) = ((u)>>16)&0xff; (*(g)) = ((u)>>8)&0xff; (*(b)) = (u)&0xff; }
 #define UINT_TO_RGBA(u,r,g,b,a) { UINT_TO_RGB(((u)>>8),r,g,b); (*(a)) = (u)&0xff; }
 
+#define GAINSCALE(x) (40.0 -(x) * 4.0)
+#define INV_GAINSCALE(x) (10.0 -(x) / 4.0)
 
 static const char *freq_table [] = {
 	" 20 Hz",   " 25 Hz",  "31.5 Hz",
@@ -155,7 +157,7 @@ static void create_meter_pattern(SAUI* ui) {
 	stp[1] = deflect(ui, -9);
 	stp[0] = deflect(ui, -18);
 
-	clr[0]=0x001188ff; clr[1]=0x00aa00ff;
+	clr[0]=0x008822ff; clr[1]=0x00aa00ff;
 	clr[2]=0x00ff00ff; clr[3]=0x00ff00ff;
 	clr[4]=0xffff00ff; clr[5]=0xffff00ff;
 	clr[6]=0xffaa00ff; clr[7]=0xffaa00ff;
@@ -215,7 +217,7 @@ static void create_meter_pattern(SAUI* ui) {
 	                                  r/255.0, g/255.0, b/255.0);
 
 	//Bottom
-	cairo_pattern_add_color_stop_rgb (pat, BOF, .2 , .2, .2);
+	cairo_pattern_add_color_stop_rgb (pat, BOF, .1 , .1, .1);
 	cairo_pattern_add_color_stop_rgb (pat, BOF + onep, .0 , .0, .0);
 	cairo_pattern_add_color_stop_rgb (pat, 1.0, .0 , .0, .0);
 
@@ -313,6 +315,7 @@ static void alloc_annotations(SAUI* ui) {
 	cairo_set_source_rgba (CR, .3, .3, .3, 1.0);
 
 #define INIT_ANN_BG(VAR, WIDTH, HEIGHT) \
+	if (!VAR) \
 	VAR = cairo_image_surface_create (CAIRO_FORMAT_RGB24, WIDTH, HEIGHT); \
 	cr = cairo_create (VAR);
 
@@ -327,7 +330,7 @@ static void alloc_annotations(SAUI* ui) {
 		/* frequecy table */
 		for (int i = 0; i < ui->num_meters; ++i) {
 			INIT_BLACK_BG(ui->an[i], 24, 64)
-			write_text(cr, freq_table[i], FONT_LBL, -M_PI/2, 4, 0);
+			write_text(cr, freq_table[i], FONT_LBL, -M_PI/2, -1, 0);
 			cairo_destroy (cr);
 		}
 	} else {
@@ -339,12 +342,20 @@ static void alloc_annotations(SAUI* ui) {
 			cairo_destroy (cr);
 		}
 	}
+}
 
-	/* metric areas */
+static void realloc_metrics(SAUI* ui) {
+	const float dboff = ui->gain > 0.001 ? 20.0 * log10f(ui->gain) : -60;
+	cairo_t* cr;
 #define DO_THE_METER(DB, TXT) \
-	write_text(cr,  TXT , FONT_MTR, 0, MA_WIDTH - 2, YPOS(deflect(ui, DB)));
+	if (dboff + DB < 6.0 && dboff + DB >= -60) \
+	write_text(cr,  TXT , FONT_MTR, 0, MA_WIDTH - 3, YPOS(deflect(ui, dboff + DB)));
 
 #define DO_THE_METRICS \
+	DO_THE_METER(  18, "+18dB") \
+	DO_THE_METER(  15, "+15dB") \
+	DO_THE_METER(   9,  "+9dB") \
+	DO_THE_METER(   6,  "+6dB") \
 	DO_THE_METER(   3,  "+3dB") \
 	DO_THE_METER(   0,  " 0dB") \
 	DO_THE_METER(  -3,  "-3dB") \
@@ -363,7 +374,7 @@ static void alloc_annotations(SAUI* ui) {
 	cairo_rectangle (cr, 0, 0, MA_WIDTH, GM_HEIGHT);
 	cairo_fill (cr);
 	DO_THE_METRICS
-	write_text(cr,  ui->display_freq ? "dBFS" : "dBTP", FONT_MTR, 0, MA_WIDTH - 2, GM_TXT);
+	write_text(cr,  ui->display_freq ? "dBFS" : "dBTP", FONT_MTR, 0, MA_WIDTH - 3, GM_TXT);
 	cairo_destroy (cr);
 
 	INIT_ANN_BG(ui->ma[1], MA_WIDTH, GM_HEIGHT)
@@ -371,13 +382,14 @@ static void alloc_annotations(SAUI* ui) {
 	cairo_rectangle (cr, 0, 0, MA_WIDTH, GM_HEIGHT);
 	cairo_fill (cr);
 	DO_THE_METRICS
-	write_text(cr,  ui->display_freq ? "dBFS" : "dBTP", FONT_MTR, 0, MA_WIDTH - 2, GM_TXT);
+	write_text(cr,  ui->display_freq ? "dBFS" : "dBTP", FONT_MTR, 0, MA_WIDTH - 3, GM_TXT);
 	cairo_destroy (cr);
 }
 
-static void alloc_sf(SAUI* ui) {
+static void prepare_metersurface(SAUI* ui) {
 	cairo_t* cr;
 #define ALLOC_SF(VAR) \
+	if (!VAR) \
 	VAR = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, GM_WIDTH, GM_HEIGHT);\
 	cr = cairo_create (VAR);\
 	BACKGROUND_COLOR(cr) \
@@ -385,13 +397,15 @@ static void alloc_sf(SAUI* ui) {
 	cairo_rectangle (cr, 0, 0, GM_WIDTH, GM_HEIGHT);\
 	cairo_fill (cr);
 
-#define GAINLINE(DB) { \
-		const float yoff = GM_TOP + GM_SCALE - deflect(ui, DB); \
+#define GAINLINE(DB) \
+	if (dboff + DB < 5.99) { \
+		const float yoff = GM_TOP + GM_SCALE - deflect(ui, dboff + DB); \
 		cairo_move_to(cr, 0, yoff); \
 		cairo_line_to(cr, GM_WIDTH, yoff); \
 		cairo_stroke(cr); \
 }
 
+	const float dboff = ui->gain > 0.001 ? 20.0 * log10f(ui->gain) : -60;
 	for (int i = 0; i < ui->num_meters; ++i) {
 		ALLOC_SF(ui->sf[i])
 
@@ -399,6 +413,10 @@ static void alloc_sf(SAUI* ui) {
 		cairo_set_operator (cr, CAIRO_OPERATOR_OVER);
 		cairo_set_line_width(cr, 1.0);
 		cairo_set_source_rgba (cr, .8, .8, .8, 1.0);
+		GAINLINE(18);
+		GAINLINE(15);
+		GAINLINE(9);
+		GAINLINE(6);
 		GAINLINE(3);
 		GAINLINE(0);
 		GAINLINE(-3);
@@ -504,15 +522,6 @@ static gboolean expose_event(GtkWidget *w, GdkEventExpose *ev, gpointer handle) 
  * UI callbacks
  */
 
-static gboolean set_gain(GtkRange* r, gpointer handle) {
-	SAUI* ui = (SAUI*)handle;
-	ui->gain = 4.0 - gtk_range_get_value(r);
-	if (!ui->disable_signals) {
-		ui->write(ui->controller, 4, sizeof(float), 0, (const void*) &ui->gain);
-	}
-	return TRUE;
-}
-
 static gboolean cb_reset_peak(GtkWidget *w, GdkEventButton *event, gpointer handle) {
 	SAUI* ui = (SAUI*)handle;
 	for (int i=0; i < ui->num_meters ; ++i) {
@@ -520,6 +529,23 @@ static gboolean cb_reset_peak(GtkWidget *w, GdkEventButton *event, gpointer hand
 	}
 	gtk_widget_queue_draw(ui->m0);
 	return TRUE;
+}
+
+static gboolean set_gain(GtkRange* r, gpointer handle) {
+	SAUI* ui = (SAUI*)handle;
+	float oldgain = ui->gain;
+	ui->gain = INV_GAINSCALE(gtk_range_get_value(r));
+#if 1
+	if (ui->gain <= .2511) ui->gain = .2511;
+	if (ui->gain >= 10.0) ui->gain = 10.0;
+#endif
+	if (oldgain == ui->gain) return TRUE;
+	if (!ui->disable_signals) {
+		ui->write(ui->controller, 4, sizeof(float), 0, (const void*) &ui->gain);
+	}
+	realloc_metrics(ui);
+	prepare_metersurface(ui);
+	return cb_reset_peak(NULL, NULL, handle);
 }
 
 /******************************************************************************
@@ -548,9 +574,12 @@ instantiate(const LV2UI_Descriptor*   descriptor,
 	ui->write      = write_function;
 	ui->controller = controller;
 
+	ui->gain = 1.0;
+
 	alloc_annotations(ui);
+	realloc_metrics(ui);
 	create_meter_pattern(ui);
-	alloc_sf(ui);
+	prepare_metersurface(ui);
 
 	for (int i=0; i < ui->num_meters ; ++i) {
 		ui->val[i] = -70.0;
@@ -562,23 +591,23 @@ instantiate(const LV2UI_Descriptor*   descriptor,
 	ui->box   = gtk_hbox_new(FALSE, 2);
 	ui->align = gtk_alignment_new(.5, .5, 0, 0);
 	ui->m0    = gtk_drawing_area_new();
-	ui->fader = gtk_vscale_new_with_range(0.0, 4.0, .001);
+	ui->fader = gtk_vscale_new_with_range(1.0, 40.0, .001);
 
 	/* fader init */
 	gtk_scale_set_draw_value(GTK_SCALE(ui->fader), FALSE);
-	gtk_range_set_value(GTK_RANGE(ui->fader), 3.0);
-	gtk_scale_add_mark(GTK_SCALE(ui->fader),4.0 - 0.0316, GTK_POS_RIGHT, "" /* -30dB */);
-	gtk_scale_add_mark(GTK_SCALE(ui->fader),4.0 - 0.1,    GTK_POS_RIGHT, "-20dB");
-	//gtk_scale_add_mark(GTK_SCALE(ui->fader),4.0 - 0.1258, GTK_POS_RIGHT, "" /*"-18db" */);
-	gtk_scale_add_mark(GTK_SCALE(ui->fader),4.0 - 0.2511, GTK_POS_RIGHT, "" /*"-12db" */);
-	gtk_scale_add_mark(GTK_SCALE(ui->fader),4.0 - 0.3548, GTK_POS_RIGHT, "" /* "-9dB" */);
-	gtk_scale_add_mark(GTK_SCALE(ui->fader),4.0 - 0.5012, GTK_POS_RIGHT, "-6dB");
-	gtk_scale_add_mark(GTK_SCALE(ui->fader),4.0 - 0.7079, GTK_POS_RIGHT, "" /* "-3dB" */);
-	gtk_scale_add_mark(GTK_SCALE(ui->fader),4.0 - 1.0000, GTK_POS_RIGHT, "0dB");
-	gtk_scale_add_mark(GTK_SCALE(ui->fader),4.0 - 1.4125, GTK_POS_RIGHT, "" /* "+3dB" */);
-	gtk_scale_add_mark(GTK_SCALE(ui->fader),4.0 - 1.9952, GTK_POS_RIGHT, "+6dB");
-	gtk_scale_add_mark(GTK_SCALE(ui->fader),4.0 - 2.8183, GTK_POS_RIGHT, "" /* "+9dB" */);
-	gtk_scale_add_mark(GTK_SCALE(ui->fader),4.0 - 3.9810, GTK_POS_RIGHT, "+12dB");
+	gtk_range_set_value(GTK_RANGE(ui->fader), GAINSCALE(1.0000));
+	gtk_scale_add_mark(GTK_SCALE(ui->fader),GAINSCALE(0.2511), GTK_POS_RIGHT, NULL /*"-12db" */);
+	gtk_scale_add_mark(GTK_SCALE(ui->fader),GAINSCALE(0.3548), GTK_POS_RIGHT, NULL /* "-9dB" */);
+	gtk_scale_add_mark(GTK_SCALE(ui->fader),GAINSCALE(0.5012), GTK_POS_RIGHT, "-6dB");
+	gtk_scale_add_mark(GTK_SCALE(ui->fader),GAINSCALE(0.7079), GTK_POS_RIGHT, NULL /* "-3dB" */);
+	gtk_scale_add_mark(GTK_SCALE(ui->fader),GAINSCALE(1.0000), GTK_POS_RIGHT, "0dB");
+	gtk_scale_add_mark(GTK_SCALE(ui->fader),GAINSCALE(1.4125), GTK_POS_RIGHT,  "+3dB");
+	gtk_scale_add_mark(GTK_SCALE(ui->fader),GAINSCALE(1.9952), GTK_POS_RIGHT,  "+6dB");
+	gtk_scale_add_mark(GTK_SCALE(ui->fader),GAINSCALE(2.8183), GTK_POS_RIGHT,  "+9dB");
+	gtk_scale_add_mark(GTK_SCALE(ui->fader),GAINSCALE(3.9810), GTK_POS_RIGHT, "+12dB");
+	gtk_scale_add_mark(GTK_SCALE(ui->fader),GAINSCALE(5.6234), GTK_POS_RIGHT, "+15dB");
+	gtk_scale_add_mark(GTK_SCALE(ui->fader),GAINSCALE(7.9432), GTK_POS_RIGHT, "+18dB");
+	gtk_scale_add_mark(GTK_SCALE(ui->fader),GAINSCALE(10.0  ), GTK_POS_RIGHT, "+20dB");
 
 	gtk_drawing_area_size(GTK_DRAWING_AREA(ui->m0), 2.0 * MA_WIDTH + ui->num_meters * GM_WIDTH, GM_HEIGHT);
 	gtk_widget_set_size_request(ui->m0, 2.0 * MA_WIDTH + ui->num_meters * GM_WIDTH, GM_HEIGHT);
@@ -665,9 +694,9 @@ static void invalidate_meter(SAUI* ui, int mtr, float val, float peak) {
 
 static void handle_spectrum_connections(SAUI* ui, uint32_t port_index, float v) {
 	if (port_index == 4) {
-		if (v >= 0 && v <= 4.0) {
+		if (v >= 0.25 && v <= 10.0) {
 			ui->disable_signals = true;
-			gtk_range_set_value(GTK_RANGE(ui->fader), 4.0 - v);
+			gtk_range_set_value(GTK_RANGE(ui->fader), GAINSCALE(v));
 			ui->disable_signals = false;
 		}
 	} else
