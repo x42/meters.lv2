@@ -1058,7 +1058,7 @@ mtr:dBTPmono
 			lv2:OutputPort ;
 		lv2:index 4 ;
 		lv2:symbol "peak" ;
-		lv2:name "peak"
+		lv2:name "peak" ;
 		lv2:portProperty pprop:notOnGUI ;
 	] ;
 	.
@@ -1121,14 +1121,14 @@ mtr:dBTPstereo
 			lv2:OutputPort ;
 		lv2:index 7 ;
 		lv2:symbol "peakR" ;
-		lv2:name "peakR"
+		lv2:name "peakR" ;
 		lv2:portProperty pprop:notOnGUI ;
 	] , [
 		a lv2:ControlPort ,
 			lv2:OutputPort ;
 		lv2:index 8 ;
 		lv2:symbol "peakR" ;
-		lv2:name "peakR"
+		lv2:name "peakR" ;
 		lv2:portProperty pprop:notOnGUI ;
 	] ;
 	.
