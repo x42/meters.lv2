@@ -32,7 +32,7 @@
 #include "lv2/lv2plug.in/ns/extensions/ui/ui.h"
 #define MTR_URI "http://gareus.org/oss/lv2/meters#"
 
-#define GM_TOP    (ui->display_freq ? 12.5f : 18.5f)
+#define GM_TOP    (ui->display_freq ? 12.5f : 22.5f)
 #define GM_LEFT   (ui->display_freq ?  1.5f :  8.5f)
 #define GM_GIRTH  (ui->display_freq ?  8.0f : 12.0f)
 #define GM_WIDTH  (ui->display_freq ? 13.0f : 28.0f)
@@ -169,8 +169,8 @@ static void create_meter_pattern(SAUI* ui) {
 
 	clr[0]=0x008844ff; clr[1]=0x00bb00ff;
 	clr[2]=0x00ff00ff; clr[3]=0x00ff00ff;
-	clr[4]=0xffff00ff; clr[5]=0xffff00ff;
-	clr[6]=0xffaa00ff; clr[7]=0xffaa00ff;
+	clr[4]=0xfff000ff; clr[5]=0xfff000ff;
+	clr[6]=0xff8000ff; clr[7]=0xff8000ff;
 	clr[8]=0xff0000ff; clr[9]=0xff0000ff;
 
 	guint8 r,g,b,a;
@@ -329,7 +329,7 @@ void rounded_rectangle (cairo_t* cr, double x, double y, double w, double h, dou
 static void alloc_annotations(SAUI* ui) {
 #define FONT_LBL "Sans 08"
 #define FONT_MTR "Sans 06"
-#define FONT_VAL "Mono 06"
+#define FONT_VAL "Mono 07"
 #define FONT_SPK "Mono 08"
 
 #define BACKGROUND_COLOR(CR) \
@@ -352,14 +352,6 @@ static void alloc_annotations(SAUI* ui) {
 		for (int i = 0; i < ui->num_meters; ++i) {
 			INIT_BLACK_BG(ui->an[i], 24, 64)
 			write_text(cr, freq_table[i], FONT_LBL, -M_PI/2, 1, -1, 0);
-			cairo_destroy (cr);
-		}
-	} else if (ui->num_meters > 1) {
-		char buf[16];
-		for (int i = 0; i < ui->num_meters; ++i) {
-			INIT_BLACK_BG(ui->an[i], 24, 64)
-			sprintf(buf, "%3d\n", i+1);
-			write_text(cr, buf, FONT_LBL, -M_PI/2, 1, 9, 0);
 			cairo_destroy (cr);
 		}
 	}
@@ -483,9 +475,13 @@ static void render_meter(SAUI* ui, int i, int old, int new, int m_old, int m_new
 
 	/* peak hold */
 	cairo_set_operator (cr, CAIRO_OPERATOR_OVER);
-	cairo_rectangle (cr, GM_LEFT, GM_TOP + GM_SCALE - m_new - 1, GM_GIRTH, 2);
+	cairo_rectangle (cr, GM_LEFT, GM_TOP + GM_SCALE - m_new - 0.5, GM_GIRTH, 3);
+#if 1
 	cairo_fill_preserve (cr);
+	cairo_set_source_rgba (cr, 1.0, 1.0, 1.0, 0.2);
+#else
 	cairo_set_source_rgba (cr, 1.0, 1.0, 1.0, 0.3);
+#endif
 	cairo_fill(cr);
 
 	/* border */
@@ -543,7 +539,7 @@ static gboolean expose_event(GtkWidget *w, GdkEventExpose *ev, gpointer handle) 
 		for (int i = 0; i < ui->num_meters ; ++i) {
 			char buf[24];
 			cairo_save(cr);
-			rounded_rectangle (cr, MA_WIDTH + GM_WIDTH * i + 2, 3, GM_WIDTH-3, GM_TOP-6, 3);
+			rounded_rectangle (cr, MA_WIDTH + GM_WIDTH * i + 2, 3, GM_WIDTH-4, GM_TOP-8, 4);
 			if (ui->peak_val[i] >= -1.0) {
 				cairo_set_source_rgba (cr, .6, .0, .0, 1.0);
 			} else {
@@ -554,13 +550,25 @@ static gboolean expose_event(GtkWidget *w, GdkEventExpose *ev, gpointer handle) 
 			cairo_set_source_rgba (cr, .6, .6, .6, 1.0);
 			cairo_stroke_preserve (cr);
 			cairo_clip (cr);
+
 			if ( ui->peak_val[i] <= -10.0) {
 				//sprintf(buf, "%d", (int) rintf(ui->peak_val[i]));
 				sprintf(buf, "%.0f ", ui->peak_val[i]);
 			} else {
 				sprintf(buf, "%+.1f", ui->peak_val[i]);
 			}
-			write_text(cr, buf, FONT_VAL, 0, 2, MA_WIDTH + GM_WIDTH * i + GM_WIDTH - 4, GM_TOP / 2);
+			write_text(cr, buf, FONT_VAL, 0, 2, MA_WIDTH + GM_WIDTH * i + GM_WIDTH - 5, GM_TOP / 2);
+			cairo_restore(cr);
+
+			cairo_save(cr);
+			rounded_rectangle (cr, MA_WIDTH + GM_WIDTH * i + 2, GM_TXT - 11.5, GM_WIDTH-4, 15, 4);
+			cairo_fill_preserve (cr);
+			cairo_set_line_width(cr, 0.75);
+			cairo_set_source_rgba (cr, .6, .6, .6, 1.0);
+			cairo_stroke_preserve (cr);
+			cairo_clip (cr);
+			sprintf(buf, "%+.1f", ui->val[i]);
+			write_text(cr, buf, FONT_VAL, 0, 2, MA_WIDTH + GM_WIDTH * i + GM_WIDTH - 5, GM_TXT - 4);
 			cairo_restore(cr);
 		}
 	}
@@ -835,20 +843,20 @@ static void invalidate_meter(SAUI* ui, int mtr, float val, float peak) {
 		gdk_region_destroy(tmp); \
 	}
 
-	if (old == new && m_old == m_new) {
-		return;
+	if (ui->val[mtr] != val && !ui->display_freq) {
+		INVALIDATE_RECT(mtr * GM_WIDTH + MA_WIDTH, GM_TXT-12, GM_WIDTH, 18);
 	}
 
 	if (ui->highlight == mtr) {
 		INVALIDATE_RECT(mtr * GM_WIDTH + MA_WIDTH + GM_WIDTH/2 - 32, GM_TXT - 10, 64, 54);
 	}
 
-	ui->val[mtr] = val;
-	ui->peak_val[mtr] = peak;
-
 	if (m_old != m_new && !ui->display_freq) {
 		INVALIDATE_RECT(mtr * GM_WIDTH + MA_WIDTH, 0, GM_WIDTH, GM_TOP);
 	}
+
+	ui->val[mtr] = val;
+	ui->peak_val[mtr] = peak;
 
 	if (old != new) {
 		if (old > new) {
@@ -877,7 +885,7 @@ static void invalidate_meter(SAUI* ui, int mtr, float val, float peak) {
 		INVALIDATE_RECT(
 				mtr * GM_WIDTH + MA_WIDTH + GM_LEFT - 1,
 				GM_TOP + GM_SCALE - t - 1,
-				GM_GIRTH + 2, h+3);
+				GM_GIRTH + 2, h+4);
 	}
 
 	if (region) {

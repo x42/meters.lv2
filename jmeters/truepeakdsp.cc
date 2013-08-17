@@ -143,10 +143,10 @@ void TruePeakdsp::init (float fsamp)
 	_buf = (float*) malloc(32768 * sizeof(float));
 
 	_z1 = _z2 = .0f;
-	_w1 = 200.0f / fsamp / 4.0;
-	_w2 = 860.0f / fsamp / 4.0;
-	_w3 = 1.0f - 4.0f / fsamp / 4.0;
-	_g = 0.5141f;
+	_w1 = 4000.0f / fsamp / 4.0;
+	_w2 = 17200.0f / fsamp / 4.0;
+	_w3 = 1.0f - 5.2f / fsamp / 4.0;
+	_g = 0.501f;
 
 	/* q/d initialize */
 	float zero[8192];
