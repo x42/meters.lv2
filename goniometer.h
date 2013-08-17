@@ -115,6 +115,17 @@ typedef struct {
 	gmringbuf *rb;
 	bool ui_active;
 
+	/* ui state/settings */
+	bool  s_autogain;
+	bool  s_oversample;
+	bool  s_line;
+	bool  s_persist;
+	int   s_sfact;
+	float s_linewidth;
+	float s_pointwidth;
+	float s_persistency;
+	float s_max_freq;
+
 	/* private */
 	float* input[2];
 	float* output[2];
