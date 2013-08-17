@@ -67,8 +67,10 @@ typedef struct {
 
 	GtkWidget* cbx_src;
 	GtkWidget* spn_src_fact;
-	GtkWidget* spn_src_hlen;
-	GtkWidget* spn_src_frel;
+
+	GtkWidget* spn_compress;
+	GtkWidget* spn_gattack;
+	GtkWidget* spn_gdecay;
 
 	GtkWidget* cbx_lines;
 	GtkWidget* cbx_xfade;
@@ -77,14 +79,14 @@ typedef struct {
 	GtkWidget* spn_alpha;
 
 	GtkWidget* sep_h0;
-	GtkWidget* sep_h1;
 	GtkWidget* sep_v0;
 
 	GtkWidget* lbl_src_fact;
-	GtkWidget* lbl_src_hlen;
-	GtkWidget* lbl_src_frel;
 	GtkWidget* lbl_psize;
 	GtkWidget* lbl_vfreq;
+	GtkWidget* lbl_compress;
+	GtkWidget* lbl_gattack;
+	GtkWidget* lbl_gdecay;
 	GtkWidget* lbl_alpha;
 
 	GtkWidget* fader;
@@ -105,6 +107,9 @@ typedef struct {
 	float ag_xmax, ag_xmin;
 	float ag_ymax, ag_ymin;
 	bool disable_signals;
+
+	float attack_pow;
+	float decay_pow;
 
 	Resampler *src;
 	float *scratch;
@@ -251,8 +256,11 @@ static void draw_rb(GMUI* ui, gmringbuf *rb) {
 	const bool composit = !gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(ui->cbx_xfade));
 	const bool autogain = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(ui->cbx_autogain));
 	const bool lines = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(ui->cbx_lines));
-	const float persist = gtk_spin_button_get_value(GTK_SPIN_BUTTON(ui->spn_alpha));
+	const float persist = .5 + .005 * gtk_spin_button_get_value(GTK_SPIN_BUTTON(ui->spn_alpha));
 	const float line_width = gtk_spin_button_get_value(GTK_SPIN_BUTTON(ui->spn_psize));
+	const float compress = .02 * gtk_spin_button_get_value(GTK_SPIN_BUTTON(ui->spn_compress));
+	const float attack_pow = ui->attack_pow;
+	const float decay_pow = ui->decay_pow;
 
 	if (composit) {
 		ui->sfc = (ui->sfc + 1) % 3;
@@ -266,7 +274,7 @@ static void draw_rb(GMUI* ui, gmringbuf *rb) {
 		cairo_fill (cr);
 	} else if (persist >= 1.0) {
 		;
-	} else if (persist >  0.50) {
+	} else if (persist >  0.5) {
 		cairo_set_operator (cr, CAIRO_OPERATOR_OVER);
 		cairo_set_source_rgba (cr, .0, .0, .0, 1.0-persist);
 		cairo_rectangle (cr, 0, 0, GM_BOUNDS, GM_BOUNDS);
@@ -341,8 +349,23 @@ static void draw_rb(GMUI* ui, gmringbuf *rb) {
 			if (ay < ui->ag_ymin) ui->ag_ymin = ay;
 		}
 
-		const float x = GM_CENTER - ui->gain * ax * GM_RAD2;
-		const float y = GM_CENTER - ui->gain * ay * GM_RAD2;
+		float x, y;
+		if (compress > 0.0 && compress <= 2.0) {
+			const float volume = sqrt(ax * ax + ay * ay);
+			float compr = 1.0;
+			if (volume > 1.0) {
+				compr = 1.0 / volume;
+			} else if (volume > .001) {
+				compr = 1.0 - compress * log10(volume);
+			} else {
+				compr = 1.0 + compress * 3.0;
+			}
+			x = GM_CENTER - ui->gain * ax * compr * GM_RAD2;
+			y = GM_CENTER - ui->gain * ay * compr * GM_RAD2;
+		} else {
+			x = GM_CENTER - ui->gain * ax * GM_RAD2;
+			y = GM_CENTER - ui->gain * ay * GM_RAD2;
+		}
 
 		if ( (ui->last_x - x) * (ui->last_x - x) + (ui->last_y - y) * (ui->last_y - y) < 2.0) continue;
 
@@ -374,8 +397,8 @@ static void draw_rb(GMUI* ui, gmringbuf *rb) {
 	if (autogain) {
 		LV2gm* self = (LV2gm*) ui->instance;
 		float elapsed = n_samples / self->rate;
+#if 0
 		const float hold = 1.0 - 2.6 * elapsed * elapsed;
-#if 1
 		ui->ag_xmax = 1e-10f + ui->ag_xmax * hold;
 		ui->ag_xmin = 1e-10f + ui->ag_xmin * hold;
 		ui->ag_ymax = 1e-10f + ui->ag_ymax * hold;
@@ -385,7 +408,13 @@ static void draw_rb(GMUI* ui, gmringbuf *rb) {
 		const float ydif = (ui->ag_ymax - ui->ag_ymin);
 		float max  = ydif > xdif ? ydif : xdif;
 #else
+		const float xdif = (ui->ag_xmax - ui->ag_xmin);
+		const float ydif = (ui->ag_ymax - ui->ag_ymin);
 		float max  = sqrt(xdif * xdif + ydif * ydif);
+		ui->ag_xmax = 0;
+		ui->ag_xmin = 0;
+		ui->ag_ymax = 0;
+		ui->ag_ymin = 0;
 #endif
 		max *= .707;
 
@@ -397,9 +426,11 @@ static void draw_rb(GMUI* ui, gmringbuf *rb) {
 		} else {
 			gain = 2.0 / max;
 		}
-		float attack = gain < ui->gain ? /* attack */ (.62 + .2 * log10f(elapsed)) : /* decay */ (.04 + .01 * logf(elapsed));
+		float attack = gain < ui->gain ? attack_pow * (.31 + .1 * log10f(elapsed)) : decay_pow * (.03 + .007 * logf(elapsed));
 		//printf(" %.3f  %.3f [max: %f %f] %f\n", ui->gain, gain, xdif, ydif, max);
 		gain = ui->gain + attack * (gain - ui->gain);
+		if (gain > 6.0) gain = 6.0;
+		if (gain < .001) gain = .001;
 		if ( rint(50 * gain) != rint(50 * gtk_range_get_value(GTK_RANGE(ui->fader)))) {
 			gtk_range_set_value(GTK_RANGE(ui->fader), gain);
 		}
@@ -550,6 +581,10 @@ static void save_state(GMUI* ui) {
 	}
 	self->s_persistency = gtk_spin_button_get_value(GTK_SPIN_BUTTON(ui->spn_alpha));
 	self->s_max_freq = gtk_spin_button_get_value(GTK_SPIN_BUTTON(ui->spn_vfreq));
+
+	self->s_gattack = gtk_spin_button_get_value(GTK_SPIN_BUTTON(ui->spn_gattack));
+	self->s_gdecay = gtk_spin_button_get_value(GTK_SPIN_BUTTON(ui->spn_gdecay));
+	self->s_compress = gtk_spin_button_get_value(GTK_SPIN_BUTTON(ui->spn_compress));
 }
 
 static gboolean cb_save_state(GtkWidget *w, gpointer handle) {
@@ -573,10 +608,28 @@ static gboolean cb_autogain(GtkWidget *w, gpointer handle) {
 	const bool autogain = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(ui->cbx_autogain));
 	if (autogain) {
 		gtk_widget_set_sensitive(GTK_WIDGET(ui->fader), false);
+		gtk_widget_set_sensitive(GTK_WIDGET(ui->spn_gattack), true);
+		gtk_widget_set_sensitive(GTK_WIDGET(ui->spn_gdecay), true);
 	} else {
 		gtk_widget_set_sensitive(GTK_WIDGET(ui->fader), true);
+		gtk_widget_set_sensitive(GTK_WIDGET(ui->spn_gattack), false);
+		gtk_widget_set_sensitive(GTK_WIDGET(ui->spn_gdecay), false);
 		ui->write(ui->controller, 4, sizeof(float), 0, (const void*) &ui->gain);
 	}
+	save_state(ui);
+	return TRUE;
+}
+
+static gboolean cb_autosettings(GtkWidget *w, gpointer handle) {
+	GMUI* ui = (GMUI*)handle;
+	float g_attack = gtk_spin_button_get_value(GTK_SPIN_BUTTON(ui->spn_gattack));
+	float g_decay = gtk_spin_button_get_value(GTK_SPIN_BUTTON(ui->spn_gdecay));
+	g_attack = 0.1 * exp(0.06 * g_attack) - .09;
+	g_decay  = 0.1 * exp(0.06 * g_decay ) - .09;
+	if (g_attack < .01) g_attack = .01;
+	if (g_decay  < .01) g_decay = .01;
+	ui->attack_pow = g_attack;
+	ui->decay_pow = g_decay;
 	save_state(ui);
 	return TRUE;
 }
@@ -594,10 +647,8 @@ static gboolean cb_lines(GtkWidget *w, gpointer handle) {
 	const bool nowlines = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(ui->cbx_lines));
 	if (!nowlines) {
 		self->s_linewidth = gtk_spin_button_get_value(GTK_SPIN_BUTTON(ui->spn_psize));
-		gtk_label_set_text(GTK_LABEL(ui->lbl_psize), "Point Size:");
 	} else {
 		self->s_pointwidth = gtk_spin_button_get_value(GTK_SPIN_BUTTON(ui->spn_psize));
-		gtk_label_set_text(GTK_LABEL(ui->lbl_psize), "Line Width:");
 	}
 	gtk_spin_button_set_value(GTK_SPIN_BUTTON(ui->spn_psize), nowlines ? self->s_linewidth : self->s_pointwidth);
 	return cb_expose(w, handle);
@@ -606,10 +657,8 @@ static gboolean cb_lines(GtkWidget *w, gpointer handle) {
 static gboolean cb_xfade(GtkWidget *w, gpointer handle) {
 	GMUI* ui = (GMUI*)handle;
 	if(!gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(ui->cbx_xfade))) {
-		//gtk_label_set_text(GTK_LABEL(ui->lbl_alpha), "XX-Fade Alpha:");
 		gtk_widget_set_sensitive(GTK_WIDGET(ui->spn_alpha), false);
 	} else {
-		//gtk_label_set_text(GTK_LABEL(ui->lbl_alpha), "Persistency:");
 		gtk_widget_set_sensitive(GTK_WIDGET(ui->spn_alpha), true);
 	}
 	return cb_expose(w, handle);
@@ -638,10 +687,7 @@ static gboolean cb_vfreq(GtkWidget *w, gpointer handle) {
 static gboolean cb_src(GtkWidget *w, gpointer handle) {
 	GMUI* ui = (GMUI*)handle;
 	if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(ui->cbx_src))) {
-		setup_src(ui,
-				gtk_spin_button_get_value(GTK_SPIN_BUTTON(ui->spn_src_fact)),
-				gtk_spin_button_get_value(GTK_SPIN_BUTTON(ui->spn_src_hlen)),
-				.973 - .3 * gtk_spin_button_get_value(GTK_SPIN_BUTTON(ui->spn_src_frel)));
+		setup_src(ui, gtk_spin_button_get_value(GTK_SPIN_BUTTON(ui->spn_src_fact)), 8, .7);
 	} else {
 		setup_src(ui, 0, 0, 0);
 	}
@@ -657,14 +703,20 @@ static void restore_state(GMUI* ui) {
 	gtk_spin_button_set_value(GTK_SPIN_BUTTON(ui->spn_alpha), self->s_persistency);
 	gtk_spin_button_set_value(GTK_SPIN_BUTTON(ui->spn_vfreq), self->s_max_freq);
 
+	gtk_spin_button_set_value(GTK_SPIN_BUTTON(ui->spn_gattack), self->s_gattack);
+	gtk_spin_button_set_value(GTK_SPIN_BUTTON(ui->spn_gdecay), self->s_gdecay);
+	gtk_spin_button_set_value(GTK_SPIN_BUTTON(ui->spn_compress), self->s_compress);
+
 	gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(ui->cbx_autogain), self->s_autogain  );
 	gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(ui->cbx_src),      self->s_oversample);
 	gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(ui->cbx_lines),    self->s_line      );
 	gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(ui->cbx_xfade),    self->s_persist   );
+	// TODO optimize, temp disable save during these
 	cb_autogain(NULL, ui);
 	cb_src(NULL, ui);
 	cb_vfreq(NULL, ui);
 	cb_xfade(NULL, ui);
+	cb_autosettings(NULL, ui);
 	ui->disable_signals = false;
 }
 
@@ -726,39 +778,52 @@ instantiate(const LV2UI_Descriptor*   descriptor,
 	ui->align = gtk_alignment_new(.5, .5, 0, 0);
 	ui->m0    = gtk_drawing_area_new();
 	ui->fader = gtk_hscale_new_with_range(0, 6.0, .001);
-	ui->cbx_autogain = gtk_check_button_new_with_label("Auto");
+	ui->cbx_autogain = gtk_check_button_new_with_label("Auto Gain");
 
-	ui->c_tbl        = gtk_table_new(/*rows*/7, /*cols*/ 5, FALSE);
+	ui->c_tbl        = gtk_table_new(/*rows*/6, /*cols*/ 6, FALSE);
 	ui->cbx_src      = gtk_check_button_new_with_label("Oversample");
 	ui->spn_src_fact = gtk_spin_button_new_with_range(1, 32, 1);
-	ui->spn_src_hlen = gtk_spin_button_new_with_range(8, 96, 4);
-	ui->spn_src_frel = gtk_spin_button_new_with_range(0.0, 1.0, .05);
+
+	ui->spn_compress = gtk_spin_button_new_with_range(0.0, 100.0, 0.5);
+	ui->spn_gattack  = gtk_spin_button_new_with_range(0.0, 100.0, 1.0);
+	ui->spn_gdecay   = gtk_spin_button_new_with_range(0.0, 100.0, 1.0);
 
 	ui->cbx_lines    = gtk_check_button_new_with_label("Draw Lines");
 	ui->cbx_xfade    = gtk_check_button_new_with_label("CRT Persist");
 	ui->spn_psize    = gtk_spin_button_new_with_range(.25, 5.25, .25);
 
 	ui->spn_vfreq    = gtk_spin_button_new_with_range(10, 100, 5);
-	ui->spn_alpha    = gtk_spin_button_new_with_range(.5, 1.0, .01);
+	ui->spn_alpha    = gtk_spin_button_new_with_range(0, 100, .5);
 
-	gtk_spin_button_set_value(GTK_SPIN_BUTTON(ui->spn_src_fact), 3);
-	gtk_spin_button_set_value(GTK_SPIN_BUTTON(ui->spn_src_hlen), 8);
-	gtk_spin_button_set_value(GTK_SPIN_BUTTON(ui->spn_src_frel), 1.0);
+	gtk_spin_button_set_value(GTK_SPIN_BUTTON(ui->spn_compress), 0.0);
+	gtk_spin_button_set_value(GTK_SPIN_BUTTON(ui->spn_gattack), 1.0);
+	gtk_spin_button_set_value(GTK_SPIN_BUTTON(ui->spn_gdecay), 1.0);
+
+	gtk_spin_button_set_value(GTK_SPIN_BUTTON(ui->spn_src_fact), 4.0);
 	gtk_spin_button_set_value(GTK_SPIN_BUTTON(ui->spn_psize), 1.25);
 	gtk_spin_button_set_value(GTK_SPIN_BUTTON(ui->spn_vfreq), 25);
 	gtk_spin_button_set_value(GTK_SPIN_BUTTON(ui->spn_alpha), 0);
+
 	gtk_spin_button_set_digits(GTK_SPIN_BUTTON(ui->spn_psize), 2);
 
 	ui->sep_h0        = gtk_hseparator_new();
-	ui->sep_h1        = gtk_hseparator_new();
 	ui->sep_v0        = gtk_vseparator_new();
 
 	ui->lbl_src_fact  = gtk_label_new("Factor:");
-	ui->lbl_src_hlen  = gtk_label_new("Table-Size:");
-	ui->lbl_src_frel  = gtk_label_new("Smooth:");
-	ui->lbl_psize     = gtk_label_new("Point or Line Width:");
-	ui->lbl_vfreq     = gtk_label_new("Max. Update Freq:");
-	ui->lbl_alpha     = gtk_label_new("Persistency:");
+	ui->lbl_psize     = gtk_label_new("Pixels:");
+	ui->lbl_vfreq     = gtk_label_new("Max. Update Freq [Hz]:");
+	ui->lbl_alpha     = gtk_label_new("Opacity [%]:");
+	ui->lbl_compress  = gtk_label_new("Compression:");
+	ui->lbl_gattack   = gtk_label_new("Attack:");
+	ui->lbl_gdecay    = gtk_label_new("Decay:");
+
+	gtk_misc_set_alignment(GTK_MISC(ui->lbl_vfreq), 0.9f, 0.0f);
+	gtk_misc_set_alignment(GTK_MISC(ui->lbl_compress), 0.9f, 0.0f);
+	gtk_misc_set_alignment(GTK_MISC(ui->lbl_gattack), 0.9f, 0.0f);
+	gtk_misc_set_alignment(GTK_MISC(ui->lbl_gdecay), 0.9f, 0.0f);
+	gtk_misc_set_alignment(GTK_MISC(ui->lbl_src_fact), 0.9f, 0.0f);
+	gtk_misc_set_alignment(GTK_MISC(ui->lbl_psize), 0.9f, 0.0f);
+	gtk_misc_set_alignment(GTK_MISC(ui->lbl_alpha), 0.9f, 0.0f);
 
 	/* fader init */
 	gtk_scale_set_draw_value(GTK_SCALE(ui->fader), FALSE);
@@ -794,34 +859,34 @@ instantiate(const LV2UI_Descriptor*   descriptor,
 	gtk_widget_set_redraw_on_allocate(ui->m0, TRUE);
 
 	/* layout */
-	gtk_table_attach_defaults(GTK_TABLE(ui->c_tbl), ui->cbx_autogain, 0, 1, 0, 1);
-	gtk_table_attach_defaults(GTK_TABLE(ui->c_tbl), ui->fader       , 1, 5, 0, 1);
+	gtk_table_attach_defaults(GTK_TABLE(ui->c_tbl), ui->fader       , 0, 6, 0, 1);
+	gtk_table_attach_defaults(GTK_TABLE(ui->c_tbl), ui->cbx_autogain, 0, 1, 1, 2);
+	gtk_table_attach(GTK_TABLE(ui->c_tbl), ui->lbl_gattack          , 1, 2, 1, 2, GTK_SHRINK, GTK_SHRINK, 4, 0);
+	gtk_table_attach_defaults(GTK_TABLE(ui->c_tbl), ui->spn_gattack , 2, 3, 1, 2);
+	gtk_table_attach(GTK_TABLE(ui->c_tbl), ui->lbl_gdecay           , 4, 5, 1, 2, GTK_SHRINK, GTK_SHRINK, 4, 0);
+	gtk_table_attach_defaults(GTK_TABLE(ui->c_tbl), ui->spn_gdecay  , 5, 6, 1, 2);
 
-	gtk_table_attach(GTK_TABLE(ui->c_tbl), ui->sep_h0, 0, 5, 1, 2, (GtkAttachOptions) (GTK_EXPAND | GTK_FILL), GTK_SHRINK, 0, 4);
-
-	gtk_table_attach_defaults(GTK_TABLE(ui->c_tbl), ui->lbl_src_fact, 2, 3, 2, 3);
-	gtk_table_attach_defaults(GTK_TABLE(ui->c_tbl), ui->lbl_src_hlen, 3, 4, 2, 3);
-	gtk_table_attach_defaults(GTK_TABLE(ui->c_tbl), ui->lbl_src_frel, 4, 5, 2, 3);
+	gtk_table_attach(GTK_TABLE(ui->c_tbl), ui->sep_h0, 0, 6, 2, 3, (GtkAttachOptions) (GTK_EXPAND | GTK_FILL), GTK_SHRINK, 0, 4);
 
 	gtk_table_attach_defaults(GTK_TABLE(ui->c_tbl), ui->cbx_src     , 0, 1, 3, 4);
+	gtk_table_attach(GTK_TABLE(ui->c_tbl), ui->lbl_src_fact         , 1, 2, 3, 4, GTK_SHRINK, GTK_SHRINK, 4, 0);
 	gtk_table_attach_defaults(GTK_TABLE(ui->c_tbl), ui->spn_src_fact, 2, 3, 3, 4);
-	gtk_table_attach_defaults(GTK_TABLE(ui->c_tbl), ui->spn_src_hlen, 3, 4, 3, 4);
-	gtk_table_attach_defaults(GTK_TABLE(ui->c_tbl), ui->spn_src_frel, 4, 5, 3, 4);
-
-	gtk_table_attach(GTK_TABLE(ui->c_tbl), ui->sep_h1, 0, 5, 4, 5, (GtkAttachOptions) (GTK_EXPAND | GTK_FILL), GTK_SHRINK, 0, 4);
 
 	gtk_table_attach_defaults(GTK_TABLE(ui->c_tbl), ui->cbx_lines   , 0, 1, 5, 6);
+	gtk_table_attach(GTK_TABLE(ui->c_tbl), ui->lbl_psize            , 1, 2, 5, 6, GTK_SHRINK, GTK_SHRINK, 4, 0);
+	gtk_table_attach_defaults(GTK_TABLE(ui->c_tbl), ui->spn_psize   , 2, 3, 5, 6);
+
 	gtk_table_attach_defaults(GTK_TABLE(ui->c_tbl), ui->cbx_xfade   , 0, 1, 6, 7);
+	gtk_table_attach(GTK_TABLE(ui->c_tbl), ui->lbl_alpha            , 1, 2, 6, 7, GTK_SHRINK, GTK_SHRINK, 4, 0);
+	gtk_table_attach_defaults(GTK_TABLE(ui->c_tbl), ui->spn_alpha   , 2, 3, 6, 7);
 
-	gtk_table_attach(GTK_TABLE(ui->c_tbl), ui->sep_v0, 1, 2, 5, 7, GTK_SHRINK, (GtkAttachOptions) (GTK_EXPAND | GTK_FILL), 4, 0);
+	gtk_table_attach(GTK_TABLE(ui->c_tbl), ui->sep_v0, 3, 4, 3, 7, GTK_SHRINK, (GtkAttachOptions) (GTK_EXPAND | GTK_FILL), 4, 0);
 
-	gtk_table_attach_defaults(GTK_TABLE(ui->c_tbl), ui->lbl_psize   , 2, 3, 5, 6);
-	gtk_table_attach_defaults(GTK_TABLE(ui->c_tbl), ui->lbl_alpha   , 3, 4, 5, 6);
-	gtk_table_attach_defaults(GTK_TABLE(ui->c_tbl), ui->lbl_vfreq   , 4, 5, 5, 6);
+	gtk_table_attach(GTK_TABLE(ui->c_tbl), ui->lbl_compress         , 4, 5, 5, 6, GTK_SHRINK, GTK_SHRINK, 4, 0);
+	gtk_table_attach_defaults(GTK_TABLE(ui->c_tbl), ui->spn_compress, 5, 6, 5, 6);
 
-	gtk_table_attach_defaults(GTK_TABLE(ui->c_tbl), ui->spn_psize   , 2, 3, 6, 7);
-	gtk_table_attach_defaults(GTK_TABLE(ui->c_tbl), ui->spn_alpha   , 3, 4, 6, 7);
-	gtk_table_attach_defaults(GTK_TABLE(ui->c_tbl), ui->spn_vfreq   , 4, 5, 6, 7);
+	gtk_table_attach(GTK_TABLE(ui->c_tbl), ui->lbl_vfreq            , 4, 5, 6, 7, GTK_SHRINK, GTK_SHRINK, 4, 0);
+	gtk_table_attach_defaults(GTK_TABLE(ui->c_tbl), ui->spn_vfreq   , 5, 6, 6, 7);
 
 	gtk_container_add(GTK_CONTAINER(ui->align), ui->m0);
 	gtk_box_pack_start(GTK_BOX(ui->box), ui->align, FALSE, FALSE, 0);
@@ -835,8 +900,10 @@ instantiate(const LV2UI_Descriptor*   descriptor,
 
 	g_signal_connect (G_OBJECT (ui->cbx_src), "toggled", G_CALLBACK (cb_src), ui);
 	g_signal_connect (G_OBJECT (ui->spn_src_fact), "value-changed", G_CALLBACK (cb_src), ui);
-	g_signal_connect (G_OBJECT (ui->spn_src_hlen), "value-changed", G_CALLBACK (cb_src), ui);
-	g_signal_connect (G_OBJECT (ui->spn_src_frel), "value-changed", G_CALLBACK (cb_src), ui);
+	g_signal_connect (G_OBJECT (ui->spn_compress), "value-changed", G_CALLBACK (cb_expose), ui);
+
+	g_signal_connect (G_OBJECT (ui->spn_gattack), "value-changed", G_CALLBACK (cb_autosettings), ui);
+	g_signal_connect (G_OBJECT (ui->spn_gdecay),  "value-changed", G_CALLBACK (cb_autosettings), ui);
 
 	g_signal_connect (G_OBJECT (ui->cbx_lines), "toggled", G_CALLBACK (cb_lines), ui);
 	g_signal_connect (G_OBJECT (ui->cbx_xfade), "toggled", G_CALLBACK (cb_xfade), ui);
@@ -872,21 +939,22 @@ cleanup(LV2UI_Handle handle)
 	gtk_widget_destroy(ui->cbx_autogain);
 	gtk_widget_destroy(ui->cbx_src);
 	gtk_widget_destroy(ui->spn_src_fact);
-	gtk_widget_destroy(ui->spn_src_hlen);
-	gtk_widget_destroy(ui->spn_src_frel);
+	gtk_widget_destroy(ui->spn_compress);
+	gtk_widget_destroy(ui->spn_gattack);
+	gtk_widget_destroy(ui->spn_gdecay);
 	gtk_widget_destroy(ui->cbx_lines);
 	gtk_widget_destroy(ui->cbx_xfade);
 	gtk_widget_destroy(ui->spn_psize);
 	gtk_widget_destroy(ui->spn_vfreq);
 	gtk_widget_destroy(ui->spn_alpha);
 	gtk_widget_destroy(ui->lbl_src_fact);
-	gtk_widget_destroy(ui->lbl_src_hlen);
-	gtk_widget_destroy(ui->lbl_src_frel);
 	gtk_widget_destroy(ui->lbl_psize);
 	gtk_widget_destroy(ui->lbl_vfreq);
+	gtk_widget_destroy(ui->lbl_compress);
+	gtk_widget_destroy(ui->lbl_gattack);
+	gtk_widget_destroy(ui->lbl_gdecay);
 	gtk_widget_destroy(ui->lbl_alpha);
 	gtk_widget_destroy(ui->sep_h0);
-	gtk_widget_destroy(ui->sep_h1);
 	gtk_widget_destroy(ui->sep_v0);
 
 	delete ui->src;

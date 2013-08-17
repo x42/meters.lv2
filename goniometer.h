@@ -125,6 +125,9 @@ typedef struct {
 	float s_pointwidth;
 	float s_persistency;
 	float s_max_freq;
+	float s_compress;
+	float s_gattack;
+	float s_gdecay;
 
 	/* private */
 	float* input[2];
