@@ -20,7 +20,7 @@ LV2NAME=meters
 LV2GUI=metersUI
 LV2GUI2=eburUI
 LV2GUI3=goniometerUI
-LV2GUI4=spectrumUI
+LV2GUI4=dpmUI
 BUNDLE=meters.lv2
 
 UNAME=$(shell uname)
@@ -102,9 +102,9 @@ $(LV2GUI3)$(LIB_EXT): goniometerui.cc goniometer.h $(UIDEPS) \
 		zita-resampler/resampler.cc zita-resampler/resampler-table.cc \
 		-shared $(LV2LDFLAGS) $(LDFLAGS) $(UILIBS)
 
-$(LV2GUI4)$(LIB_EXT): spectrumui.c $(UIDEPS)
+$(LV2GUI4)$(LIB_EXT): dpmui.c $(UIDEPS)
 	$(CC) $(CPPFLAGS) $(CFLAGS) -std=c99 $(UICFLAGS) \
-		-o $(LV2GUI4)$(LIB_EXT) spectrumui.c \
+		-o $(LV2GUI4)$(LIB_EXT) dpmui.c \
 		-shared $(LV2LDFLAGS) $(LDFLAGS) $(UILIBS)
 
 # install/uninstall/clean target definitions
@@ -129,6 +129,6 @@ uninstall:
 	-rmdir $(DESTDIR)$(LV2DIR)/$(BUNDLE)
 
 clean:
-	rm -f manifest.ttl $(LV2NAME).ttl $(LV2NAME)$(LIB_EXT) $(LV2GUI)$(LIB_EXT) $(LV2GUI2)$(LIB_EXT) $(LV2GUI3)$(LIB_EXT)
+	rm -f manifest.ttl $(LV2NAME).ttl $(LV2NAME)$(LIB_EXT) $(LV2GUI)$(LIB_EXT) $(LV2GUI2)$(LIB_EXT) $(LV2GUI3)$(LIB_EXT) $(LV2GUI4)$(LIB_EXT)
 
 .PHONY: clean all install uninstall
