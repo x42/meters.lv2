@@ -104,6 +104,7 @@ typedef struct {
 
 	float cache_sf;
 	float cache_ma;
+	int highlight;
 
 } SAUI;
 
@@ -274,7 +275,7 @@ static void create_meter_pattern(SAUI* ui) {
 static void write_text(
 		cairo_t* cr,
 		const char *txt, const char * font,
-		const float ang,
+		const float ang, const int align,
 		const float x, const float y) {
 	int tw, th;
 	cairo_save(cr);
@@ -289,9 +290,18 @@ static void write_text(
 	cairo_translate (cr, x, y);
 	if (ang != 0)  {
 		cairo_rotate(cr, ang);
-		cairo_translate (cr, -tw, 0);
 	}  else {
-	  cairo_translate (cr, -tw - 0.5, -th/2.0);
+	}
+	switch(align) {
+		default:
+			cairo_translate (cr, -tw/2.0 - 0.5, -th/2.0);
+			break;
+		case 1:
+			cairo_translate (cr, -tw, 0);
+			break;
+		case 2:
+			cairo_translate (cr, -tw - 0.5, -th/2.0);
+			break;
 	}
 	pango_cairo_layout_path(cr, pl);
 	pango_cairo_show_layout(cr, pl);
@@ -320,6 +330,7 @@ static void alloc_annotations(SAUI* ui) {
 #define FONT_LBL "Sans 08"
 #define FONT_MTR "Sans 06"
 #define FONT_VAL "Mono 06"
+#define FONT_SPK "Mono 08"
 
 #define BACKGROUND_COLOR(CR) \
 	cairo_set_source_rgba (CR, 84/255.0, 85/255.0, 93/255.0, 1.0);
@@ -340,7 +351,7 @@ static void alloc_annotations(SAUI* ui) {
 		/* frequecy table */
 		for (int i = 0; i < ui->num_meters; ++i) {
 			INIT_BLACK_BG(ui->an[i], 24, 64)
-			write_text(cr, freq_table[i], FONT_LBL, -M_PI/2, -1, 0);
+			write_text(cr, freq_table[i], FONT_LBL, -M_PI/2, 1, -1, 0);
 			cairo_destroy (cr);
 		}
 	} else if (ui->num_meters > 1) {
@@ -348,7 +359,7 @@ static void alloc_annotations(SAUI* ui) {
 		for (int i = 0; i < ui->num_meters; ++i) {
 			INIT_BLACK_BG(ui->an[i], 24, 64)
 			sprintf(buf, "%3d\n", i+1);
-			write_text(cr, buf, FONT_LBL, -M_PI/2, 9, 0);
+			write_text(cr, buf, FONT_LBL, -M_PI/2, 1, 9, 0);
 			cairo_destroy (cr);
 		}
 	}
@@ -363,7 +374,7 @@ static void realloc_metrics(SAUI* ui) {
 	cairo_t* cr;
 #define DO_THE_METER(DB, TXT) \
 	if (dboff + DB < 6.0 && dboff + DB >= -60) \
-	write_text(cr,  TXT , FONT_MTR, 0, MA_WIDTH - 3, YPOS(deflect(ui, dboff + DB)));
+	write_text(cr,  TXT , FONT_MTR, 0, 2, MA_WIDTH - 3, YPOS(deflect(ui, dboff + DB)));
 
 #define DO_THE_METRICS \
 	DO_THE_METER(  18, "+18dB") \
@@ -388,7 +399,7 @@ static void realloc_metrics(SAUI* ui) {
 	cairo_rectangle (cr, 0, 0, MA_WIDTH, GM_HEIGHT);
 	cairo_fill (cr);
 	DO_THE_METRICS
-	write_text(cr,  ui->display_freq ? "dBFS" : "dBTP", FONT_MTR, 0, MA_WIDTH - 5, GM_TXT - 10);
+	write_text(cr,  ui->display_freq ? "dBFS" : "dBTP", FONT_MTR, 0, 2, MA_WIDTH - 5, GM_TXT - 10);
 	cairo_destroy (cr);
 
 	INIT_ANN_BG(ui->ma[1], MA_WIDTH, GM_HEIGHT)
@@ -396,7 +407,7 @@ static void realloc_metrics(SAUI* ui) {
 	cairo_rectangle (cr, 0, 0, MA_WIDTH, GM_HEIGHT);
 	cairo_fill (cr);
 	DO_THE_METRICS
-	write_text(cr,  ui->display_freq ? "dBFS" : "dBTP", FONT_MTR, 0, MA_WIDTH - 5, GM_TXT - 10);
+	write_text(cr,  ui->display_freq ? "dBFS" : "dBTP", FONT_MTR, 0, 2, MA_WIDTH - 5, GM_TXT - 10);
 	cairo_destroy (cr);
 }
 
@@ -549,7 +560,7 @@ static gboolean expose_event(GtkWidget *w, GdkEventExpose *ev, gpointer handle) 
 			} else {
 				sprintf(buf, "%+.1f", ui->peak_val[i]);
 			}
-			write_text(cr, buf, FONT_VAL, 0, MA_WIDTH + GM_WIDTH * i + GM_WIDTH - 4, GM_TOP / 2);
+			write_text(cr, buf, FONT_VAL, 0, 2, MA_WIDTH + GM_WIDTH * i + GM_WIDTH - 4, GM_TOP / 2);
 			cairo_restore(cr);
 		}
 	}
@@ -559,6 +570,30 @@ static gboolean expose_event(GtkWidget *w, GdkEventExpose *ev, gpointer handle) 
 	for (int i = 0; i < ui->num_meters ; ++i) {
 		cairo_set_source_surface(cr, ui->an[i], MA_WIDTH + GM_WIDTH * i, GM_TXT);
 		cairo_paint (cr);
+	}
+
+	/* highlight */
+	if (ui->highlight >= 0 && ui->highlight < ui->num_meters) {
+		const float dboff = ui->gain > 0.001 ? 20.0 * log10f(ui->gain) : -60;
+		cairo_set_operator (cr, CAIRO_OPERATOR_OVER);
+		const int i = ui->highlight;
+		char buf[32];
+		sprintf(buf, "%s\nc:%+5.1f\np:%+5.1f",
+				freq_table[i], ui->val[i] - dboff, ui->peak_val[i] - dboff);
+		cairo_save(cr);
+		cairo_set_line_width(cr, 0.75);
+		cairo_set_source_rgba (cr, 1.0, 1.0, 1.0, 1.0);
+		cairo_move_to(cr, MA_WIDTH + GM_WIDTH * i + GM_LEFT + GM_GIRTH/2, GM_TXT - 9.5);
+		cairo_line_to(cr, MA_WIDTH + GM_WIDTH * i + GM_LEFT + GM_GIRTH/2, GM_TXT - 4.5);
+		cairo_stroke(cr);
+		rounded_rectangle (cr, MA_WIDTH + GM_WIDTH * i + GM_WIDTH/2 - 32, GM_TXT -4.5, 64, 46, 3);
+		cairo_set_source_rgba (cr, 0, 0, 0, .8);
+		cairo_fill_preserve (cr);
+		cairo_set_source_rgba (cr, .6, .6, .6, 1.0);
+		cairo_stroke_preserve (cr);
+		cairo_clip (cr);
+		write_text(cr, buf, FONT_SPK, 0, 0, MA_WIDTH + GM_WIDTH * i + GM_WIDTH/2, GM_TXT + 18);
+		cairo_restore(cr);
 	}
 
 	cairo_destroy (cr);
@@ -623,6 +658,32 @@ static gboolean set_decay(GtkWidget* w, gpointer handle) {
 	return TRUE;
 }
 
+static gboolean mousemove(GtkWidget *w, GdkEventMotion *event, gpointer handle) {
+	SAUI* ui = (SAUI*)handle;
+	if (event->y < GM_TOP || event->y > (GM_TOP + GM_SCALE)) {
+		if (ui->highlight != -1) { gtk_widget_queue_draw(ui->m0); }
+		ui->highlight = -1;
+		return FALSE;
+	}
+	const int x = event->x - MA_WIDTH;
+	const int remain =  x % ((int) GM_WIDTH);
+	if (remain < GM_LEFT || remain > GM_LEFT + GM_GIRTH) {
+		if (ui->highlight != -1) { gtk_widget_queue_draw(ui->m0); }
+		ui->highlight = -1;
+		return FALSE;
+	}
+
+	const int mtr = x / ((int) GM_WIDTH);
+	if (mtr >=0 && mtr < ui->num_meters) {
+		if (ui->highlight != mtr) { gtk_widget_queue_draw(ui->m0); }
+		ui->highlight = mtr;
+	} else {
+		if (ui->highlight != -1) { gtk_widget_queue_draw(ui->m0); }
+		ui->highlight = -1;
+	}
+	return TRUE;
+}
+
 /******************************************************************************
  * LV2 callbacks
  */
@@ -652,6 +713,7 @@ instantiate(const LV2UI_Descriptor*   descriptor,
 	ui->gain = 1.0;
 	ui->cache_sf = -100;
 	ui->cache_ma = -100;
+	ui->highlight = -1;
 
 	alloc_annotations(ui);
 	realloc_metrics(ui);
@@ -672,7 +734,7 @@ instantiate(const LV2UI_Descriptor*   descriptor,
 	ui->fader = gtk_vscale_new_with_range(1.0, 40.0, .001);
 
 	ui->spn_attack = gtk_spin_button_new_with_range(1, 1000, 5);
-	ui->spn_decay  = gtk_spin_button_new_with_range(.1, 5, .1);
+	ui->spn_decay  = gtk_spin_button_new_with_range(.1, 5, .05);
 	ui->lbl_attack = gtk_label_new("Attack [1/s]:");
 	ui->lbl_decay  = gtk_label_new("Decay [1/s]:");
 
@@ -717,6 +779,10 @@ instantiate(const LV2UI_Descriptor*   descriptor,
 	g_signal_connect (G_OBJECT (ui->fader), "value-changed", G_CALLBACK (set_gain), ui);
 	g_signal_connect (G_OBJECT (ui->spn_attack), "value-changed", G_CALLBACK (set_attack), ui);
 	g_signal_connect (G_OBJECT (ui->spn_decay), "value-changed", G_CALLBACK (set_decay), ui);
+	if (ui->display_freq) {
+		gtk_widget_add_events(ui->m0, GDK_POINTER_MOTION_MASK);
+		g_signal_connect (G_OBJECT (ui->m0), "motion-notify-event", G_CALLBACK (mousemove), ui);
+	}
 
 	gtk_widget_show_all(ui->box);
 	*widget = ui->box;
@@ -760,6 +826,8 @@ static void invalidate_meter(SAUI* ui, int mtr, float val, float peak) {
 
 #define INVALIDATE_RECT(XX,YY,WW,HH) \
 	rect.x=XX; rect.y=YY; rect.width=WW; rect.height=HH; \
+	if (rect.x < 0 ) { rect.x = 0; } \
+	if (rect.y < 0 ) { rect.y = 0; } \
 	if (!region) { region =  gdk_region_rectangle (&rect); } \
 	else { \
 		tmp = gdk_region_rectangle (&rect); \
@@ -769,6 +837,10 @@ static void invalidate_meter(SAUI* ui, int mtr, float val, float peak) {
 
 	if (old == new && m_old == m_new) {
 		return;
+	}
+
+	if (ui->highlight == mtr) {
+		INVALIDATE_RECT(mtr * GM_WIDTH + MA_WIDTH + GM_WIDTH/2 - 32, GM_TXT - 10, 64, 54);
 	}
 
 	ui->val[mtr] = val;
