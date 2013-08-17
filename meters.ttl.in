@@ -1021,7 +1021,7 @@ mtr:spectrum
 		lv2:index 36 ;
 		lv2:symbol "UIattack" ;
 		lv2:name "UI attack" ;
-		lv2:default 15.0 ;
+		lv2:default 180.0 ;
 		lv2:minimum 1.0 ;
 		lv2:maximum 1000.0 ;
 		lv2:portProperty pprop:notOnGUI ;
@@ -1031,7 +1031,7 @@ mtr:spectrum
 		lv2:index 37 ;
 		lv2:symbol "UIdecay" ;
 		lv2:name "UI decay" ;
-		lv2:default 1.5 ;
+		lv2:default 0.5 ;
 		lv2:minimum 0.1 ;
 		lv2:maximum 10.0 ;
 		lv2:portProperty pprop:notOnGUI ;
