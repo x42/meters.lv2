@@ -290,7 +290,7 @@ ebur128_run(LV2_Handle instance, uint32_t n_samples)
 							break;
 						case CTL_UISETTINGS:
 							self->ui_settings = (uint32_t) v;
-							self->dbtp_enable = (self->ui_settings & 32) ? true : false;
+							self->dbtp_enable = (self->ui_settings & 64) ? true : false;
 							break;
 						default:
 							break;
@@ -524,7 +524,7 @@ restore(LV2_Handle                  instance,
 		self->follow_transport_mode = (cfg >> 8) & 0x3;
 		self->radar_spd_max = cfg >> 16;
 		self->send_state_to_ui = true;
-		self->dbtp_enable = (self->ui_settings & 32) ? true : false;
+		self->dbtp_enable = (self->ui_settings & 64) ? true : false;
 	}
   return LV2_STATE_SUCCESS;
 }
