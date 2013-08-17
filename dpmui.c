@@ -102,6 +102,9 @@ typedef struct {
 	bool display_freq;
 	bool reset_toggle;
 
+	float cache_sf;
+	float cache_ma;
+
 } SAUI;
 
 /******************************************************************************
@@ -163,7 +166,7 @@ static void create_meter_pattern(SAUI* ui) {
 	stp[1] = deflect(ui, -9);
 	stp[0] = deflect(ui, -18);
 
-	clr[0]=0x008822ff; clr[1]=0x00aa00ff;
+	clr[0]=0x008844ff; clr[1]=0x00bb00ff;
 	clr[2]=0x00ff00ff; clr[3]=0x00ff00ff;
 	clr[4]=0xffff00ff; clr[5]=0xffff00ff;
 	clr[6]=0xffaa00ff; clr[7]=0xffaa00ff;
@@ -340,7 +343,7 @@ static void alloc_annotations(SAUI* ui) {
 			write_text(cr, freq_table[i], FONT_LBL, -M_PI/2, -1, 0);
 			cairo_destroy (cr);
 		}
-	} else {
+	} else if (ui->num_meters > 1) {
 		char buf[16];
 		for (int i = 0; i < ui->num_meters; ++i) {
 			INIT_BLACK_BG(ui->an[i], 24, 64)
@@ -353,6 +356,10 @@ static void alloc_annotations(SAUI* ui) {
 
 static void realloc_metrics(SAUI* ui) {
 	const float dboff = ui->gain > 0.001 ? 20.0 * log10f(ui->gain) : -60;
+	if (rint(ui->cache_ma * 5) == rint(dboff * 5)) {
+		return;
+	}
+	ui->cache_ma = dboff;
 	cairo_t* cr;
 #define DO_THE_METER(DB, TXT) \
 	if (dboff + DB < 6.0 && dboff + DB >= -60) \
@@ -394,6 +401,13 @@ static void realloc_metrics(SAUI* ui) {
 }
 
 static void prepare_metersurface(SAUI* ui) {
+	const float dboff = ui->gain > 0.001 ? 20.0 * log10f(ui->gain) : -60;
+
+	if (rint(ui->cache_sf * 5) == rint(dboff * 5)) {
+		return;
+	}
+	ui->cache_sf = dboff;
+
 	cairo_t* cr;
 #define ALLOC_SF(VAR) \
 	if (!VAR) \
@@ -412,7 +426,6 @@ static void prepare_metersurface(SAUI* ui) {
 		cairo_stroke(cr); \
 }
 
-	const float dboff = ui->gain > 0.001 ? 20.0 * log10f(ui->gain) : -60;
 	for (int i = 0; i < ui->num_meters; ++i) {
 		ALLOC_SF(ui->sf[i])
 
@@ -637,6 +650,8 @@ instantiate(const LV2UI_Descriptor*   descriptor,
 	ui->controller = controller;
 
 	ui->gain = 1.0;
+	ui->cache_sf = -100;
+	ui->cache_ma = -100;
 
 	alloc_annotations(ui);
 	realloc_metrics(ui);
