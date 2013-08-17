@@ -78,7 +78,12 @@ typedef struct {
 	GtkWidget* box;
 	GtkWidget* align;
 	GtkWidget* m0;
+	GtkWidget* c_box;
 	GtkWidget* fader;
+	GtkWidget* spn_attack;
+	GtkWidget* spn_decay;
+	GtkWidget* lbl_attack;
+	GtkWidget* lbl_decay;
 
 	cairo_surface_t* sf[MAX_METERS];
 	cairo_surface_t* an[MAX_METERS];
@@ -312,7 +317,7 @@ static void alloc_annotations(SAUI* ui) {
 #define FONT_MTR "Sans 06"
 
 #define BACKGROUND_COLOR(CR) \
-	cairo_set_source_rgba (CR, .3, .3, .3, 1.0);
+	cairo_set_source_rgba (CR, 84/255.0, 85/255.0, 93/255.0, 1.0);
 
 #define INIT_ANN_BG(VAR, WIDTH, HEIGHT) \
 	if (!VAR) \
@@ -374,7 +379,7 @@ static void realloc_metrics(SAUI* ui) {
 	cairo_rectangle (cr, 0, 0, MA_WIDTH, GM_HEIGHT);
 	cairo_fill (cr);
 	DO_THE_METRICS
-	write_text(cr,  ui->display_freq ? "dBFS" : "dBTP", FONT_MTR, 0, MA_WIDTH - 3, GM_TXT);
+	write_text(cr,  ui->display_freq ? "dBFS" : "dBTP", FONT_MTR, 0, MA_WIDTH - 5, GM_TXT - 10);
 	cairo_destroy (cr);
 
 	INIT_ANN_BG(ui->ma[1], MA_WIDTH, GM_HEIGHT)
@@ -382,7 +387,7 @@ static void realloc_metrics(SAUI* ui) {
 	cairo_rectangle (cr, 0, 0, MA_WIDTH, GM_HEIGHT);
 	cairo_fill (cr);
 	DO_THE_METRICS
-	write_text(cr,  ui->display_freq ? "dBFS" : "dBTP", FONT_MTR, 0, MA_WIDTH - 3, GM_TXT);
+	write_text(cr,  ui->display_freq ? "dBFS" : "dBTP", FONT_MTR, 0, MA_WIDTH - 5, GM_TXT - 10);
 	cairo_destroy (cr);
 }
 
@@ -548,6 +553,24 @@ static gboolean set_gain(GtkRange* r, gpointer handle) {
 	return cb_reset_peak(NULL, NULL, handle);
 }
 
+static gboolean set_attack(GtkWidget* w, gpointer handle) {
+	SAUI* ui = (SAUI*)handle;
+	float val = gtk_spin_button_get_value(GTK_SPIN_BUTTON(ui->spn_attack));
+	if (!ui->disable_signals) {
+		ui->write(ui->controller, 36, sizeof(float), 0, (const void*) &val);
+	}
+	return TRUE;
+}
+
+static gboolean set_decay(GtkWidget* w, gpointer handle) {
+	SAUI* ui = (SAUI*)handle;
+	float val = gtk_spin_button_get_value(GTK_SPIN_BUTTON(ui->spn_decay));
+	if (!ui->disable_signals) {
+		ui->write(ui->controller, 37, sizeof(float), 0, (const void*) &val);
+	}
+	return TRUE;
+}
+
 /******************************************************************************
  * LV2 callbacks
  */
@@ -589,9 +612,15 @@ instantiate(const LV2UI_Descriptor*   descriptor,
 	ui->disable_signals = false;
 
 	ui->box   = gtk_hbox_new(FALSE, 2);
+	ui->c_box = gtk_vbox_new(FALSE, 2);
 	ui->align = gtk_alignment_new(.5, .5, 0, 0);
 	ui->m0    = gtk_drawing_area_new();
 	ui->fader = gtk_vscale_new_with_range(1.0, 40.0, .001);
+
+	ui->spn_attack = gtk_spin_button_new_with_range(1, 1000, 5);
+	ui->spn_decay  = gtk_spin_button_new_with_range(.1, 5, .1);
+	ui->lbl_attack = gtk_label_new("Attack [1/s]:");
+	ui->lbl_decay  = gtk_label_new("Decay [1/s]:");
 
 	/* fader init */
 	gtk_scale_set_draw_value(GTK_SCALE(ui->fader), FALSE);
@@ -612,19 +641,28 @@ instantiate(const LV2UI_Descriptor*   descriptor,
 	gtk_drawing_area_size(GTK_DRAWING_AREA(ui->m0), 2.0 * MA_WIDTH + ui->num_meters * GM_WIDTH, GM_HEIGHT);
 	gtk_widget_set_size_request(ui->m0, 2.0 * MA_WIDTH + ui->num_meters * GM_WIDTH, GM_HEIGHT);
 	gtk_widget_set_redraw_on_allocate(ui->m0, TRUE);
+	gtk_widget_set_size_request(ui->fader, -1, 200);
 
 	/* layout */
 	gtk_container_add(GTK_CONTAINER(ui->align), ui->m0);
-	gtk_box_pack_start(GTK_BOX(ui->box), ui->align, FALSE, FALSE, 0);
+	gtk_box_pack_start(GTK_BOX(ui->box), ui->align, TRUE, TRUE, 0);
+
 	if (ui->display_freq) {
-		gtk_box_pack_start(GTK_BOX(ui->box), ui->fader, FALSE, FALSE, 0);
+		gtk_box_pack_start(GTK_BOX(ui->c_box), ui->fader, TRUE, TRUE, 0);
+		gtk_box_pack_start(GTK_BOX(ui->c_box), ui->lbl_attack, FALSE, FALSE, 0);
+		gtk_box_pack_start(GTK_BOX(ui->c_box), ui->spn_attack, FALSE, FALSE, 0);
+		gtk_box_pack_start(GTK_BOX(ui->c_box), ui->lbl_decay, FALSE, FALSE, 0);
+		gtk_box_pack_start(GTK_BOX(ui->c_box), ui->spn_decay, FALSE, FALSE, 0);
+		gtk_box_pack_start(GTK_BOX(ui->box), ui->c_box, TRUE, FALSE, 0);
 	}
 
 	gtk_widget_add_events(ui->m0, GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK);
 
 	g_signal_connect (G_OBJECT (ui->m0), "expose_event", G_CALLBACK (expose_event), ui);
-	g_signal_connect (G_OBJECT (ui->fader), "value-changed", G_CALLBACK (set_gain), ui);
 	g_signal_connect (G_OBJECT (ui->m0), "button-release-event", G_CALLBACK (cb_reset_peak), ui);
+	g_signal_connect (G_OBJECT (ui->fader), "value-changed", G_CALLBACK (set_gain), ui);
+	g_signal_connect (G_OBJECT (ui->spn_attack), "value-changed", G_CALLBACK (set_attack), ui);
+	g_signal_connect (G_OBJECT (ui->spn_decay), "value-changed", G_CALLBACK (set_decay), ui);
 
 	gtk_widget_show_all(ui->box);
 	*widget = ui->box;
@@ -640,11 +678,17 @@ cleanup(LV2UI_Handle handle)
 		cairo_surface_destroy(ui->sf[i]);
 		cairo_surface_destroy(ui->an[i]);
 	}
-	cairo_pattern_destroy (ui->mpat);
+	cairo_pattern_destroy(ui->mpat);
 	cairo_surface_destroy(ui->ma[0]);
 	cairo_surface_destroy(ui->ma[1]);
+
 	gtk_widget_destroy(ui->m0);
 	gtk_widget_destroy(ui->fader);
+	gtk_widget_destroy(ui->spn_attack);
+	gtk_widget_destroy(ui->spn_decay);
+	gtk_widget_destroy(ui->lbl_attack);
+	gtk_widget_destroy(ui->lbl_decay);
+	gtk_widget_destroy(ui->c_box);
 
 	free(ui);
 }
@@ -699,6 +743,16 @@ static void handle_spectrum_connections(SAUI* ui, uint32_t port_index, float v) 
 			gtk_range_set_value(GTK_RANGE(ui->fader), GAINSCALE(v));
 			ui->disable_signals = false;
 		}
+	} else
+	if (port_index == 36) {
+		ui->disable_signals = true;
+		gtk_spin_button_set_value(GTK_SPIN_BUTTON(ui->spn_attack), v);
+		ui->disable_signals = false;
+	} else
+	if (port_index == 37) {
+		ui->disable_signals = true;
+		gtk_spin_button_set_value(GTK_SPIN_BUTTON(ui->spn_decay), v);
+		ui->disable_signals = false;
 	} else
 	if (port_index > 4 && port_index < 5 + ui->num_meters) {
 		int pidx = port_index -5;

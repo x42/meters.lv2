@@ -115,6 +115,8 @@ typedef enum {
 	SA_INPUT1   = 2,
 	SA_OUTPUT1  = 3,
 	SA_GAIN     = 4,
+	SA_ATTACK   = 36,
+	SA_DECAY    = 37,
 } SAPortIndex;
 
 typedef struct {
@@ -123,10 +125,12 @@ typedef struct {
 
 	float* gain;
 	float* spec[FILTER_COUNT];
+	float* attack_p;
+	float* decay_p;
 
 	double rate;
-	float attack;
-	float decay;
+	float attack, attack_h;
+	float decay, decay_h;
 
 	float  spec_f[FILTER_COUNT];
 	struct FilterParam flt[FILTER_COUNT];
@@ -165,10 +169,13 @@ spectrum_instantiate(
 	LV2spec* self = (LV2spec*)calloc(1, sizeof(LV2spec));
 	if (!self) return NULL;
 
+	self->attack_h = 15.0;
+	self->decay_h = .5;
 	self->rate = rate;
+
 	// 1.0 - e^(-2.0 * π * v / 48000)
-	self->attack = 1.0f - expf(-2.0 * M_PI * 15 / rate); // 220
-	self->decay  = 1.0f - expf(-2.0 * M_PI * 0.5 / rate);
+	self->attack = 1.0f - expf(-2.0 * M_PI * self->attack_h / rate);
+	self->decay  = 1.0f - expf(-2.0 * M_PI * self->decay_h / rate);
 
 	for (int i = 0; i < FILTER_COUNT; ++i) {
 		self->spec_f[i] = 0;
@@ -198,6 +205,12 @@ spectrum_connect_port(LV2_Handle instance, uint32_t port, void* data)
 	case SA_GAIN:
 		self->gain = (float*) data;
 		break;
+	case SA_ATTACK:
+		self->attack_p = (float*) data;
+		break;
+	case SA_DECAY:
+		self->decay_p = (float*) data;
+		break;
 	default:
 		if (port > 4 && port < 36) {
 			self->spec[port-5] = (float*) data;
@@ -213,6 +226,20 @@ spectrum_run(LV2_Handle instance, uint32_t n_samples)
 	float* inL = self->input[0];
 	float* inR = self->input[1];
 
+	if (self->attack_h != *self->attack_p) {
+		self->attack_h = *self->attack_p;
+		float v = self->attack_h;
+		if (v < 1.0) v = 1.0;
+		if (v > 1000.0) v = 1000.0;
+		self->attack = 1.0f - expf(-2.0 * M_PI * v / self->rate);
+	}
+	if (self->decay_h != *self->decay_p) {
+		self->decay_h = *self->decay_p;
+		float v = self->decay_h;
+		if (v < 0.05) v = 0.05;
+		if (v > 15.0) v = 15.0;
+		self->decay  = 1.0f - expf(-2.0 * M_PI * v / self->rate);
+	}
 	/* localize variables */
 	float spec_f[FILTER_COUNT];
 	const float attack = self->attack;
