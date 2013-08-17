@@ -35,7 +35,7 @@ public:
     void process (float *p, int n);
     void process_max (float *p, int n);
     float read (void);
-    void  read (float *m, float *p);
+    void  read (float &m, float &p);
 
     void init (float fsamp);
 

@@ -129,11 +129,11 @@ float TruePeakdsp::read (void)
     return _m;
 }
 
-void TruePeakdsp::read (float *m, float *p)
+void TruePeakdsp::read (float &m, float &p)
 {
     _res = true;
-		*m = _m;
-		*p = _p;
+		m = _m;
+		p = _p;
 }
 
 

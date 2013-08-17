@@ -62,6 +62,7 @@ typedef struct {
 	float* peak[2];
 
 	int chn;
+	float peak_max[2];
 
 	/* ebur specific */
   LV2_URID_Map* map;
@@ -139,6 +140,9 @@ instantiate(const LV2_Descriptor*     descriptor,
 
 	self->rlgain = 1.0;
 	self->p_refl = -9999;
+
+	self->peak_max[0] = 0;
+	self->peak_max[1] = 0;
 
 	return (LV2_Handle)self;
 }
@@ -225,7 +229,8 @@ dbtp_run(LV2_Handle instance, uint32_t n_samples)
 
 	if (self->p_refl != *self->reflvl) {
 		self->p_refl = *self->reflvl;
-		self->rlgain = powf (10.0f, 0.05f * (self->p_refl + 18.0));
+		self->peak_max[0] = 0;
+		self->peak_max[1] = 0;
 	}
 
 	int c;
@@ -243,17 +248,22 @@ dbtp_run(LV2_Handle instance, uint32_t n_samples)
 
 	if (self->chn == 1) {
 		float m, p;
-		static_cast<TruePeakdsp*>(self->mtr[0])->read(&m, &p);
-		*self->input[1] = self->rlgain * p; // port index 4
+		static_cast<TruePeakdsp*>(self->mtr[0])->read(m, p);
+		if (self->peak_max[0] < self->rlgain * p) { self->peak_max[0] = self->rlgain * p; }
 		*self->level[0] = self->rlgain * m;
+		*self->input[1] = self->peak_max[0]; // portindex 4
 	} else if (self->chn == 2) {
 		float m, p;
-		static_cast<TruePeakdsp*>(self->mtr[0])->read(&m, &p);
-		*self->peak[0] = p;
+		static_cast<TruePeakdsp*>(self->mtr[0])->read(m, p);
+		if (self->peak_max[0] < self->rlgain * p) { self->peak_max[0] = self->rlgain * p; }
 		*self->level[0] = self->rlgain * m;
-		static_cast<TruePeakdsp*>(self->mtr[1])->read(&m, &p);
-		*self->peak[1] = p;
+		*self->peak[0] = self->rlgain * p;
+		*self->peak[0] = self->peak_max[0];
+		static_cast<TruePeakdsp*>(self->mtr[1])->read(m, p);
+		if (self->peak_max[1] < self->rlgain * p) { self->peak_max[1] = self->rlgain * p; }
 		*self->level[1] = self->rlgain * m;
+		*self->peak[1] = self->rlgain * p;
+		*self->peak[1] = self->peak_max[1];
 	}
 }
 

@@ -100,6 +100,7 @@ typedef struct {
 	float gain;
 	uint32_t num_meters;
 	bool display_freq;
+	bool reset_toggle;
 
 } SAUI;
 
@@ -439,6 +440,7 @@ static void prepare_metersurface(SAUI* ui) {
 
 		render_meter(ui, i, GM_SCALE, 2, 0, 0);
 		ui->vui[i] = 2;
+		ui->peak_vis[i] = 0;
 	}
 }
 
@@ -558,6 +560,14 @@ static gboolean expose_event(GtkWidget *w, GdkEventExpose *ev, gpointer handle) 
 
 static gboolean cb_reset_peak(GtkWidget *w, GdkEventButton *event, gpointer handle) {
 	SAUI* ui = (SAUI*)handle;
+	if (!ui->display_freq) {
+		/* reset peak-hold in backend
+		 * -- use unused reflevel in dBTP to notify plugin
+		 */
+		ui->reset_toggle = !ui->reset_toggle;
+		float temp = ui->reset_toggle ? 1.0 : 0.0;
+		ui->write(ui->controller, 0, sizeof(float), 0, (const void*) &temp);
+	}
 	for (int i=0; i < ui->num_meters ; ++i) {
 		ui->peak_val[i] = -70;
 	}
