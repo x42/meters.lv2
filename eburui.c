@@ -995,7 +995,7 @@ static gboolean cbx_lufs(GtkWidget *w, gpointer handle) {
 	v |= gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(ui->cbx_ring_short)) ? 4 : 0;
 	v |= gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(ui->cbx_hist_short)) ? 8 : 0;
 	v |= gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(ui->cbx_histogram)) ? 16 : 0;
-	v |= gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(ui->cbx_truepeak)) ? 32 : 0;
+	v |= gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(ui->cbx_truepeak)) ? 64 : 0;
 	forge_message_kv(ui, ui->uris.mtr_meters_cfg, CTL_UISETTINGS, (float)v);
 	invalidate_changed(ui, -1);
 	return TRUE;
@@ -1405,6 +1405,7 @@ port_event(LV2UI_Handle handle,
 					} else {
 						gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(ui->cbx_radar), true);
 					}
+					gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(ui->cbx_truepeak), (vv & 64) ? true: false);
 					ui->disable_signals = false;
 				}
 			} else if (obj->body.otype == uris->rdr_radarpoint) {
