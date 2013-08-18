@@ -19,6 +19,7 @@
 
 #include <string.h>
 #include <stdlib.h>
+#include "lv2/lv2plug.in/ns/ext/urid/urid.h"
 
 /* simple lockless ringbuffer
  * for goniometer stereo signal
@@ -116,20 +117,20 @@ typedef struct {
 	bool ui_active;
 
 	/* ui state/settings */
-	bool  s_autogain;
-	bool  s_oversample;
-	bool  s_line;
-	bool  s_persist;
-	int   s_sfact;
-	float s_linewidth;
-	float s_pointwidth;
-	float s_persistency;
-	float s_max_freq;
-	float s_compress;
-	float s_gattack;
-	float s_gdecay;
-	float s_gtarget;
-	float s_grms;
+	volatile bool  s_autogain;
+	volatile bool  s_oversample;
+	volatile bool  s_line;
+	volatile bool  s_persist;
+	volatile int   s_sfact;
+	volatile float s_linewidth;
+	volatile float s_pointwidth;
+	volatile float s_persistency;
+	volatile float s_max_freq;
+	volatile float s_compress;
+	volatile float s_gattack;
+	volatile float s_gdecay;
+	volatile float s_gtarget;
+	volatile float s_grms;
 
 	/* private */
 	float* input[2];
@@ -146,5 +147,13 @@ typedef struct {
 	uint32_t sample_cnt;
 
 	Stcorrdsp *cor;
+
+	LV2_URID_Map* map;
+
+	LV2_URID atom_Vector;
+	LV2_URID atom_Int;
+	LV2_URID atom_Float;
+	LV2_URID gon_State_F;
+	LV2_URID gon_State_I;
 
 } LV2gm;

@@ -635,6 +635,7 @@ mtr:goniometer
 	lv2:project <http://gareus.org/oss/lv2/meters> ;
 	lv2:optionalFeature lv2:hardRTCapable ;
 	lv2:requiredFeature <http://lv2plug.in/ns/ext/instance-access>;
+	lv2:extensionData state:interface ;
 	ui:ui mtr:goniometerui;
 	lv2:port [
 		a lv2:AudioPort ,

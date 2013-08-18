@@ -846,7 +846,7 @@ instantiate(const LV2UI_Descriptor*   descriptor,
 
 	ui->c_tbl        = gtk_table_new(/*rows*/6, /*cols*/ 6, FALSE);
 	ui->cbx_src      = gtk_check_button_new_with_label("Oversample");
-	ui->spn_src_fact = gtk_spin_button_new_with_range(1, 32, 1);
+	ui->spn_src_fact = gtk_spin_button_new_with_range(2, 32, 1);
 
 	ui->spn_compress = gtkext_dial_new(0.0, 100.0, 0.5);
 	ui->spn_gattack  = gtkext_dial_new(0.0, 100.0, 1.0);

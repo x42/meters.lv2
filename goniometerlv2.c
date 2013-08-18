@@ -50,20 +50,36 @@ goniometer_instantiate(
 	if (strcmp(descriptor->URI, MTR_URI "goniometer")) {
 		return NULL;
 	}
+	LV2gm* self = (LV2gm*)calloc(1, sizeof(LV2gm));
+	if (!self) return NULL;
 
 	bool instance_ok = false;
 	for (int i=0; features[i]; ++i) {
 		if (!strcmp(features[i]->URI, "http://lv2plug.in/ns/ext/instance-access")) {
 			instance_ok = true;
 		}
+		if (!strcmp(features[i]->URI, LV2_URID__map)) {
+			self->map = (LV2_URID_Map*)features[i]->data;
+		}
 	}
-	if (!instance_ok) {
-		fprintf(stderr, "meters.lv2 error: Host does not support instance-access.\n");
+
+	if (!self->map) {
+		fprintf(stderr, "EBUrLV2 error: Host does not support urid:map\n");
+		free(self);
 		return NULL;
 	}
 
-	LV2gm* self = (LV2gm*)calloc(1, sizeof(LV2gm));
-	if (!self) return NULL;
+	if (!instance_ok) {
+		fprintf(stderr, "meters.lv2 error: Host does not support instance-access.\n");
+		free(self);
+		return NULL;
+	}
+
+	self->atom_Vector = self->map->map(self->map->handle, LV2_ATOM__Vector);
+	self->atom_Int    = self->map->map(self->map->handle, LV2_ATOM__Int);
+	self->atom_Float  = self->map->map(self->map->handle, LV2_ATOM__Float);
+	self->gon_State_F = self->map->map(self->map->handle, MTR_URI "gon_stateF");
+	self->gon_State_I = self->map->map(self->map->handle, MTR_URI "gon_stateI");
 
 	self->cor = new Stcorrdsp();
 	self->cor->init(rate, 2e3f, 0.3f);
@@ -165,6 +181,112 @@ goniometer_cleanup(LV2_Handle instance)
 	free(instance);
 }
 
+
+struct VectorOfFloat {
+	uint32_t child_size;
+	uint32_t child_type;
+	float    cfg[9];
+};
+
+struct VectorOfInt {
+	uint32_t child_size;
+	uint32_t child_type;
+	int32_t  cfg[2];
+};
+
+static LV2_State_Status
+goniometer_save(LV2_Handle     instance,
+     LV2_State_Store_Function  store,
+     LV2_State_Handle          handle,
+     uint32_t                  flags,
+     const LV2_Feature* const* features)
+{
+	LV2gm* self = (LV2gm*)instance;
+	struct VectorOfFloat vof;
+	struct VectorOfInt voi;
+
+	vof.child_type = self->atom_Float;
+	vof.child_size = sizeof(float);
+
+	voi.child_type = self->atom_Int;
+	voi.child_size = sizeof(int32_t);
+
+	vof.cfg[0] = self->s_linewidth;
+	vof.cfg[1] = self->s_pointwidth;
+	vof.cfg[2] = self->s_persistency;
+	vof.cfg[3] = self->s_max_freq;
+	vof.cfg[4] = self->s_compress;
+	vof.cfg[5] = self->s_gattack;
+	vof.cfg[6] = self->s_gdecay;
+	vof.cfg[7] = self->s_gtarget;
+	vof.cfg[8] = self->s_grms;
+
+	voi.cfg[1] = self->s_sfact;
+	voi.cfg[0] = 0;
+	voi.cfg[0] |= self->s_autogain    ? 1 : 0;
+	voi.cfg[0] |= self->s_oversample  ? 2 : 0;
+	voi.cfg[0] |= self->s_line        ? 4 : 0;
+	voi.cfg[0] |= self->s_persist     ? 8 : 0;
+
+	store(handle, self->gon_State_F,
+			(void*) &vof, sizeof(struct VectorOfFloat),
+			self->atom_Vector, LV2_STATE_IS_POD /*| LV2_STATE_IS_PORTABLE*/);
+
+	store(handle, self->gon_State_I,
+			(void*) &voi, sizeof(struct VectorOfInt),
+			self->atom_Vector, LV2_STATE_IS_POD /*| LV2_STATE_IS_PORTABLE */);
+
+  return LV2_STATE_SUCCESS;
+}
+
+static LV2_State_Status
+goniometer_restore(LV2_Handle       instance,
+        LV2_State_Retrieve_Function retrieve,
+        LV2_State_Handle            handle,
+        uint32_t                    flags,
+        const LV2_Feature* const*   features)
+{
+	LV2gm* self = (LV2gm*)instance;
+  size_t   size;
+  uint32_t type;
+  uint32_t valflags;
+  const void* v1 = retrieve(handle, self->gon_State_F, &size, &type, &valflags);
+  if (v1 && size == (sizeof(LV2_Atom_Vector_Body) + (9 * sizeof(float))) && type == self->atom_Vector)
+	{
+		float *cfg = (float*) LV2_ATOM_BODY(v1);
+		self->s_linewidth   = cfg[0];
+		self->s_pointwidth  = cfg[1];
+		self->s_persistency = cfg[2];
+		self->s_max_freq    = cfg[3];
+		self->s_compress    = cfg[4];
+		self->s_gattack     = cfg[5];
+		self->s_gdecay      = cfg[6];
+		self->s_gtarget     = cfg[7];
+		self->s_grms        = cfg[8];
+	}
+  const void* v2 = retrieve(handle, self->gon_State_I, &size, &type, &valflags);
+  if (v2 && size == (sizeof(LV2_Atom_Vector_Body) + (2 * sizeof(int32_t))) && type == self->atom_Vector)
+	{
+		int *cfg = (int32_t*) LV2_ATOM_BODY(v2);
+		self->s_sfact = cfg[1];
+		self->s_autogain   = (cfg[0] & 1) ? true: false;
+		self->s_oversample = (cfg[0] & 2) ? true: false;
+		self->s_line       = (cfg[0] & 4) ? true: false;
+		self->s_persist    = (cfg[0] & 8) ? true: false;
+	}
+  return LV2_STATE_SUCCESS;
+}
+
+static const void*
+goniometer_extension_data(const char* uri)
+{
+  static const LV2_State_Interface  state  = { goniometer_save, goniometer_restore };
+  if (!strcmp(uri, LV2_STATE__interface)) {
+    return &state;
+  }
+  return NULL;
+}
+
 static const LV2_Descriptor descriptorGoniometer = {
 	MTR_URI "goniometer",
 	goniometer_instantiate,
@@ -173,6 +295,6 @@ static const LV2_Descriptor descriptorGoniometer = {
 	goniometer_run,
 	NULL,
 	goniometer_cleanup,
-	extension_data
+	goniometer_extension_data
 };
 
