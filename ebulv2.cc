@@ -489,7 +489,7 @@ ebur128_cleanup(LV2_Handle instance)
 }
 
 static LV2_State_Status
-save(LV2_Handle                instance,
+ebur128_save(LV2_Handle        instance,
      LV2_State_Store_Function  store,
      LV2_State_Handle          handle,
      uint32_t                  flags,
@@ -507,7 +507,7 @@ save(LV2_Handle                instance,
 }
 
 static LV2_State_Status
-restore(LV2_Handle                  instance,
+ebur128_restore(LV2_Handle          instance,
         LV2_State_Retrieve_Function retrieve,
         LV2_State_Handle            handle,
         uint32_t                    flags,
@@ -532,12 +532,13 @@ restore(LV2_Handle                  instance,
 static const void*
 extension_data_ebur(const char* uri)
 {
-  static const LV2_State_Interface  state  = { save, restore };
+  static const LV2_State_Interface  state  = { ebur128_save, ebur128_restore };
   if (!strcmp(uri, LV2_STATE__interface)) {
     return &state;
   }
   return NULL;
 }
+
 static const LV2_Descriptor descriptorEBUr128 = {
 	MTR_URI "EBUr128",
 	ebur128_instantiate,
