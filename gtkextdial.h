@@ -85,6 +85,16 @@ static gboolean gtkext_dial_expose_event(GtkWidget *w, GdkEventExpose *ev, gpoin
 	return TRUE;
 }
 
+static void gtkext_dial_update_value(GtkExtDial * d, float val) {
+	if (val < d->min) val = d->min;
+	if (val > d->max) val = d->max;
+	if (val != d->cur) {
+		d->cur = val;
+		if (d->cb) d->cb(d->w, d->handle);
+		gtk_widget_queue_draw(d->w);
+	}
+}
+
 static gboolean gtkext_dial_mousedown(GtkWidget *w, GdkEventButton *event, gpointer handle) {
 	GtkExtDial * d = (GtkExtDial *)handle;
 	if (!d->sensitive) { return FALSE; }
@@ -116,13 +126,32 @@ static gboolean gtkext_dial_mousemove(GtkWidget *w, GdkEventMotion *event, gpoin
 	float diff = ((event->x - d->drag_x) - (event->y - d->drag_y)) * 0.004; // 250px full-scale
 	diff = rint(diff * (d->max - d->min) / d->acc ) * d->acc;
 	float val = d->drag_c + diff;
-	if (val < d->min) val = d->min;
-	if (val > d->max) val = d->max;
-	if (val != d->cur) {
-		d->cur = val;
-		if (d->cb) d->cb(d->w, d->handle);
-		gtk_widget_queue_draw(d->w);
+	gtkext_dial_update_value(d, val);
+	return TRUE;
+}
+
+static gboolean gtkext_dial_scroll(GtkWidget *w, GdkEventScroll *ev, gpointer handle) {
+	GtkExtDial * d = (GtkExtDial *)handle;
+	if (!d->sensitive) { return FALSE; }
+
+	if (!(d->drag_x < 0 || d->drag_y < 0)) {
+		d->drag_x = d->drag_y = -1;
 	}
+
+	float val = d->cur;
+	switch (ev->direction) {
+		case GDK_SCROLL_RIGHT:
+		case GDK_SCROLL_UP:
+			val += d->acc;
+			break;
+		case GDK_SCROLL_LEFT:
+		case GDK_SCROLL_DOWN:
+			val -= d->acc;
+			break;
+		default:
+			break;
+	}
+	gtkext_dial_update_value(d, val);
 	return TRUE;
 }
 
@@ -188,12 +217,13 @@ static GtkExtDial * gtkext_dial_new(float min, float max, float step) {
 	gtk_widget_set_size_request(d->w, GED_BOUNDS, GED_BOUNDS);
 
 	gtk_widget_set_redraw_on_allocate(d->w, TRUE);
-	gtk_widget_add_events(d->w, GDK_BUTTON1_MOTION_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK);
+	gtk_widget_add_events(d->w, GDK_BUTTON1_MOTION_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK | GDK_SCROLL_MASK);
 
 	g_signal_connect (G_OBJECT (d->w), "expose_event", G_CALLBACK (gtkext_dial_expose_event), d);
 	g_signal_connect (G_OBJECT (d->w), "button-release-event", G_CALLBACK (gtkext_dial_mouseup), d);
 	g_signal_connect (G_OBJECT (d->w), "button-press-event",   G_CALLBACK (gtkext_dial_mousedown), d);
 	g_signal_connect (G_OBJECT (d->w), "motion-notify-event",  G_CALLBACK (gtkext_dial_mousemove), d);
+	g_signal_connect (G_OBJECT (d->w), "scroll-event",  G_CALLBACK (gtkext_dial_scroll), d);
 
 	return d;
 }
@@ -216,16 +246,7 @@ static void gtkext_dial_set_callback(GtkExtDial *d, gboolean (*cb) (GtkWidget* w
 
 static void gtkext_dial_set_value(GtkExtDial *d, float v) {
 	v = d->min + rint((v-d->min) / d->acc ) * d->acc;
-	if (v < d->min) d->cur = d->min;
-	else if (v > d->max) d->cur = d->max;
-
-	if (v != d->cur) {
-		d->cur = v;
-		if (d->cb) d->cb(d->w, d->handle);
-		gtk_widget_queue_draw(d->w);
-	}
-
-	gtk_widget_queue_draw(d->w);
+	gtkext_dial_update_value(d, v);
 }
 
 static void gtkext_dial_set_sensitive(GtkExtDial *d, gboolean s) {
