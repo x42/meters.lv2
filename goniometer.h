@@ -128,6 +128,8 @@ typedef struct {
 	float s_compress;
 	float s_gattack;
 	float s_gdecay;
+	float s_gtarget;
+	float s_grms;
 
 	/* private */
 	float* input[2];

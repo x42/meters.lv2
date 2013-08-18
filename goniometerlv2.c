@@ -82,11 +82,13 @@ goniometer_instantiate(
 	self->s_sfact = 4;
 	self->s_linewidth = .75;
 	self->s_pointwidth = 1.75;
-	self->s_persistency = 0.88;
+	self->s_persistency = 88;
 	self->s_max_freq = 50;
 	self->s_compress = 0.0;
-	self->s_gattack = 25.0;
-	self->s_gdecay = 25.0;
+	self->s_gattack = 50.0;
+	self->s_gdecay = 50.0;
+	self->s_gtarget = 40.0;
+	self->s_grms = 50.0;
 
 	uint32_t rbsize = self->rate / 5;
 	if (rbsize < 8192u) rbsize = 8192u;
