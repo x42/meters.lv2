@@ -972,7 +972,7 @@ static gboolean cbx_transport(GtkWidget *w, gpointer handle) {
 		forge_message_kv(ui, ui->uris.mtr_meters_cfg, CTL_TRANSPORTSYNC, 1);
 	} else {
 		gtk_widget_set_sensitive(GTK_WIDGET(ui->btn_start), true);
-		forge_message_kv(ui, ui->uris.mtr_meters_cfg, CTL_AUTORESET, 0);
+		forge_message_kv(ui, ui->uris.mtr_meters_cfg, CTL_TRANSPORTSYNC, 0);
 	}
 	return TRUE;
 }
@@ -980,9 +980,9 @@ static gboolean cbx_transport(GtkWidget *w, gpointer handle) {
 static gboolean cbx_autoreset(GtkWidget *w, gpointer handle) {
 	EBUrUI* ui = (EBUrUI*)handle;
 	if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(ui->cbx_autoreset))) {
-		forge_message_kv(ui, ui->uris.mtr_meters_cfg, 5, 1);
+		forge_message_kv(ui, ui->uris.mtr_meters_cfg, CTL_AUTORESET, 1);
 	} else {
-		forge_message_kv(ui, ui->uris.mtr_meters_cfg, 5, 0);
+		forge_message_kv(ui, ui->uris.mtr_meters_cfg, CTL_AUTORESET, 0);
 	}
 	return TRUE;
 }
