@@ -339,7 +339,7 @@ static gboolean mousemove(GtkWidget *w, GdkEventMotion *event, gpointer handle) 
 	MetersLV2UI* ui = (MetersLV2UI*)handle;
 	if (ui->drag_x < 0 || ui->drag_y < 0) return FALSE;
 
-	const float diff = rint( (event->x - ui->drag_x) - (event->y - ui->drag_y) / 5.0 ) * .5;
+	const float diff = rint(((event->x - ui->drag_x) - (event->y - ui->drag_y)) / 5.0 ) * .5;
 	float cal = ui->drag_cal + diff;
 	if (cal < -30.0) cal = -30.0;
 	if (cal > 0.0) cal = 0.0;
