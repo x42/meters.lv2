@@ -904,6 +904,7 @@ void invalidate_histogram_line(EBUrUI* ui, int p) {
 		amin = 110;
 		amax = 650;
 	}
+	if (p < amin || p > amax) return;
 	const double astep = 1.5 * M_PI / (double) (amax - amin);
 	const double aoff = (M_PI / 2.0) - amin * astep;
 
