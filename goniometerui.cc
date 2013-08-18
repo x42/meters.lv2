@@ -265,7 +265,7 @@ static void alloc_annotations(GMUI* ui) {
 	write_text(cr, TXTR, FONT_LB, -4, GED_WIDTH-1, GED_HEIGHT - 1); \
 	cairo_destroy (cr);
 
-	INIT_DIAL_SF(ui->dial[0], "fast", "slow")
+	INIT_DIAL_SF(ui->dial[0], "slow", "fast")
 	INIT_DIAL_SF(ui->dial[1], "peak", "rms ")
 	INIT_DIAL_SF(ui->dial[2], "  0%", "100%")
 	INIT_DIAL_SF(ui->dial[3], " 15%", "600%")
@@ -886,7 +886,7 @@ instantiate(const LV2UI_Descriptor*   descriptor,
 	ui->lbl_gattack   = gtk_label_new("Attack Speed:");
 	ui->lbl_gdecay    = gtk_label_new("Decay Speed:");
 	ui->lbl_gtarget   = gtk_label_new("Target Zoom:");
-	ui->lbl_grms      = gtk_label_new("RMS (vs peak):");
+	ui->lbl_grms      = gtk_label_new("RMS / Peak:");
 
 	gtk_misc_set_alignment(GTK_MISC(ui->lbl_vfreq),    1.0f, 0.5f);
 	gtk_misc_set_alignment(GTK_MISC(ui->lbl_compress), 1.0f, 0.5f);
