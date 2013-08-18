@@ -236,13 +236,13 @@ spectrum_run(LV2_Handle instance, uint32_t n_samples)
 	if (self->decay_h != *self->decay_p) {
 		self->decay_h = *self->decay_p;
 		float v = self->decay_h;
-		if (v < 0.05) v = 0.05;
+		if (v < 0.01) v = 0.01;
 		if (v > 15.0) v = 15.0;
 		self->decay  = 1.0f - expf(-2.0 * M_PI * v / self->rate);
 	}
 	/* localize variables */
 	float spec_f[FILTER_COUNT];
-	const float attack = self->attack;
+	const float attack = self->attack > self->decay ? self->attack : self->decay;
 	const float decay  = self->decay;
 	const float gain   = *self->gain;
 	struct FilterParam *flt[FILTER_COUNT];

@@ -649,19 +649,28 @@ static gboolean set_gain(GtkRange* r, gpointer handle) {
 	return cb_reset_peak(NULL, NULL, handle);
 }
 
+/* val: 1 .. 1000 1/s  <> 0..100 */
+#define ATTACKSCALE(X) ((X) > 0.1 ? rint(333.333 * (log10f(X)))/10.0 : 0)
+#define INV_ATTACKSCALE(X) powf(10, (X) * .03f)
+
 static gboolean set_attack(GtkWidget* w, gpointer handle) {
 	SAUI* ui = (SAUI*)handle;
-	float val = gtk_spin_button_get_value(GTK_SPIN_BUTTON(ui->spn_attack));
 	if (!ui->disable_signals) {
+		float val = INV_ATTACKSCALE(gtk_spin_button_get_value(GTK_SPIN_BUTTON(ui->spn_attack)));
+		//printf("set_attack %f -> %f\n", gtk_spin_button_get_value(GTK_SPIN_BUTTON(ui->spn_attack)), val);
 		ui->write(ui->controller, 36, sizeof(float), 0, (const void*) &val);
 	}
 	return TRUE;
 }
 
+/* val: .5 .. 15 1/s  <> 0..100 */
+#define DECAYSCALE(X) ((X) > 0.01 ? rint(400.0 * (1.3f + log10f(X)) )/ 10.0 : 0)
+#define INV_DECAYSCALE(X) powf(10, (X) * .025f - 1.3f)
 static gboolean set_decay(GtkWidget* w, gpointer handle) {
 	SAUI* ui = (SAUI*)handle;
-	float val = gtk_spin_button_get_value(GTK_SPIN_BUTTON(ui->spn_decay));
 	if (!ui->disable_signals) {
+		float val = INV_DECAYSCALE(gtk_spin_button_get_value(GTK_SPIN_BUTTON(ui->spn_decay)));
+		//printf("set_decay %f -> %f\n", gtk_spin_button_get_value(GTK_SPIN_BUTTON(ui->spn_decay)), val);
 		ui->write(ui->controller, 37, sizeof(float), 0, (const void*) &val);
 	}
 	return TRUE;
@@ -742,20 +751,20 @@ instantiate(const LV2UI_Descriptor*   descriptor,
 	ui->m0    = gtk_drawing_area_new();
 	ui->fader = gtk_vscale_new_with_range(1.0, 40.0, .001);
 
-	ui->spn_attack = gtk_spin_button_new_with_range(1, 1000, 5);
-	ui->spn_decay  = gtk_spin_button_new_with_range(.1, 5, .05);
-	ui->lbl_attack = gtk_label_new("Attack [1/s]:");
-	ui->lbl_decay  = gtk_label_new("Decay [1/s]:");
+	ui->spn_attack = gtk_spin_button_new_with_range(0, 100, .5);
+	ui->spn_decay  = gtk_spin_button_new_with_range(0, 100, .5);
+	ui->lbl_attack = gtk_label_new("Attack:");
+	ui->lbl_decay  = gtk_label_new("Decay:");
 
 	/* fader init */
 	gtk_scale_set_draw_value(GTK_SCALE(ui->fader), FALSE);
 	gtk_range_set_value(GTK_RANGE(ui->fader), GAINSCALE(1.0000));
 	gtk_scale_add_mark(GTK_SCALE(ui->fader),GAINSCALE(0.2511), GTK_POS_RIGHT, NULL /*"-12db" */);
 	gtk_scale_add_mark(GTK_SCALE(ui->fader),GAINSCALE(0.3548), GTK_POS_RIGHT, NULL /* "-9dB" */);
-	gtk_scale_add_mark(GTK_SCALE(ui->fader),GAINSCALE(0.5012), GTK_POS_RIGHT, "-6dB");
+	gtk_scale_add_mark(GTK_SCALE(ui->fader),GAINSCALE(0.5012), GTK_POS_RIGHT, NULL /* "-6dB" */);
 	gtk_scale_add_mark(GTK_SCALE(ui->fader),GAINSCALE(0.7079), GTK_POS_RIGHT, NULL /* "-3dB" */);
 	gtk_scale_add_mark(GTK_SCALE(ui->fader),GAINSCALE(1.0000), GTK_POS_RIGHT, "0dB");
-	gtk_scale_add_mark(GTK_SCALE(ui->fader),GAINSCALE(1.4125), GTK_POS_RIGHT,  "+3dB");
+	gtk_scale_add_mark(GTK_SCALE(ui->fader),GAINSCALE(1.4125), GTK_POS_RIGHT, NULL /* "+3dB" */);
 	gtk_scale_add_mark(GTK_SCALE(ui->fader),GAINSCALE(1.9952), GTK_POS_RIGHT,  "+6dB");
 	gtk_scale_add_mark(GTK_SCALE(ui->fader),GAINSCALE(2.8183), GTK_POS_RIGHT,  "+9dB");
 	gtk_scale_add_mark(GTK_SCALE(ui->fader),GAINSCALE(3.9810), GTK_POS_RIGHT, "+12dB");
@@ -917,12 +926,12 @@ static void handle_spectrum_connections(SAUI* ui, uint32_t port_index, float v) 
 	} else
 	if (port_index == 36) {
 		ui->disable_signals = true;
-		gtk_spin_button_set_value(GTK_SPIN_BUTTON(ui->spn_attack), v);
+		gtk_spin_button_set_value(GTK_SPIN_BUTTON(ui->spn_attack), ATTACKSCALE(v));
 		ui->disable_signals = false;
 	} else
 	if (port_index == 37) {
 		ui->disable_signals = true;
-		gtk_spin_button_set_value(GTK_SPIN_BUTTON(ui->spn_decay), v);
+		gtk_spin_button_set_value(GTK_SPIN_BUTTON(ui->spn_decay), DECAYSCALE(v));
 		ui->disable_signals = false;
 	} else
 	if (port_index > 4 && port_index < 5 + ui->num_meters) {
