@@ -102,6 +102,7 @@ typedef struct {
 	int sfc;
 	cairo_surface_t* sf[3];
 	cairo_surface_t* an[7];
+	cairo_surface_t* dial[4];
 
 	float last_x, last_y;
 	float lp0, lp1;
@@ -164,6 +165,7 @@ static void setup_src(GMUI* ui, float oversample, int hlen, float frel) {
 static void write_text(
 		cairo_t* cr,
 		const char *txt, const char * font,
+		const int align,
 		const float x, const float y) {
 	int tw, th;
 	cairo_save(cr);
@@ -172,11 +174,24 @@ static void write_text(
 	PangoFontDescription *fd = pango_font_description_from_string(font);
 	pango_layout_set_font_description(pl, fd);
 	pango_font_description_free(fd);
-	cairo_set_source_rgba (cr, .5, .5, .6, 1.0);
+	if (align < 0) {
+		cairo_set_source_rgba (cr, .9, .95, .9, 1.0);
+	} else {
+		cairo_set_source_rgba (cr, .5, .5, .6, 1.0);
+	}
 	pango_layout_set_text(pl, txt, -1);
 	pango_layout_get_pixel_size(pl, &tw, &th);
 	cairo_translate (cr, x, y);
-	cairo_translate (cr, -tw/2.0 - 0.5, -th/2.0);
+	switch(abs(align)) {
+		default:
+			cairo_translate (cr, -tw/2.0 - 0.5, -th/2.0);
+			break;
+		case 3:
+			cairo_translate (cr, -.5 , -th);
+			break;
+		case 4:
+			cairo_translate (cr, -tw - 0.5, -th);
+	}
 	pango_cairo_layout_path(cr, pl);
 	pango_cairo_show_layout(cr, pl);
 	g_object_unref(pl);
@@ -199,6 +214,7 @@ void rounded_rectangle (cairo_t* cr, double x, double y, double w, double h, dou
 static void alloc_annotations(GMUI* ui) {
 #define FONT_GM "Mono 16"
 #define FONT_PC "Mono 10"
+#define FONT_LB "Sans 06"
 
 #define INIT_BLACK_BG(ID, WIDTH, HEIGHT) \
 	ui->an[ID] = cairo_image_surface_create (CAIRO_FORMAT_RGB24, WIDTH, HEIGHT); \
@@ -210,32 +226,49 @@ static void alloc_annotations(GMUI* ui) {
 	cairo_t* cr;
 
 	INIT_BLACK_BG(0, 32, 32)
-	write_text(cr, "L", FONT_GM, 16, 16);
+	write_text(cr, "L", FONT_GM, 0, 16, 16);
 	cairo_destroy (cr);
 
 	INIT_BLACK_BG(1, 32, 32)
-	write_text(cr, "R", FONT_GM, 16, 16);
+	write_text(cr, "R", FONT_GM, 0, 16, 16);
 	cairo_destroy (cr);
 
 	INIT_BLACK_BG(2, 64, 32)
-	write_text(cr, "Mono", FONT_GM, 32, 16);
+	write_text(cr, "Mono", FONT_GM, 0, 32, 16);
 	cairo_destroy (cr);
 
 	INIT_BLACK_BG(3, 32, 32)
-	write_text(cr, "+S", FONT_GM, 16, 16);
+	write_text(cr, "+S", FONT_GM, 0, 16, 16);
 	cairo_destroy (cr);
 
 	INIT_BLACK_BG(4, 32, 32)
-	write_text(cr, "-S", FONT_GM, 16, 16);
+	write_text(cr, "-S", FONT_GM, 0, 16, 16);
 	cairo_destroy (cr);
 
 	INIT_BLACK_BG(5, 32, 32)
-	write_text(cr, "+1", FONT_PC, 10, 10);
+	write_text(cr, "+1", FONT_PC, 0, 10, 10);
 	cairo_destroy (cr);
 
 	INIT_BLACK_BG(6, 32, 32)
-	write_text(cr, "-1", FONT_PC, 10, 10);
+	write_text(cr, "-1", FONT_PC, 0, 10, 10);
 	cairo_destroy (cr);
+
+#define INIT_DIAL_SF(VAR, TXTL, TXTR) \
+	VAR = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, GED_WIDTH, GED_HEIGHT); \
+	cr = cairo_create (VAR); \
+	cairo_set_source_rgba (cr, .0, .0, .0, 0); \
+	cairo_set_operator (cr, CAIRO_OPERATOR_SOURCE); \
+	cairo_rectangle (cr, 0, 0, GED_WIDTH, GED_HEIGHT); \
+	cairo_fill (cr); \
+	cairo_set_operator (cr, CAIRO_OPERATOR_OVER); \
+	write_text(cr, TXTL, FONT_LB, -3, 1, GED_HEIGHT - 1); \
+	write_text(cr, TXTR, FONT_LB, -4, GED_WIDTH-1, GED_HEIGHT - 1); \
+	cairo_destroy (cr);
+
+	INIT_DIAL_SF(ui->dial[0], "fast", "slow")
+	INIT_DIAL_SF(ui->dial[1], "peak", "rms ")
+	INIT_DIAL_SF(ui->dial[2], "  0%", "100%")
+	INIT_DIAL_SF(ui->dial[3], " 15%", "600%")
 }
 
 static void alloc_sf(GMUI* ui) {
@@ -864,6 +897,13 @@ instantiate(const LV2UI_Descriptor*   descriptor,
 	gtk_misc_set_alignment(GTK_MISC(ui->lbl_src_fact), 1.0f, 0.5f);
 	gtk_misc_set_alignment(GTK_MISC(ui->lbl_psize),    1.0f, 0.5f);
 
+	gtkext_dial_set_surface(ui->spn_gattack,  ui->dial[0]);
+	gtkext_dial_set_surface(ui->spn_gdecay,   ui->dial[0]);
+	gtkext_dial_set_surface(ui->spn_gtarget,  ui->dial[3]);
+	gtkext_dial_set_surface(ui->spn_grms,     ui->dial[1]);
+	gtkext_dial_set_surface(ui->spn_compress, ui->dial[2]);
+	gtkext_dial_set_surface(ui->spn_alpha,    ui->dial[2]);
+
 	/* fader init */
 	gtk_scale_set_draw_value(GTK_SCALE(ui->fader), FALSE);
 	gtk_range_set_value(GTK_RANGE(ui->fader), 1.0);
@@ -986,6 +1026,10 @@ cleanup(LV2UI_Handle handle)
 	for (int i=0; i < 7 ; ++i) {
 		cairo_surface_destroy(ui->an[i]);
 	}
+	for (int i=0; i < 4 ; ++i) {
+		cairo_surface_destroy(ui->dial[i]);
+	}
+
 	gtk_widget_destroy(ui->m0);
 	gtk_widget_destroy(ui->fader);
 	gtk_widget_destroy(ui->cbx_autogain);

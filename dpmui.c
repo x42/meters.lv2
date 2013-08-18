@@ -91,6 +91,7 @@ typedef struct {
 	cairo_surface_t* sf[MAX_METERS];
 	cairo_surface_t* an[MAX_METERS];
 	cairo_surface_t* ma[2];
+	cairo_surface_t* dial;
 	cairo_pattern_t* mpat;
 
 	float val[MAX_METERS];
@@ -288,7 +289,11 @@ static void write_text(
 	PangoFontDescription *fd = pango_font_description_from_string(font);
 	pango_layout_set_font_description(pl, fd);
 	pango_font_description_free(fd);
-	cairo_set_source_rgba (cr, .9, .9, .9, 1.0);
+	if (align < 0) {
+		cairo_set_source_rgba (cr, .9, .95, .9, 1.0);
+	} else {
+		cairo_set_source_rgba (cr, .9, .9, .9, 1.0);
+	}
 	pango_layout_set_text(pl, txt, -1);
 	pango_layout_get_pixel_size(pl, &tw, &th);
 	cairo_translate (cr, x, y);
@@ -296,7 +301,7 @@ static void write_text(
 		cairo_rotate(cr, ang);
 	}  else {
 	}
-	switch(align) {
+	switch(abs(align)) {
 		default:
 			cairo_translate (cr, -tw/2.0 - 0.5, -th/2.0);
 			break;
@@ -305,6 +310,12 @@ static void write_text(
 			break;
 		case 2:
 			cairo_translate (cr, -tw - 0.5, -th/2.0);
+			break;
+		case 3:
+			cairo_translate (cr, -.5 , -th);
+			break;
+		case 4:
+			cairo_translate (cr, -tw - 0.5, -th);
 			break;
 	}
 	pango_cairo_layout_path(cr, pl);
@@ -359,6 +370,17 @@ static void alloc_annotations(SAUI* ui) {
 			cairo_destroy (cr);
 		}
 	}
+
+	ui->dial = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, GED_WIDTH, GED_HEIGHT);
+	cr = cairo_create (ui->dial);
+	cairo_set_source_rgba (cr, .0, .0, .0, 0);
+	cairo_set_operator (cr, CAIRO_OPERATOR_SOURCE);
+	cairo_rectangle (cr, 0, 0, GED_WIDTH, GED_HEIGHT);
+	cairo_fill (cr);
+	cairo_set_operator (cr, CAIRO_OPERATOR_OVER);
+	write_text(cr, "slow", FONT_MTR, 0, -3, 1, GED_HEIGHT - 1);
+	write_text(cr, "fast", FONT_MTR, 0, -4, GED_WIDTH-1, GED_HEIGHT - 1);
+	cairo_destroy (cr);
 }
 
 static void realloc_metrics(SAUI* ui) {
@@ -759,6 +781,9 @@ instantiate(const LV2UI_Descriptor*   descriptor,
 	ui->lbl_attack = gtk_label_new("Attack:");
 	ui->lbl_decay  = gtk_label_new("Decay:");
 
+	gtkext_dial_set_surface(ui->spn_attack, ui->dial);
+	gtkext_dial_set_surface(ui->spn_decay, ui->dial);
+
 	/* fader init */
 	gtk_scale_set_draw_value(GTK_SCALE(ui->fader), FALSE);
 	gtk_range_set_value(GTK_RANGE(ui->fader), GAINSCALE(1.0000));
@@ -831,6 +856,7 @@ cleanup(LV2UI_Handle handle)
 	cairo_pattern_destroy(ui->mpat);
 	cairo_surface_destroy(ui->ma[0]);
 	cairo_surface_destroy(ui->ma[1]);
+	cairo_surface_destroy(ui->dial);
 
 	gtk_widget_destroy(ui->m0);
 	gtk_widget_destroy(ui->fader);

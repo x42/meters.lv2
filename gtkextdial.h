@@ -36,12 +36,14 @@ typedef struct {
 	gpointer handle;
 
 	cairo_pattern_t* dpat;
+	cairo_surface_t* bg;
 
 } GtkExtDial;
 
-#define GED_BOUNDS 25
+#define GED_WIDTH 55
+#define GED_HEIGHT 29
 #define GED_RADIUS 10
-#define GED_CX 12.5
+#define GED_CX 27.5
 #define GED_CY 12.5
 
 static gboolean gtkext_dial_expose_event(GtkWidget *w, GdkEventExpose *ev, gpointer handle) {
@@ -54,13 +56,19 @@ static gboolean gtkext_dial_expose_event(GtkWidget *w, GdkEventExpose *ev, gpoin
 	GtkStyle *style = gtk_widget_get_style(w);
 	GdkColor *c = &style->bg[GTK_STATE_NORMAL];
 	cairo_set_source_rgb (cr, c->red/65536.0, c->green/65536.0, c->blue/65536.0);
-	cairo_rectangle (cr, 0, 0, GED_BOUNDS, GED_BOUNDS);
+	cairo_rectangle (cr, 0, 0, GED_WIDTH, GED_HEIGHT);
 	cairo_fill(cr);
+
+	if (d->bg) {
+		cairo_set_operator (cr, CAIRO_OPERATOR_EXCLUSION);
+		cairo_set_source_surface(cr, d->bg, 0, 0);
+		cairo_paint (cr);
+		cairo_set_source_rgb (cr, c->red/65536.0, c->green/65536.0, c->blue/65536.0);
+	}
 
 	cairo_set_operator (cr, CAIRO_OPERATOR_OVER);
 
 	if (d->sensitive) {
-		//cairo_set_source_rgba (cr, .4, .4, .45, 1.0);
 		cairo_set_source(cr, d->dpat);
 	}
 	cairo_arc (cr, GED_CX, GED_CY, GED_RADIUS, 0, 2.0 * M_PI);
@@ -156,13 +164,14 @@ static gboolean gtkext_dial_scroll(GtkWidget *w, GdkEventScroll *ev, gpointer ha
 }
 
 static void create_dial_pattern(GtkExtDial * d) {
-	cairo_pattern_t* pat = cairo_pattern_create_linear (0.0, 0.0, 0.0, GED_BOUNDS);
+	cairo_pattern_t* pat = cairo_pattern_create_linear (0.0, 0.0, 0.0, GED_HEIGHT);
 
+	// TODO offset patterns by CX, CY and span RADIUS only.
 	cairo_pattern_add_color_stop_rgb (pat, 0.0,  .8, .8, .82);
 	cairo_pattern_add_color_stop_rgb (pat, 1.0,  .3, .3, .33);
 
 	if (!getenv("NO_METER_SHADE") || strlen(getenv("NO_METER_SHADE")) == 0) {
-		cairo_pattern_t* shade_pattern = cairo_pattern_create_linear (0.0, 0.0, GED_BOUNDS, 0.0);
+		cairo_pattern_t* shade_pattern = cairo_pattern_create_linear (0.0, 0.0, GED_WIDTH, 0.0);
 		cairo_pattern_add_color_stop_rgba (shade_pattern, 0.0,   0.0, 0.0, 0.0, 0.15);
 		cairo_pattern_add_color_stop_rgba (shade_pattern, 0.35, 1.0, 1.0, 1.0, 0.10);
 		cairo_pattern_add_color_stop_rgba (shade_pattern, 0.53, 0.0, 0.0, 0.0, 0.05);
@@ -170,15 +179,15 @@ static void create_dial_pattern(GtkExtDial * d) {
 
 		cairo_surface_t* surface;
 		cairo_t* tc = 0;
-		surface = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, GED_BOUNDS, GED_BOUNDS);
+		surface = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, GED_WIDTH, GED_HEIGHT);
 		tc = cairo_create (surface);
 		cairo_set_source (tc, pat);
-		cairo_rectangle (tc, 0, 0, GED_BOUNDS, GED_BOUNDS);
+		cairo_rectangle (tc, 0, 0, GED_WIDTH, GED_HEIGHT);
 		cairo_fill (tc);
 		cairo_pattern_destroy (pat);
 
 		cairo_set_source (tc, shade_pattern);
-		cairo_rectangle (tc, 0, 0, GED_BOUNDS, GED_BOUNDS);
+		cairo_rectangle (tc, 0, 0, GED_WIDTH, GED_HEIGHT);
 		cairo_fill (tc);
 		cairo_pattern_destroy (shade_pattern);
 
@@ -211,10 +220,11 @@ static GtkExtDial * gtkext_dial_new(float min, float max, float step) {
 	d->acc = step;
 	d->cur = min;
 	d->sensitive = TRUE;
+	d->bg  = NULL;
 	create_dial_pattern(d);
 
-	gtk_drawing_area_size(GTK_DRAWING_AREA(d->w), GED_BOUNDS, GED_BOUNDS);
-	gtk_widget_set_size_request(d->w, GED_BOUNDS, GED_BOUNDS);
+	gtk_drawing_area_size(GTK_DRAWING_AREA(d->w), GED_WIDTH, GED_HEIGHT);
+	gtk_widget_set_size_request(d->w, GED_WIDTH, GED_HEIGHT);
 
 	gtk_widget_set_redraw_on_allocate(d->w, TRUE);
 	gtk_widget_add_events(d->w, GDK_BUTTON1_MOTION_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK | GDK_SCROLL_MASK);
@@ -232,6 +242,9 @@ static void gtkext_dial_destroy(GtkExtDial *d) {
 	gtk_widget_destroy(d->w);
 	gtk_widget_destroy(d->c);
 	cairo_pattern_destroy(d->dpat);
+#if 0
+	if (d->bg) { cairo_surface_destroy(d->bg); }
+#endif
 	free(d);
 }
 
@@ -258,4 +271,11 @@ static void gtkext_dial_set_sensitive(GtkExtDial *d, gboolean s) {
 
 static float gtkext_dial_get_value(GtkExtDial *d) {
 	return (d->cur);
+}
+
+static void gtkext_dial_set_surface(GtkExtDial *d, cairo_surface_t *s) {
+#if 0
+	if (d->bg) { cairo_surface_destroy(d->bg); }
+#endif
+	d->bg = s;
 }
