@@ -29,6 +29,8 @@
 #include <cairo/cairo.h>
 #include <pango/pango.h>
 
+#include "gtkextdial.h"
+
 #include "lv2/lv2plug.in/ns/extensions/ui/ui.h"
 #define MTR_URI "http://gareus.org/oss/lv2/meters#"
 
@@ -80,10 +82,11 @@ typedef struct {
 	GtkWidget* m0;
 	GtkWidget* c_box;
 	GtkWidget* fader;
-	GtkWidget* spn_attack;
-	GtkWidget* spn_decay;
 	GtkWidget* lbl_attack;
 	GtkWidget* lbl_decay;
+
+	GtkExtDial* spn_attack;
+	GtkExtDial* spn_decay;
 
 	cairo_surface_t* sf[MAX_METERS];
 	cairo_surface_t* an[MAX_METERS];
@@ -656,8 +659,8 @@ static gboolean set_gain(GtkRange* r, gpointer handle) {
 static gboolean set_attack(GtkWidget* w, gpointer handle) {
 	SAUI* ui = (SAUI*)handle;
 	if (!ui->disable_signals) {
-		float val = INV_ATTACKSCALE(gtk_spin_button_get_value(GTK_SPIN_BUTTON(ui->spn_attack)));
-		//printf("set_attack %f -> %f\n", gtk_spin_button_get_value(GTK_SPIN_BUTTON(ui->spn_attack)), val);
+		float val = INV_ATTACKSCALE(gtkext_dial_get_value(ui->spn_attack));
+		//printf("set_attack %f -> %f\n", gtkext_dial_get_value(ui->spn_attack), val);
 		ui->write(ui->controller, 36, sizeof(float), 0, (const void*) &val);
 	}
 	return TRUE;
@@ -669,8 +672,8 @@ static gboolean set_attack(GtkWidget* w, gpointer handle) {
 static gboolean set_decay(GtkWidget* w, gpointer handle) {
 	SAUI* ui = (SAUI*)handle;
 	if (!ui->disable_signals) {
-		float val = INV_DECAYSCALE(gtk_spin_button_get_value(GTK_SPIN_BUTTON(ui->spn_decay)));
-		//printf("set_decay %f -> %f\n", gtk_spin_button_get_value(GTK_SPIN_BUTTON(ui->spn_decay)), val);
+		float val = INV_DECAYSCALE(gtkext_dial_get_value(ui->spn_decay));
+		//printf("set_decay %f -> %f\n", gtkext_dial_get_value(ui->spn_decay), val);
 		ui->write(ui->controller, 37, sizeof(float), 0, (const void*) &val);
 	}
 	return TRUE;
@@ -751,8 +754,8 @@ instantiate(const LV2UI_Descriptor*   descriptor,
 	ui->m0    = gtk_drawing_area_new();
 	ui->fader = gtk_vscale_new_with_range(1.0, 40.0, .001);
 
-	ui->spn_attack = gtk_spin_button_new_with_range(0, 100, .5);
-	ui->spn_decay  = gtk_spin_button_new_with_range(0, 100, .5);
+	ui->spn_attack = gtkext_dial_new(0, 100, .5);
+	ui->spn_decay  = gtkext_dial_new(0, 100, .5);
 	ui->lbl_attack = gtk_label_new("Attack:");
 	ui->lbl_decay  = gtk_label_new("Decay:");
 
@@ -784,9 +787,9 @@ instantiate(const LV2UI_Descriptor*   descriptor,
 	if (ui->display_freq) {
 		gtk_box_pack_start(GTK_BOX(ui->c_box), ui->fader, TRUE, TRUE, 0);
 		gtk_box_pack_start(GTK_BOX(ui->c_box), ui->lbl_attack, FALSE, FALSE, 0);
-		gtk_box_pack_start(GTK_BOX(ui->c_box), ui->spn_attack, FALSE, FALSE, 0);
+		gtk_box_pack_start(GTK_BOX(ui->c_box), gtkext_dial_wiget(ui->spn_attack), FALSE, FALSE, 0);
 		gtk_box_pack_start(GTK_BOX(ui->c_box), ui->lbl_decay, FALSE, FALSE, 0);
-		gtk_box_pack_start(GTK_BOX(ui->c_box), ui->spn_decay, FALSE, FALSE, 0);
+		gtk_box_pack_start(GTK_BOX(ui->c_box), gtkext_dial_wiget(ui->spn_decay), FALSE, FALSE, 0);
 		gtk_box_pack_start(GTK_BOX(ui->box), ui->c_box, TRUE, FALSE, 0);
 	}
 
@@ -795,8 +798,8 @@ instantiate(const LV2UI_Descriptor*   descriptor,
 	g_signal_connect (G_OBJECT (ui->m0), "expose_event", G_CALLBACK (expose_event), ui);
 	g_signal_connect (G_OBJECT (ui->m0), "button-release-event", G_CALLBACK (cb_reset_peak), ui);
 	g_signal_connect (G_OBJECT (ui->fader), "value-changed", G_CALLBACK (set_gain), ui);
-	g_signal_connect (G_OBJECT (ui->spn_attack), "value-changed", G_CALLBACK (set_attack), ui);
-	g_signal_connect (G_OBJECT (ui->spn_decay), "value-changed", G_CALLBACK (set_decay), ui);
+	gtkext_dial_set_callback(ui->spn_attack, set_attack, ui);
+	gtkext_dial_set_callback(ui->spn_decay, set_decay, ui);
 	if (ui->display_freq) {
 		gtk_widget_add_events(ui->m0, GDK_POINTER_MOTION_MASK);
 		g_signal_connect (G_OBJECT (ui->m0), "motion-notify-event", G_CALLBACK (mousemove), ui);
@@ -831,8 +834,8 @@ cleanup(LV2UI_Handle handle)
 
 	gtk_widget_destroy(ui->m0);
 	gtk_widget_destroy(ui->fader);
-	gtk_widget_destroy(ui->spn_attack);
-	gtk_widget_destroy(ui->spn_decay);
+	gtkext_dial_destroy(ui->spn_attack);
+	gtkext_dial_destroy(ui->spn_decay);
 	gtk_widget_destroy(ui->lbl_attack);
 	gtk_widget_destroy(ui->lbl_decay);
 	gtk_widget_destroy(ui->c_box);
@@ -926,12 +929,12 @@ static void handle_spectrum_connections(SAUI* ui, uint32_t port_index, float v) 
 	} else
 	if (port_index == 36) {
 		ui->disable_signals = true;
-		gtk_spin_button_set_value(GTK_SPIN_BUTTON(ui->spn_attack), ATTACKSCALE(v));
+		gtkext_dial_set_value(ui->spn_attack, ATTACKSCALE(v));
 		ui->disable_signals = false;
 	} else
 	if (port_index == 37) {
 		ui->disable_signals = true;
-		gtk_spin_button_set_value(GTK_SPIN_BUTTON(ui->spn_decay), DECAYSCALE(v));
+		gtkext_dial_set_value(ui->spn_decay, DECAYSCALE(v));
 		ui->disable_signals = false;
 	} else
 	if (port_index > 4 && port_index < 5 + ui->num_meters) {
