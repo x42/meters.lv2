@@ -226,11 +226,19 @@ static void
 dbtp_run(LV2_Handle instance, uint32_t n_samples)
 {
 	LV2meter* self = (LV2meter*)instance;
+	bool reinit_gui = false;
 
 	if (self->p_refl != *self->reflvl) {
-		self->p_refl = *self->reflvl;
-		self->peak_max[0] = 0;
-		self->peak_max[1] = 0;
+		if (*self->reflvl >= 0) {
+			self->peak_max[0] = 0;
+			self->peak_max[1] = 0;
+		}
+
+		if (*self->reflvl == -1) {
+			reinit_gui = true;
+		} else {
+			self->p_refl = *self->reflvl;
+		}
 	}
 
 	int c;
@@ -246,6 +254,20 @@ dbtp_run(LV2_Handle instance, uint32_t n_samples)
 		}
 	}
 
+	if (reinit_gui) {
+		/* force parameter change */
+		if (self->chn == 1) {
+			*self->level[0] = -1 - (rand() & 0xffff);
+			*self->input[1] = -1;
+		} else if (self->chn == 2) {
+			*self->level[0] = -1 - (rand() & 0xffff);
+			*self->level[1] = -1;
+			*self->peak[0] = -1;
+			*self->peak[1] = -1;
+		}
+		return;
+	}
+
 	if (self->chn == 1) {
 		float m, p;
 		static_cast<TruePeakdsp*>(self->mtr[0])->read(m, p);
@@ -257,12 +279,10 @@ dbtp_run(LV2_Handle instance, uint32_t n_samples)
 		static_cast<TruePeakdsp*>(self->mtr[0])->read(m, p);
 		if (self->peak_max[0] < self->rlgain * p) { self->peak_max[0] = self->rlgain * p; }
 		*self->level[0] = self->rlgain * m;
-		*self->peak[0] = self->rlgain * p;
 		*self->peak[0] = self->peak_max[0];
 		static_cast<TruePeakdsp*>(self->mtr[1])->read(m, p);
 		if (self->peak_max[1] < self->rlgain * p) { self->peak_max[1] = self->rlgain * p; }
 		*self->level[1] = self->rlgain * m;
-		*self->peak[1] = self->rlgain * p;
 		*self->peak[1] = self->peak_max[1];
 	}
 }

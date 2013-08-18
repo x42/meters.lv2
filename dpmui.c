@@ -101,6 +101,7 @@ typedef struct {
 	uint32_t num_meters;
 	bool display_freq;
 	bool reset_toggle;
+	bool initialized;
 
 	float cache_sf;
 	float cache_ma;
@@ -795,6 +796,15 @@ instantiate(const LV2UI_Descriptor*   descriptor,
 	gtk_widget_show_all(ui->box);
 	*widget = ui->box;
 
+	if (!ui->display_freq) {
+		/* dBTP run() re-sends peak-data */
+		ui->initialized = false;
+		float temp = -1;
+		ui->write(ui->controller, 0, sizeof(float), 0, (const void*) &temp);
+	} else {
+		ui->initialized = true;
+	}
+
 	return ui;
 }
 
@@ -962,6 +972,12 @@ port_event(LV2UI_Handle handle,
 {
 	SAUI* ui = (SAUI*)handle;
 	if (format != 0) return;
+
+	if (!ui->initialized && port_index != 0) {
+		ui->initialized = true;
+		float temp = -2;
+		ui->write(ui->controller, 0, sizeof(float), 0, (const void*) &temp);
+	}
 	if (ui->display_freq) {
 		handle_spectrum_connections(ui, port_index, *(float *)buffer);
 	} else {
