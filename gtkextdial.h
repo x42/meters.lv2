@@ -1,3 +1,22 @@
+/* gtk dial widget
+ *
+ * Copyright (C) 2013 Robin Gareus <robin@gareus.org>
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2, or (at your option)
+ * any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software Foundation,
+ * Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+ */
+
 #include <gtk/gtk.h>
 #include <cairo/cairo.h>
 
@@ -14,6 +33,8 @@ typedef struct {
 
 	gboolean (*cb) (GtkWidget* w, gpointer handle);
 	gpointer handle;
+
+	gboolean sensitive;
 
 } GtkExtDial;
 
@@ -37,7 +58,9 @@ static gboolean gtkext_dial_expose_event(GtkWidget *w, GdkEventExpose *ev, gpoin
 
 	cairo_set_operator (cr, CAIRO_OPERATOR_OVER);
 
-	cairo_set_source_rgba (cr, .35, .36, .37, 1.0);
+	if (d->sensitive) {
+		cairo_set_source_rgba (cr, .4, .4, .45, 1.0);
+	}
 	//cairo_move_to(cr, GED_CX, GED_CY);
 	cairo_arc (cr, GED_CX, GED_CY, GED_RADIUS, 0, 2.0 * M_PI);
 	cairo_fill_preserve (cr);
@@ -45,7 +68,11 @@ static gboolean gtkext_dial_expose_event(GtkWidget *w, GdkEventExpose *ev, gpoin
 	cairo_set_source_rgba (cr, .0, .0, .0, 1.0);
 	cairo_stroke (cr);
 
-	cairo_set_source_rgba (cr, .95, .95, .95, 1.0);
+	if (d->sensitive) {
+		cairo_set_source_rgba (cr, .95, .95, .95, 1.0);
+	} else {
+		cairo_set_source_rgba (cr, .5, .5, .5, .7);
+	}
 	cairo_set_line_width(cr, 1.5);
 	cairo_move_to(cr, GED_CX, GED_CY);
 	float ang = (.75 * M_PI) + (1.5 * M_PI) * (d->cur - d->min) / d->max;
@@ -59,6 +86,7 @@ static gboolean gtkext_dial_expose_event(GtkWidget *w, GdkEventExpose *ev, gpoin
 
 static gboolean gtkext_dial_mousedown(GtkWidget *w, GdkEventButton *event, gpointer handle) {
 	GtkExtDial * d = (GtkExtDial *)handle;
+	if (!d->sensitive) { return FALSE; }
 	d->drag_x = event->x;
 	d->drag_y = event->y;
 	d->drag_c = d->cur;
@@ -68,6 +96,7 @@ static gboolean gtkext_dial_mousedown(GtkWidget *w, GdkEventButton *event, gpoin
 
 static gboolean gtkext_dial_mouseup(GtkWidget *w, GdkEventButton *event, gpointer handle) {
 	GtkExtDial * d = (GtkExtDial *)handle;
+	if (!d->sensitive) { return FALSE; }
 	d->drag_x = d->drag_y = -1;
 	gtk_widget_queue_draw(d->w);
 	return TRUE;
@@ -76,6 +105,13 @@ static gboolean gtkext_dial_mouseup(GtkWidget *w, GdkEventButton *event, gpointe
 static gboolean gtkext_dial_mousemove(GtkWidget *w, GdkEventMotion *event, gpointer handle) {
 	GtkExtDial * d = (GtkExtDial *)handle;
 	if (d->drag_x < 0 || d->drag_y < 0) return FALSE;
+
+	if (!d->sensitive) {
+		d->drag_x = d->drag_y = -1;
+		gtk_widget_queue_draw(d->w);
+		return FALSE;
+	}
+
 	float diff = ((event->x - d->drag_x) - (event->y - d->drag_y)) * 0.004; // 250px full-scale
 	diff = rint(diff * (d->max - d->min) / d->acc ) * d->acc;
 	float val = d->drag_c + diff;
@@ -93,12 +129,12 @@ static gboolean gtkext_dial_mousemove(GtkWidget *w, GdkEventMotion *event, gpoin
  * public functions
  */
 
-GtkExtDial * gtkext_dial_new(float min, float max, float step) {
+static GtkExtDial * gtkext_dial_new(float min, float max, float step) {
 	assert(max > min);
 	assert( (max - min) / step <= 250.0);
 	assert( (max - min) / step >= 1.0);
 
-	GtkExtDial *d = malloc(sizeof(GtkExtDial));
+	GtkExtDial *d = (GtkExtDial *) malloc(sizeof(GtkExtDial));
 	d->w = gtk_drawing_area_new();
 	d->c = gtk_alignment_new(.5, .5, 0, 0);
 	gtk_container_add(GTK_CONTAINER(d->c), d->w);
@@ -109,6 +145,7 @@ GtkExtDial * gtkext_dial_new(float min, float max, float step) {
 	d->max = max;
 	d->acc = step;
 	d->cur = min;
+	d->sensitive = TRUE;
 
 	gtk_drawing_area_size(GTK_DRAWING_AREA(d->w), GED_BOUNDS, GED_BOUNDS);
 	gtk_widget_set_size_request(d->w, GED_BOUNDS, GED_BOUNDS);
@@ -123,22 +160,22 @@ GtkExtDial * gtkext_dial_new(float min, float max, float step) {
 	return d;
 }
 
-GtkWidget * gtkext_dial_wiget(GtkExtDial *d) {
-	return d->c;
-}
-
-void gtkext_dial_set_callback(GtkExtDial *d, gboolean (*cb) (GtkWidget* w, gpointer handle), gpointer handle) {
-	d->cb = cb;
-	d->handle = handle;
-}
-
-void gtkext_dial_destroy(GtkExtDial *d) {
+static void gtkext_dial_destroy(GtkExtDial *d) {
 	gtk_widget_destroy(d->w);
 	gtk_widget_destroy(d->c);
 	free(d);
 }
 
-void gtkext_dial_set_value(GtkExtDial *d, float v) {
+static GtkWidget * gtkext_dial_wiget(GtkExtDial *d) {
+	return d->c;
+}
+
+static void gtkext_dial_set_callback(GtkExtDial *d, gboolean (*cb) (GtkWidget* w, gpointer handle), gpointer handle) {
+	d->cb = cb;
+	d->handle = handle;
+}
+
+static void gtkext_dial_set_value(GtkExtDial *d, float v) {
 	v = d->min + rint((v-d->min) / d->acc ) * d->acc;
 	if (v < d->min) d->cur = d->min;
 	else if (v > d->max) d->cur = d->max;
@@ -152,6 +189,13 @@ void gtkext_dial_set_value(GtkExtDial *d, float v) {
 	gtk_widget_queue_draw(d->w);
 }
 
-float gtkext_dial_get_value(GtkExtDial *d) {
+static void gtkext_dial_set_sensitive(GtkExtDial *d, gboolean s) {
+	if (d->sensitive != s) {
+		d->sensitive = s;
+		gtk_widget_queue_draw(d->w);
+	}
+}
+
+static float gtkext_dial_get_value(GtkExtDial *d) {
 	return (d->cur);
 }

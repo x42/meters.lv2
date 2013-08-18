@@ -35,6 +35,9 @@ typedef void Stcorrdsp;
 #include "lv2/lv2plug.in/ns/extensions/ui/ui.h"
 #include "zita-resampler/resampler.h"
 #include "goniometer.h"
+#include "gtkextdial.h"
+
+#define GED_W(PTR) gtkext_dial_wiget(PTR)
 
 #define PC_BOUNDS ( 40.0f)
 
@@ -68,17 +71,18 @@ typedef struct {
 	GtkWidget* cbx_src;
 	GtkWidget* spn_src_fact;
 
-	GtkWidget* spn_compress;
-	GtkWidget* spn_gattack;
-	GtkWidget* spn_gdecay;
-	GtkWidget* spn_gtarget;
-	GtkWidget* spn_grms;
+	GtkExtDial* spn_compress;
+	GtkExtDial* spn_gattack;
+	GtkExtDial* spn_gdecay;
+	GtkExtDial* spn_gtarget;
+	GtkExtDial* spn_grms;
 
 	GtkWidget* cbx_lines;
 	GtkWidget* cbx_xfade;
+
 	GtkWidget* spn_psize;
 	GtkWidget* spn_vfreq;
-	GtkWidget* spn_alpha;
+	GtkExtDial* spn_alpha;
 
 	GtkWidget* sep_h0;
 	GtkWidget* sep_v0;
@@ -91,7 +95,6 @@ typedef struct {
 	GtkWidget* lbl_gdecay;
 	GtkWidget* lbl_gtarget;
 	GtkWidget* lbl_grms;
-	GtkWidget* lbl_alpha;
 
 	GtkWidget* fader;
 	GtkWidget* cbx_autogain;
@@ -260,9 +263,9 @@ static void draw_rb(GMUI* ui, gmringbuf *rb) {
 	const bool composit = !gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(ui->cbx_xfade));
 	const bool autogain = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(ui->cbx_autogain));
 	const bool lines = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(ui->cbx_lines));
-	const float persist = .5 + .005 * gtk_spin_button_get_value(GTK_SPIN_BUTTON(ui->spn_alpha));
 	const float line_width = gtk_spin_button_get_value(GTK_SPIN_BUTTON(ui->spn_psize));
-	const float compress = .02 * gtk_spin_button_get_value(GTK_SPIN_BUTTON(ui->spn_compress));
+	const float compress = .02 * gtkext_dial_get_value(ui->spn_compress);
+	const float persist = .5 + .005 * gtkext_dial_get_value(ui->spn_alpha);
 	const float attack_pow = ui->attack_pow;
 	const float decay_pow = ui->decay_pow;
 	const float g_target = ui->g_target;
@@ -594,15 +597,15 @@ static void save_state(GMUI* ui) {
 	} else {
 		self->s_pointwidth = gtk_spin_button_get_value(GTK_SPIN_BUTTON(ui->spn_psize));
 	}
-	self->s_persistency = gtk_spin_button_get_value(GTK_SPIN_BUTTON(ui->spn_alpha));
+	self->s_persistency = gtkext_dial_get_value(ui->spn_alpha);
 	self->s_max_freq = gtk_spin_button_get_value(GTK_SPIN_BUTTON(ui->spn_vfreq));
 
-	self->s_gattack = gtk_spin_button_get_value(GTK_SPIN_BUTTON(ui->spn_gattack));
-	self->s_gdecay = gtk_spin_button_get_value(GTK_SPIN_BUTTON(ui->spn_gdecay));
-	self->s_compress = gtk_spin_button_get_value(GTK_SPIN_BUTTON(ui->spn_compress));
+	self->s_gattack = gtkext_dial_get_value(ui->spn_gattack);
+	self->s_gdecay = gtkext_dial_get_value(ui->spn_gdecay);
+	self->s_compress = gtkext_dial_get_value(ui->spn_compress);
 
-	self->s_gtarget = gtk_spin_button_get_value(GTK_SPIN_BUTTON(ui->spn_gtarget));
-	self->s_grms = gtk_spin_button_get_value(GTK_SPIN_BUTTON(ui->spn_grms));
+	self->s_gtarget = gtkext_dial_get_value(ui->spn_gtarget);
+	self->s_grms = gtkext_dial_get_value(ui->spn_grms);
 }
 
 static gboolean cb_save_state(GtkWidget *w, gpointer handle) {
@@ -626,16 +629,16 @@ static gboolean cb_autogain(GtkWidget *w, gpointer handle) {
 	const bool autogain = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(ui->cbx_autogain));
 	if (autogain) {
 		gtk_widget_set_sensitive(GTK_WIDGET(ui->fader), false);
-		gtk_widget_set_sensitive(GTK_WIDGET(ui->spn_gattack), true);
-		gtk_widget_set_sensitive(GTK_WIDGET(ui->spn_gdecay), true);
-		gtk_widget_set_sensitive(GTK_WIDGET(ui->spn_gtarget), true);
-		gtk_widget_set_sensitive(GTK_WIDGET(ui->spn_grms), true);
+		gtkext_dial_set_sensitive(ui->spn_gattack, true);
+		gtkext_dial_set_sensitive(ui->spn_gdecay, true);
+		gtkext_dial_set_sensitive(ui->spn_gtarget, true);
+		gtkext_dial_set_sensitive(ui->spn_grms, true);
 	} else {
 		gtk_widget_set_sensitive(GTK_WIDGET(ui->fader), true);
-		gtk_widget_set_sensitive(GTK_WIDGET(ui->spn_gattack), false);
-		gtk_widget_set_sensitive(GTK_WIDGET(ui->spn_gdecay), false);
-		gtk_widget_set_sensitive(GTK_WIDGET(ui->spn_gtarget), false);
-		gtk_widget_set_sensitive(GTK_WIDGET(ui->spn_grms), false);
+		gtkext_dial_set_sensitive(ui->spn_gattack, false);
+		gtkext_dial_set_sensitive(ui->spn_gdecay, false);
+		gtkext_dial_set_sensitive(ui->spn_gtarget, false);
+		gtkext_dial_set_sensitive(ui->spn_grms, false);
 		ui->write(ui->controller, 4, sizeof(float), 0, (const void*) &ui->gain);
 	}
 	save_state(ui);
@@ -644,8 +647,8 @@ static gboolean cb_autogain(GtkWidget *w, gpointer handle) {
 
 static gboolean cb_autosettings(GtkWidget *w, gpointer handle) {
 	GMUI* ui = (GMUI*)handle;
-	float g_attack = gtk_spin_button_get_value(GTK_SPIN_BUTTON(ui->spn_gattack));
-	float g_decay = gtk_spin_button_get_value(GTK_SPIN_BUTTON(ui->spn_gdecay));
+	float g_attack = gtkext_dial_get_value(ui->spn_gattack);
+	float g_decay = gtkext_dial_get_value(ui->spn_gdecay);
 	g_attack = 0.1 * exp(0.06 * g_attack) - .09;
 	g_decay  = 0.1 * exp(0.06 * g_decay ) - .09;
 	if (g_attack < .01) g_attack = .01;
@@ -653,10 +656,10 @@ static gboolean cb_autosettings(GtkWidget *w, gpointer handle) {
 	ui->attack_pow = g_attack;
 	ui->decay_pow = g_decay;
 	//
-	float g_rms = .01 * gtk_spin_button_get_value(GTK_SPIN_BUTTON(ui->spn_grms));
+	float g_rms = .01 * gtkext_dial_get_value(ui->spn_grms);
 	ui->g_rms = g_rms;
 
-	float g_target = gtk_spin_button_get_value(GTK_SPIN_BUTTON(ui->spn_gtarget));
+	float g_target = gtkext_dial_get_value(ui->spn_gtarget);
 	g_target = exp(1.8 * (-.02 * g_target + 1.0));
 	if (g_target < .15) g_target = .15;
 	ui->g_target = g_target;
@@ -687,9 +690,9 @@ static gboolean cb_lines(GtkWidget *w, gpointer handle) {
 static gboolean cb_xfade(GtkWidget *w, gpointer handle) {
 	GMUI* ui = (GMUI*)handle;
 	if(!gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(ui->cbx_xfade))) {
-		gtk_widget_set_sensitive(GTK_WIDGET(ui->spn_alpha), false);
+		gtkext_dial_set_sensitive(ui->spn_alpha, false);
 	} else {
-		gtk_widget_set_sensitive(GTK_WIDGET(ui->spn_alpha), true);
+		gtkext_dial_set_sensitive(ui->spn_alpha, true);
 	}
 	return cb_expose(w, handle);
 }
@@ -730,14 +733,14 @@ static void restore_state(GMUI* ui) {
 	ui->disable_signals = true;
 	gtk_spin_button_set_value(GTK_SPIN_BUTTON(ui->spn_src_fact), self->s_sfact);
 	gtk_spin_button_set_value(GTK_SPIN_BUTTON(ui->spn_psize), self->s_line ? self->s_linewidth : self->s_pointwidth);
-	gtk_spin_button_set_value(GTK_SPIN_BUTTON(ui->spn_alpha), self->s_persistency);
 	gtk_spin_button_set_value(GTK_SPIN_BUTTON(ui->spn_vfreq), self->s_max_freq);
+	gtkext_dial_set_value(ui->spn_alpha, self->s_persistency);
 
-	gtk_spin_button_set_value(GTK_SPIN_BUTTON(ui->spn_gattack), self->s_gattack);
-	gtk_spin_button_set_value(GTK_SPIN_BUTTON(ui->spn_gdecay), self->s_gdecay);
-	gtk_spin_button_set_value(GTK_SPIN_BUTTON(ui->spn_compress), self->s_compress);
-	gtk_spin_button_set_value(GTK_SPIN_BUTTON(ui->spn_gtarget), self->s_gtarget);
-	gtk_spin_button_set_value(GTK_SPIN_BUTTON(ui->spn_grms), self->s_grms);
+	gtkext_dial_set_value(ui->spn_gattack, self->s_gattack);
+	gtkext_dial_set_value(ui->spn_gdecay, self->s_gdecay);
+	gtkext_dial_set_value(ui->spn_compress, self->s_compress);
+	gtkext_dial_set_value(ui->spn_gtarget, self->s_gtarget);
+	gtkext_dial_set_value(ui->spn_grms, self->s_grms);
 
 	gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(ui->cbx_autogain), self->s_autogain  );
 	gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(ui->cbx_src),      self->s_oversample);
@@ -812,31 +815,31 @@ instantiate(const LV2UI_Descriptor*   descriptor,
 	ui->cbx_src      = gtk_check_button_new_with_label("Oversample");
 	ui->spn_src_fact = gtk_spin_button_new_with_range(1, 32, 1);
 
-	ui->spn_compress = gtk_spin_button_new_with_range(0.0, 100.0, 0.5);
-	ui->spn_gattack  = gtk_spin_button_new_with_range(0.0, 100.0, 1.0);
-	ui->spn_gdecay   = gtk_spin_button_new_with_range(0.0, 100.0, 1.0);
+	ui->spn_compress = gtkext_dial_new(0.0, 100.0, 0.5);
+	ui->spn_gattack  = gtkext_dial_new(0.0, 100.0, 1.0);
+	ui->spn_gdecay   = gtkext_dial_new(0.0, 100.0, 1.0);
 
-	ui->spn_gtarget  = gtk_spin_button_new_with_range(0.0, 100.0, 1.0);
-	ui->spn_grms     = gtk_spin_button_new_with_range(0.0, 100.0, 1.0);
+	ui->spn_gtarget  = gtkext_dial_new(0.0, 100.0, 1.0);
+	ui->spn_grms     = gtkext_dial_new(0.0, 100.0, 1.0);
 
 	ui->cbx_lines    = gtk_check_button_new_with_label("Draw Lines");
-	ui->cbx_xfade    = gtk_check_button_new_with_label("CRT Persist");
+	ui->cbx_xfade    = gtk_check_button_new_with_label("CRT Persistency:");
 	ui->spn_psize    = gtk_spin_button_new_with_range(.25, 5.25, .25);
 
 	ui->spn_vfreq    = gtk_spin_button_new_with_range(10, 100, 5);
-	ui->spn_alpha    = gtk_spin_button_new_with_range(0, 100, .5);
+	ui->spn_alpha    = gtkext_dial_new(0, 100, .5);
 
-	gtk_spin_button_set_value(GTK_SPIN_BUTTON(ui->spn_compress), 0.0);
-	gtk_spin_button_set_value(GTK_SPIN_BUTTON(ui->spn_gattack), 1.0);
-	gtk_spin_button_set_value(GTK_SPIN_BUTTON(ui->spn_gdecay), 1.0);
+	gtkext_dial_set_value(ui->spn_compress, 0.0);
+	gtkext_dial_set_value(ui->spn_gattack, 1.0);
+	gtkext_dial_set_value(ui->spn_gdecay, 1.0);
 
-	gtk_spin_button_set_value(GTK_SPIN_BUTTON(ui->spn_gtarget), 50.0);
-	gtk_spin_button_set_value(GTK_SPIN_BUTTON(ui->spn_grms), 0.0);
+	gtkext_dial_set_value(ui->spn_gtarget, 50.0);
+	gtkext_dial_set_value(ui->spn_grms, 0.0);
 
 	gtk_spin_button_set_value(GTK_SPIN_BUTTON(ui->spn_src_fact), 4.0);
 	gtk_spin_button_set_value(GTK_SPIN_BUTTON(ui->spn_psize), 1.25);
 	gtk_spin_button_set_value(GTK_SPIN_BUTTON(ui->spn_vfreq), 25);
-	gtk_spin_button_set_value(GTK_SPIN_BUTTON(ui->spn_alpha), 0);
+	gtkext_dial_set_value(ui->spn_alpha, 0);
 
 	gtk_spin_button_set_digits(GTK_SPIN_BUTTON(ui->spn_psize), 2);
 
@@ -846,22 +849,20 @@ instantiate(const LV2UI_Descriptor*   descriptor,
 	ui->lbl_src_fact  = gtk_label_new("Factor:");
 	ui->lbl_psize     = gtk_label_new("Pixels:");
 	ui->lbl_vfreq     = gtk_label_new("Max. Update Freq [Hz]:");
-	ui->lbl_alpha     = gtk_label_new("Opacity [%]:");
-	ui->lbl_compress  = gtk_label_new("Inflate [%]:");
+	ui->lbl_compress  = gtk_label_new("Inflate:");
 	ui->lbl_gattack   = gtk_label_new("Attack Speed:");
 	ui->lbl_gdecay    = gtk_label_new("Decay Speed:");
-	ui->lbl_gtarget   = gtk_label_new("Target Zoom to [%]:");
-	ui->lbl_grms      = gtk_label_new("RMS [%] (vs peak):");
+	ui->lbl_gtarget   = gtk_label_new("Target Zoom:");
+	ui->lbl_grms      = gtk_label_new("RMS (vs peak):");
 
-	gtk_misc_set_alignment(GTK_MISC(ui->lbl_vfreq), 0.9f, 0.0f);
-	gtk_misc_set_alignment(GTK_MISC(ui->lbl_compress), 0.9f, 0.0f);
-	gtk_misc_set_alignment(GTK_MISC(ui->lbl_gattack), 0.9f, 0.0f);
-	gtk_misc_set_alignment(GTK_MISC(ui->lbl_gdecay), 0.9f, 0.0f);
-	gtk_misc_set_alignment(GTK_MISC(ui->lbl_gtarget), 0.9f, 0.0f);
-	gtk_misc_set_alignment(GTK_MISC(ui->lbl_grms), 0.9f, 0.0f);
-	gtk_misc_set_alignment(GTK_MISC(ui->lbl_src_fact), 0.9f, 0.0f);
-	gtk_misc_set_alignment(GTK_MISC(ui->lbl_psize), 0.9f, 0.0f);
-	gtk_misc_set_alignment(GTK_MISC(ui->lbl_alpha), 0.9f, 0.0f);
+	gtk_misc_set_alignment(GTK_MISC(ui->lbl_vfreq),    1.0f, 0.5f);
+	gtk_misc_set_alignment(GTK_MISC(ui->lbl_compress), 1.0f, 0.5f);
+	gtk_misc_set_alignment(GTK_MISC(ui->lbl_gattack),  1.0f, 0.5f);
+	gtk_misc_set_alignment(GTK_MISC(ui->lbl_gdecay),   1.0f, 0.5f);
+	gtk_misc_set_alignment(GTK_MISC(ui->lbl_gtarget),  1.0f, 0.5f);
+	gtk_misc_set_alignment(GTK_MISC(ui->lbl_grms),     1.0f, 0.5f);
+	gtk_misc_set_alignment(GTK_MISC(ui->lbl_src_fact), 1.0f, 0.5f);
+	gtk_misc_set_alignment(GTK_MISC(ui->lbl_psize),    1.0f, 0.5f);
 
 	/* fader init */
 	gtk_scale_set_draw_value(GTK_SCALE(ui->fader), FALSE);
@@ -897,45 +898,44 @@ instantiate(const LV2UI_Descriptor*   descriptor,
 	gtk_widget_set_redraw_on_allocate(ui->m0, TRUE);
 
 	/* layout */
-	gtk_table_attach_defaults(GTK_TABLE(ui->c_tbl), ui->fader       , 0, 6, 0, 1);
+	gtk_table_attach_defaults(GTK_TABLE(ui->c_tbl), ui->fader              , 0, 6, 0, 1);
 	int row = 1;
-	gtk_table_attach_defaults(GTK_TABLE(ui->c_tbl), ui->cbx_autogain, 0, 1, row, row+1);
-	gtk_table_attach(GTK_TABLE(ui->c_tbl), ui->lbl_gattack          , 1, 2, row, row+1, GTK_SHRINK, GTK_SHRINK, 4, 0);
-	gtk_table_attach_defaults(GTK_TABLE(ui->c_tbl), ui->spn_gattack , 2, 3, row, row+1);
-	gtk_table_attach(GTK_TABLE(ui->c_tbl), ui->lbl_gdecay           , 4, 5, row, row+1, GTK_SHRINK, GTK_SHRINK, 4, 0);
-	gtk_table_attach_defaults(GTK_TABLE(ui->c_tbl), ui->spn_gdecay  , 5, 6, row, row+1);
+	gtk_table_attach_defaults(GTK_TABLE(ui->c_tbl), ui->cbx_autogain       , 0, 1, row, row+1);
+	gtk_table_attach(GTK_TABLE(ui->c_tbl), ui->lbl_gattack                 , 1, 2, row, row+1, GTK_FILL, GTK_FILL, 4, 0);
+	gtk_table_attach_defaults(GTK_TABLE(ui->c_tbl), GED_W(ui->spn_gattack) , 2, 3, row, row+1);
+	gtk_table_attach(GTK_TABLE(ui->c_tbl), ui->lbl_gdecay                  , 4, 5, row, row+1, GTK_FILL, GTK_FILL, 4, 0);
+	gtk_table_attach_defaults(GTK_TABLE(ui->c_tbl), GED_W(ui->spn_gdecay)  , 5, 6, row, row+1);
 
 	row++;
-	gtk_table_attach(GTK_TABLE(ui->c_tbl), ui->lbl_gtarget          , 1, 2, row, row+1, GTK_SHRINK, GTK_SHRINK, 4, 0);
-	gtk_table_attach_defaults(GTK_TABLE(ui->c_tbl), ui->spn_gtarget , 2, 3, row, row+1);
-	gtk_table_attach(GTK_TABLE(ui->c_tbl), ui->lbl_grms             , 4, 5, row, row+1, GTK_SHRINK, GTK_SHRINK, 4, 0);
-	gtk_table_attach_defaults(GTK_TABLE(ui->c_tbl), ui->spn_grms    , 5, 6, row, row+1);
+	gtk_table_attach(GTK_TABLE(ui->c_tbl), ui->lbl_gtarget                 , 1, 2, row, row+1, GTK_FILL, GTK_FILL, 4, 0);
+	gtk_table_attach_defaults(GTK_TABLE(ui->c_tbl), GED_W(ui->spn_gtarget) , 2, 3, row, row+1);
+	gtk_table_attach(GTK_TABLE(ui->c_tbl), ui->lbl_grms                    , 4, 5, row, row+1, GTK_FILL, GTK_FILL, 4, 0);
+	gtk_table_attach_defaults(GTK_TABLE(ui->c_tbl), GED_W(ui->spn_grms)    , 5, 6, row, row+1);
 
 	row++;
 	gtk_table_attach(GTK_TABLE(ui->c_tbl), ui->sep_h0, 0, 6, row, row+1, (GtkAttachOptions) (GTK_EXPAND | GTK_FILL), GTK_SHRINK, 0, 4);
 
 	row++;
-	gtk_table_attach(GTK_TABLE(ui->c_tbl), ui->sep_v0, 3, 4, row, row+3, GTK_SHRINK, (GtkAttachOptions) (GTK_EXPAND | GTK_FILL), 4, 0);
+	gtk_table_attach(GTK_TABLE(ui->c_tbl), ui->sep_v0, 3, 4, row, row+3, GTK_SHRINK, (GtkAttachOptions) (GTK_EXPAND | GTK_FILL), 6, 0);
 
-	gtk_table_attach_defaults(GTK_TABLE(ui->c_tbl), ui->cbx_src     , 0, 1, row, row+1);
-	gtk_table_attach(GTK_TABLE(ui->c_tbl), ui->lbl_src_fact         , 1, 2, row, row+1, GTK_SHRINK, GTK_SHRINK, 4, 0);
-	gtk_table_attach_defaults(GTK_TABLE(ui->c_tbl), ui->spn_src_fact, 2, 3, row, row+1);
+	gtk_table_attach_defaults(GTK_TABLE(ui->c_tbl), ui->cbx_src            , 0, 1, row, row+1);
+	gtk_table_attach(GTK_TABLE(ui->c_tbl), ui->lbl_src_fact                , 1, 2, row, row+1, GTK_FILL, GTK_FILL, 4, 0);
+	gtk_table_attach_defaults(GTK_TABLE(ui->c_tbl), ui->spn_src_fact       , 2, 3, row, row+1);
 
-	row++;
-	gtk_table_attach_defaults(GTK_TABLE(ui->c_tbl), ui->cbx_lines   , 0, 1, row, row+1);
-	gtk_table_attach(GTK_TABLE(ui->c_tbl), ui->lbl_psize            , 1, 2, row, row+1, GTK_SHRINK, GTK_SHRINK, 4, 0);
-	gtk_table_attach_defaults(GTK_TABLE(ui->c_tbl), ui->spn_psize   , 2, 3, row, row+1);
-
-	gtk_table_attach(GTK_TABLE(ui->c_tbl), ui->lbl_compress         , 4, 5, row, row+1, GTK_SHRINK, GTK_SHRINK, 4, 0);
-	gtk_table_attach_defaults(GTK_TABLE(ui->c_tbl), ui->spn_compress, 5, 6, row, row+1);
+	gtk_table_attach(GTK_TABLE(ui->c_tbl), ui->cbx_xfade                   , 4, 5, row, row+1, GTK_SHRINK, GTK_SHRINK, 4, 0);
+	gtk_table_attach_defaults(GTK_TABLE(ui->c_tbl), GED_W(ui->spn_alpha)   , 5, 6, row, row+1);
 
 	row++;
-	gtk_table_attach_defaults(GTK_TABLE(ui->c_tbl), ui->cbx_xfade   , 0, 1, row, row+1);
-	gtk_table_attach(GTK_TABLE(ui->c_tbl), ui->lbl_alpha            , 1, 2, row, row+1, GTK_SHRINK, GTK_SHRINK, 4, 0);
-	gtk_table_attach_defaults(GTK_TABLE(ui->c_tbl), ui->spn_alpha   , 2, 3, row, row+1);
+	gtk_table_attach_defaults(GTK_TABLE(ui->c_tbl), ui->cbx_lines          , 0, 1, row, row+1);
+	gtk_table_attach(GTK_TABLE(ui->c_tbl), ui->lbl_psize                   , 1, 2, row, row+1, GTK_FILL, GTK_FILL, 4, 0);
+	gtk_table_attach_defaults(GTK_TABLE(ui->c_tbl), ui->spn_psize          , 2, 3, row, row+1);
 
-	gtk_table_attach(GTK_TABLE(ui->c_tbl), ui->lbl_vfreq            , 4, 5, row, row+1, GTK_SHRINK, GTK_SHRINK, 4, 0);
-	gtk_table_attach_defaults(GTK_TABLE(ui->c_tbl), ui->spn_vfreq   , 5, 6, row, row+1);
+	row++;
+	gtk_table_attach(GTK_TABLE(ui->c_tbl), ui->lbl_vfreq                   , 0, 2, row, row+1, GTK_FILL, GTK_FILL, 4, 0);
+	gtk_table_attach_defaults(GTK_TABLE(ui->c_tbl), ui->spn_vfreq          , 2, 3, row, row+1);
+
+	gtk_table_attach(GTK_TABLE(ui->c_tbl), ui->lbl_compress                , 4, 5, row, row+1, GTK_FILL, GTK_FILL, 4, 0);
+	gtk_table_attach_defaults(GTK_TABLE(ui->c_tbl), GED_W(ui->spn_compress), 5, 6, row, row+1);
 
 	gtk_container_add(GTK_CONTAINER(ui->align), ui->m0);
 	gtk_box_pack_start(GTK_BOX(ui->box), ui->align, FALSE, FALSE, 0);
@@ -949,18 +949,19 @@ instantiate(const LV2UI_Descriptor*   descriptor,
 
 	g_signal_connect (G_OBJECT (ui->cbx_src), "toggled", G_CALLBACK (cb_src), ui);
 	g_signal_connect (G_OBJECT (ui->spn_src_fact), "value-changed", G_CALLBACK (cb_src), ui);
-	g_signal_connect (G_OBJECT (ui->spn_compress), "value-changed", G_CALLBACK (cb_expose), ui);
 
-	g_signal_connect (G_OBJECT (ui->spn_gattack), "value-changed", G_CALLBACK (cb_autosettings), ui);
-	g_signal_connect (G_OBJECT (ui->spn_gdecay),  "value-changed", G_CALLBACK (cb_autosettings), ui);
-	g_signal_connect (G_OBJECT (ui->spn_gtarget), "value-changed", G_CALLBACK (cb_autosettings), ui);
-	g_signal_connect (G_OBJECT (ui->spn_grms),    "value-changed", G_CALLBACK (cb_autosettings), ui);
+	gtkext_dial_set_callback(ui->spn_gattack, cb_autosettings, ui);
+	gtkext_dial_set_callback(ui->spn_gdecay, cb_autosettings, ui);
+	gtkext_dial_set_callback(ui->spn_gtarget, cb_autosettings, ui);
+	gtkext_dial_set_callback(ui->spn_grms, cb_autosettings, ui);
+
+	gtkext_dial_set_callback(ui->spn_compress, cb_expose, ui);
+	gtkext_dial_set_callback(ui->spn_alpha, cb_save_state, ui);
 
 	g_signal_connect (G_OBJECT (ui->cbx_lines), "toggled", G_CALLBACK (cb_lines), ui);
 	g_signal_connect (G_OBJECT (ui->cbx_xfade), "toggled", G_CALLBACK (cb_xfade), ui);
 	g_signal_connect (G_OBJECT (ui->spn_psize), "value-changed", G_CALLBACK (cb_expose), ui);
 	g_signal_connect (G_OBJECT (ui->spn_vfreq), "value-changed", G_CALLBACK (cb_vfreq), ui);
-	g_signal_connect (G_OBJECT (ui->spn_alpha), "value-changed", G_CALLBACK (cb_save_state), ui);
 
 	gtk_widget_show_all(ui->box);
 	*widget = ui->box;
@@ -990,16 +991,16 @@ cleanup(LV2UI_Handle handle)
 	gtk_widget_destroy(ui->cbx_autogain);
 	gtk_widget_destroy(ui->cbx_src);
 	gtk_widget_destroy(ui->spn_src_fact);
-	gtk_widget_destroy(ui->spn_compress);
-	gtk_widget_destroy(ui->spn_gattack);
-	gtk_widget_destroy(ui->spn_gdecay);
-	gtk_widget_destroy(ui->spn_gtarget);
-	gtk_widget_destroy(ui->spn_grms);
+	gtkext_dial_destroy(ui->spn_compress);
+	gtkext_dial_destroy(ui->spn_gattack);
+	gtkext_dial_destroy(ui->spn_gdecay);
+	gtkext_dial_destroy(ui->spn_gtarget);
+	gtkext_dial_destroy(ui->spn_grms);
 	gtk_widget_destroy(ui->cbx_lines);
 	gtk_widget_destroy(ui->cbx_xfade);
 	gtk_widget_destroy(ui->spn_psize);
 	gtk_widget_destroy(ui->spn_vfreq);
-	gtk_widget_destroy(ui->spn_alpha);
+	gtkext_dial_destroy(ui->spn_alpha);
 	gtk_widget_destroy(ui->lbl_src_fact);
 	gtk_widget_destroy(ui->lbl_psize);
 	gtk_widget_destroy(ui->lbl_vfreq);
@@ -1008,7 +1009,6 @@ cleanup(LV2UI_Handle handle)
 	gtk_widget_destroy(ui->lbl_gdecay);
 	gtk_widget_destroy(ui->lbl_gtarget);
 	gtk_widget_destroy(ui->lbl_grms);
-	gtk_widget_destroy(ui->lbl_alpha);
 	gtk_widget_destroy(ui->sep_h0);
 	gtk_widget_destroy(ui->sep_v0);
 
