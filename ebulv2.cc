@@ -215,13 +215,20 @@ ebur128_connect_port(LV2_Handle instance, uint32_t port, void* data)
 	}
 }
 
+#define DEBUG_FORGE(VAR,NAME) \
+	static uint32_t max_cap##VAR = 0; \
+	if (self->notify->atom.size > max_cap##VAR) { \
+		max_cap##VAR = self->notify->atom.size; \
+		printf("POX %s new max: %d\n", NAME , max_cap##VAR); \
+	}
+
 static void
 ebur128_run(LV2_Handle instance, uint32_t n_samples)
 {
 	LV2meter* self = (LV2meter*)instance;
 
 	const uint32_t capacity = self->notify->atom.size;
-	assert(capacity > 640);
+	assert(capacity > 920);
 	lv2_atom_forge_set_buffer(&self->forge, (uint8_t*)self->notify, capacity);
 	lv2_atom_forge_sequence_head(&self->forge, &self->frame, 0);
 
@@ -346,8 +353,8 @@ ebur128_run(LV2_Handle instance, uint32_t n_samples)
 	}
 	
 	if (self->radar_resync >= 0) {
-		int batch = (capacity - 320) / 160; // TODO verify alignment & padding,
-		if (batch > 6) batch = 6; // limit max data transfer
+		int batch = (capacity - 512) / 192;
+		if (batch > 16) batch = 16; // limit max data transfer per cycle
 		for (int i=0; i < batch; i++, self->radar_resync++) {
 			if (self->radar_resync >= self->radar_pos_max) {
 				self->radar_resync = -1;
@@ -377,7 +384,7 @@ ebur128_run(LV2_Handle instance, uint32_t n_samples)
 	self->radar_spd_cur += n_samples;
 	if (self->radar_spd_cur > self->radar_spd_max) {
 		if (self->ui_active) {
-			LV2_Atom_Forge_Frame frame;
+			LV2_Atom_Forge_Frame frame; // max 128 bytes
 			lv2_atom_forge_frame_time(&self->forge, 0);
 			lv2_atom_forge_blank(&self->forge, &frame, 1, self->uris.rdr_radarpoint);
 			lv2_atom_forge_property_head(&self->forge, self->uris.ebu_loudnessM, 0);  lv2_atom_forge_float(&self->forge, self->radarMC);
@@ -411,14 +418,14 @@ ebur128_run(LV2_Handle instance, uint32_t n_samples)
 			for (int i = 110; i < 650; i++) {
 				const int vm = histM [i];
 				const int vs = histS [i];
-				if (capacity - self->notify->atom.size < 320) {
+				if (capacity - self->notify->atom.size <= 512) {
 					break;
 				}
 				if (self->histM[i] != vm || self->histS[i] != vs) {
-					if (msgtx++ > 6) { break; } // limit max data-rate
+					if (msgtx++ > 16) { break; } // limit max data-rate
 					self->histM[i] = vm;
 					self->histS[i] = vs;
-					LV2_Atom_Forge_Frame frame;
+					LV2_Atom_Forge_Frame frame; // max 128 bytes
 					lv2_atom_forge_frame_time(&self->forge, 0);
 					lv2_atom_forge_blank(&self->forge, &frame, 1, self->uris.rdr_histpoint);
 					lv2_atom_forge_property_head(&self->forge, self->uris.ebu_loudnessM, 0);  lv2_atom_forge_int(&self->forge, vm);
@@ -431,7 +438,7 @@ ebur128_run(LV2_Handle instance, uint32_t n_samples)
 				//printf ("%5.1lf %8.6lf %8.6lf\n", (0.1f * (i - 700)), vm / countM, vs / countS);
 			}
 			if (max_changed) {
-				LV2_Atom_Forge_Frame frame;
+				LV2_Atom_Forge_Frame frame; // max 128 bytes
 				lv2_atom_forge_frame_time(&self->forge, 0);
 				lv2_atom_forge_blank(&self->forge, &frame, 1, self->uris.rdr_histogram);
 				lv2_atom_forge_property_head(&self->forge, self->uris.ebu_loudnessM, 0); lv2_atom_forge_int(&self->forge, self->hist_maxM);
@@ -443,7 +450,7 @@ ebur128_run(LV2_Handle instance, uint32_t n_samples)
 
 	/* report values to UI - TODO only if changed*/
 	if (self->ui_active) {
-		LV2_Atom_Forge_Frame frame;
+		LV2_Atom_Forge_Frame frame; // max 264 bytes
 		lv2_atom_forge_frame_time(&self->forge, 0);
 		lv2_atom_forge_blank(&self->forge, &frame, 1, self->uris.mtr_ebulevels);
 		lv2_atom_forge_property_head(&self->forge, self->uris.ebu_loudnessM, 0);   lv2_atom_forge_float(&self->forge, lm);
@@ -467,11 +474,11 @@ ebur128_run(LV2_Handle instance, uint32_t n_samples)
 		memcpy(self->output[1], self->input[1], sizeof(float) * n_samples);
 	}
 #if 0
-	printf("forged %d bytes\n", self->notify->atom.size);
+	//printf("forged %d bytes\n", self->notify->atom.size);
 	static uint32_t max_cap = 0;
 	if (self->notify->atom.size > max_cap) {
 		max_cap = self->notify->atom.size;
-		printf("new max: %d\n", max_cap);
+		printf("new max: %d (of %d avail)\n", max_cap, capacity);
 	}
 #endif
 }
