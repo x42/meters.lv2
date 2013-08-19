@@ -3,18 +3,22 @@ meters.lv2 - Audio Level Meters
 
 meters.lv2 is a collection of audio-level meters with GUI in LV2 plugin format.
 
-It includes needle style meters (mono, stereo variants)
+It includes needle style meters (mono and stereo variants)
 
 *   IEC 60268-10 Type I / DIN
 *   IEC 60268-10 Type I / Nordic
 *   IEC 60268-10 Type IIa / BBC
 *   IEC 60268-10 Type IIb / EBU
 *   IEC 60268-17 / VU
-*   Phase Correlation Meter
 
-and a graphical history, led-style
+and the following stereo plugins
 
-*   EBU R128 (stereo)
+*   Stereo Phase Correlation Meter (needle display)
+*   EBU R128 meter with histogram & history
+*   True-Peak (4x oversampling)
+*   Goniometer
+*   30-band spectrum analyzer
+
 
 Install
 -------
