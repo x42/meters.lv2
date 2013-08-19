@@ -34,13 +34,13 @@
 #include "lv2/lv2plug.in/ns/extensions/ui/ui.h"
 #define MTR_URI "http://gareus.org/oss/lv2/meters#"
 
-#define GM_TOP    (ui->display_freq ? 12.5f : 22.5f)
+#define GM_TOP    (ui->display_freq ? 12.5f : 25.5f)
 #define GM_LEFT   (ui->display_freq ?  1.5f :  8.5f)
 #define GM_GIRTH  (ui->display_freq ?  8.0f : 12.0f)
 #define GM_WIDTH  (ui->display_freq ? 13.0f : 28.0f)
 
 #define GM_HEIGHT (400.0f)
-#define GM_TXT    (GM_HEIGHT - (ui->display_freq ? 52.0f : 16.0f))
+#define GM_TXT    (GM_HEIGHT - (ui->display_freq ? 52.0f : 8.0f))
 #define GM_SCALE  (GM_TXT - GM_TOP - GM_TOP + 2.0)
 
 #define MA_WIDTH  (30.0f)
@@ -443,7 +443,9 @@ static void realloc_metrics(SAUI* ui) {
 	cairo_rectangle (cr, 0, 0, MA_WIDTH, GM_HEIGHT);
 	cairo_fill (cr);
 	DO_THE_METRICS
-	write_text(cr,  ui->display_freq ? "dBFS" : "dBTP", FONT_MTR, 0, 2, MA_WIDTH - 5, GM_TXT - 10);
+	if (ui->display_freq) {
+		write_text(cr,  "dBFS", FONT_MTR, 0, 2, MA_WIDTH - 5, GM_TXT - 8);
+	}
 	cairo_destroy (cr);
 
 	INIT_ANN_BG(ui->ma[1], MA_WIDTH, GM_HEIGHT)
@@ -451,7 +453,11 @@ static void realloc_metrics(SAUI* ui) {
 	cairo_rectangle (cr, 0, 0, MA_WIDTH, GM_HEIGHT);
 	cairo_fill (cr);
 	DO_THE_METRICS
-	write_text(cr,  ui->display_freq ? "dBFS" : "dBTP", FONT_MTR, 0, 2, MA_WIDTH - 5, GM_TXT - 10);
+	if (ui->display_freq) {
+		write_text(cr,  "dBFS", FONT_MTR, 0, 2, MA_WIDTH - 5, GM_TXT - 8);
+	} else {
+		write_text(cr,  "dBTP", FONT_MTR, 0, 2, MA_WIDTH - 5, GM_TXT - 6);
+	}
 	cairo_destroy (cr);
 }
 
@@ -581,13 +587,13 @@ static gboolean expose_event(GtkWidget *w, GdkEventExpose *ev, gpointer handle) 
 		cairo_paint (cr);
 	}
 
-	/* labels */
+	/* numerical peak and value */
 	if (!ui->display_freq) {
 		cairo_set_operator (cr, CAIRO_OPERATOR_OVER);
 		for (int i = 0; i < ui->num_meters ; ++i) {
 			char buf[24];
 			cairo_save(cr);
-			rounded_rectangle (cr, MA_WIDTH + GM_WIDTH * i + 2, 3, GM_WIDTH-4, GM_TOP-8, 4);
+			rounded_rectangle (cr, MA_WIDTH + GM_WIDTH * i + 2, GM_TOP/2 - 6, GM_WIDTH-4, 16, 4);
 			if (ui->peak_val[i] >= -1.0) {
 				cairo_set_source_rgba (cr, .6, .0, .0, 1.0);
 			} else {
@@ -600,23 +606,22 @@ static gboolean expose_event(GtkWidget *w, GdkEventExpose *ev, gpointer handle) 
 			cairo_clip (cr);
 
 			if ( ui->peak_val[i] <= -10.0) {
-				//sprintf(buf, "%d", (int) rintf(ui->peak_val[i]));
 				sprintf(buf, "%.0f ", ui->peak_val[i]);
 			} else {
 				sprintf(buf, "%+.1f", ui->peak_val[i]);
 			}
-			write_text(cr, buf, FONT_VAL, 0, 2, MA_WIDTH + GM_WIDTH * i + GM_WIDTH - 5, GM_TOP / 2);
+			write_text(cr, buf, FONT_VAL, 0, 2, MA_WIDTH + GM_WIDTH * i + GM_WIDTH - 5, GM_TOP / 2 + 2);
 			cairo_restore(cr);
 
 			cairo_save(cr);
-			rounded_rectangle (cr, MA_WIDTH + GM_WIDTH * i + 2, GM_TXT - 11.5, GM_WIDTH-4, 15, 4);
+			rounded_rectangle (cr, MA_WIDTH + GM_WIDTH * i + 2, GM_TXT - 14.5, GM_WIDTH-4, 16, 4);
 			cairo_fill_preserve (cr);
 			cairo_set_line_width(cr, 0.75);
 			cairo_set_source_rgba (cr, .6, .6, .6, 1.0);
 			cairo_stroke_preserve (cr);
 			cairo_clip (cr);
 			sprintf(buf, "%+.1f", ui->val[i]);
-			write_text(cr, buf, FONT_VAL, 0, 2, MA_WIDTH + GM_WIDTH * i + GM_WIDTH - 5, GM_TXT - 4);
+			write_text(cr, buf, FONT_VAL, 0, 2, MA_WIDTH + GM_WIDTH * i + GM_WIDTH - 5, GM_TXT - 6);
 			cairo_restore(cr);
 		}
 	}
@@ -918,7 +923,7 @@ static void invalidate_meter(SAUI* ui, int mtr, float val, float peak) {
 	}
 
 	if (ui->val[mtr] != val && !ui->display_freq) {
-		INVALIDATE_RECT(mtr * GM_WIDTH + MA_WIDTH, GM_TXT-12, GM_WIDTH, 18);
+		INVALIDATE_RECT(mtr * GM_WIDTH + MA_WIDTH, GM_TXT-16, GM_WIDTH, 20);
 	}
 
 	if (ui->highlight == mtr) {
@@ -926,7 +931,7 @@ static void invalidate_meter(SAUI* ui, int mtr, float val, float peak) {
 	}
 
 	if (m_old != m_new && !ui->display_freq) {
-		INVALIDATE_RECT(mtr * GM_WIDTH + MA_WIDTH, 0, GM_WIDTH, GM_TOP);
+		INVALIDATE_RECT(mtr * GM_WIDTH + MA_WIDTH, GM_TOP/2 - 7, GM_WIDTH, 18);
 	}
 
 	ui->val[mtr] = val;
