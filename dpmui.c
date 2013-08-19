@@ -93,6 +93,7 @@ typedef struct {
 	cairo_surface_t* ma[2];
 	cairo_surface_t* dial;
 	cairo_pattern_t* mpat;
+	PangoFontDescription *font[4];
 
 	float val[MAX_METERS];
 	int   vui[MAX_METERS];
@@ -279,21 +280,22 @@ static void create_meter_pattern(SAUI* ui) {
 
 static void write_text(
 		cairo_t* cr,
-		const char *txt, const char * font,
+		const char *txt,
+		PangoFontDescription *font,
 		const float ang, const int align,
 		const float x, const float y) {
 	int tw, th;
 	cairo_save(cr);
 
 	PangoLayout * pl = pango_cairo_create_layout(cr);
-	PangoFontDescription *fd = pango_font_description_from_string(font);
-	pango_layout_set_font_description(pl, fd);
-	pango_font_description_free(fd);
+	pango_layout_set_font_description(pl, font);
+
 	if (align < 0) {
 		cairo_set_source_rgba (cr, .9, .95, .9, 1.0);
 	} else {
 		cairo_set_source_rgba (cr, .9, .9, .9, 1.0);
 	}
+
 	pango_layout_set_text(pl, txt, -1);
 	pango_layout_get_pixel_size(pl, &tw, &th);
 	cairo_translate (cr, x, y);
@@ -340,12 +342,26 @@ void rounded_rectangle (cairo_t* cr, double x, double y, double w, double h, dou
 /******************************************************************************
  * Drawing
  */
+enum {
+	FONT_S06 = 0,
+	FONT_S08,
+	FONT_M07,
+	FONT_M08
+};
+
+static void initialize_font_cache(SAUI* ui) {
+	ui->font[FONT_S08] = pango_font_description_from_string("Sans 8");
+	ui->font[FONT_S06] = pango_font_description_from_string("Sans 6");
+	ui->font[FONT_M07] = pango_font_description_from_string("Mono 7");
+	ui->font[FONT_M08] = pango_font_description_from_string("Mono 8");
+}
 
 static void alloc_annotations(SAUI* ui) {
-#define FONT_LBL "Sans 08"
-#define FONT_MTR "Sans 06"
-#define FONT_VAL "Mono 07"
-#define FONT_SPK "Mono 08"
+
+#define FONT_LBL ui->font[FONT_S08]
+#define FONT_MTR ui->font[FONT_S06]
+#define FONT_VAL ui->font[FONT_M07]
+#define FONT_SPK ui->font[FONT_M08]
 
 #define BACKGROUND_COLOR(CR) \
 	cairo_set_source_rgba (CR, 84/255.0, 85/255.0, 93/255.0, 1.0);
@@ -758,6 +774,7 @@ instantiate(const LV2UI_Descriptor*   descriptor,
 	ui->cache_ma = -100;
 	ui->highlight = -1;
 
+	initialize_font_cache(ui);
 	alloc_annotations(ui);
 	realloc_metrics(ui);
 	create_meter_pattern(ui);
@@ -852,6 +869,9 @@ cleanup(LV2UI_Handle handle)
 	for (int i=0; i < ui->num_meters ; ++i) {
 		cairo_surface_destroy(ui->sf[i]);
 		cairo_surface_destroy(ui->an[i]);
+	}
+	for (int i=0; i < 4; ++i) {
+		pango_font_description_free(ui->font[i]);
 	}
 	cairo_pattern_destroy(ui->mpat);
 	cairo_surface_destroy(ui->ma[0]);
