@@ -226,6 +226,9 @@ spectrum_run(LV2_Handle instance, uint32_t n_samples)
 	float* inL = self->input[0];
 	float* inR = self->input[1];
 
+	/* calculate time-constants when they're changed,
+	 * no-need to smoothen then for the visual display
+	 */
 	if (self->attack_h != *self->attack_p) {
 		self->attack_h = *self->attack_p;
 		float v = self->attack_h;
@@ -240,6 +243,7 @@ spectrum_run(LV2_Handle instance, uint32_t n_samples)
 		if (v > 15.0) v = 15.0;
 		self->decay  = 1.0f - expf(-2.0 * M_PI * v / self->rate);
 	}
+
 	/* localize variables */
 	float spec_f[FILTER_COUNT];
 	const float attack = self->attack > self->decay ? self->attack : self->decay;
@@ -247,9 +251,11 @@ spectrum_run(LV2_Handle instance, uint32_t n_samples)
 	const float gain   = *self->gain;
 	struct FilterParam *flt[FILTER_COUNT];
 
+	float mx [FILTER_COUNT];
 	for(int i=0; i < FILTER_COUNT; ++i) {
 		spec_f[i] = self->spec_f[i];
 		flt[i] = &self->flt[i];
+		mx[i] = 0;
 	}
 
 	/* .. and go */
@@ -260,15 +266,16 @@ spectrum_run(LV2_Handle instance, uint32_t n_samples)
 				
 		for(int i = 0; i < FILTER_COUNT; ++i) {
 			const float v = fabsf(bandpass_proc(flt[i], in));
-			spec_f[i] +=  10e-20 + (v > spec_f[i] ? attack * (v - spec_f[i]) : decay * (v - spec_f[i]));
+			spec_f[i] += v > spec_f[i] ? attack * (v - spec_f[i]) : decay * (v - spec_f[i]);
+			if (spec_f[i] > mx[i]) mx[i] = spec_f[i];
 		}
 	}
 
-	/* copy back variables */
+	/* copy back variables and assign value */
 	for(int i=0; i < FILTER_COUNT; ++i) {
-		self->spec_f[i] = spec_f[i];
-		spec_f[i] *= 1.0592f;
-		*(self->spec[i]) = spec_f[i] > .000316f ? 20.0 * log10f(spec_f[i]) : -70.0;
+		self->spec_f[i] = spec_f[i] + 10e-12 ;
+		mx[i] *= 1.0592f;
+		*(self->spec[i]) = mx[i] > .000316f ? 20.0 * log10f(mx[i]) : -70.0;
 	}
 
 	if (self->input[0] != self->output[0]) {
