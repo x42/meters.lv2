@@ -165,19 +165,21 @@ static void create_meter_pattern(SAUI* ui) {
 	const int width = GM_WIDTH;
 	const int height = GM_HEIGHT;
 
-	int clr[10];
-	float stp[4];
+	int clr[12];
+	float stp[5];
 
-	stp[3] = deflect(ui, 0);
-	stp[2] = deflect(ui, -3);
-	stp[1] = deflect(ui, -9);
-	stp[0] = deflect(ui, -18);
+	stp[4] = deflect(ui,  0);
+	stp[3] = deflect(ui, -3);
+	stp[2] = deflect(ui, -9);
+	stp[1] = deflect(ui,-18);
+	stp[0] = deflect(ui,-40);
 
-	clr[0]=0x008844ff; clr[1]=0x00bb00ff;
-	clr[2]=0x00ff00ff; clr[3]=0x00ff00ff;
-	clr[4]=0xfff000ff; clr[5]=0xfff000ff;
-	clr[6]=0xff8000ff; clr[7]=0xff8000ff;
-	clr[8]=0xff0000ff; clr[9]=0xff0000ff;
+	clr[ 0]=0x004488ff; clr[ 1]=0x1188bbff;
+	clr[ 2]=0x228888ff; clr[ 3]=0x00bb00ff;
+	clr[ 4]=0x00ff00ff; clr[ 5]=0x00ff00ff;
+	clr[ 6]=0xfff000ff; clr[ 7]=0xfff000ff;
+	clr[ 8]=0xff8000ff; clr[ 9]=0xff8000ff;
+	clr[10]=0xff0000ff; clr[11]=0xff0000ff;
 
 	guint8 r,g,b,a;
 	const double onep  =  1.0 / (double) GM_SCALE;
@@ -191,11 +193,19 @@ static void create_meter_pattern(SAUI* ui) {
 	cairo_pattern_add_color_stop_rgb (pat, TOF, .5 , .5, .5);
 
 	// top/clip
-	UINT_TO_RGBA (clr[9], &r, &g, &b, &a);
+	UINT_TO_RGBA (clr[11], &r, &g, &b, &a);
 	cairo_pattern_add_color_stop_rgb (pat, TOF + onep,
 	                                  r/255.0, g/255.0, b/255.0);
 
 	// -0dB
+	UINT_TO_RGBA (clr[10], &r, &g, &b, &a);
+	cairo_pattern_add_color_stop_rgb (pat, YVAL(stp[4]) - softT,
+	                                  r/255.0, g/255.0, b/255.0);
+	UINT_TO_RGBA (clr[9], &r, &g, &b, &a);
+	cairo_pattern_add_color_stop_rgb (pat, YVAL(stp[4]) + softB,
+	                                  r/255.0, g/255.0, b/255.0);
+
+	// -3dB || -2dB
 	UINT_TO_RGBA (clr[8], &r, &g, &b, &a);
 	cairo_pattern_add_color_stop_rgb (pat, YVAL(stp[3]) - softT,
 	                                  r/255.0, g/255.0, b/255.0);
@@ -203,7 +213,7 @@ static void create_meter_pattern(SAUI* ui) {
 	cairo_pattern_add_color_stop_rgb (pat, YVAL(stp[3]) + softB,
 	                                  r/255.0, g/255.0, b/255.0);
 
-	// -3dB || -2dB
+	// -9dB
 	UINT_TO_RGBA (clr[6], &r, &g, &b, &a);
 	cairo_pattern_add_color_stop_rgb (pat, YVAL(stp[2]) - softT,
 	                                  r/255.0, g/255.0, b/255.0);
@@ -211,7 +221,7 @@ static void create_meter_pattern(SAUI* ui) {
 	cairo_pattern_add_color_stop_rgb (pat, YVAL(stp[2]) + softB,
 	                                  r/255.0, g/255.0, b/255.0);
 
-	// -9dB
+	// -18dB
 	UINT_TO_RGBA (clr[4], &r, &g, &b, &a);
 	cairo_pattern_add_color_stop_rgb (pat, YVAL(stp[1]) - softT,
 	                                  r/255.0, g/255.0, b/255.0);
@@ -219,7 +229,7 @@ static void create_meter_pattern(SAUI* ui) {
 	cairo_pattern_add_color_stop_rgb (pat, YVAL(stp[1]) + softB,
 	                                  r/255.0, g/255.0, b/255.0);
 
-	// -18dB
+	// -40dB
 	UINT_TO_RGBA (clr[2], &r, &g, &b, &a);
 	cairo_pattern_add_color_stop_rgb (pat, YVAL(stp[0]) - softT,
 	                                  r/255.0, g/255.0, b/255.0);
@@ -518,12 +528,8 @@ static void render_meter(SAUI* ui, int i, int old, int new, int m_old, int m_new
 	/* peak hold */
 	cairo_set_operator (cr, CAIRO_OPERATOR_OVER);
 	cairo_rectangle (cr, GM_LEFT, GM_TOP + GM_SCALE - m_new - 0.5, GM_GIRTH, 3);
-#if 1
 	cairo_fill_preserve (cr);
 	cairo_set_source_rgba (cr, 1.0, 1.0, 1.0, 0.2);
-#else
-	cairo_set_source_rgba (cr, 1.0, 1.0, 1.0, 0.3);
-#endif
 	cairo_fill(cr);
 
 	/* border */
