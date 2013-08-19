@@ -37,7 +37,7 @@ typedef void Stcorrdsp;
 #include "goniometer.h"
 #include "gtkextdial.h"
 
-#define GED_W(PTR) gtkext_dial_wiget(PTR)
+#define GED_W(PTR) gtkext_dial_widget(PTR)
 
 #define PC_BOUNDS ( 40.0f)
 

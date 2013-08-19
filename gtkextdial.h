@@ -280,7 +280,7 @@ static void gtkext_dial_destroy(GtkExtDial *d) {
 	free(d);
 }
 
-static GtkWidget * gtkext_dial_wiget(GtkExtDial *d) {
+static GtkWidget * gtkext_dial_widget(GtkExtDial *d) {
 	return d->c;
 }
 

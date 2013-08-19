@@ -845,9 +845,9 @@ instantiate(const LV2UI_Descriptor*   descriptor,
 	if (ui->display_freq) {
 		gtk_box_pack_start(GTK_BOX(ui->c_box), ui->fader, TRUE, TRUE, 0);
 		gtk_box_pack_start(GTK_BOX(ui->c_box), ui->lbl_attack, FALSE, FALSE, 0);
-		gtk_box_pack_start(GTK_BOX(ui->c_box), gtkext_dial_wiget(ui->spn_attack), FALSE, FALSE, 0);
+		gtk_box_pack_start(GTK_BOX(ui->c_box), gtkext_dial_widget(ui->spn_attack), FALSE, FALSE, 0);
 		gtk_box_pack_start(GTK_BOX(ui->c_box), ui->lbl_decay, FALSE, FALSE, 0);
-		gtk_box_pack_start(GTK_BOX(ui->c_box), gtkext_dial_wiget(ui->spn_decay), FALSE, FALSE, 0);
+		gtk_box_pack_start(GTK_BOX(ui->c_box), gtkext_dial_widget(ui->spn_decay), FALSE, FALSE, 0);
 		gtk_box_pack_start(GTK_BOX(ui->box), ui->c_box, TRUE, FALSE, 0);
 	}
 
