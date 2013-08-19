@@ -20,6 +20,15 @@
 #include <gtk/gtk.h>
 #include <cairo/cairo.h>
 
+/* default values used by gtkext_dial_new()
+ * for calling gtkext_dial_new_with_size()
+ */
+#define GED_WIDTH 55
+#define GED_HEIGHT 29
+#define GED_RADIUS 10
+#define GED_CX 27.5
+#define GED_CY 12.5
+
 typedef struct {
 	GtkWidget* w;
 	GtkWidget* c;
@@ -38,13 +47,11 @@ typedef struct {
 	cairo_pattern_t* dpat;
 	cairo_surface_t* bg;
 
-} GtkExtDial;
+	float w_width, w_height;
+	float w_cx, w_cy;
+	float w_radius;
 
-#define GED_WIDTH 55
-#define GED_HEIGHT 29
-#define GED_RADIUS 10
-#define GED_CX 27.5
-#define GED_CY 12.5
+} GtkExtDial;
 
 static gboolean gtkext_dial_expose_event(GtkWidget *w, GdkEventExpose *ev, gpointer handle) {
 	GtkExtDial * d = (GtkExtDial *)handle;
@@ -56,7 +63,7 @@ static gboolean gtkext_dial_expose_event(GtkWidget *w, GdkEventExpose *ev, gpoin
 	GtkStyle *style = gtk_widget_get_style(w);
 	GdkColor *c = &style->bg[GTK_STATE_NORMAL];
 	cairo_set_source_rgb (cr, c->red/65536.0, c->green/65536.0, c->blue/65536.0);
-	cairo_rectangle (cr, 0, 0, GED_WIDTH, GED_HEIGHT);
+	cairo_rectangle (cr, 0, 0, d->w_width, d->w_height);
 	cairo_fill(cr);
 
 	if (d->bg) {
@@ -71,7 +78,7 @@ static gboolean gtkext_dial_expose_event(GtkWidget *w, GdkEventExpose *ev, gpoin
 	if (d->sensitive) {
 		cairo_set_source(cr, d->dpat);
 	}
-	cairo_arc (cr, GED_CX, GED_CY, GED_RADIUS, 0, 2.0 * M_PI);
+	cairo_arc (cr, d->w_cx, d->w_cy, d->w_radius, 0, 2.0 * M_PI);
 	cairo_fill_preserve (cr);
 	cairo_set_line_width(cr, .75);
 	cairo_set_source_rgba (cr, .0, .0, .0, 1.0);
@@ -83,10 +90,10 @@ static gboolean gtkext_dial_expose_event(GtkWidget *w, GdkEventExpose *ev, gpoin
 		cairo_set_source_rgba (cr, .5, .5, .5, .7);
 	}
 	cairo_set_line_width(cr, 1.5);
-	cairo_move_to(cr, GED_CX, GED_CY);
+	cairo_move_to(cr, d->w_cx, d->w_cy);
 	float ang = (.75 * M_PI) + (1.5 * M_PI) * (d->cur - d->min) / d->max;
 	float wid = M_PI * 2 / 180.0;
-	cairo_arc (cr, GED_CX, GED_CY, GED_RADIUS, ang-wid, ang+wid);
+	cairo_arc (cr, d->w_cx, d->w_cy, d->w_radius, ang-wid, ang+wid);
 	cairo_stroke (cr);
 
 	cairo_destroy (cr);
@@ -164,30 +171,38 @@ static gboolean gtkext_dial_scroll(GtkWidget *w, GdkEventScroll *ev, gpointer ha
 }
 
 static void create_dial_pattern(GtkExtDial * d) {
-	cairo_pattern_t* pat = cairo_pattern_create_linear (0.0, 0.0, 0.0, GED_HEIGHT);
+	cairo_pattern_t* pat = cairo_pattern_create_linear (0.0, 0.0, 0.0, d->w_height);
 
-	// TODO offset patterns by CX, CY and span RADIUS only.
-	cairo_pattern_add_color_stop_rgb (pat, 0.0,  .8, .8, .82);
-	cairo_pattern_add_color_stop_rgb (pat, 1.0,  .3, .3, .33);
+	const float pat_left   = (d->w_cx - d->w_radius) / (float) d->w_width;
+	const float pat_right  = (d->w_cx + d->w_radius) / (float) d->w_width;
+	const float pat_top    = (d->w_cy - d->w_radius) / (float) d->w_height;
+	const float pat_bottom = (d->w_cy + d->w_radius) / (float) d->w_height;
+#define PAT_XOFF(VAL) (pat_left + 0.35 * 2.0 * d->w_radius)
+
+	cairo_pattern_add_color_stop_rgb (pat, pat_top,    .8, .8, .82);
+	cairo_pattern_add_color_stop_rgb (pat, pat_bottom, .3, .3, .33);
 
 	if (!getenv("NO_METER_SHADE") || strlen(getenv("NO_METER_SHADE")) == 0) {
-		cairo_pattern_t* shade_pattern = cairo_pattern_create_linear (0.0, 0.0, GED_WIDTH, 0.0);
-		cairo_pattern_add_color_stop_rgba (shade_pattern, 0.0,   0.0, 0.0, 0.0, 0.15);
-		cairo_pattern_add_color_stop_rgba (shade_pattern, 0.35, 1.0, 1.0, 1.0, 0.10);
-		cairo_pattern_add_color_stop_rgba (shade_pattern, 0.53, 0.0, 0.0, 0.0, 0.05);
-		cairo_pattern_add_color_stop_rgba (shade_pattern, 1.0,  0.0, 0.0, 0.0, 0.25);
+		/* light from top-left */
+		cairo_pattern_t* shade_pattern = cairo_pattern_create_linear (0.0, 0.0, d->w_width, 0.0);
+		cairo_pattern_add_color_stop_rgba (shade_pattern, pat_left,       0.0, 0.0, 0.0, 0.15);
+		cairo_pattern_add_color_stop_rgba (shade_pattern, PAT_XOFF(0.35), 1.0, 1.0, 1.0, 0.10);
+		cairo_pattern_add_color_stop_rgba (shade_pattern, PAT_XOFF(0.53), 0.0, 0.0, 0.0, 0.05);
+		cairo_pattern_add_color_stop_rgba (shade_pattern, pat_right,      0.0, 0.0, 0.0, 0.25);
 
 		cairo_surface_t* surface;
 		cairo_t* tc = 0;
-		surface = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, GED_WIDTH, GED_HEIGHT);
+		surface = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, d->w_width, d->w_height);
 		tc = cairo_create (surface);
+		cairo_set_operator (tc, CAIRO_OPERATOR_SOURCE);
 		cairo_set_source (tc, pat);
-		cairo_rectangle (tc, 0, 0, GED_WIDTH, GED_HEIGHT);
+		cairo_rectangle (tc, 0, 0, d->w_width, d->w_height);
 		cairo_fill (tc);
 		cairo_pattern_destroy (pat);
 
+		cairo_set_operator (tc, CAIRO_OPERATOR_OVER);
 		cairo_set_source (tc, shade_pattern);
-		cairo_rectangle (tc, 0, 0, GED_WIDTH, GED_HEIGHT);
+		cairo_rectangle (tc, 0, 0, d->w_width, d->w_height);
 		cairo_fill (tc);
 		cairo_pattern_destroy (shade_pattern);
 
@@ -203,12 +218,24 @@ static void create_dial_pattern(GtkExtDial * d) {
  * public functions
  */
 
-static GtkExtDial * gtkext_dial_new(float min, float max, float step) {
+static GtkExtDial * gtkext_dial_new_with_size(float min, float max, float step,
+		int width, int height, float cx, float cy, float radius) {
+
 	assert(max > min);
 	assert( (max - min) / step <= 250.0);
 	assert( (max - min) / step >= 1.0);
 
+	assert( (cx  + radius) < width);
+	assert( (cx  - radius) > 0);
+	assert( (cy  + radius) < height);
+	assert( (cy  - radius) > 0);
+
 	GtkExtDial *d = (GtkExtDial *) malloc(sizeof(GtkExtDial));
+
+	d->w_width = width; d->w_height = height;
+	d->w_cx = cx; d->w_cy = cy;
+	d->w_radius = radius;
+
 	d->w = gtk_drawing_area_new();
 	d->c = gtk_alignment_new(.5, .5, 0, 0);
 	gtk_container_add(GTK_CONTAINER(d->c), d->w);
@@ -223,8 +250,8 @@ static GtkExtDial * gtkext_dial_new(float min, float max, float step) {
 	d->bg  = NULL;
 	create_dial_pattern(d);
 
-	gtk_drawing_area_size(GTK_DRAWING_AREA(d->w), GED_WIDTH, GED_HEIGHT);
-	gtk_widget_set_size_request(d->w, GED_WIDTH, GED_HEIGHT);
+	gtk_drawing_area_size(GTK_DRAWING_AREA(d->w), d->w_width, d->w_height);
+	gtk_widget_set_size_request(d->w, d->w_width, d->w_height);
 
 	gtk_widget_set_redraw_on_allocate(d->w, TRUE);
 	gtk_widget_add_events(d->w, GDK_BUTTON1_MOTION_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK | GDK_SCROLL_MASK);
@@ -236,6 +263,11 @@ static GtkExtDial * gtkext_dial_new(float min, float max, float step) {
 	g_signal_connect (G_OBJECT (d->w), "scroll-event",  G_CALLBACK (gtkext_dial_scroll), d);
 
 	return d;
+}
+
+static GtkExtDial * gtkext_dial_new(float min, float max, float step) {
+	return gtkext_dial_new_with_size(min, max, step,
+			GED_WIDTH, GED_HEIGHT, GED_CX, GED_CY, GED_RADIUS);
 }
 
 static void gtkext_dial_destroy(GtkExtDial *d) {
