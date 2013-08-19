@@ -174,8 +174,13 @@ static void create_meter_pattern(SAUI* ui) {
 	stp[1] = deflect(ui,-18);
 	stp[0] = deflect(ui,-40);
 
-	clr[ 0]=0x004488ff; clr[ 1]=0x1188bbff;
-	clr[ 2]=0x228888ff; clr[ 3]=0x00bb00ff;
+	if (ui->display_freq) {
+		clr[ 0]=0x004488ff; clr[ 1]=0x1188bbff;
+		clr[ 2]=0x228888ff; clr[ 3]=0x00bb00ff;
+	} else {
+		clr[ 0]=0x008844ff; clr[ 1]=0x009922ff;
+		clr[ 2]=0x00aa00ff; clr[ 3]=0x00bb00ff;
+	}
 	clr[ 4]=0x00ff00ff; clr[ 5]=0x00ff00ff;
 	clr[ 6]=0xfff000ff; clr[ 7]=0xfff000ff;
 	clr[ 8]=0xff8000ff; clr[ 9]=0xff8000ff;
