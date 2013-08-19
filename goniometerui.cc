@@ -1069,10 +1069,12 @@ static void invalidate_gm(GMUI* ui) {
 
 static void invalidate_pc(GMUI* ui) {
 	float c;
-	c = (PC_HEIGHT - PC_BLOCK) * ui->cor_u;
+#define PC_BLOCKSIZE (PC_HEIGHT - PC_BLOCK)
+	if (rint(PC_BLOCKSIZE * ui->cor_u) ==rint (PC_BLOCKSIZE * ui->cor)) return;
+	c = PC_BLOCKSIZE * ui->cor_u;
 	gtk_widget_queue_draw_area(ui->m0, PC_LEFT, PC_TOP + c -1 , PC_WIDTH, PC_BLOCK + 2);
 	ui->cor_u = ui->cor;
-	c = (PC_HEIGHT - PC_BLOCK) * ui->cor_u;
+	c = PC_BLOCKSIZE * ui->cor_u;
 	gtk_widget_queue_draw_area(ui->m0, PC_LEFT, PC_TOP + c -1 , PC_WIDTH, PC_BLOCK + 2);
 }
 
