@@ -17,6 +17,9 @@
  * Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
+#ifndef _GTK_EXT_DIAL_H_
+#define _GTK_EXT_DIAL_H_
+
 #include <gtk/gtk.h>
 #include <cairo/cairo.h>
 
@@ -40,6 +43,7 @@ typedef struct {
 
 	float drag_x, drag_y, drag_c;
 	gboolean sensitive;
+	gboolean prelight;
 
 	gboolean (*cb) (GtkWidget* w, gpointer handle);
 	gpointer handle;
@@ -96,6 +100,12 @@ static gboolean gtkext_dial_expose_event(GtkWidget *w, GdkEventExpose *ev, gpoin
 	cairo_arc (cr, d->w_cx, d->w_cy, d->w_radius, ang-wid, ang+wid);
 	cairo_stroke (cr);
 
+	if (d->sensitive && (d->prelight || d->drag_x > 0)) {
+		cairo_set_source_rgba (cr, 1.0, 1.0, 1.0, .15);
+		cairo_arc (cr, d->w_cx, d->w_cy, d->w_radius-1, 0, 2.0 * M_PI);
+		cairo_fill(cr);
+	}
+
 	cairo_destroy (cr);
 	return TRUE;
 }
@@ -143,6 +153,23 @@ static gboolean gtkext_dial_mousemove(GtkWidget *w, GdkEventMotion *event, gpoin
 	float val = d->drag_c + diff;
 	gtkext_dial_update_value(d, val);
 	return TRUE;
+}
+
+static gboolean gtkext_dial_enter_notify(GtkWidget *w, GdkEvent *event, gpointer handle) {
+	GtkExtDial * d = (GtkExtDial *)handle;
+	if (!d->prelight) {
+		d->prelight = TRUE;
+		gtk_widget_queue_draw(d->w);
+	}
+	return FALSE;
+}
+static gboolean gtkext_dial_leave_notify(GtkWidget *w, GdkEvent *event, gpointer handle) {
+	GtkExtDial * d = (GtkExtDial *)handle;
+	if (d->prelight) {
+		d->prelight = FALSE;
+		gtk_widget_queue_draw(d->w);
+	}
+	return FALSE;
 }
 
 static gboolean gtkext_dial_scroll(GtkWidget *w, GdkEventScroll *ev, gpointer handle) {
@@ -222,6 +249,7 @@ static GtkExtDial * gtkext_dial_new_with_size(float min, float max, float step,
 		int width, int height, float cx, float cy, float radius) {
 
 	assert(max > min);
+	assert(step > 0);
 	assert( (max - min) / step <= 250.0);
 	assert( (max - min) / step >= 1.0);
 
@@ -247,6 +275,8 @@ static GtkExtDial * gtkext_dial_new_with_size(float min, float max, float step,
 	d->acc = step;
 	d->cur = min;
 	d->sensitive = TRUE;
+	d->prelight = FALSE;
+	d->drag_x = d->drag_y = -1;
 	d->bg  = NULL;
 	create_dial_pattern(d);
 
@@ -254,13 +284,15 @@ static GtkExtDial * gtkext_dial_new_with_size(float min, float max, float step,
 	gtk_widget_set_size_request(d->w, d->w_width, d->w_height);
 
 	gtk_widget_set_redraw_on_allocate(d->w, TRUE);
-	gtk_widget_add_events(d->w, GDK_BUTTON1_MOTION_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK | GDK_SCROLL_MASK);
+	gtk_widget_add_events(d->w, GDK_ENTER_NOTIFY_MASK | GDK_LEAVE_NOTIFY_MASK | GDK_BUTTON1_MOTION_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK | GDK_SCROLL_MASK);
 
 	g_signal_connect (G_OBJECT (d->w), "expose_event", G_CALLBACK (gtkext_dial_expose_event), d);
 	g_signal_connect (G_OBJECT (d->w), "button-release-event", G_CALLBACK (gtkext_dial_mouseup), d);
 	g_signal_connect (G_OBJECT (d->w), "button-press-event",   G_CALLBACK (gtkext_dial_mousedown), d);
 	g_signal_connect (G_OBJECT (d->w), "motion-notify-event",  G_CALLBACK (gtkext_dial_mousemove), d);
 	g_signal_connect (G_OBJECT (d->w), "scroll-event",  G_CALLBACK (gtkext_dial_scroll), d);
+	g_signal_connect (G_OBJECT (d->w), "enter-notify-event",  G_CALLBACK (gtkext_dial_enter_notify), d);
+	g_signal_connect (G_OBJECT (d->w), "leave-notify-event",  G_CALLBACK (gtkext_dial_leave_notify), d);
 
 	return d;
 }
@@ -274,9 +306,6 @@ static void gtkext_dial_destroy(GtkExtDial *d) {
 	gtk_widget_destroy(d->w);
 	gtk_widget_destroy(d->c);
 	cairo_pattern_destroy(d->dpat);
-#if 0
-	if (d->bg) { cairo_surface_destroy(d->bg); }
-#endif
 	free(d);
 }
 
@@ -306,8 +335,6 @@ static float gtkext_dial_get_value(GtkExtDial *d) {
 }
 
 static void gtkext_dial_set_surface(GtkExtDial *d, cairo_surface_t *s) {
-#if 0
-	if (d->bg) { cairo_surface_destroy(d->bg); }
-#endif
 	d->bg = s;
 }
+#endif
