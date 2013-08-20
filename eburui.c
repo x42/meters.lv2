@@ -28,6 +28,7 @@
 #include <gtk/gtk.h>
 #include "common_cairo.h"
 #include "gtkextrbtn.h"
+#define GRB_W(PTR) gtkext_rbtn_widget(PTR)
 
 #include "lv2/lv2plug.in/ns/extensions/ui/ui.h"
 #include "./uris.h"
@@ -57,8 +58,8 @@ typedef struct {
 	GtkToolItem* btn_reset;
 
 	GtkWidget* cbx_box;
-	GtkWidget* cbx_lufs;
-	GtkWidget* cbx_lu;
+	GtkExtRBtn* cbx_lufs;
+	GtkExtRBtn* cbx_lu;
 	GtkWidget* cbx_sc9;
 	GtkWidget* cbx_sc18;
 	GtkWidget* cbx_sc24;
@@ -311,7 +312,7 @@ static void initialize_font_cache(EBUrUI* ui) {
 
 static gboolean expose_event(GtkWidget *w, GdkEventExpose *ev, gpointer handle) {
 	EBUrUI* ui = (EBUrUI*)handle;
-	const bool lufs = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(ui->cbx_lufs));
+	const bool lufs = gtkext_rbtn_get_active(ui->cbx_lufs);
 	const bool rings = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(ui->cbx_ring_short));
 	const bool hists = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(ui->cbx_hist_short));
 	const bool plus9 = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(ui->cbx_sc9));
@@ -929,7 +930,7 @@ static gboolean cbx_autoreset(GtkWidget *w, gpointer handle) {
 static gboolean cbx_lufs(GtkWidget *w, gpointer handle) {
 	EBUrUI* ui = (EBUrUI*)handle;
 	uint32_t v = 0;
-	v |= gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(ui->cbx_lufs)) ? 1 : 0;
+	v |= gtkext_rbtn_get_active(ui->cbx_lufs) ? 1 : 0;
 	v |= gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(ui->cbx_sc9)) ? 2 : 0;
 	v |= gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(ui->cbx_sc24)) ? 32 : 0;
 	v |= gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(ui->cbx_ring_short)) ? 4 : 0;
@@ -998,8 +999,9 @@ instantiate(const LV2UI_Descriptor*   descriptor,
 	gtk_toolbar_set_style (GTK_TOOLBAR(ui->btn_box), GTK_TOOLBAR_ICONS);
 
 	ui->cbx_box = gtk_table_new(/*rows*/5, /*cols*/ 5, FALSE);
-	ui->cbx_lu         = gtk_radio_button_new_with_label(NULL, "LU");
-	ui->cbx_lufs       = gtk_radio_button_new_with_label_from_widget(GTK_RADIO_BUTTON (ui->cbx_lu), "LUFS");
+	ui->cbx_lu         = gtkext_rbtn_new("LU", NULL);
+	ui->cbx_lufs       = gtkext_rbtn_new("LUFS", gtkext_rbtn_group(ui->cbx_lu));
+
 	ui->cbx_ring_mom   = gtk_radio_button_new_with_label(NULL, "Momentary");
 	ui->cbx_ring_short = gtk_radio_button_new_with_label_from_widget(GTK_RADIO_BUTTON(ui->cbx_ring_mom), "Short");
 	ui->cbx_hist_short = gtk_radio_button_new_with_label(NULL, "Short");
@@ -1024,10 +1026,10 @@ instantiate(const LV2UI_Descriptor*   descriptor,
 	gtk_toolbar_insert(GTK_TOOLBAR(ui->btn_box), GTK_TOOL_ITEM(ui->btn_reset), 1);
 
 	gtk_table_attach(GTK_TABLE(ui->cbx_box), ui->lbl_ringinfo, 0, 2, 0, 1, GTK_SHRINK, GTK_SHRINK, 3, 0);
-	gtk_table_attach_defaults(GTK_TABLE(ui->cbx_box), ui->cbx_lu       , 0, 1, 1, 2);
-	gtk_table_attach_defaults(GTK_TABLE(ui->cbx_box), ui->cbx_lufs     , 1, 2, 1, 2);
-	gtk_table_attach_defaults(GTK_TABLE(ui->cbx_box), ui->cbx_sc18     , 0, 1, 2, 3);
-	gtk_table_attach_defaults(GTK_TABLE(ui->cbx_box), ui->cbx_sc9      , 1, 2, 2, 3);
+	gtk_table_attach_defaults(GTK_TABLE(ui->cbx_box), GRB_W(ui->cbx_lu)   , 0, 1, 1, 2);
+	gtk_table_attach_defaults(GTK_TABLE(ui->cbx_box), GRB_W(ui->cbx_lufs) , 1, 2, 1, 2);
+	gtk_table_attach_defaults(GTK_TABLE(ui->cbx_box), ui->cbx_sc18        , 0, 1, 2, 3);
+	gtk_table_attach_defaults(GTK_TABLE(ui->cbx_box), ui->cbx_sc9         , 1, 2, 2, 3);
 #ifdef EASTER_EGG
 	gtk_table_attach_defaults(GTK_TABLE(ui->cbx_box), ui->cbx_sc24     , 1, 2, 3, 4);
 	gtk_table_attach_defaults(GTK_TABLE(ui->cbx_box), ui->cbx_truepeak , 0, 1, 3, 4);
@@ -1060,7 +1062,7 @@ instantiate(const LV2UI_Descriptor*   descriptor,
 	g_signal_connect (G_OBJECT (ui->m0), "expose_event", G_CALLBACK (expose_event), ui);
 	g_signal_connect (G_OBJECT (ui->btn_start), "toggled", G_CALLBACK (btn_start), ui);
 	g_signal_connect (G_OBJECT (ui->btn_reset), "clicked", G_CALLBACK (btn_reset), ui);
-	g_signal_connect (G_OBJECT (ui->cbx_lufs),  "toggled", G_CALLBACK (cbx_lufs), ui);
+	gtkext_rbtn_set_callback(ui->cbx_lufs, cbx_lufs, ui);
 	g_signal_connect (G_OBJECT (ui->cbx_hist_short), "toggled", G_CALLBACK (cbx_lufs), ui);
 	g_signal_connect (G_OBJECT (ui->cbx_ring_short), "toggled", G_CALLBACK (cbx_lufs), ui);
 	g_signal_connect (G_OBJECT (ui->cbx_sc18),  "toggled", G_CALLBACK (cbx_lufs), ui);
@@ -1107,8 +1109,8 @@ cleanup(LV2UI_Handle handle)
 	free(ui->radarS);
 	free(ui->radarM);
 
-	gtk_widget_destroy(ui->cbx_lufs);
-	gtk_widget_destroy(ui->cbx_lu);
+	gtkext_rbtn_destroy(ui->cbx_lufs);
+	gtkext_rbtn_destroy(ui->cbx_lu);
 	gtk_widget_destroy(ui->cbx_sc9);
 	gtk_widget_destroy(ui->cbx_sc18);
 	gtk_widget_destroy(ui->cbx_sc24);
@@ -1313,9 +1315,9 @@ port_event(LV2UI_Handle handle,
 					uint32_t vv = v;
 					ui->disable_signals = true;
 					if ((vv & 1)) {
-						gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(ui->cbx_lufs), true);
+						gtkext_rbtn_set_active(ui->cbx_lufs, true);
 					} else {
-						gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(ui->cbx_lu), true);
+						gtkext_rbtn_set_active(ui->cbx_lu, true);
 					}
 					if ((vv & 2)) {
 						gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(ui->cbx_sc9), true);

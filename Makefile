@@ -89,7 +89,7 @@ $(LV2GUI)$(LIB_EXT): ui.c $(UIDEPS) uris.h
 		-o $(LV2GUI)$(LIB_EXT) ui.c \
 		-shared $(LV2LDFLAGS) $(LDFLAGS) $(UILIBS)
 
-$(LV2GUI2)$(LIB_EXT): eburui.c $(UIDEPS) common_cairo.h
+$(LV2GUI2)$(LIB_EXT): eburui.c $(UIDEPS) common_cairo.h gtkextrbtn.h gtkextcbtn.h
 	$(CC) $(CPPFLAGS) $(CFLAGS) -std=c99 $(UICFLAGS) \
 		-o $(LV2GUI2)$(LIB_EXT) eburui.c \
 		-shared $(LV2LDFLAGS) $(LDFLAGS) $(UILIBS)
