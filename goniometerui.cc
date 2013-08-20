@@ -36,9 +36,11 @@ typedef void Stcorrdsp;
 
 #include "gtkextdial.h"
 #include "gtkextcbtn.h"
+#include "gtkextspin.h"
 
 #define GED_W(PTR) gtkext_dial_widget(PTR)
 #define GBT_W(PTR) gtkext_cbtn_widget(PTR)
+#define GSP_W(PTR) gtkext_spin_widget(PTR)
 
 #define PC_BOUNDS ( 40.0f)
 
@@ -71,7 +73,7 @@ typedef struct {
 	GtkWidget* c_tbl;
 
 	GtkExtCBtn* cbn_src;
-	GtkWidget* spn_src_fact;
+	GtkExtSpin* spn_src_fact;
 
 	GtkExtDial* spn_compress;
 	GtkExtDial* spn_gattack;
@@ -84,8 +86,8 @@ typedef struct {
 	GtkExtCBtn* cbn_lines;
 	GtkExtCBtn* cbn_xfade;
 
-	GtkWidget* spn_psize;
-	GtkWidget* spn_vfreq;
+	GtkExtSpin* spn_psize;
+	GtkExtSpin* spn_vfreq;
 	GtkExtDial* spn_alpha;
 
 	GtkWidget* sep_h0;
@@ -266,7 +268,7 @@ static void draw_rb(GMUI* ui, gmringbuf *rb) {
 	const bool composit = !gtkext_cbtn_get_active(ui->cbn_xfade);
 	const bool autogain = gtkext_cbtn_get_active(ui->cbn_autogain);
 	const bool lines = gtkext_cbtn_get_active(ui->cbn_lines);
-	const float line_width = gtk_spin_button_get_value(GTK_SPIN_BUTTON(ui->spn_psize));
+	const float line_width = gtkext_spin_get_value(ui->spn_psize);
 	const float compress = .02 * gtkext_dial_get_value(ui->spn_compress);
 	const float persist = .5 + .005 * gtkext_dial_get_value(ui->spn_alpha);
 	const float attack_pow = ui->attack_pow;
@@ -600,14 +602,14 @@ static void save_state(GMUI* ui) {
 	self->s_persist    = gtkext_cbtn_get_active(ui->cbn_xfade);
 	self->s_preferences= gtkext_cbtn_get_active(ui->cbn_preferences);
 
-	self->s_sfact = gtk_spin_button_get_value(GTK_SPIN_BUTTON(ui->spn_src_fact));
+	self->s_sfact = gtkext_spin_get_value(ui->spn_src_fact);
 	if (self->s_line) {
-		self->s_linewidth = gtk_spin_button_get_value(GTK_SPIN_BUTTON(ui->spn_psize));
+		self->s_linewidth = gtkext_spin_get_value(ui->spn_psize);
 	} else {
-		self->s_pointwidth = gtk_spin_button_get_value(GTK_SPIN_BUTTON(ui->spn_psize));
+		self->s_pointwidth = gtkext_spin_get_value(ui->spn_psize);
 	}
 	self->s_persistency = gtkext_dial_get_value(ui->spn_alpha);
-	self->s_max_freq = gtk_spin_button_get_value(GTK_SPIN_BUTTON(ui->spn_vfreq));
+	self->s_max_freq = gtkext_spin_get_value(ui->spn_vfreq);
 
 	self->s_gattack = gtkext_dial_get_value(ui->spn_gattack);
 	self->s_gdecay = gtkext_dial_get_value(ui->spn_gdecay);
@@ -689,12 +691,12 @@ static gboolean cb_lines(GtkWidget *w, gpointer handle) {
 	const bool nowlines = gtkext_cbtn_get_active(ui->cbn_lines);
 	if (!nowlines) {
 		gtk_label_set_text(GTK_LABEL(ui->lbl_psize), "Point Size [px]:");
-		self->s_linewidth = gtk_spin_button_get_value(GTK_SPIN_BUTTON(ui->spn_psize));
+		self->s_linewidth = gtkext_spin_get_value(ui->spn_psize);
 	} else {
 		gtk_label_set_text(GTK_LABEL(ui->lbl_psize), "Line Width [px]:");
-		self->s_pointwidth = gtk_spin_button_get_value(GTK_SPIN_BUTTON(ui->spn_psize));
+		self->s_pointwidth = gtkext_spin_get_value(ui->spn_psize);
 	}
-	gtk_spin_button_set_value(GTK_SPIN_BUTTON(ui->spn_psize), nowlines ? self->s_linewidth : self->s_pointwidth);
+	gtkext_spin_set_value(ui->spn_psize, nowlines ? self->s_linewidth : self->s_pointwidth);
 	return cb_expose(w, handle);
 }
 
@@ -711,13 +713,13 @@ static gboolean cb_xfade(GtkWidget *w, gpointer handle) {
 static gboolean cb_vfreq(GtkWidget *w, gpointer handle) {
 	GMUI* ui = (GMUI*)handle;
 	LV2gm* self = (LV2gm*) ui->instance;
-	float v = gtk_spin_button_get_value(GTK_SPIN_BUTTON(ui->spn_vfreq));
+	float v = gtkext_spin_get_value(ui->spn_vfreq);
 	if (v < 10) {
-		gtk_spin_button_set_value(GTK_SPIN_BUTTON(ui->spn_vfreq), 10);
+		gtkext_spin_set_value(ui->spn_vfreq, 10);
 		return TRUE;
 	}
 	if (v > 100) {
-		gtk_spin_button_set_value(GTK_SPIN_BUTTON(ui->spn_vfreq), 100);
+		gtkext_spin_set_value(ui->spn_vfreq, 100);
 		return TRUE;
 	}
 
@@ -731,7 +733,7 @@ static gboolean cb_vfreq(GtkWidget *w, gpointer handle) {
 static gboolean cb_src(GtkWidget *w, gpointer handle) {
 	GMUI* ui = (GMUI*)handle;
 	if (gtkext_cbtn_get_active(ui->cbn_src)) {
-		setup_src(ui, gtk_spin_button_get_value(GTK_SPIN_BUTTON(ui->spn_src_fact)), 8, .7);
+		setup_src(ui, gtkext_spin_get_value(ui->spn_src_fact), 8, .7);
 	} else {
 		setup_src(ui, 0, 0, 0);
 	}
@@ -761,9 +763,9 @@ static gboolean cb_preferences(GtkWidget *w, gpointer handle) {
 static void restore_state(GMUI* ui) {
 	LV2gm* self = (LV2gm*) ui->instance;
 	ui->disable_signals = true;
-	gtk_spin_button_set_value(GTK_SPIN_BUTTON(ui->spn_src_fact), self->s_sfact);
-	gtk_spin_button_set_value(GTK_SPIN_BUTTON(ui->spn_psize), self->s_line ? self->s_linewidth : self->s_pointwidth);
-	gtk_spin_button_set_value(GTK_SPIN_BUTTON(ui->spn_vfreq), self->s_max_freq);
+	gtkext_spin_set_value(ui->spn_src_fact, self->s_sfact);
+	gtkext_spin_set_value(ui->spn_psize, self->s_line ? self->s_linewidth : self->s_pointwidth);
+	gtkext_spin_set_value(ui->spn_vfreq, self->s_max_freq);
 	gtkext_dial_set_value(ui->spn_alpha, self->s_persistency);
 
 	gtkext_dial_set_value(ui->spn_gattack, self->s_gattack);
@@ -849,7 +851,7 @@ instantiate(const LV2UI_Descriptor*   descriptor,
 
 	ui->c_tbl        = gtk_table_new(/*rows*/6, /*cols*/ 6, FALSE);
 	ui->cbn_src      = gtkext_cbtn_new("Oversample", GBT_LED_LEFT, false);
-	ui->spn_src_fact = gtk_spin_button_new_with_range(2, 32, 1);
+	ui->spn_src_fact = gtkext_spin_new(2, 32, 1);
 
 	ui->spn_compress = gtkext_dial_new(0.0, 100.0, 0.5);
 	ui->spn_gattack  = gtkext_dial_new(0.0, 100.0, 1.0);
@@ -860,9 +862,9 @@ instantiate(const LV2UI_Descriptor*   descriptor,
 
 	ui->cbn_lines    = gtkext_cbtn_new("Draw Lines", GBT_LED_LEFT, false);
 	ui->cbn_xfade    = gtkext_cbtn_new("CRT Persistency", GBT_LED_LEFT, true);
-	ui->spn_psize    = gtk_spin_button_new_with_range(.25, 5.25, .25);
+	ui->spn_psize    = gtkext_spin_new(.25, 5.25, .25);
 
-	ui->spn_vfreq    = gtk_spin_button_new_with_range(10, 100, 5);
+	ui->spn_vfreq    = gtkext_spin_new(10, 100, 5);
 	ui->spn_alpha    = gtkext_dial_new(0, 100, .5);
 
 	gtkext_dial_set_value(ui->spn_compress, 0.0);
@@ -872,12 +874,12 @@ instantiate(const LV2UI_Descriptor*   descriptor,
 	gtkext_dial_set_value(ui->spn_gtarget, 50.0);
 	gtkext_dial_set_value(ui->spn_grms, 0.0);
 
-	gtk_spin_button_set_value(GTK_SPIN_BUTTON(ui->spn_src_fact), 4.0);
-	gtk_spin_button_set_value(GTK_SPIN_BUTTON(ui->spn_psize), 1.25);
-	gtk_spin_button_set_value(GTK_SPIN_BUTTON(ui->spn_vfreq), 25);
+	gtkext_spin_set_value(ui->spn_src_fact, 4.0);
+	gtkext_spin_set_value(ui->spn_psize, 1.25);
+	gtkext_spin_set_value(ui->spn_vfreq, 25);
 	gtkext_dial_set_value(ui->spn_alpha, 0);
 
-	gtk_spin_button_set_digits(GTK_SPIN_BUTTON(ui->spn_psize), 2);
+	gtkext_spin_set_digits(ui->spn_psize, 2);
 
 	ui->sep_h0        = gtk_hseparator_new();
 	ui->sep_h1        = gtk_hseparator_new();
@@ -971,19 +973,19 @@ instantiate(const LV2UI_Descriptor*   descriptor,
 
 	//gtk_table_attach_defaults(GTK_TABLE(ui->c_tbl), GBT_W(ui->cbn_src)     , 0, 1, row, row+1);
 	gtk_table_attach(GTK_TABLE(ui->c_tbl), ui->lbl_src_fact                , 1, 2, row, row+1, GTK_FILL, GTK_FILL, 4, 0);
-	gtk_table_attach_defaults(GTK_TABLE(ui->c_tbl), ui->spn_src_fact       , 2, 3, row, row+1);
+	gtk_table_attach_defaults(GTK_TABLE(ui->c_tbl), GSP_W(ui->spn_src_fact), 2, 3, row, row+1);
 
 	gtk_table_attach(GTK_TABLE(ui->c_tbl), GBT_W(ui->cbn_xfade)            , 4, 5, row, row+1, GTK_SHRINK, GTK_SHRINK, 4, 0);
 	gtk_table_attach_defaults(GTK_TABLE(ui->c_tbl), GED_W(ui->spn_alpha)   , 5, 6, row, row+1);
 
 	row++;
-	//gtk_table_attach_defaults(GTK_TABLE(ui->c_tbl), GBT_W(ui->cbn_lines)          , 0, 1, row, row+1);
+	//gtk_table_attach_defaults(GTK_TABLE(ui->c_tbl), GBT_W(ui->cbn_lines) , 0, 1, row, row+1);
 	gtk_table_attach(GTK_TABLE(ui->c_tbl), ui->lbl_psize                   , 1, 2, row, row+1, GTK_FILL, GTK_FILL, 4, 0);
-	gtk_table_attach_defaults(GTK_TABLE(ui->c_tbl), ui->spn_psize          , 2, 3, row, row+1);
+	gtk_table_attach_defaults(GTK_TABLE(ui->c_tbl), GSP_W(ui->spn_psize)   , 2, 3, row, row+1);
 
 	row++;
 	gtk_table_attach(GTK_TABLE(ui->c_tbl), ui->lbl_vfreq                   , 0, 2, row, row+1, GTK_FILL, GTK_FILL, 4, 0);
-	gtk_table_attach_defaults(GTK_TABLE(ui->c_tbl), ui->spn_vfreq          , 2, 3, row, row+1);
+	gtk_table_attach_defaults(GTK_TABLE(ui->c_tbl), GSP_W(ui->spn_vfreq)   , 2, 3, row, row+1);
 
 	gtk_table_attach(GTK_TABLE(ui->c_tbl), ui->lbl_compress                , 4, 5, row, row+1, GTK_FILL, GTK_FILL, 4, 0);
 	gtk_table_attach_defaults(GTK_TABLE(ui->c_tbl), GED_W(ui->spn_compress), 5, 6, row, row+1);
@@ -1004,7 +1006,7 @@ instantiate(const LV2UI_Descriptor*   descriptor,
 
 	g_signal_connect (G_OBJECT (ui->m0), "expose_event", G_CALLBACK (expose_event), ui);
 	g_signal_connect (G_OBJECT (ui->fader), "value-changed", G_CALLBACK (set_gain), ui);
-	g_signal_connect (G_OBJECT (ui->spn_src_fact), "value-changed", G_CALLBACK (cb_src), ui);
+	gtkext_spin_set_callback(ui->spn_src_fact, cb_src, ui);
 
 	gtkext_cbtn_set_callback(ui->cbn_autogain, cb_autogain, ui);
 	gtkext_cbtn_set_callback(ui->cbn_src, cb_src, ui);
@@ -1019,8 +1021,9 @@ instantiate(const LV2UI_Descriptor*   descriptor,
 
 	gtkext_cbtn_set_callback(ui->cbn_lines, cb_lines, ui);
 	gtkext_cbtn_set_callback(ui->cbn_xfade, cb_xfade, ui);
-	g_signal_connect (G_OBJECT (ui->spn_psize), "value-changed", G_CALLBACK (cb_expose), ui);
-	g_signal_connect (G_OBJECT (ui->spn_vfreq), "value-changed", G_CALLBACK (cb_vfreq), ui);
+
+	gtkext_spin_set_callback(ui->spn_psize, cb_expose, ui);
+	gtkext_spin_set_callback(ui->spn_vfreq, cb_vfreq, ui);
 
 	gtkext_cbtn_set_callback(ui->cbn_preferences, cb_preferences, ui);
 
@@ -1052,11 +1055,9 @@ cleanup(LV2UI_Handle handle)
 		cairo_surface_destroy(ui->dial[i]);
 	}
 
-	gtk_widget_destroy(ui->m0);
-	gtk_widget_destroy(ui->fader);
 	gtkext_cbtn_destroy(ui->cbn_autogain);
 	gtkext_cbtn_destroy(ui->cbn_src);
-	gtk_widget_destroy(ui->spn_src_fact);
+	gtkext_spin_destroy(ui->spn_src_fact);
 	gtkext_dial_destroy(ui->spn_compress);
 	gtkext_dial_destroy(ui->spn_gattack);
 	gtkext_dial_destroy(ui->spn_gdecay);
@@ -1064,9 +1065,12 @@ cleanup(LV2UI_Handle handle)
 	gtkext_dial_destroy(ui->spn_grms);
 	gtkext_cbtn_destroy(ui->cbn_lines);
 	gtkext_cbtn_destroy(ui->cbn_xfade);
-	gtk_widget_destroy(ui->spn_psize);
-	gtk_widget_destroy(ui->spn_vfreq);
+	gtkext_spin_destroy(ui->spn_psize);
+	gtkext_spin_destroy(ui->spn_vfreq);
 	gtkext_dial_destroy(ui->spn_alpha);
+
+	gtk_widget_destroy(ui->m0);
+	gtk_widget_destroy(ui->fader);
 	gtk_widget_destroy(ui->lbl_src_fact);
 	gtk_widget_destroy(ui->lbl_psize);
 	gtk_widget_destroy(ui->lbl_vfreq);
