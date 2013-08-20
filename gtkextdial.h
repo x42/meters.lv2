@@ -99,7 +99,7 @@ static gboolean gtkext_dial_expose_event(GtkWidget *w, GdkEventExpose *ev, gpoin
 	}
 	cairo_set_line_width(cr, 1.5);
 	cairo_move_to(cr, d->w_cx, d->w_cy);
-	float ang = (.75 * M_PI) + (1.5 * M_PI) * (d->cur - d->min) / d->max;
+	float ang = (.75 * M_PI) + (1.5 * M_PI) * (d->cur - d->min) / (d->max - d->min);
 	float wid = M_PI * 2 / 180.0;
 	cairo_arc (cr, d->w_cx, d->w_cy, d->w_radius, ang-wid, ang+wid);
 	cairo_stroke (cr);
