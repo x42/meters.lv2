@@ -27,6 +27,7 @@
 
 #include <gtk/gtk.h>
 #include "common_cairo.h"
+#include "gtkextrbtn.h"
 
 #include "lv2/lv2plug.in/ns/extensions/ui/ui.h"
 #include "./uris.h"

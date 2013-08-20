@@ -26,6 +26,7 @@
 
 #define GBT_LED_RADIUS (11.0)
 enum GedLedMode {
+	GBT_LED_RADIO  = -2,
 	GBT_LED_LEFT  = -1,
 	GBT_LED_OFF   = 0,
 	GBT_LED_RIGHT = 1
@@ -41,6 +42,7 @@ typedef struct {
 
 	enum GedLedMode show_led;
 	gboolean flat_button;
+	gboolean radiomode;
 
 	gboolean (*cb) (GtkWidget* w, gpointer handle);
 	gpointer handle;
@@ -75,13 +77,17 @@ static gboolean gtkext_cbtn_expose_event(GtkWidget *w, GdkEventExpose *ev, gpoin
 			led_g = c->green/65536.0;
 			led_b = c->blue/65536.0;
 		} else if (d->enabled) {
-			led_r = .8;
-			led_g = .3;
-			led_b = .1;
+			if (d->radiomode) {
+				led_r = .3; led_g = .8; led_b = .1;
+			} else {
+				led_r = .8; led_g = .3; led_b = .1;
+			}
 		} else {
-			led_r = .3;
-			led_g = .1;
-			led_b = .1;
+			if (d->radiomode) {
+				led_r = .1; led_g = .3; led_b = .1;
+			} else {
+				led_r = .3; led_g = .1; led_b = .1;
+			}
 		}
 
 
@@ -123,7 +129,7 @@ static gboolean gtkext_cbtn_expose_event(GtkWidget *w, GdkEventExpose *ev, gpoin
 	if (d->show_led) {
 		cairo_set_operator (cr, CAIRO_OPERATOR_OVER);
 		cairo_save(cr);
-		if (d->show_led == GBT_LED_LEFT) {
+		if (d->show_led == GBT_LED_LEFT || d->show_led == GBT_LED_RADIO) {
 			cairo_translate(cr, GBT_LED_RADIUS/2 + 7, d->w_height/2.0 + 1);
 		} else {
 			cairo_translate(cr, d->w_width - GBT_LED_RADIUS/2 - 7, d->w_height/2.0 + 1);
@@ -172,6 +178,8 @@ static void gtkext_cbtn_update_enabled(GtkExtCBtn * d, gboolean enabled) {
 static gboolean gtkext_cbtn_mouseup(GtkWidget *w, GdkEventButton *event, gpointer handle) {
 	GtkExtCBtn * d = (GtkExtCBtn *)handle;
 	if (!d->sensitive) { return FALSE; }
+	if (!d->prelight) { return FALSE; }
+	if (d->radiomode && d->enabled) { return FALSE; }
 	gtkext_cbtn_update_enabled(d, ! d->enabled);
 	return TRUE;
 }
@@ -228,7 +236,10 @@ static void create_text_surface(GtkExtCBtn * d, const char * txt, PangoFontDescr
 	c_col[3] = 1.0;
 
 	write_text_full(cr, txt, font,
-			(d->w_width - (d->show_led ? GBT_LED_RADIUS + 6 : 0)) / 2.0 + 1 + (d->show_led < 0 ? GBT_LED_RADIUS + 6 : 0),
+			(d->w_width - (d->show_led ? GBT_LED_RADIUS + 6 : 0)) / 2.0
+			 + 1
+			//- (d->show_led == GBT_LED_RADIO ? 5 : 0)
+			 + (d->show_led < 0 ? GBT_LED_RADIUS + 6 : 0),
 			d->w_height / 2.0 + 1, 0, 2, c_col);
 	cairo_destroy (cr);
 }
@@ -247,8 +258,13 @@ static GtkExtCBtn * gtkext_cbtn_new(const char * txt, enum GedLedMode led, gbool
 	d->handle = NULL;
 	d->sf_txt = NULL;
 	d->sensitive = TRUE;
+	d->radiomode = FALSE;
 	d->prelight = FALSE;
 	d->enabled = FALSE;
+
+	if (led == GBT_LED_RADIO) {
+		d->radiomode = TRUE;
+	}
 
 	int ww, wh;
 	//PangoFontDescription *fd = pango_font_description_from_string("Sans 9");
