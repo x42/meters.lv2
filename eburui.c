@@ -27,9 +27,13 @@
 
 #include <gtk/gtk.h>
 #include "common_cairo.h"
+
 #include "gtkextrbtn.h"
+#include "gtkextspin.h"
+
 #define GBT_W(PTR) gtkext_cbtn_widget(PTR)
 #define GRB_W(PTR) gtkext_rbtn_widget(PTR)
+#define GSP_W(PTR) gtkext_spin_widget(PTR)
 
 #include "lv2/lv2plug.in/ns/extensions/ui/ui.h"
 #include "./uris.h"
@@ -75,7 +79,7 @@ typedef struct {
 	GtkExtRBtn* cbx_radar;
 	GtkExtRBtn* cbx_histogram;
 
-	GtkWidget* spn_radartime;
+	GtkExtSpin* spn_radartime;
 	GtkWidget* lbl_ringinfo;
 	GtkWidget* lbl_radarinfo;
 	GtkWidget* sep_v0;
@@ -944,9 +948,9 @@ static gboolean cbx_lufs(GtkWidget *w, gpointer handle) {
 	return TRUE;
 }
 
-static gboolean spn_radartime(GtkSpinButton *w, gpointer handle) {
+static gboolean spn_radartime(GtkWidget *w, gpointer handle) {
 	EBUrUI* ui = (EBUrUI*)handle;
-	 float v = gtk_spin_button_get_value(w);
+	 float v = gtkext_spin_get_value(ui->spn_radartime);
 	forge_message_kv(ui, ui->uris.mtr_meters_cfg, CTL_RADARTIME, v);
 	return TRUE;
 }
@@ -1017,7 +1021,7 @@ instantiate(const LV2UI_Descriptor*   descriptor,
 
 	ui->cbx_transport  = gtkext_cbtn_new("Host Transport", GBT_LED_LEFT, true);
 	ui->cbx_autoreset  = gtkext_cbtn_new("Reset on Start", GBT_LED_LEFT, true);
-	ui->spn_radartime  = gtk_spin_button_new_with_range(30, 600, 15);
+	ui->spn_radartime  = gtkext_spin_new(30, 600, 15);
 	ui->lbl_radarinfo  = gtk_label_new("History Length [s]:");
 	ui->lbl_ringinfo   = gtk_label_new("Level Diplay");
 	ui->cbx_truepeak   = gtkext_cbtn_new("Compute True-Peak", GBT_LED_LEFT, true);
@@ -1051,7 +1055,7 @@ instantiate(const LV2UI_Descriptor*   descriptor,
 	gtk_table_attach_defaults(GTK_TABLE(ui->cbx_box), GRB_W(ui->cbx_histogram) , 3, 4, 0, 1);
 
 	gtk_table_attach(GTK_TABLE(ui->cbx_box), ui->lbl_radarinfo, 3, 4, 1, 2, GTK_FILL, GTK_SHRINK, 3, 0);
-	gtk_table_attach(GTK_TABLE(ui->cbx_box), ui->spn_radartime, 4, 5, 1, 2, GTK_EXPAND | GTK_FILL, GTK_EXPAND, 3, 0);
+	gtk_table_attach(GTK_TABLE(ui->cbx_box), GSP_W(ui->spn_radartime), 4, 5, 1, 2, GTK_EXPAND | GTK_FILL, GTK_EXPAND, 3, 0);
 
 	gtk_table_attach_defaults(GTK_TABLE(ui->cbx_box), GBT_W(ui->cbx_autoreset), 3, 4, 2, 3);
 	gtk_table_attach_defaults(GTK_TABLE(ui->cbx_box), GBT_W(ui->cbx_transport), 3, 4, 3, 4);
@@ -1069,7 +1073,7 @@ instantiate(const LV2UI_Descriptor*   descriptor,
 	g_signal_connect (G_OBJECT (ui->m0), "expose_event", G_CALLBACK (expose_event), ui);
 	g_signal_connect (G_OBJECT (ui->btn_start), "toggled", G_CALLBACK (btn_start), ui);
 	g_signal_connect (G_OBJECT (ui->btn_reset), "clicked", G_CALLBACK (btn_reset), ui);
-	g_signal_connect (G_OBJECT (ui->spn_radartime), "value-changed", G_CALLBACK (spn_radartime), ui);
+	gtkext_spin_set_callback(ui->spn_radartime, spn_radartime, ui);
 
 	gtkext_rbtn_set_callback(ui->cbx_lufs, cbx_lufs, ui);
 	gtkext_rbtn_set_callback(ui->cbx_sc18, cbx_lufs, ui);
@@ -1132,7 +1136,7 @@ cleanup(LV2UI_Handle handle)
 	gtkext_cbtn_destroy(ui->cbx_transport);
 	gtkext_cbtn_destroy(ui->cbx_autoreset);
 	gtkext_cbtn_destroy(ui->cbx_truepeak);
-	gtk_widget_destroy(ui->spn_radartime);
+	gtkext_spin_destroy(ui->spn_radartime);
 	gtk_widget_destroy(ui->lbl_ringinfo);
 	gtk_widget_destroy(ui->lbl_radarinfo);
 	gtk_widget_destroy(ui->sep_v0);
@@ -1307,7 +1311,7 @@ port_event(LV2UI_Handle handle,
 					ui->disable_signals = false;
 				} else if (k == CTL_LV2_RADARTIME) {
 					ui->disable_signals = true;
-					gtk_spin_button_set_value(GTK_SPIN_BUTTON(ui->spn_radartime), v);
+					gtkext_spin_set_value(ui->spn_radartime, v);
 					ui->disable_signals = false;
 				} else if (k == CTL_LV2_RESETRADAR) {
 					for (int i=0; i < ui->radar_pos_max; ++i) {
