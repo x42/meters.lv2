@@ -26,8 +26,7 @@
 #include <math.h>
 
 #include <gtk/gtk.h>
-#include <cairo/cairo.h>
-#include <pango/pango.h>
+#include "common_cairo.h"
 
 #include "lv2/lv2plug.in/ns/extensions/ui/ui.h"
 #include "./uris.h"
@@ -178,77 +177,17 @@ static void radar_color(cairo_t* cr, const float v, float alpha) {
 #define LUFS(V) ((V) < -100 ? -INFINITY : (lufs ? (V) : (V) + 23.0))
 #define FONT(A) ui->font[(A)]
 
-/* colors */
-static const float c_blk[4] = {0.0, 0.0, 0.0, 1.0};
-static const float c_wht[4] = {1.0, 1.0, 1.0, 1.0};
-static const float c_gry[4] = {0.5, 0.5, 0.5, 1.0};
 
-void write_text(
+static void write_text(
 		PangoContext * pc, cairo_t* cr,
 		const char *txt,
 		PangoFontDescription *font, //const char *font,
 		const float x, const float y,
 		const float ang, const int align,
 		const float * const col) {
-	int tw, th;
-	cairo_save(cr);
-
-	PangoLayout * pl = pango_layout_new (pc);
-	pango_layout_set_font_description(pl, font);
-	cairo_set_source_rgba (cr, col[0], col[1], col[2], col[3]);
-	pango_layout_set_text(pl, txt, -1);
-	pango_layout_get_pixel_size(pl, &tw, &th);
-	cairo_translate (cr, x, y);
-	if (ang != 0) { cairo_rotate (cr, ang); }
-	switch(align) {
-		case 1:
-			cairo_translate (cr, -tw, -th/2.0);
-			break;
-		case 2:
-			cairo_translate (cr, -tw/2.0 - 0.5, -th/2.0);
-			break;
-		case 3:
-			cairo_translate (cr, -0.5, -th/2.0);
-			break;
-		case 4:
-			cairo_translate (cr, -tw, -th);
-			break;
-		case 5:
-			cairo_translate (cr, -tw/2.0 - 0.5, -th);
-			break;
-		case 6:
-			cairo_translate (cr, -0.5, -th);
-			break;
-		case 7:
-			cairo_translate (cr, -tw, 0);
-			break;
-		case 8:
-			cairo_translate (cr, -tw/2.0 - 0.5, 0);
-			break;
-		case 9:
-			cairo_translate (cr, -0.5, 0);
-			break;
-		default:
-			break;
-	}
-	pango_cairo_layout_path(cr, pl);
-	pango_cairo_show_layout(cr, pl);
-	g_object_unref(pl);
-	cairo_restore(cr);
-	cairo_new_path (cr);
+	write_text_full(cr, txt, font, x, y, ang, align, col);
 }
 
-void rounded_rectangle (cairo_t* cr, double x, double y, double w, double h, double r)
-{
-  double degrees = M_PI / 180.0;
-
-  cairo_new_sub_path (cr);
-  cairo_arc (cr, x + w - r, y + r, r, -90 * degrees, 0 * degrees);
-  cairo_arc (cr, x + w - r, y + h - r, r, 0 * degrees, 90 * degrees);
-  cairo_arc (cr, x + r, y + h - r, r, 90 * degrees, 180 * degrees);
-  cairo_arc (cr, x + r, y + r, r, 180 * degrees, 270 * degrees);
-  cairo_close_path (cr);
-}
 
 static cairo_pattern_t * radar_pattern(cairo_t* cr, float cx, float cy, float rad) {
 	cairo_pattern_t * pat = cairo_pattern_create_radial(cx, cy, 0, cx, cy, rad);
@@ -808,7 +747,7 @@ static gboolean expose_event(GtkWidget *w, GdkEventExpose *ev, gpointer handle) 
 	return TRUE;
 }
 
-void invalidate_changed(EBUrUI* ui, int what) {
+static void invalidate_changed(EBUrUI* ui, int what) {
 	GdkRectangle rect;
 	GdkRegion *tmp = 0;
 
@@ -890,7 +829,7 @@ void invalidate_changed(EBUrUI* ui, int what) {
 	gdk_window_invalidate_region (ui->m0->window, region, true);
 }
 
-void invalidate_histogram_line(EBUrUI* ui, int p) {
+static void invalidate_histogram_line(EBUrUI* ui, int p) {
 	const bool plus9 = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(ui->cbx_sc9));
 	GdkRectangle rect;
 	GdkRegion *tmp = 0;

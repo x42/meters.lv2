@@ -26,15 +26,14 @@
 #include <assert.h>
 
 #include <gtk/gtk.h>
-#include <cairo/cairo.h>
-#include <pango/pango.h>
-
+#include "common_cairo.h"
 
 typedef void Stcorrdsp;
 
 #include "lv2/lv2plug.in/ns/extensions/ui/ui.h"
 #include "zita-resampler/resampler.h"
 #include "goniometer.h"
+
 #include "gtkextdial.h"
 
 #define GED_W(PTR) gtkext_dial_widget(PTR)
@@ -167,48 +166,10 @@ static void write_text(
 		const char *txt, const char * font,
 		const int align,
 		const float x, const float y) {
-	int tw, th;
-	cairo_save(cr);
 
-	PangoLayout * pl = pango_cairo_create_layout(cr);
 	PangoFontDescription *fd = pango_font_description_from_string(font);
-	pango_layout_set_font_description(pl, fd);
+	write_text_full(cr, txt, fd, x, y, 0, align, align < 0 ? c_lgg : c_grb);
 	pango_font_description_free(fd);
-	if (align < 0) {
-		cairo_set_source_rgba (cr, .9, .95, .9, 1.0);
-	} else {
-		cairo_set_source_rgba (cr, .5, .5, .6, 1.0);
-	}
-	pango_layout_set_text(pl, txt, -1);
-	pango_layout_get_pixel_size(pl, &tw, &th);
-	cairo_translate (cr, x, y);
-	switch(abs(align)) {
-		default:
-			cairo_translate (cr, -tw/2.0 - 0.5, -th/2.0);
-			break;
-		case 3:
-			cairo_translate (cr, -.5 , -th);
-			break;
-		case 4:
-			cairo_translate (cr, -tw - 0.5, -th);
-	}
-	pango_cairo_layout_path(cr, pl);
-	pango_cairo_show_layout(cr, pl);
-	g_object_unref(pl);
-	cairo_restore(cr);
-	cairo_new_path (cr);
-}
-
-void rounded_rectangle (cairo_t* cr, double x, double y, double w, double h, double r)
-{
-  double degrees = M_PI / 180.0;
-
-  cairo_new_sub_path (cr);
-  cairo_arc (cr, x + w - r, y + r, r, -90 * degrees, 0 * degrees);
-  cairo_arc (cr, x + w - r, y + h - r, r, 0 * degrees, 90 * degrees);
-  cairo_arc (cr, x + r, y + h - r, r, 90 * degrees, 180 * degrees);
-  cairo_arc (cr, x + r, y + r, r, 180 * degrees, 270 * degrees);
-  cairo_close_path (cr);
 }
 
 static void alloc_annotations(GMUI* ui) {
@@ -226,31 +187,31 @@ static void alloc_annotations(GMUI* ui) {
 	cairo_t* cr;
 
 	INIT_BLACK_BG(0, 32, 32)
-	write_text(cr, "L", FONT_GM, 0, 16, 16);
+	write_text(cr, "L", FONT_GM, 2, 16, 16);
 	cairo_destroy (cr);
 
 	INIT_BLACK_BG(1, 32, 32)
-	write_text(cr, "R", FONT_GM, 0, 16, 16);
+	write_text(cr, "R", FONT_GM, 2, 16, 16);
 	cairo_destroy (cr);
 
 	INIT_BLACK_BG(2, 64, 32)
-	write_text(cr, "Mono", FONT_GM, 0, 32, 16);
+	write_text(cr, "Mono", FONT_GM, 2, 32, 16);
 	cairo_destroy (cr);
 
 	INIT_BLACK_BG(3, 32, 32)
-	write_text(cr, "+S", FONT_GM, 0, 16, 16);
+	write_text(cr, "+S", FONT_GM, 2, 16, 16);
 	cairo_destroy (cr);
 
 	INIT_BLACK_BG(4, 32, 32)
-	write_text(cr, "-S", FONT_GM, 0, 16, 16);
+	write_text(cr, "-S", FONT_GM, 2, 16, 16);
 	cairo_destroy (cr);
 
 	INIT_BLACK_BG(5, 32, 32)
-	write_text(cr, "+1", FONT_PC, 0, 10, 10);
+	write_text(cr, "+1", FONT_PC, 2, 10, 10);
 	cairo_destroy (cr);
 
 	INIT_BLACK_BG(6, 32, 32)
-	write_text(cr, "-1", FONT_PC, 0, 10, 10);
+	write_text(cr, "-1", FONT_PC, 2, 10, 10);
 	cairo_destroy (cr);
 
 #define INIT_DIAL_SF(VAR, TXTL, TXTR) \
@@ -261,7 +222,7 @@ static void alloc_annotations(GMUI* ui) {
 	cairo_rectangle (cr, 0, 0, GED_WIDTH, GED_HEIGHT); \
 	cairo_fill (cr); \
 	cairo_set_operator (cr, CAIRO_OPERATOR_OVER); \
-	write_text(cr, TXTL, FONT_LB, -3, 1, GED_HEIGHT - 1); \
+	write_text(cr, TXTL, FONT_LB, -6, 2, GED_HEIGHT - 1); \
 	write_text(cr, TXTR, FONT_LB, -4, GED_WIDTH-1, GED_HEIGHT - 1); \
 	cairo_destroy (cr);
 
@@ -1004,6 +965,7 @@ instantiate(const LV2UI_Descriptor*   descriptor,
 	g_signal_connect (G_OBJECT (ui->spn_vfreq), "value-changed", G_CALLBACK (cb_vfreq), ui);
 
 	gtk_widget_show_all(ui->box);
+
 	*widget = ui->box;
 
 	gmrb_read_clear(self->rb);
@@ -1055,6 +1017,8 @@ cleanup(LV2UI_Handle handle)
 	gtk_widget_destroy(ui->lbl_grms);
 	gtk_widget_destroy(ui->sep_h0);
 	gtk_widget_destroy(ui->sep_v0);
+
+	gtk_widget_destroy(ui->c_tbl);
 
 	delete ui->src;
 	free(ui->scratch);
