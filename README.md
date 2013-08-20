@@ -13,11 +13,11 @@ It includes needle style meters (mono and stereo variants)
 
 and the following stereo plugins
 
-*   Stereo Phase Correlation Meter (needle display)
-*   EBU R128 meter with histogram & history
-*   True-Peak (4x oversampling)
+*   Stereo Phase Correlation Meter (Needle Display)
+*   EBU R128 Meter with Histogram and History
+*   True-Peak (4x Oversampling)
 *   Goniometer
-*   30-band spectrum analyzer
+*   31 Band Spectrum-Analyzer
 
 
 Install
