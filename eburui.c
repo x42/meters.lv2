@@ -28,6 +28,7 @@
 #include <gtk/gtk.h>
 #include "common_cairo.h"
 #include "gtkextrbtn.h"
+#define GBT_W(PTR) gtkext_cbtn_widget(PTR)
 #define GRB_W(PTR) gtkext_rbtn_widget(PTR)
 
 #include "lv2/lv2plug.in/ns/extensions/ui/ui.h"
@@ -60,19 +61,19 @@ typedef struct {
 	GtkWidget* cbx_box;
 	GtkExtRBtn* cbx_lufs;
 	GtkExtRBtn* cbx_lu;
-	GtkWidget* cbx_sc9;
-	GtkWidget* cbx_sc18;
-	GtkWidget* cbx_sc24;
-	GtkWidget* cbx_ring_short;
-	GtkWidget* cbx_ring_mom;
-	GtkWidget* cbx_hist_short;
-	GtkWidget* cbx_hist_mom;
-	GtkWidget* cbx_transport;
-	GtkWidget* cbx_autoreset;
-	GtkWidget* cbx_truepeak;
+	GtkExtRBtn* cbx_sc9;
+	GtkExtRBtn* cbx_sc18;
+	GtkExtRBtn* cbx_sc24;
+	GtkExtRBtn* cbx_ring_short;
+	GtkExtRBtn* cbx_ring_mom;
+	GtkExtRBtn* cbx_hist_short;
+	GtkExtRBtn* cbx_hist_mom;
+	GtkExtCBtn* cbx_transport;
+	GtkExtCBtn* cbx_autoreset;
+	GtkExtCBtn* cbx_truepeak;
 
-	GtkWidget* cbx_radar;
-	GtkWidget* cbx_histogram;
+	GtkExtRBtn* cbx_radar;
+	GtkExtRBtn* cbx_histogram;
 
 	GtkWidget* spn_radartime;
 	GtkWidget* lbl_ringinfo;
@@ -291,8 +292,8 @@ static int check_overlap(EBUrUI* ui, const GdkRegion *r) {
 }
 
 static void ring_leds(EBUrUI* ui, int *l, int *m) {
-	const bool rings = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(ui->cbx_ring_short));
-	const bool plus9 = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(ui->cbx_sc9));
+	const bool rings = gtkext_rbtn_get_active(ui->cbx_ring_short);
+	const bool plus9 = gtkext_rbtn_get_active(ui->cbx_sc9);
 
 	const float clr = rings ? ui->ls : ui->lm;
 	const float cmr = rings ? ui->ms : ui->mm;
@@ -312,12 +313,12 @@ static void initialize_font_cache(EBUrUI* ui) {
 
 static gboolean expose_event(GtkWidget *w, GdkEventExpose *ev, gpointer handle) {
 	EBUrUI* ui = (EBUrUI*)handle;
-	const bool lufs = gtkext_rbtn_get_active(ui->cbx_lufs);
-	const bool rings = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(ui->cbx_ring_short));
-	const bool hists = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(ui->cbx_hist_short));
-	const bool plus9 = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(ui->cbx_sc9));
-	const bool plus24= gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(ui->cbx_sc24));
-	const bool dbtp  = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(ui->cbx_truepeak));
+	const bool lufs =  gtkext_rbtn_get_active(ui->cbx_lufs);
+	const bool rings = gtkext_rbtn_get_active(ui->cbx_ring_short);
+	const bool hists = gtkext_rbtn_get_active(ui->cbx_hist_short);
+	const bool plus9 = gtkext_rbtn_get_active(ui->cbx_sc9);
+	const bool plus24= gtkext_rbtn_get_active(ui->cbx_sc24);
+	const bool dbtp  = gtkext_cbtn_get_active(ui->cbx_truepeak);
 
 	cairo_t* cr = gdk_cairo_create(GDK_DRAWABLE(w->window));
 
@@ -399,7 +400,7 @@ static gboolean expose_event(GtkWidget *w, GdkEventExpose *ev, gpointer handle) 
 
 #if 1 /* Radar */
 
-	if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(ui->cbx_histogram)) && (redraw_part & 2) == 2) {
+	if (gtkext_rbtn_get_active(ui->cbx_histogram) && (redraw_part & 2) == 2) {
 		/* ----- Histogram ----- */
 		const int *rdr = hists ? ui->histS : ui->histM;
 		const int  len = hists ? ui->histLenS : ui->histLenM;
@@ -768,7 +769,7 @@ static void invalidate_changed(EBUrUI* ui, int what) {
 	gdk_region_union(region, tmp); \
 	gdk_region_destroy(tmp);
 
-	if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(ui->cbx_truepeak))) {
+	if (gtkext_cbtn_get_active(ui->cbx_truepeak)) {
 		INVALIDATE_RECT(25, 5, 75, 38)    // top left side
 		INVALIDATE_RECT(35, 30, 40, 30)   // top left side tab
 	}
@@ -784,7 +785,7 @@ static void invalidate_changed(EBUrUI* ui, int what) {
 	INVALIDATE_RECT(275, 287, 40, 30)  // bottom side tab
 
 	if ((what & 1) ||
-			(gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(ui->cbx_radar))
+			(gtkext_rbtn_get_active(ui->cbx_radar)
 			 && ui->radar_pos_cur != ui->radar_pos_disp)) {
 
 		GdkRegion* rr = gdk_region_copy(ui->polygon_radar);
@@ -831,7 +832,7 @@ static void invalidate_changed(EBUrUI* ui, int what) {
 }
 
 static void invalidate_histogram_line(EBUrUI* ui, int p) {
-	const bool plus9 = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(ui->cbx_sc9));
+	const bool plus9 = gtkext_rbtn_get_active(ui->cbx_sc9);
 	GdkRectangle rect;
 	GdkRegion *tmp = 0;
 
@@ -907,7 +908,7 @@ static gboolean btn_reset(GtkWidget *w, gpointer handle) {
 
 static gboolean cbx_transport(GtkWidget *w, gpointer handle) {
 	EBUrUI* ui = (EBUrUI*)handle;
-	if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(ui->cbx_transport))) {
+	if (gtkext_cbtn_get_active(ui->cbx_transport)) {
 		gtk_widget_set_sensitive(GTK_WIDGET(ui->btn_start), false);
 		forge_message_kv(ui, ui->uris.mtr_meters_cfg, CTL_TRANSPORTSYNC, 1);
 	} else {
@@ -919,7 +920,7 @@ static gboolean cbx_transport(GtkWidget *w, gpointer handle) {
 
 static gboolean cbx_autoreset(GtkWidget *w, gpointer handle) {
 	EBUrUI* ui = (EBUrUI*)handle;
-	if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(ui->cbx_autoreset))) {
+	if (gtkext_cbtn_get_active(ui->cbx_autoreset)) {
 		forge_message_kv(ui, ui->uris.mtr_meters_cfg, CTL_AUTORESET, 1);
 	} else {
 		forge_message_kv(ui, ui->uris.mtr_meters_cfg, CTL_AUTORESET, 0);
@@ -931,12 +932,12 @@ static gboolean cbx_lufs(GtkWidget *w, gpointer handle) {
 	EBUrUI* ui = (EBUrUI*)handle;
 	uint32_t v = 0;
 	v |= gtkext_rbtn_get_active(ui->cbx_lufs) ? 1 : 0;
-	v |= gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(ui->cbx_sc9)) ? 2 : 0;
-	v |= gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(ui->cbx_sc24)) ? 32 : 0;
-	v |= gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(ui->cbx_ring_short)) ? 4 : 0;
-	v |= gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(ui->cbx_hist_short)) ? 8 : 0;
-	v |= gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(ui->cbx_histogram)) ? 16 : 0;
-	v |= gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(ui->cbx_truepeak)) ? 64 : 0;
+	v |= gtkext_rbtn_get_active(ui->cbx_sc9) ? 2 : 0;
+	v |= gtkext_rbtn_get_active(ui->cbx_sc24) ? 32 : 0;
+	v |= gtkext_rbtn_get_active(ui->cbx_ring_short) ? 4 : 0;
+	v |= gtkext_rbtn_get_active(ui->cbx_hist_short) ? 8 : 0;
+	v |= gtkext_rbtn_get_active(ui->cbx_histogram) ? 16 : 0;
+	v |= gtkext_cbtn_get_active(ui->cbx_truepeak) ? 64 : 0;
 	forge_message_kv(ui, ui->uris.mtr_meters_cfg, CTL_UISETTINGS, (float)v);
 	invalidate_changed(ui, -1);
 	return TRUE;
@@ -1002,23 +1003,26 @@ instantiate(const LV2UI_Descriptor*   descriptor,
 	ui->cbx_lu         = gtkext_rbtn_new("LU", NULL);
 	ui->cbx_lufs       = gtkext_rbtn_new("LUFS", gtkext_rbtn_group(ui->cbx_lu));
 
-	ui->cbx_ring_mom   = gtk_radio_button_new_with_label(NULL, "Momentary");
-	ui->cbx_ring_short = gtk_radio_button_new_with_label_from_widget(GTK_RADIO_BUTTON(ui->cbx_ring_mom), "Short");
-	ui->cbx_hist_short = gtk_radio_button_new_with_label(NULL, "Short");
-	ui->cbx_hist_mom   = gtk_radio_button_new_with_label_from_widget(GTK_RADIO_BUTTON(ui->cbx_hist_short), "Momentary");
-	ui->cbx_sc18       = gtk_radio_button_new_with_label(NULL, "-36..+18LU");
-	ui->cbx_sc9        = gtk_radio_button_new_with_label_from_widget(GTK_RADIO_BUTTON (ui->cbx_sc18), "-18..+9LU");
-	ui->cbx_sc24       = gtk_radio_button_new_with_label_from_widget(GTK_RADIO_BUTTON (ui->cbx_sc18), "-36..+24LU");
-	ui->cbx_transport  = gtk_check_button_new_with_label("Host Transport");
-	ui->cbx_autoreset  = gtk_check_button_new_with_label("Reset on Start");
+	ui->cbx_ring_mom   = gtkext_rbtn_new("Momentary", NULL);
+	ui->cbx_ring_short = gtkext_rbtn_new("Short", gtkext_rbtn_group(ui->cbx_ring_mom));
+
+	ui->cbx_hist_short = gtkext_rbtn_new("Short", NULL);
+	ui->cbx_hist_mom   = gtkext_rbtn_new("Momentary", gtkext_rbtn_group(ui->cbx_hist_short));
+
+	ui->cbx_sc18       = gtkext_rbtn_new("-36..+18LU", NULL);
+	ui->cbx_sc9        = gtkext_rbtn_new("-18..+9LU", gtkext_rbtn_group(ui->cbx_sc18));
+	ui->cbx_sc24       = gtkext_rbtn_new("-36..+24LU", gtkext_rbtn_group(ui->cbx_sc18));
+
+	ui->cbx_transport  = gtkext_cbtn_new("Host Transport", GBT_LED_LEFT, true);
+	ui->cbx_autoreset  = gtkext_cbtn_new("Reset on Start", GBT_LED_LEFT, true);
 	ui->spn_radartime  = gtk_spin_button_new_with_range(30, 600, 15);
 	ui->lbl_radarinfo  = gtk_label_new("History Length [s]:");
 	ui->lbl_ringinfo   = gtk_label_new("Level Diplay");
-	ui->cbx_truepeak   = gtk_check_button_new_with_label("Compute True-Peak");
+	ui->cbx_truepeak   = gtkext_cbtn_new("Compute True-Peak", GBT_LED_LEFT, true);
 	ui->sep_v0         = gtk_vseparator_new();
 
-	ui->cbx_radar      = gtk_radio_button_new_with_label(NULL, "History");
-	ui->cbx_histogram  = gtk_radio_button_new_with_label_from_widget(GTK_RADIO_BUTTON(ui->cbx_radar), "Histogram");
+	ui->cbx_radar      = gtkext_rbtn_new("History", NULL);
+	ui->cbx_histogram  = gtkext_rbtn_new("Histogram", gtkext_rbtn_group(ui->cbx_radar));
 
 	gtk_misc_set_alignment(GTK_MISC(ui->lbl_radarinfo), 0.0f, 0.5f);
 
@@ -1028,30 +1032,30 @@ instantiate(const LV2UI_Descriptor*   descriptor,
 	gtk_table_attach(GTK_TABLE(ui->cbx_box), ui->lbl_ringinfo, 0, 2, 0, 1, GTK_SHRINK, GTK_SHRINK, 3, 0);
 	gtk_table_attach_defaults(GTK_TABLE(ui->cbx_box), GRB_W(ui->cbx_lu)   , 0, 1, 1, 2);
 	gtk_table_attach_defaults(GTK_TABLE(ui->cbx_box), GRB_W(ui->cbx_lufs) , 1, 2, 1, 2);
-	gtk_table_attach_defaults(GTK_TABLE(ui->cbx_box), ui->cbx_sc18        , 0, 1, 2, 3);
-	gtk_table_attach_defaults(GTK_TABLE(ui->cbx_box), ui->cbx_sc9         , 1, 2, 2, 3);
+	gtk_table_attach_defaults(GTK_TABLE(ui->cbx_box), GRB_W(ui->cbx_sc18) , 0, 1, 2, 3);
+	gtk_table_attach_defaults(GTK_TABLE(ui->cbx_box), GRB_W(ui->cbx_sc9)  , 1, 2, 2, 3);
 #ifdef EASTER_EGG
-	gtk_table_attach_defaults(GTK_TABLE(ui->cbx_box), ui->cbx_sc24     , 1, 2, 3, 4);
-	gtk_table_attach_defaults(GTK_TABLE(ui->cbx_box), ui->cbx_truepeak , 0, 1, 3, 4);
+	gtk_table_attach_defaults(GTK_TABLE(ui->cbx_box), GRB_W(ui->cbx_sc24)      , 1, 2, 3, 4);
+	gtk_table_attach_defaults(GTK_TABLE(ui->cbx_box), GBT_W(ui->cbx_truepeak)  , 0, 1, 3, 4);
 #else
-	gtk_table_attach_defaults(GTK_TABLE(ui->cbx_box), ui->cbx_truepeak , 0, 2, 3, 4);
+	gtk_table_attach_defaults(GTK_TABLE(ui->cbx_box), GBT_W(ui->cbx_truepeak)  , 0, 2, 3, 4);
 #endif
-	gtk_table_attach_defaults(GTK_TABLE(ui->cbx_box), ui->cbx_ring_mom  , 0, 1, 4, 5);
-	gtk_table_attach_defaults(GTK_TABLE(ui->cbx_box), ui->cbx_ring_short, 1, 2, 4, 5);
+	gtk_table_attach_defaults(GTK_TABLE(ui->cbx_box), GRB_W(ui->cbx_ring_mom)  , 0, 1, 4, 5);
+	gtk_table_attach_defaults(GTK_TABLE(ui->cbx_box), GRB_W(ui->cbx_ring_short), 1, 2, 4, 5);
 
 	gtk_table_attach_defaults(GTK_TABLE(ui->cbx_box), ui->sep_v0, 2, 3, 0, 5);
 
-	gtk_table_attach_defaults(GTK_TABLE(ui->cbx_box), ui->cbx_radar     , 4, 5, 0, 1);
-	gtk_table_attach_defaults(GTK_TABLE(ui->cbx_box), ui->cbx_histogram , 3, 4, 0, 1);
+	gtk_table_attach_defaults(GTK_TABLE(ui->cbx_box), GRB_W(ui->cbx_radar)     , 4, 5, 0, 1);
+	gtk_table_attach_defaults(GTK_TABLE(ui->cbx_box), GRB_W(ui->cbx_histogram) , 3, 4, 0, 1);
 
 	gtk_table_attach(GTK_TABLE(ui->cbx_box), ui->lbl_radarinfo, 3, 4, 1, 2, GTK_FILL, GTK_SHRINK, 3, 0);
 	gtk_table_attach(GTK_TABLE(ui->cbx_box), ui->spn_radartime, 4, 5, 1, 2, GTK_EXPAND | GTK_FILL, GTK_EXPAND, 3, 0);
 
-	gtk_table_attach_defaults(GTK_TABLE(ui->cbx_box), ui->cbx_autoreset, 3, 4, 2, 3);
-	gtk_table_attach_defaults(GTK_TABLE(ui->cbx_box), ui->cbx_transport, 3, 4, 3, 4);
+	gtk_table_attach_defaults(GTK_TABLE(ui->cbx_box), GBT_W(ui->cbx_autoreset), 3, 4, 2, 3);
+	gtk_table_attach_defaults(GTK_TABLE(ui->cbx_box), GBT_W(ui->cbx_transport), 3, 4, 3, 4);
 
-	gtk_table_attach_defaults(GTK_TABLE(ui->cbx_box), ui->cbx_hist_mom  , 3, 4, 4, 5);
-	gtk_table_attach_defaults(GTK_TABLE(ui->cbx_box), ui->cbx_hist_short, 4, 5, 4, 5);
+	gtk_table_attach_defaults(GTK_TABLE(ui->cbx_box), GRB_W(ui->cbx_hist_mom)  , 3, 4, 4, 5);
+	gtk_table_attach_defaults(GTK_TABLE(ui->cbx_box), GRB_W(ui->cbx_hist_short), 4, 5, 4, 5);
 
 	gtk_table_attach(GTK_TABLE(ui->cbx_box), ui->btn_box, 4, 5, 2, 4, GTK_EXPAND | GTK_FILL, GTK_EXPAND|GTK_FILL, 3, 1);
 
@@ -1062,15 +1066,19 @@ instantiate(const LV2UI_Descriptor*   descriptor,
 	g_signal_connect (G_OBJECT (ui->m0), "expose_event", G_CALLBACK (expose_event), ui);
 	g_signal_connect (G_OBJECT (ui->btn_start), "toggled", G_CALLBACK (btn_start), ui);
 	g_signal_connect (G_OBJECT (ui->btn_reset), "clicked", G_CALLBACK (btn_reset), ui);
-	gtkext_rbtn_set_callback(ui->cbx_lufs, cbx_lufs, ui);
-	g_signal_connect (G_OBJECT (ui->cbx_hist_short), "toggled", G_CALLBACK (cbx_lufs), ui);
-	g_signal_connect (G_OBJECT (ui->cbx_ring_short), "toggled", G_CALLBACK (cbx_lufs), ui);
-	g_signal_connect (G_OBJECT (ui->cbx_sc18),  "toggled", G_CALLBACK (cbx_lufs), ui);
-	g_signal_connect (G_OBJECT (ui->cbx_histogram), "toggled", G_CALLBACK (cbx_lufs), ui);
-	g_signal_connect (G_OBJECT (ui->cbx_transport), "toggled", G_CALLBACK (cbx_transport), ui);
-	g_signal_connect (G_OBJECT (ui->cbx_autoreset), "toggled", G_CALLBACK (cbx_autoreset), ui);
 	g_signal_connect (G_OBJECT (ui->spn_radartime), "value-changed", G_CALLBACK (spn_radartime), ui);
-	g_signal_connect (G_OBJECT (ui->cbx_truepeak), "toggled", G_CALLBACK (cbx_lufs), ui);
+
+	gtkext_rbtn_set_callback(ui->cbx_lufs, cbx_lufs, ui);
+	gtkext_rbtn_set_callback(ui->cbx_sc18, cbx_lufs, ui);
+
+	gtkext_rbtn_set_callback(ui->cbx_hist_short, cbx_lufs, ui);
+	gtkext_rbtn_set_callback(ui->cbx_ring_short, cbx_lufs, ui);
+	gtkext_rbtn_set_callback(ui->cbx_histogram, cbx_lufs, ui);
+	gtkext_cbtn_set_callback(ui->cbx_truepeak, cbx_lufs, ui);
+
+	gtkext_cbtn_set_callback(ui->cbx_transport, cbx_transport, ui);
+	gtkext_cbtn_set_callback(ui->cbx_autoreset, cbx_autoreset, ui);
+
 
 	gtk_widget_show_all(ui->box);
 	*widget = ui->box;
@@ -1111,20 +1119,20 @@ cleanup(LV2UI_Handle handle)
 
 	gtkext_rbtn_destroy(ui->cbx_lufs);
 	gtkext_rbtn_destroy(ui->cbx_lu);
-	gtk_widget_destroy(ui->cbx_sc9);
-	gtk_widget_destroy(ui->cbx_sc18);
-	gtk_widget_destroy(ui->cbx_sc24);
-	gtk_widget_destroy(ui->cbx_ring_short);
-	gtk_widget_destroy(ui->cbx_ring_mom);
-	gtk_widget_destroy(ui->cbx_hist_short);
-	gtk_widget_destroy(ui->cbx_hist_mom);
-	gtk_widget_destroy(ui->cbx_transport);
-	gtk_widget_destroy(ui->cbx_autoreset);
+	gtkext_rbtn_destroy(ui->cbx_sc9);
+	gtkext_rbtn_destroy(ui->cbx_sc18);
+	gtkext_rbtn_destroy(ui->cbx_sc24);
+	gtkext_rbtn_destroy(ui->cbx_ring_short);
+	gtkext_rbtn_destroy(ui->cbx_ring_mom);
+	gtkext_rbtn_destroy(ui->cbx_hist_short);
+	gtkext_rbtn_destroy(ui->cbx_hist_mom);
+	gtkext_cbtn_destroy(ui->cbx_transport);
+	gtkext_cbtn_destroy(ui->cbx_autoreset);
+	gtkext_cbtn_destroy(ui->cbx_truepeak);
 	gtk_widget_destroy(ui->spn_radartime);
 	gtk_widget_destroy(ui->lbl_ringinfo);
 	gtk_widget_destroy(ui->lbl_radarinfo);
 	gtk_widget_destroy(ui->sep_v0);
-	gtk_widget_destroy(ui->cbx_truepeak);
 	gtk_widget_destroy(ui->m0);
 
 	/* IA__gtk_widget_destroy: assertion `GTK_IS_WIDGET (widget)' fail: */
@@ -1290,8 +1298,8 @@ port_event(LV2UI_Handle handle,
 				if (k == CTL_LV2_FTM) {
 					int vv = v;
 					ui->disable_signals = true;
-					gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(ui->cbx_autoreset), (vv&2)==2);
-					gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(ui->cbx_transport), (vv&1)==1);
+					gtkext_cbtn_set_active(ui->cbx_autoreset, (vv&2)==2);
+					gtkext_cbtn_set_active(ui->cbx_transport, (vv&1)==1);
 					ui->disable_signals = false;
 				} else if (k == CTL_LV2_RADARTIME) {
 					ui->disable_signals = true;
@@ -1320,39 +1328,39 @@ port_event(LV2UI_Handle handle,
 						gtkext_rbtn_set_active(ui->cbx_lu, true);
 					}
 					if ((vv & 2)) {
-						gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(ui->cbx_sc9), true);
+						gtkext_rbtn_set_active(ui->cbx_sc9, true);
 					} else {
 #ifdef EASTER_EGG
 						if ((vv & 32)) {
-							gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(ui->cbx_sc24), true);
+							gtkext_rbtn_set_active(ui->cbx_sc24, true);
 						} else {
-							gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(ui->cbx_sc18), true);
+							gtkext_rbtn_set_active(ui->cbx_sc18, true);
 						}
 #else
-						gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(ui->cbx_sc18), true);
+						gtkext_rbtn_set_active(ui->cbx_sc18, true);
 #endif
 					}
 					if ((vv & 4)) {
-						gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(ui->cbx_ring_short), true);
+						gtkext_rbtn_set_active(ui->cbx_ring_short, true);
 					} else {
-						gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(ui->cbx_ring_mom), true);
+						gtkext_rbtn_set_active(ui->cbx_ring_mom, true);
 					}
 					if ((vv & 8)) {
-						gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(ui->cbx_hist_short), true);
+						gtkext_rbtn_set_active(ui->cbx_hist_short, true);
 					} else {
-						gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(ui->cbx_hist_mom), true);
+						gtkext_rbtn_set_active(ui->cbx_hist_mom, true);
 					}
 					if ((vv & 16)) {
-						gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(ui->cbx_histogram), true);
+						gtkext_rbtn_set_active(ui->cbx_histogram, true);
 					} else {
-						gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(ui->cbx_radar), true);
+						gtkext_rbtn_set_active(ui->cbx_radar, true);
 					}
-					gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(ui->cbx_truepeak), (vv & 64) ? true: false);
+					gtkext_cbtn_set_active(ui->cbx_truepeak, (vv & 64) ? true: false);
 					ui->disable_signals = false;
 				}
 			} else if (obj->body.otype == uris->rdr_radarpoint) {
 				parse_radarinfo(ui, obj);
-				if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(ui->cbx_radar))) {
+				if (gtkext_rbtn_get_active(ui->cbx_radar)) {
 					invalidate_changed(ui, 0);
 				}
 			} else if (obj->body.otype == uris->rdr_histpoint) {
@@ -1367,7 +1375,7 @@ port_event(LV2UI_Handle handle,
 				);
 				PARSE_A_INT(lm, ui->histLenM);
 				PARSE_A_INT(ls, ui->histLenS);
-				if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(ui->cbx_histogram))) {
+				if (gtkext_rbtn_get_active(ui->cbx_histogram)) {
 					invalidate_changed(ui, 3);
 				}
 			} else {
