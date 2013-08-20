@@ -30,10 +30,12 @@
 
 #include "gtkextrbtn.h"
 #include "gtkextspin.h"
+#include "gtkextpbtn.h"
 
 #define GBT_W(PTR) gtkext_cbtn_widget(PTR)
 #define GRB_W(PTR) gtkext_rbtn_widget(PTR)
 #define GSP_W(PTR) gtkext_spin_widget(PTR)
+#define GPB_W(PTR) gtkext_pbtn_widget(PTR)
 
 #include "lv2/lv2plug.in/ns/extensions/ui/ui.h"
 #include "./uris.h"
@@ -58,9 +60,8 @@ typedef struct {
 
 	GtkWidget* box;
 
-	GtkWidget* btn_box;
-	GtkToolItem* btn_start;
-	GtkToolItem* btn_reset;
+	GtkExtCBtn* btn_start;
+	GtkExtPBtn* btn_reset;
 
 	GtkWidget* cbx_box;
 	GtkExtRBtn* cbx_lufs;
@@ -685,7 +686,7 @@ static gboolean expose_event(GtkWidget *w, GdkEventExpose *ev, gpointer handle) 
 	int bottom_max_offset = 50;
 
 	/* integrated level text display */
-	if (ui->il > -60 || gtk_toggle_tool_button_get_active(GTK_TOGGLE_TOOL_BUTTON(ui->btn_start))) {
+	if (ui->il > -60 || gtkext_cbtn_get_active(ui->btn_start)) {
 		bottom_max_offset = 3;
 
 		cairo_set_source_rgba (cr, .1, .1, .1, 1.0);
@@ -894,11 +895,13 @@ static void forge_message_kv(EBUrUI* ui, LV2_URID uri, int key, float value) {
 
 static gboolean btn_start(GtkWidget *w, gpointer handle) {
 	EBUrUI* ui = (EBUrUI*)handle;
-	if (gtk_toggle_tool_button_get_active(GTK_TOGGLE_TOOL_BUTTON(ui->btn_start))) {
-		gtk_tool_button_set_stock_id(GTK_TOOL_BUTTON(ui->btn_start), GTK_STOCK_MEDIA_PAUSE);
+	if (gtkext_cbtn_get_active(ui->btn_start)) {
+		// TODO
+		//gtk_tool_button_set_stock_id(GTK_TOOL_BUTTON(ui->btn_start), GTK_STOCK_MEDIA_PAUSE);
 		forge_message_kv(ui, ui->uris.mtr_meters_cfg, CTL_START, 0);
 	} else {
-		gtk_tool_button_set_stock_id(GTK_TOOL_BUTTON(ui->btn_start), GTK_STOCK_MEDIA_PLAY);
+		// TODO
+		//gtk_tool_button_set_stock_id(GTK_TOOL_BUTTON(ui->btn_start), GTK_STOCK_MEDIA_PLAY);
 		forge_message_kv(ui, ui->uris.mtr_meters_cfg, CTL_PAUSE, 0);
 	}
 	invalidate_changed(ui, -1);
@@ -914,10 +917,10 @@ static gboolean btn_reset(GtkWidget *w, gpointer handle) {
 static gboolean cbx_transport(GtkWidget *w, gpointer handle) {
 	EBUrUI* ui = (EBUrUI*)handle;
 	if (gtkext_cbtn_get_active(ui->cbx_transport)) {
-		gtk_widget_set_sensitive(GTK_WIDGET(ui->btn_start), false);
+		gtkext_cbtn_set_sensitive(ui->btn_start, false);
 		forge_message_kv(ui, ui->uris.mtr_meters_cfg, CTL_TRANSPORTSYNC, 1);
 	} else {
-		gtk_widget_set_sensitive(GTK_WIDGET(ui->btn_start), true);
+		gtkext_cbtn_set_sensitive(ui->btn_start, true);
 		forge_message_kv(ui, ui->uris.mtr_meters_cfg, CTL_TRANSPORTSYNC, 0);
 	}
 	return TRUE;
@@ -999,11 +1002,8 @@ instantiate(const LV2UI_Descriptor*   descriptor,
 	gtk_widget_set_size_request(ui->m0, 330, 400);
 	gtk_widget_set_redraw_on_allocate(ui->m0, TRUE);
 
-	ui->btn_box = gtk_toolbar_new();
-	ui->btn_start = gtk_toggle_tool_button_new_from_stock(GTK_STOCK_MEDIA_PLAY);
-	ui->btn_reset = gtk_tool_button_new_from_stock(GTK_STOCK_REFRESH);
-	gtk_toolbar_set_icon_size (GTK_TOOLBAR(ui->btn_box), GTK_ICON_SIZE_MENU);
-	gtk_toolbar_set_style (GTK_TOOLBAR(ui->btn_box), GTK_TOOLBAR_ICONS);
+	ui->btn_start = gtkext_cbtn_new("Integrate", GBT_LED_OFF, false);
+	ui->btn_reset = gtkext_pbtn_new("Reset");
 
 	ui->cbx_box = gtk_table_new(/*rows*/5, /*cols*/ 5, FALSE);
 	ui->cbx_lu         = gtkext_rbtn_new("LU", NULL);
@@ -1032,9 +1032,6 @@ instantiate(const LV2UI_Descriptor*   descriptor,
 
 	gtk_misc_set_alignment(GTK_MISC(ui->lbl_radarinfo), 0.0f, 0.5f);
 
-	gtk_toolbar_insert(GTK_TOOLBAR(ui->btn_box), GTK_TOOL_ITEM(ui->btn_start), 0);
-	gtk_toolbar_insert(GTK_TOOLBAR(ui->btn_box), GTK_TOOL_ITEM(ui->btn_reset), 1);
-
 	gtk_table_attach(GTK_TABLE(ui->cbx_box), ui->lbl_ringinfo, 0, 2, 0, 1, GTK_SHRINK, GTK_SHRINK, 3, 0);
 	gtk_table_attach_defaults(GTK_TABLE(ui->cbx_box), GRB_W(ui->cbx_lu)   , 0, 1, 1, 2);
 	gtk_table_attach_defaults(GTK_TABLE(ui->cbx_box), GRB_W(ui->cbx_lufs) , 1, 2, 1, 2);
@@ -1058,12 +1055,14 @@ instantiate(const LV2UI_Descriptor*   descriptor,
 	gtk_table_attach(GTK_TABLE(ui->cbx_box), GSP_W(ui->spn_radartime), 4, 5, 1, 2, GTK_EXPAND | GTK_FILL, GTK_EXPAND, 3, 0);
 
 	gtk_table_attach_defaults(GTK_TABLE(ui->cbx_box), GBT_W(ui->cbx_autoreset), 3, 4, 2, 3);
+	gtk_table_attach(GTK_TABLE(ui->cbx_box), GPB_W(ui->btn_reset), 4, 5, 2, 3, GTK_EXPAND | GTK_FILL, GTK_EXPAND|GTK_FILL, 3, 1);
+
 	gtk_table_attach_defaults(GTK_TABLE(ui->cbx_box), GBT_W(ui->cbx_transport), 3, 4, 3, 4);
+	gtk_table_attach(GTK_TABLE(ui->cbx_box), GBT_W(ui->btn_start), 4, 5, 3, 4, GTK_EXPAND | GTK_FILL, GTK_EXPAND|GTK_FILL, 3, 1);
 
 	gtk_table_attach_defaults(GTK_TABLE(ui->cbx_box), GRB_W(ui->cbx_hist_mom)  , 3, 4, 4, 5);
 	gtk_table_attach_defaults(GTK_TABLE(ui->cbx_box), GRB_W(ui->cbx_hist_short), 4, 5, 4, 5);
 
-	gtk_table_attach(GTK_TABLE(ui->cbx_box), ui->btn_box, 4, 5, 2, 4, GTK_EXPAND | GTK_FILL, GTK_EXPAND|GTK_FILL, 3, 1);
 
 	/* global packing */
 	gtk_container_add(GTK_CONTAINER(ui->align), ui->m0);
@@ -1071,8 +1070,10 @@ instantiate(const LV2UI_Descriptor*   descriptor,
 	gtk_box_pack_start(GTK_BOX(ui->box), ui->cbx_box, FALSE, FALSE, 2);
 
 	g_signal_connect (G_OBJECT (ui->m0), "expose_event", G_CALLBACK (expose_event), ui);
-	g_signal_connect (G_OBJECT (ui->btn_start), "toggled", G_CALLBACK (btn_start), ui);
-	g_signal_connect (G_OBJECT (ui->btn_reset), "clicked", G_CALLBACK (btn_reset), ui);
+
+	gtkext_cbtn_set_callback(ui->btn_start, btn_start, ui);
+	gtkext_pbtn_set_callback(ui->btn_reset, btn_reset, ui);
+
 	gtkext_spin_set_callback(ui->spn_radartime, spn_radartime, ui);
 
 	gtkext_rbtn_set_callback(ui->cbx_lufs, cbx_lufs, ui);
@@ -1137,6 +1138,8 @@ cleanup(LV2UI_Handle handle)
 	gtkext_cbtn_destroy(ui->cbx_autoreset);
 	gtkext_cbtn_destroy(ui->cbx_truepeak);
 	gtkext_spin_destroy(ui->spn_radartime);
+	gtkext_cbtn_destroy(ui->btn_start);
+	gtkext_pbtn_destroy(ui->btn_reset);
 	gtk_widget_destroy(ui->lbl_ringinfo);
 	gtk_widget_destroy(ui->lbl_radarinfo);
 	gtk_widget_destroy(ui->sep_v0);
@@ -1145,8 +1148,6 @@ cleanup(LV2UI_Handle handle)
 
 	/* IA__gtk_widget_destroy: assertion `GTK_IS_WIDGET (widget)' fail: */
 	//gtk_widget_destroy(ui->cbx_box);
-	//gtk_widget_destroy(GTK_WIDGET(ui->btn_start));
-	//gtk_widget_destroy(GTK_WIDGET(ui->btn_reset));
 
 	free(ui);
 }
@@ -1204,10 +1205,10 @@ static void parse_ebulevels(EBUrUI* ui, const LV2_Atom_Object* obj) {
 
 	if (ii && ii->type == uris->atom_Bool) {
 		bool ix = ((LV2_Atom_Bool*)ii)->body;
-	  bool bx = gtk_toggle_tool_button_get_active(GTK_TOGGLE_TOOL_BUTTON(ui->btn_start));
+	  bool bx = gtkext_cbtn_get_active(ui->btn_start);
 		if (ix != bx) {
 			ui->disable_signals = true;
-			gtk_toggle_tool_button_set_active(GTK_TOGGLE_TOOL_BUTTON(ui->btn_start), ix);
+			gtkext_cbtn_set_active(ui->btn_start, ix);
 			ui->disable_signals = false;
 		}
 	}
