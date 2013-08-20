@@ -94,19 +94,10 @@ static gboolean gtkext_cbtn_expose_event(GtkWidget *w, GdkEventExpose *ev, gpoin
 	if (!d->flat_button) {
 		if (!d->sensitive) {
 			cairo_set_source_rgb (cr, c->red/65536.0, c->green/65536.0, c->blue/65536.0);
-			led_r = c->red/65536.0;
-			led_g = c->green/65536.0;
-			led_b = c->blue/65536.0;
 		} else if (d->enabled) {
 			cairo_set_source(cr, d->btn_active);
-			led_r = .8;
-			led_g = .3;
-			led_b = .1;
 		} else {
 			cairo_set_source(cr, d->btn_inactive);
-			led_r = .3;
-			led_g = .1;
-			led_b = .1;
 		}
 
 		rounded_rectangle(cr, 2.5, 2.5, d->w_width - 4, d->w_height -4, 6);
@@ -119,6 +110,8 @@ static gboolean gtkext_cbtn_expose_event(GtkWidget *w, GdkEventExpose *ev, gpoin
 	if (d->flat_button && !d->sensitive) {
 		//cairo_set_operator (cr, CAIRO_OPERATOR_XOR); // check
 		cairo_set_operator (cr, CAIRO_OPERATOR_EXCLUSION);
+	} else if (!d->flat_button && d->enabled) {
+		cairo_set_operator (cr, CAIRO_OPERATOR_XOR);
 	} else {
 		cairo_set_operator (cr, CAIRO_OPERATOR_OVER);
 	}
@@ -153,7 +146,6 @@ static gboolean gtkext_cbtn_expose_event(GtkWidget *w, GdkEventExpose *ev, gpoin
 		cairo_set_source_rgba (cr, 1.0, 1.0, 1.0, .1);
 		if (d->flat_button) {
 			rounded_rectangle(cr, 2.5, 2.5, d->w_width - 4, d->w_height -4, 6);
-			//cairo_rectangle (cr, 0, 0, d->w_width, d->w_height);
 			cairo_fill(cr);
 		} else {
 			rounded_rectangle(cr, 2.5, 2.5, d->w_width - 4, d->w_height -4, 6);
@@ -203,19 +195,24 @@ static gboolean gtkext_cbtn_leave_notify(GtkWidget *w, GdkEvent *event, gpointer
 
 static void create_cbtn_pattern(GtkExtCBtn * d) {
 	d->btn_inactive = cairo_pattern_create_linear (0.0, 0.0, 0.0, d->w_height);
-	cairo_pattern_add_color_stop_rgb (d->btn_inactive, 0.0, .3, .3, .3);
-	cairo_pattern_add_color_stop_rgb (d->btn_inactive, 1.0, .2, .2, .2);
+	cairo_pattern_add_color_stop_rgb (d->btn_inactive, 0.0, .65, .65, .66);
+	cairo_pattern_add_color_stop_rgb (d->btn_inactive, 1.0, .25, .25, .3);
 
 	d->btn_active = cairo_pattern_create_linear (0.0, 0.0, 0.0, d->w_height);
-	cairo_pattern_add_color_stop_rgb (d->btn_active, 0.0, .3, .3, .3);
-	cairo_pattern_add_color_stop_rgb (d->btn_active, 1.0, .4, .4, .4);
+	if (d->show_led == GBT_LED_OFF) {
+		cairo_pattern_add_color_stop_rgb (d->btn_active, 0.0, .2, .5, .21);
+		cairo_pattern_add_color_stop_rgb (d->btn_active, 1.0, .5, .9, .51);
+	} else {
+		cairo_pattern_add_color_stop_rgb (d->btn_active, 0.0, .3, .3, .33);
+		cairo_pattern_add_color_stop_rgb (d->btn_active, 1.0, .8, .8, .82);
+	}
 
 	d->btn_led = cairo_pattern_create_linear (0.0, 0.0, 0.0, GBT_LED_RADIUS);
 	cairo_pattern_add_color_stop_rgba (d->btn_led, 0.0, 0.0, 0.0, 0.0, 0.4);
 	cairo_pattern_add_color_stop_rgba (d->btn_led, 1.0, 1.0, 1.0, 1.0 , 0.7);
 }
 
-static void create_text_surface(GtkExtCBtn * d, const char * txt, PangoFontDescription *font) {
+static void create_cbtn_text_surface(GtkExtCBtn * d, const char * txt, PangoFontDescription *font) {
 	if (d->sf_txt) {
 		cairo_surface_destroy(d->sf_txt);
 	}
@@ -267,14 +264,13 @@ static GtkExtCBtn * gtkext_cbtn_new(const char * txt, enum GedLedMode led, gbool
 	}
 
 	int ww, wh;
-	//PangoFontDescription *fd = pango_font_description_from_string("Sans 9");
 	PangoFontDescription *fd = get_font_from_gtk();
 
 	get_text_geometry(txt, fd, &ww, &wh);
 	d->w_width = ww + 14 + (d->show_led ? GBT_LED_RADIUS + 6 : 0);
 	d->w_height = wh + 8;
 
-	create_text_surface(d, txt, fd);
+	create_cbtn_text_surface(d, txt, fd);
 	pango_font_description_free(fd);
 
 	d->w = gtk_drawing_area_new();

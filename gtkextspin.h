@@ -103,10 +103,12 @@ static GtkExtSpin * gtkext_spin_new(float min, float max, float step) {
 	d->c = gtk_hbox_new(FALSE, 2);
 	gtk_box_pack_start(GTK_BOX(d->c), gtkext_dial_widget(d->dial), FALSE, FALSE, 0);
 	gtk_box_pack_start(GTK_BOX(d->c), d->lbl, FALSE, FALSE, 0);
+	gtk_widget_show_all(d->c);
 
 	//gtk_widget_add_events(d->lbl, GDK_ENTER_NOTIFY_MASK | GDK_LEAVE_NOTIFY_MASK);
 	//g_signal_connect (G_OBJECT (d->lbl), "enter-notify-event",  G_CALLBACK (gtkext_spin_enter_notify), d);
 	//g_signal_connect (G_OBJECT (d->lbl), "leave-notify-event",  G_CALLBACK (gtkext_spin_leave_notify), d);
+	gtkext_spin_callback(0, d); // set value
 	return d;
 }
 
