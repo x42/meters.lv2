@@ -179,7 +179,7 @@ static void radar_color(cairo_t* cr, const float v, float alpha) {
 
 
 static void write_text(
-		PangoContext * pc, cairo_t* cr,
+		cairo_t* cr,
 		const char *txt,
 		PangoFontDescription *font, //const char *font,
 		const float x, const float y,
@@ -318,7 +318,6 @@ static gboolean expose_event(GtkWidget *w, GdkEventExpose *ev, gpointer handle) 
 	const bool dbtp  = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(ui->cbx_truepeak));
 
 	cairo_t* cr = gdk_cairo_create(GDK_DRAWABLE(w->window));
-	PangoContext * pc = gtk_widget_get_pango_context(w);
 
 	char buf[128];
 	int redraw_part = 0;
@@ -356,11 +355,11 @@ static gboolean expose_event(GtkWidget *w, GdkEventExpose *ev, gpointer handle) 
 	cairo_rectangle (cr, 0, 0, 330, 400);
 	cairo_set_source_rgba (cr, .0, .0, .0, 1.0);
 	cairo_fill (cr);
-	write_text(pc, cr, "EBU R128 LV2", FONT(FONT_S08), 2 , 5, 1.5 * M_PI, 7, c_gry);
+	write_text(cr, "EBU R128 LV2", FONT(FONT_S08), 2 , 5, 1.5 * M_PI, 7, c_gry);
 
 	/* big level as text */
 	sprintf(buf, "%+5.1f %s", LUFS( rings ? ui->ls : ui->lm), lufs ? "LUFS" : "LU");
-	write_text(pc, cr, buf, FONT(FONT_M14), CX , 10, 0, 8, c_wht);
+	write_text(cr, buf, FONT(FONT_M14), CX , 10, 0, 8, c_wht);
 
 	/* max level background */
 	int trw = lufs ? 87 : 75;
@@ -372,9 +371,9 @@ static gboolean expose_event(GtkWidget *w, GdkEventExpose *ev, gpointer handle) 
 	cairo_fill (cr);
 
 	/* display max level as text */
-	write_text(pc, cr, !rings ? "Mom":"Short", FONT(FONT_S08), 295, 45, 0, 8, c_wht);
+	write_text(cr, !rings ? "Mom":"Short", FONT(FONT_S08), 295, 45, 0, 8, c_wht);
 	sprintf(buf, "Max:\n%+5.1f %s", LUFS( rings ? ui->ms: ui->mm), lufs ? "LUFS" : "LU");
-	write_text(pc, cr, buf, FONT(FONT_M09), 315, 10, 0, 7, c_wht);
+	write_text(cr, buf, FONT(FONT_M09), 315, 10, 0, 7, c_wht);
 
 	if (dbtp) {
 		/* true peak level */
@@ -391,9 +390,9 @@ static gboolean expose_event(GtkWidget *w, GdkEventExpose *ev, gpointer handle) 
 
 		/* true-peak val */
 		sprintf(buf, "%+5.1f", coef_to_db(ui->tp));
-		write_text(pc, cr, buf, FONT(FONT_M09), 90, 10, 0, 7, c_wht);
-		write_text(pc, cr, "dBTP", FONT(FONT_M09), 90, 24, 0, 7, c_wht);
-		write_text(pc, cr, "True", FONT(FONT_S08), 55, 45, 0, 8, c_wht);
+		write_text(cr, buf, FONT(FONT_M09), 90, 10, 0, 7, c_wht);
+		write_text(cr, "dBTP", FONT(FONT_M09), 90, 24, 0, 7, c_wht);
+		write_text(cr, "True", FONT(FONT_S08), 55, 45, 0, 8, c_wht);
 	}
 
 #if 1 /* Radar */
@@ -466,14 +465,14 @@ static gboolean expose_event(GtkWidget *w, GdkEventExpose *ev, gpointer handle) 
 	{ \
 	cairo_arc (cr, CX, CY, RADIUS * RDS, 0.5 * M_PI, 2.0 * M_PI); \
 	cairo_stroke (cr); \
-	write_text(pc, cr, LBL, FONT(FONT_M08), CX + RADIUS * RDS, CY + 14, M_PI * -.5, 2, c_gry);\
+	write_text(cr, LBL, FONT(FONT_M08), CX + RADIUS * RDS, CY + 14, M_PI * -.5, 2, c_gry);\
 	}
 			// POS = fast_log10(VAL) + 1;
 			CIRCLABEL(.301, "20%")
 			CIRCLABEL(.602, "40%")
 			CIRCLABEL(.903, "80%")
 		} else {
-			write_text(pc, cr, "No integration\ndata available.", FONT(FONT_S08), CX + RADIUS / 2, CY + 5, 0, 8, c_gry);
+			write_text(cr, "No integration\ndata available.", FONT(FONT_S08), CX + RADIUS / 2, CY + 5, 0, 8, c_gry);
 		}
 
 		/* center circle */
@@ -644,7 +643,7 @@ static gboolean expose_event(GtkWidget *w, GdkEventExpose *ev, gpointer handle) 
 #define SIN60 0.866025404
 #define CLABEL(PT, XS, YS, AL) \
 		sprintf(buf, "%+.0f", LUFS(PT)); \
-		write_text(pc, cr, buf, FONT(FONT_M08), CX + RADIUS23 * XS, CY + RADIUS23 *YS , 0, AL, c_gry);
+		write_text(cr, buf, FONT(FONT_M08), CX + RADIUS23 * XS, CY + RADIUS23 *YS , 0, AL, c_gry);
 
 		if (plus9) {
 			CLABEL(-41,    0.0,   1.0, 8)
@@ -684,7 +683,7 @@ static gboolean expose_event(GtkWidget *w, GdkEventExpose *ev, gpointer handle) 
 		cairo_set_source_rgba (cr, .1, .1, .1, 1.0);
 		rounded_rectangle (cr, 15, 335, 40, 30, 10);
 		cairo_fill (cr);
-		write_text(pc, cr, "Long", FONT(FONT_S08), 35 , 353, 0,  5, c_wht);
+		write_text(cr, "Long", FONT(FONT_S08), 35 , 353, 0,  5, c_wht);
 
 		cairo_set_source_rgba (cr, .2, .2, .2, 1.0);
 		rounded_rectangle (cr, 5, 355, 320, 40, 10);
@@ -692,19 +691,19 @@ static gboolean expose_event(GtkWidget *w, GdkEventExpose *ev, gpointer handle) 
 
 		if (ui->il > -60) {
 			sprintf(buf, "Int:   %+5.1f %s", LUFS(ui->il), lufs ? "LUFS" : "LU");
-			write_text(pc, cr, buf, FONT(FONT_M09), 15 , 375, 0,  6, c_wht);
+			write_text(cr, buf, FONT(FONT_M09), 15 , 375, 0,  6, c_wht);
 		} else {
 			sprintf(buf, "[Integrating over 5 sec]");
-			write_text(pc, cr, buf, FONT(FONT_S09), 15 , 375, 0,  6, c_wht);
+			write_text(cr, buf, FONT(FONT_S09), 15 , 375, 0,  6, c_wht);
 		}
 
 		if (ui->rx > -60.0 && ui->rn > -60.0) {
 			sprintf(buf, "Range: %+5.1f..%+5.1f %s (%4.1f)",
 					LUFS(ui->rn), LUFS(ui->rx), lufs ? "LUFS" : "LU", (ui->rx - ui->rn));
-			write_text(pc, cr, buf, FONT(FONT_M09), 15 , 390, 0,  6, c_wht);
+			write_text(cr, buf, FONT(FONT_M09), 15 , 390, 0,  6, c_wht);
 		} else {
 			sprintf(buf, "[Collecting 10 sec range.]");
-			write_text(pc, cr, buf, FONT(FONT_S09), 15 , 390, 0,  6, c_wht);
+			write_text(cr, buf, FONT(FONT_S09), 15 , 390, 0,  6, c_wht);
 		}
 
 		/* clock */
@@ -724,7 +723,7 @@ static gboolean expose_event(GtkWidget *w, GdkEventExpose *ev, gpointer handle) 
 			int minutes = ((int)floorf(ui->it / 60)) % 60;
 			sprintf(buf, "%dh%02d'", hours, minutes);
 		}
-		write_text(pc, cr, buf, FONT(FONT_M12), 318, 385, 0,  4, c_wht);
+		write_text(cr, buf, FONT(FONT_M12), 318, 385, 0,  4, c_wht);
 
 	}
 
@@ -737,11 +736,11 @@ static gboolean expose_event(GtkWidget *w, GdkEventExpose *ev, gpointer handle) 
 	rounded_rectangle (cr, 325-trw, 305+bottom_max_offset, trw, 40, 10);
 	cairo_fill (cr);
 
-	write_text(pc, cr, rings ? "Mom":"Short", FONT(FONT_S08), 295, 290+bottom_max_offset, 0, 8, c_wht);
+	write_text(cr, rings ? "Mom":"Short", FONT(FONT_S08), 295, 290+bottom_max_offset, 0, 8, c_wht);
 	sprintf(buf, "%+5.1f %s", LUFS(!rings ? ui->ls : ui->lm), lufs ? "LUFS" : "LU");
-	write_text(pc, cr, buf, FONT(FONT_M09), 315, 310+bottom_max_offset, 0, 7, c_wht);
+	write_text(cr, buf, FONT(FONT_M09), 315, 310+bottom_max_offset, 0, 7, c_wht);
 	sprintf(buf, "Max:%+5.1f %s", LUFS(!rings ? ui->ms: ui->mm), lufs ? "LUFS" : "LU");
-	write_text(pc, cr, buf, FONT(FONT_M09), 315, 325+bottom_max_offset, 0, 7, c_wht);
+	write_text(cr, buf, FONT(FONT_M09), 315, 325+bottom_max_offset, 0, 7, c_wht);
 
 	cairo_destroy (cr);
 	return TRUE;
