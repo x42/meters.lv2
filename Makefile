@@ -96,7 +96,7 @@ $(LV2GUI2)$(LIB_EXT): eburui.c $(UIDEPS) \
 		-shared $(LV2LDFLAGS) $(LDFLAGS) $(UILIBS)
 
 $(LV2GUI3)$(LIB_EXT): goniometerui.cc goniometer.h $(UIDEPS) \
-	common_cairo.h gtkextdial.h gtkextcbtn.h \
+	common_cairo.h gtkextdial.h gtkextcbtn.h gtkextscale.h \
 	zita-resampler/resampler.cc zita-resampler/resampler-table.cc \
 	zita-resampler/resampler.h zita-resampler/resampler-table.h
 	$(CXX) $(CPPFLAGS) $(CFLAGS) $(UICFLAGS) $(CXXFLAGS) \
@@ -105,7 +105,7 @@ $(LV2GUI3)$(LIB_EXT): goniometerui.cc goniometer.h $(UIDEPS) \
 		-shared $(LV2LDFLAGS) $(LDFLAGS) $(UILIBS)
 
 $(LV2GUI4)$(LIB_EXT): dpmui.c $(UIDEPS) \
-	common_cairo.h gtkextdial.h
+	common_cairo.h gtkextdial.h gtkextscale.h
 	$(CC) $(CPPFLAGS) $(CFLAGS) -std=c99 $(UICFLAGS) \
 		-o $(LV2GUI4)$(LIB_EXT) dpmui.c \
 		-shared $(LV2LDFLAGS) $(LDFLAGS) $(UILIBS)

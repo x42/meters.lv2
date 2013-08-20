@@ -17,7 +17,7 @@
  * Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#define _XOPEN_SOURCE
+#define _XOPEN_SOURCE 500
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -28,6 +28,7 @@
 #include <gtk/gtk.h>
 #include "common_cairo.h"
 #include "gtkextdial.h"
+#include "gtkextscale.h"
 
 #include "lv2/lv2plug.in/ns/extensions/ui/ui.h"
 #define MTR_URI "http://gareus.org/oss/lv2/meters#"
@@ -79,7 +80,7 @@ typedef struct {
 	GtkWidget* align;
 	GtkWidget* m0;
 	GtkWidget* c_box;
-	GtkWidget* fader;
+	GtkExtScale* fader;
 	GtkWidget* lbl_attack;
 	GtkWidget* lbl_decay;
 
@@ -638,10 +639,10 @@ static gboolean cb_reset_peak(GtkWidget *w, GdkEventButton *event, gpointer hand
 	return TRUE;
 }
 
-static gboolean set_gain(GtkRange* r, gpointer handle) {
+static gboolean set_gain(GtkWidget* w, gpointer handle) {
 	SAUI* ui = (SAUI*)handle;
 	float oldgain = ui->gain;
-	ui->gain = INV_GAINSCALE(gtk_range_get_value(r));
+	ui->gain = INV_GAINSCALE(gtkext_scale_get_value(ui->fader));
 #if 1
 	if (ui->gain <= .2511) ui->gain = .2511;
 	if (ui->gain >= 10.0) ui->gain = 10.0;
@@ -757,7 +758,7 @@ instantiate(const LV2UI_Descriptor*   descriptor,
 	ui->c_box = gtk_vbox_new(FALSE, 2);
 	ui->align = gtk_alignment_new(.5, .5, 0, 0);
 	ui->m0    = gtk_drawing_area_new();
-	ui->fader = gtk_vscale_new_with_range(1.0, 40.0, .001);
+	ui->fader = gtkext_scale_new(0.0, 40.0, .001, FALSE);
 
 	ui->spn_attack = gtkext_dial_new(0, 100, .5);
 	ui->spn_decay  = gtkext_dial_new(0, 100, .5);
@@ -767,33 +768,31 @@ instantiate(const LV2UI_Descriptor*   descriptor,
 	gtkext_dial_set_surface(ui->spn_attack, ui->dial);
 	gtkext_dial_set_surface(ui->spn_decay, ui->dial);
 
-	/* fader init */
-	gtk_scale_set_draw_value(GTK_SCALE(ui->fader), FALSE);
-	gtk_range_set_value(GTK_RANGE(ui->fader), GAINSCALE(1.0000));
-	gtk_scale_add_mark(GTK_SCALE(ui->fader),GAINSCALE(0.2511), GTK_POS_RIGHT, NULL /*"-12db" */);
-	gtk_scale_add_mark(GTK_SCALE(ui->fader),GAINSCALE(0.3548), GTK_POS_RIGHT, NULL /* "-9dB" */);
-	gtk_scale_add_mark(GTK_SCALE(ui->fader),GAINSCALE(0.5012), GTK_POS_RIGHT, NULL /* "-6dB" */);
-	gtk_scale_add_mark(GTK_SCALE(ui->fader),GAINSCALE(0.7079), GTK_POS_RIGHT, NULL /* "-3dB" */);
-	gtk_scale_add_mark(GTK_SCALE(ui->fader),GAINSCALE(1.0000), GTK_POS_RIGHT, "0dB");
-	gtk_scale_add_mark(GTK_SCALE(ui->fader),GAINSCALE(1.4125), GTK_POS_RIGHT, NULL /* "+3dB" */);
-	gtk_scale_add_mark(GTK_SCALE(ui->fader),GAINSCALE(1.9952), GTK_POS_RIGHT,  "+6dB");
-	gtk_scale_add_mark(GTK_SCALE(ui->fader),GAINSCALE(2.8183), GTK_POS_RIGHT,  "+9dB");
-	gtk_scale_add_mark(GTK_SCALE(ui->fader),GAINSCALE(3.9810), GTK_POS_RIGHT, "+12dB");
-	gtk_scale_add_mark(GTK_SCALE(ui->fader),GAINSCALE(5.6234), GTK_POS_RIGHT, "+15dB");
-	gtk_scale_add_mark(GTK_SCALE(ui->fader),GAINSCALE(7.9432), GTK_POS_RIGHT, "+18dB");
-	gtk_scale_add_mark(GTK_SCALE(ui->fader),GAINSCALE(10.0  ), GTK_POS_RIGHT, "+20dB");
+	gtkext_scale_set_value(ui->fader, GAINSCALE(1.0000));
+	gtkext_scale_add_mark(ui->fader,GAINSCALE(0.2511), NULL /*"-12db" */);
+	gtkext_scale_add_mark(ui->fader,GAINSCALE(0.3548), NULL /* "-9dB" */);
+	gtkext_scale_add_mark(ui->fader,GAINSCALE(0.5012), NULL /* "-6dB" */);
+	gtkext_scale_add_mark(ui->fader,GAINSCALE(0.7079), NULL /* "-3dB" */);
+	gtkext_scale_add_mark(ui->fader,GAINSCALE(1.0000), "0dB");
+	gtkext_scale_add_mark(ui->fader,GAINSCALE(1.4125), NULL /* "+3dB" */);
+	gtkext_scale_add_mark(ui->fader,GAINSCALE(1.9952),  "+6dB");
+	gtkext_scale_add_mark(ui->fader,GAINSCALE(2.8183),  "+9dB");
+	gtkext_scale_add_mark(ui->fader,GAINSCALE(3.9810), "+12dB");
+	gtkext_scale_add_mark(ui->fader,GAINSCALE(5.6234), "+15dB");
+	gtkext_scale_add_mark(ui->fader,GAINSCALE(7.9432), "+18dB");
+	gtkext_scale_add_mark(ui->fader,GAINSCALE(10.0  ), "+20dB");
 
 	gtk_drawing_area_size(GTK_DRAWING_AREA(ui->m0), 2.0 * MA_WIDTH + ui->num_meters * GM_WIDTH, GM_HEIGHT);
 	gtk_widget_set_size_request(ui->m0, 2.0 * MA_WIDTH + ui->num_meters * GM_WIDTH, GM_HEIGHT);
 	gtk_widget_set_redraw_on_allocate(ui->m0, TRUE);
-	gtk_widget_set_size_request(ui->fader, -1, 200);
+	//gtk_widget_set_size_request(ui->fader, -1, 200);
 
 	/* layout */
 	gtk_container_add(GTK_CONTAINER(ui->align), ui->m0);
 	gtk_box_pack_start(GTK_BOX(ui->box), ui->align, TRUE, TRUE, 0);
 
 	if (ui->display_freq) {
-		gtk_box_pack_start(GTK_BOX(ui->c_box), ui->fader, TRUE, TRUE, 0);
+		gtk_box_pack_start(GTK_BOX(ui->c_box), gtkext_scale_widget(ui->fader), TRUE, TRUE, 0);
 		gtk_box_pack_start(GTK_BOX(ui->c_box), ui->lbl_attack, FALSE, FALSE, 0);
 		gtk_box_pack_start(GTK_BOX(ui->c_box), gtkext_dial_widget(ui->spn_attack), FALSE, FALSE, 0);
 		gtk_box_pack_start(GTK_BOX(ui->c_box), ui->lbl_decay, FALSE, FALSE, 0);
@@ -805,7 +804,7 @@ instantiate(const LV2UI_Descriptor*   descriptor,
 
 	g_signal_connect (G_OBJECT (ui->m0), "expose_event", G_CALLBACK (expose_event), ui);
 	g_signal_connect (G_OBJECT (ui->m0), "button-release-event", G_CALLBACK (cb_reset_peak), ui);
-	g_signal_connect (G_OBJECT (ui->fader), "value-changed", G_CALLBACK (set_gain), ui);
+	gtkext_scale_set_callback(ui->fader, set_gain, ui);
 	gtkext_dial_set_callback(ui->spn_attack, set_attack, ui);
 	gtkext_dial_set_callback(ui->spn_decay, set_decay, ui);
 	if (ui->display_freq) {
@@ -845,7 +844,7 @@ cleanup(LV2UI_Handle handle)
 	cairo_surface_destroy(ui->dial);
 
 	gtk_widget_destroy(ui->m0);
-	gtk_widget_destroy(ui->fader);
+	gtkext_scale_destroy(ui->fader);
 	gtkext_dial_destroy(ui->spn_attack);
 	gtkext_dial_destroy(ui->spn_decay);
 	gtk_widget_destroy(ui->lbl_attack);
@@ -925,6 +924,7 @@ static void invalidate_meter(SAUI* ui, int mtr, float val, float peak) {
 
 	if (region) {
 		gdk_window_invalidate_region (ui->m0->window, region, true);
+		gdk_region_destroy(region);
 	}
 }
 
@@ -936,7 +936,7 @@ static void handle_spectrum_connections(SAUI* ui, uint32_t port_index, float v) 
 	if (port_index == 4) {
 		if (v >= 0.25 && v <= 10.0) {
 			ui->disable_signals = true;
-			gtk_range_set_value(GTK_RANGE(ui->fader), GAINSCALE(v));
+			gtkext_scale_set_value(ui->fader, GAINSCALE(v));
 			ui->disable_signals = false;
 		}
 	} else

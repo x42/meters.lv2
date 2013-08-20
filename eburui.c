@@ -835,6 +835,7 @@ static void invalidate_changed(EBUrUI* ui, int what) {
 	}
 
 	gdk_window_invalidate_region (ui->m0->window, region, true);
+	gdk_region_destroy(region);
 }
 
 static void invalidate_histogram_line(EBUrUI* ui, int p) {
