@@ -81,6 +81,7 @@ typedef struct {
 	GtkWidget* sep_v0;
 
 	GtkWidget* m0;
+	GtkWidget* align;
 	cairo_pattern_t * cpattern;
 	cairo_pattern_t * hpattern;
 	GdkRegion * polygon_radar;
@@ -989,6 +990,7 @@ instantiate(const LV2UI_Descriptor*   descriptor,
 	ui->box = gtk_vbox_new(FALSE, 2);
 
 	ui->m0    = gtk_drawing_area_new();
+	ui->align = gtk_alignment_new(.5, .5, 0, 0);
 	gtk_drawing_area_size(GTK_DRAWING_AREA(ui->m0), 330, 400);
 	gtk_widget_set_size_request(ui->m0, 330, 400);
 	gtk_widget_set_redraw_on_allocate(ui->m0, TRUE);
@@ -1060,7 +1062,8 @@ instantiate(const LV2UI_Descriptor*   descriptor,
 	gtk_table_attach(GTK_TABLE(ui->cbx_box), ui->btn_box, 4, 5, 2, 4, GTK_EXPAND | GTK_FILL, GTK_EXPAND|GTK_FILL, 3, 1);
 
 	/* global packing */
-	gtk_box_pack_start(GTK_BOX(ui->box), ui->m0, FALSE, FALSE, 0);
+	gtk_container_add(GTK_CONTAINER(ui->align), ui->m0);
+	gtk_box_pack_start(GTK_BOX(ui->box), ui->align, FALSE, FALSE, 0);
 	gtk_box_pack_start(GTK_BOX(ui->box), ui->cbx_box, FALSE, FALSE, 2);
 
 	g_signal_connect (G_OBJECT (ui->m0), "expose_event", G_CALLBACK (expose_event), ui);
@@ -1134,6 +1137,7 @@ cleanup(LV2UI_Handle handle)
 	gtk_widget_destroy(ui->lbl_radarinfo);
 	gtk_widget_destroy(ui->sep_v0);
 	gtk_widget_destroy(ui->m0);
+	gtk_widget_destroy(ui->align);
 
 	/* IA__gtk_widget_destroy: assertion `GTK_IS_WIDGET (widget)' fail: */
 	//gtk_widget_destroy(ui->cbx_box);
