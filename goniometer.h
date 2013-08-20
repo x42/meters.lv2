@@ -121,6 +121,7 @@ typedef struct {
 	volatile bool  s_oversample;
 	volatile bool  s_line;
 	volatile bool  s_persist;
+	volatile bool  s_preferences;
 	volatile int   s_sfact;
 	volatile float s_linewidth;
 	volatile float s_pointwidth;

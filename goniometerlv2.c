@@ -95,6 +95,7 @@ goniometer_instantiate(
 	self->s_oversample = false;
 	self->s_line = false;
 	self->s_persist = false;
+	self->s_preferences = true;
 	self->s_sfact = 4;
 	self->s_linewidth = .75;
 	self->s_pointwidth = 1.75;
@@ -227,6 +228,7 @@ goniometer_save(LV2_Handle     instance,
 	voi.cfg[0] |= self->s_oversample  ? 2 : 0;
 	voi.cfg[0] |= self->s_line        ? 4 : 0;
 	voi.cfg[0] |= self->s_persist     ? 8 : 0;
+	voi.cfg[0] |= self->s_preferences ?16 : 0;
 
 	store(handle, self->gon_State_F,
 			(void*) &vof, sizeof(struct VectorOfFloat),
@@ -273,6 +275,7 @@ goniometer_restore(LV2_Handle       instance,
 		self->s_oversample = (cfg[0] & 2) ? true: false;
 		self->s_line       = (cfg[0] & 4) ? true: false;
 		self->s_persist    = (cfg[0] & 8) ? true: false;
+		self->s_preferences= (cfg[0] &16) ? true: false;
 	}
   return LV2_STATE_SUCCESS;
 }
