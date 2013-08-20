@@ -118,7 +118,6 @@ PangoFontDescription * get_font_from_gtk () {
 	gtk_container_add(GTK_CONTAINER(window), foobar);
 	gtk_widget_ensure_style(foobar);
 
-
 	PangoContext* pc = gtk_widget_get_pango_context(foobar);
 	PangoFontDescription const * pfd = pango_context_get_font_description (pc);
 	rv = pango_font_description_copy (pfd);
@@ -132,5 +131,15 @@ void set_cairo_color_from_gtk (cairo_t *cr, int which) {
 	get_color_from_gtk(&color, which);
 	cairo_set_source_rgba(cr, color.red/65536.0, color.green/65536.0, color.blue/65536.0, 1.0);
 }
+
+void get_cairo_color_from_gtk (int which, float *col) {
+	GdkColor color;
+	get_color_from_gtk(&color, which);
+	col[0] = color.red/65536.0;
+	col[1] = color.green/65536.0;
+	col[2] = color.blue/65536.0;
+	col[3] = 1.0;
+}
+
 
 #endif

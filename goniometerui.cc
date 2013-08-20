@@ -106,6 +106,7 @@ typedef struct {
 	GtkWidget* fader;
 
 	bool initialized;
+	float c_txt[4];
 
 	int sfc;
 	cairo_surface_t* sf[3];
@@ -175,11 +176,17 @@ static void setup_src(GMUI* ui, float oversample, int hlen, float frel) {
 static void write_text(
 		cairo_t* cr,
 		const char *txt, const char * font,
+		const float x, const float y,
 		const int align,
-		const float x, const float y) {
+		const float * const col) {
 
-	PangoFontDescription *fd = pango_font_description_from_string(font);
-	write_text_full(cr, txt, fd, x, y, 0, align, align < 0 ? c_lgg : c_grb);
+	PangoFontDescription *fd;
+	if (font) {
+		fd = pango_font_description_from_string(font);
+	} else {
+		fd = get_font_from_gtk();
+	}
+	write_text_full(cr, txt, fd, x, y, 0, align, col);
 	pango_font_description_free(fd);
 }
 
@@ -198,31 +205,31 @@ static void alloc_annotations(GMUI* ui) {
 	cairo_t* cr;
 
 	INIT_BLACK_BG(0, 32, 32)
-	write_text(cr, "L", FONT_GM, 2, 16, 16);
+	write_text(cr, "L", FONT_GM, 16, 16, 2, c_grb);
 	cairo_destroy (cr);
 
 	INIT_BLACK_BG(1, 32, 32)
-	write_text(cr, "R", FONT_GM, 2, 16, 16);
+	write_text(cr, "R", FONT_GM, 16, 16, 2, c_grb);
 	cairo_destroy (cr);
 
 	INIT_BLACK_BG(2, 64, 32)
-	write_text(cr, "Mono", FONT_GM, 2, 32, 16);
+	write_text(cr, "Mono", FONT_GM, 32, 16, 2, c_grb);
 	cairo_destroy (cr);
 
 	INIT_BLACK_BG(3, 32, 32)
-	write_text(cr, "+S", FONT_GM, 2, 16, 16);
+	write_text(cr, "+S", FONT_GM, 16, 16, 2, c_grb);
 	cairo_destroy (cr);
 
 	INIT_BLACK_BG(4, 32, 32)
-	write_text(cr, "-S", FONT_GM, 2, 16, 16);
+	write_text(cr, "-S", FONT_GM, 16, 16, 2, c_grb);
 	cairo_destroy (cr);
 
 	INIT_BLACK_BG(5, 32, 32)
-	write_text(cr, "+1", FONT_PC, 2, 10, 10);
+	write_text(cr, "+1", FONT_PC, 10, 10, 2, c_grb);
 	cairo_destroy (cr);
 
 	INIT_BLACK_BG(6, 32, 32)
-	write_text(cr, "-1", FONT_PC, 2, 10, 10);
+	write_text(cr, "-1", FONT_PC, 10, 10, 2, c_grb);
 	cairo_destroy (cr);
 
 #define INIT_DIAL_SF(VAR, TXTL, TXTR) \
@@ -233,8 +240,8 @@ static void alloc_annotations(GMUI* ui) {
 	cairo_rectangle (cr, 0, 0, GED_WIDTH, GED_HEIGHT); \
 	cairo_fill (cr); \
 	cairo_set_operator (cr, CAIRO_OPERATOR_OVER); \
-	write_text(cr, TXTL, FONT_LB, -6, 2, GED_HEIGHT - 1); \
-	write_text(cr, TXTR, FONT_LB, -4, GED_WIDTH-1, GED_HEIGHT - 1); \
+	write_text(cr, TXTL, FONT_LB, 2, GED_HEIGHT - 1, -6, ui->c_txt); \
+	write_text(cr, TXTR, FONT_LB, GED_WIDTH-1, GED_HEIGHT - 1, -4, ui->c_txt); \
 	cairo_destroy (cr);
 
 	INIT_DIAL_SF(ui->dial[0], "slow", "fast")
@@ -821,6 +828,7 @@ instantiate(const LV2UI_Descriptor*   descriptor,
 	ui->write      = write_function;
 	ui->controller = controller;
 
+	get_cairo_color_from_gtk(0, ui->c_txt);
 	alloc_sf(ui);
 	alloc_annotations(ui);
 

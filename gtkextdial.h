@@ -71,7 +71,11 @@ static gboolean gtkext_dial_expose_event(GtkWidget *w, GdkEventExpose *ev, gpoin
 	cairo_fill(cr);
 
 	if (d->bg) {
-		cairo_set_operator (cr, CAIRO_OPERATOR_EXCLUSION);
+		if (!d->sensitive) {
+			cairo_set_operator (cr, CAIRO_OPERATOR_EXCLUSION);
+		} else {
+			cairo_set_operator (cr, CAIRO_OPERATOR_OVER);
+		}
 		cairo_set_source_surface(cr, d->bg, 0, 0);
 		cairo_paint (cr);
 		cairo_set_source_rgb (cr, c->red/65536.0, c->green/65536.0, c->blue/65536.0);

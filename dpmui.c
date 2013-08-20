@@ -110,6 +110,8 @@ typedef struct {
 	float cache_ma;
 	int highlight;
 
+	float c_txt[4];
+
 } SAUI;
 
 /******************************************************************************
@@ -295,9 +297,10 @@ static void write_text(
 		cairo_t* cr,
 		const char *txt,
 		PangoFontDescription *font,
+		const float x, const float y,
 		const float ang, const int align,
-		const float x, const float y) {
-	write_text_full(cr, txt, font, x, y, ang, align, align < 0 ? c_lgg : c_lgt);
+		const float * const col) {
+	write_text_full(cr, txt, font, x, y, ang, align, col);
 }
 
 /******************************************************************************
@@ -343,7 +346,7 @@ static void alloc_annotations(SAUI* ui) {
 		/* frequecy table */
 		for (int i = 0; i < ui->num_meters; ++i) {
 			INIT_BLACK_BG(ui->an[i], 24, 64)
-			write_text(cr, freq_table[i], FONT_LBL, -M_PI/2, 7, -1, 0);
+			write_text(cr, freq_table[i], FONT_LBL, -1, 0, -M_PI/2, 7, c_lgt);
 			cairo_destroy (cr);
 		}
 	}
@@ -355,8 +358,8 @@ static void alloc_annotations(SAUI* ui) {
 	cairo_rectangle (cr, 0, 0, GED_WIDTH, GED_HEIGHT);
 	cairo_fill (cr);
 	cairo_set_operator (cr, CAIRO_OPERATOR_OVER);
-	write_text(cr, "slow", FONT_MTR, 0, -6, 2, GED_HEIGHT - 1);
-	write_text(cr, "fast", FONT_MTR, 0, -4, GED_WIDTH-1, GED_HEIGHT - 1);
+	write_text(cr, "slow", FONT_MTR, 2, GED_HEIGHT - 1, 0, -6, ui->c_txt);
+	write_text(cr, "fast", FONT_MTR, GED_WIDTH-1, GED_HEIGHT - 1, 0, -4, ui->c_txt);
 	cairo_destroy (cr);
 }
 
@@ -369,7 +372,7 @@ static void realloc_metrics(SAUI* ui) {
 	cairo_t* cr;
 #define DO_THE_METER(DB, TXT) \
 	if (dboff + DB < 6.0 && dboff + DB >= -60) \
-	write_text(cr,  TXT , FONT_MTR, 0, 1, MA_WIDTH - 3, YPOS(deflect(ui, dboff + DB)));
+	write_text(cr,  TXT , FONT_MTR, MA_WIDTH - 3, YPOS(deflect(ui, dboff + DB)), 0, 1, c_lgt);
 
 #define DO_THE_METRICS \
 	DO_THE_METER(  18, "+18dB") \
@@ -395,7 +398,7 @@ static void realloc_metrics(SAUI* ui) {
 	cairo_fill (cr);
 	DO_THE_METRICS
 	if (ui->display_freq) {
-		write_text(cr,  "dBFS", FONT_MTR, 0, 1, MA_WIDTH - 5, GM_TXT - 8);
+		write_text(cr,  "dBFS", FONT_MTR, MA_WIDTH - 5, GM_TXT - 8, 0, 1, c_lgt);
 	}
 	cairo_destroy (cr);
 
@@ -405,9 +408,9 @@ static void realloc_metrics(SAUI* ui) {
 	cairo_fill (cr);
 	DO_THE_METRICS
 	if (ui->display_freq) {
-		write_text(cr,  "dBFS", FONT_MTR, 0, 1, MA_WIDTH - 5, GM_TXT - 8);
+		write_text(cr,  "dBFS", FONT_MTR, MA_WIDTH - 5, GM_TXT - 8, 0, 1, c_lgt);
 	} else {
-		write_text(cr,  "dBTP", FONT_MTR, 0, 1, MA_WIDTH - 5, GM_TXT - 6);
+		write_text(cr,  "dBTP", FONT_MTR, MA_WIDTH - 5, GM_TXT - 6, 0, 1, c_lgt);
 	}
 	cairo_destroy (cr);
 }
@@ -561,7 +564,7 @@ static gboolean expose_event(GtkWidget *w, GdkEventExpose *ev, gpointer handle) 
 			} else {
 				sprintf(buf, "%+.1f", ui->peak_val[i]);
 			}
-			write_text(cr, buf, FONT_VAL, 0, 1, MA_WIDTH + GM_WIDTH * i + GM_WIDTH - 5, GM_TOP / 2 + 2);
+			write_text(cr, buf, FONT_VAL, MA_WIDTH + GM_WIDTH * i + GM_WIDTH - 5, GM_TOP / 2 + 2, 0, 1, c_lgt);
 			cairo_restore(cr);
 
 			cairo_save(cr);
@@ -572,7 +575,7 @@ static gboolean expose_event(GtkWidget *w, GdkEventExpose *ev, gpointer handle) 
 			cairo_stroke_preserve (cr);
 			cairo_clip (cr);
 			sprintf(buf, "%+.1f", ui->val[i]);
-			write_text(cr, buf, FONT_VAL, 0, 1, MA_WIDTH + GM_WIDTH * i + GM_WIDTH - 5, GM_TXT - 6);
+			write_text(cr, buf, FONT_VAL, MA_WIDTH + GM_WIDTH * i + GM_WIDTH - 5, GM_TXT - 6, 0, 1, c_lgt);
 			cairo_restore(cr);
 		}
 	}
@@ -604,7 +607,7 @@ static gboolean expose_event(GtkWidget *w, GdkEventExpose *ev, gpointer handle) 
 		cairo_set_source_rgba (cr, .6, .6, .6, 1.0);
 		cairo_stroke_preserve (cr);
 		cairo_clip (cr);
-		write_text(cr, buf, FONT_SPK, 0, 2, MA_WIDTH + GM_WIDTH * i + GM_WIDTH/2, GM_TXT + 18);
+		write_text(cr, buf, FONT_SPK, MA_WIDTH + GM_WIDTH * i + GM_WIDTH/2, GM_TXT + 18, 0, 2, c_lgt);
 		cairo_restore(cr);
 	}
 
@@ -731,6 +734,7 @@ instantiate(const LV2UI_Descriptor*   descriptor,
 	ui->write      = write_function;
 	ui->controller = controller;
 
+	get_cairo_color_from_gtk(0, ui->c_txt);
 	ui->gain = 1.0;
 	ui->cache_sf = -100;
 	ui->cache_ma = -100;
@@ -846,6 +850,7 @@ cleanup(LV2UI_Handle handle)
 	gtkext_dial_destroy(ui->spn_decay);
 	gtk_widget_destroy(ui->lbl_attack);
 	gtk_widget_destroy(ui->lbl_decay);
+	gtk_widget_destroy(ui->align);
 	gtk_widget_destroy(ui->c_box);
 
 	free(ui);
