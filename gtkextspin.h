@@ -63,13 +63,18 @@ static gboolean gtkext_spin_leave_notify(GtkWidget *w, GdkEvent *event, gpointer
 	return FALSE;
 }
 
-static gboolean gtkext_spin_callback(GtkWidget *w, gpointer handle) {
-	GtkExtSpin *d = (GtkExtSpin *) handle;
+static gboolean gtkext_spin_render(GtkExtSpin *d){
 	char buf[32];
 	snprintf(buf, 32, d->prec_fmt, gtkext_dial_get_value(d->dial));
 	buf[31] = '\0';
 	if (d->lbl & 1) gtkext_lbl_set_text(d->lbl_l, buf);
 	if (d->lbl & 2) gtkext_lbl_set_text(d->lbl_r, buf);
+	return TRUE;
+}
+
+static gboolean gtkext_spin_callback(GtkWidget *w, gpointer handle) {
+	GtkExtSpin *d = (GtkExtSpin *) handle;
+	gtkext_spin_render(d);
 	if (d->cb) d->cb(gtkext_dial_widget(d->dial), d->handle);
 	return TRUE;
 }
@@ -85,12 +90,11 @@ static void gtkext_spin_set_digits(GtkExtSpin *d, int prec) {
 	} else {
 		sprintf(d->prec_fmt,"%%.%df", prec);
 	}
+	gtkext_spin_render(d);
 }
 
 static GtkExtSpin * gtkext_spin_new(float min, float max, float step) {
 	GtkExtSpin *d = (GtkExtSpin *) malloc(sizeof(GtkExtSpin));
-
-	gtkext_spin_set_digits(d, - floorf(log10f(step)));
 
 	d->sensitive = TRUE;
 	d->prelight = FALSE;
@@ -113,6 +117,7 @@ static GtkExtSpin * gtkext_spin_new(float min, float max, float step) {
 	gtk_container_add(GTK_CONTAINER(d->c), d->b);
 	gtk_widget_show_all(d->c);
 
+	gtkext_spin_set_digits(d, - floorf(log10f(step)));
 	gtkext_spin_callback(0, d); // set value
 	return d;
 }
@@ -133,6 +138,7 @@ static void gtkext_spin_set_alignment(GtkExtSpin *d, float x, float y) {
 static void gtkext_spin_label_width(GtkExtSpin *d, float left, float right) {
 	gtkext_lbl_set_min_geometry(d->lbl_l, (float) left, 0);
 	gtkext_lbl_set_min_geometry(d->lbl_r, (float) right, 0);
+	gtkext_spin_render(d);
 }
 
 static void gtkext_spin_set_label_pos(GtkExtSpin *d, int p) {
