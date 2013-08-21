@@ -56,8 +56,8 @@
 #define UINT_TO_RGB(u,r,g,b) { (*(r)) = ((u)>>16)&0xff; (*(g)) = ((u)>>8)&0xff; (*(b)) = (u)&0xff; }
 #define UINT_TO_RGBA(u,r,g,b,a) { UINT_TO_RGB(((u)>>8),r,g,b); (*(a)) = (u)&0xff; }
 
-#define GAINSCALE(x) (40.0 -(x) * 4.0)
-#define INV_GAINSCALE(x) (10.0 -(x) / 4.0)
+#define GAINSCALE(x) (x > .01 ? ((20.0f * log10f(x) + 20.0f) / 5.20412f) : 0)
+#define INV_GAINSCALE(x) (powf(10, .05f * ((x * 5.20411f) - 20)))
 
 static const char *freq_table [] = {
 	" 20 Hz",   " 25 Hz",  "31.5 Hz",
@@ -367,7 +367,7 @@ static void alloc_annotations(SAUI* ui) {
 }
 
 static void realloc_metrics(SAUI* ui) {
-	const float dboff = ui->gain > 0.001 ? 20.0 * log10f(ui->gain) : -60;
+	const float dboff = ui->gain > 0.01 ? 20.0 * log10f(ui->gain) : -20;
 	if (rint(ui->cache_ma * 5) == rint(dboff * 5)) {
 		return;
 	}
@@ -378,6 +378,8 @@ static void realloc_metrics(SAUI* ui) {
 	write_text(cr,  TXT , FONT_MTR, MA_WIDTH - 3, YPOS(deflect(ui, dboff + DB)), 0, 1, c_lgt);
 
 #define DO_THE_METRICS \
+	DO_THE_METER(  25, "+25dB") \
+	DO_THE_METER(  20, "+20dB") \
 	DO_THE_METER(  18, "+18dB") \
 	DO_THE_METER(  15, "+15dB") \
 	DO_THE_METER(   9,  "+9dB") \
@@ -419,7 +421,7 @@ static void realloc_metrics(SAUI* ui) {
 }
 
 static void prepare_metersurface(SAUI* ui) {
-	const float dboff = ui->gain > 0.001 ? 20.0 * log10f(ui->gain) : -60;
+	const float dboff = ui->gain > 0.01 ? 20.0 * log10f(ui->gain) : -20;
 
 	if (rint(ui->cache_sf * 5) == rint(dboff * 5)) {
 		return;
@@ -451,6 +453,8 @@ static void prepare_metersurface(SAUI* ui) {
 		cairo_set_operator (cr, CAIRO_OPERATOR_OVER);
 		cairo_set_line_width(cr, 1.0);
 		cairo_set_source_rgba (cr, .8, .8, .8, 1.0);
+		GAINLINE(25);
+		GAINLINE(20);
 		GAINLINE(18);
 		GAINLINE(15);
 		GAINLINE(9);
@@ -597,7 +601,7 @@ static gboolean expose_event(GtkWidget *w, GdkEventExpose *ev, gpointer handle) 
 
 	/* highlight */
 	if (ui->highlight >= 0 && ui->highlight < ui->num_meters) {
-		const float dboff = ui->gain > 0.001 ? 20.0 * log10f(ui->gain) : -60;
+		const float dboff = ui->gain > 0.01 ? 20.0 * log10f(ui->gain) : -20;
 		cairo_set_operator (cr, CAIRO_OPERATOR_OVER);
 		const int i = ui->highlight;
 		char buf[32];
@@ -651,8 +655,8 @@ static gboolean set_gain(GtkWidget* w, gpointer handle) {
 	float oldgain = ui->gain;
 	ui->gain = INV_GAINSCALE(gtkext_scale_get_value(ui->fader));
 #if 1
-	if (ui->gain <= .2511) ui->gain = .2511;
-	if (ui->gain >= 10.0) ui->gain = 10.0;
+	if (ui->gain <  .250) ui->gain = 0.01;
+	if (ui->gain >= 40.0) ui->gain = 40.0;
 #endif
 	if (oldgain == ui->gain) return TRUE;
 	if (!ui->disable_signals) {
@@ -765,7 +769,7 @@ instantiate(const LV2UI_Descriptor*   descriptor,
 	ui->c_box = gtk_vbox_new(FALSE, 2);
 	ui->align = gtk_alignment_new(.5, .5, 0, 0);
 	ui->m0    = gtk_drawing_area_new();
-	ui->fader = gtkext_scale_new(0.0, 40.0, .001, FALSE);
+	ui->fader = gtkext_scale_new(1.45, 10.0, .05, FALSE);
 
 	ui->spn_attack = gtkext_dial_new(0, 100, .5);
 	ui->spn_decay  = gtkext_dial_new(0, 100, .5);
@@ -776,18 +780,20 @@ instantiate(const LV2UI_Descriptor*   descriptor,
 	gtkext_dial_set_surface(ui->spn_decay, ui->dial);
 
 	gtkext_scale_set_value(ui->fader, GAINSCALE(1.0000));
-	gtkext_scale_add_mark(ui->fader,GAINSCALE(0.2511), NULL /*"-12db" */);
-	gtkext_scale_add_mark(ui->fader,GAINSCALE(0.3548), NULL /* "-9dB" */);
-	gtkext_scale_add_mark(ui->fader,GAINSCALE(0.5012), NULL /* "-6dB" */);
-	gtkext_scale_add_mark(ui->fader,GAINSCALE(0.7079), NULL /* "-3dB" */);
-	gtkext_scale_add_mark(ui->fader,GAINSCALE(1.0000), "0dB");
-	gtkext_scale_add_mark(ui->fader,GAINSCALE(1.4125), NULL /* "+3dB" */);
+	gtkext_scale_add_mark(ui->fader,GAINSCALE(0.2511), "-12db");
+	gtkext_scale_add_mark(ui->fader,GAINSCALE(0.3548),  "-9dB");
+	gtkext_scale_add_mark(ui->fader,GAINSCALE(0.5012),  "-6dB");
+	gtkext_scale_add_mark(ui->fader,GAINSCALE(0.7079),  "-3dB");
+	gtkext_scale_add_mark(ui->fader,GAINSCALE(1.0000),   "0dB");
+	gtkext_scale_add_mark(ui->fader,GAINSCALE(1.4125),  "+3dB");
 	gtkext_scale_add_mark(ui->fader,GAINSCALE(1.9952),  "+6dB");
 	gtkext_scale_add_mark(ui->fader,GAINSCALE(2.8183),  "+9dB");
 	gtkext_scale_add_mark(ui->fader,GAINSCALE(3.9810), "+12dB");
 	gtkext_scale_add_mark(ui->fader,GAINSCALE(5.6234), "+15dB");
 	gtkext_scale_add_mark(ui->fader,GAINSCALE(7.9432), "+18dB");
 	gtkext_scale_add_mark(ui->fader,GAINSCALE(10.0  ), "+20dB");
+	gtkext_scale_add_mark(ui->fader,GAINSCALE(17.783), "+25dB");
+	gtkext_scale_add_mark(ui->fader,GAINSCALE(31.623), "+30dB");
 
 	gtk_drawing_area_size(GTK_DRAWING_AREA(ui->m0), 2.0 * MA_WIDTH + ui->num_meters * GM_WIDTH, GM_HEIGHT);
 	gtk_widget_set_size_request(ui->m0, 2.0 * MA_WIDTH + ui->num_meters * GM_WIDTH, GM_HEIGHT);

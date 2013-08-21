@@ -47,6 +47,7 @@ typedef struct {
 	gpointer handle;
 
 	cairo_pattern_t* dpat;
+	cairo_pattern_t* fpat;
 	cairo_surface_t* bg;
 
 	float w_width, w_height;
@@ -78,13 +79,13 @@ static void gtkext_scale_set_rect(GtkExtScale * d, float val, GdkRectangle *rect
 	if (d->horiz) {
 		rect->x = 1 + val;
 		rect->width = 8;
-		rect->y = 3;
-		rect->height = d->w_height - 6;
+		rect->y = d->mark_space + 3;
+		rect->height = d->w_height - 6 - d->mark_space;
 	} else {
 		rect->x = 5;
-		rect->width = d->w_width - 5;
+		rect->width = d->w_width - 5 - d->mark_space;
 		rect->y = 1 + val;
-		rect->height = 8;
+		rect->height = 9;
 	}
 }
 
@@ -98,6 +99,7 @@ static void gtkext_scale_update_value(GtkExtScale * d, float val) {
 		if (d->w->window &&
 				gtkext_scale_round_length(d, oldval) != gtkext_scale_round_length(d, val)
 				) {
+#if 0
 			GdkRectangle rect;
 			gtkext_scale_set_rect(d, val, &rect);
 			GdkRegion* region0 =  gdk_region_rectangle (&rect);
@@ -107,6 +109,40 @@ static void gtkext_scale_update_value(GtkExtScale * d, float val) {
 			gdk_window_invalidate_region (d->w->window, region0, TRUE);
 			gdk_region_destroy(region1);
 			gdk_region_destroy(region0);
+#else
+			val = gtkext_scale_round_length(d, val);
+			oldval = gtkext_scale_round_length(d, oldval);
+			GdkRectangle rect;
+			if (oldval > val) {
+
+				if (d->horiz) {
+					rect.x = 1 + val;
+					rect.width = 9 + oldval - val;
+					rect.y = d->mark_space + 3;
+					rect.height = d->w_height - 6 - d->mark_space;
+				} else {
+					rect.x = 5;
+					rect.width = d->w_width - 5 - d->mark_space;
+					rect.y = 1 + val;
+					rect.height = 9 + oldval - val;
+				}
+			} else {
+				if (d->horiz) {
+					rect.x = 1 + oldval;
+					rect.width = 9 + val - oldval;
+					rect.y = d->mark_space + 3;
+					rect.height = d->w_height - 6 - d->mark_space;
+				} else {
+					rect.x = 5;
+					rect.width = d->w_width - 5 - d->mark_space;
+					rect.y = 1 + oldval;
+					rect.height = 9 + val - oldval;
+				}
+			}
+			GdkRegion* region =  gdk_region_rectangle (&rect);
+			gdk_window_invalidate_region (d->w->window, region, TRUE);
+			gdk_region_destroy(region);
+#endif
 		}
 	}
 }
@@ -139,13 +175,17 @@ static gboolean gtkext_scale_mousemove(GtkWidget *w, GdkEventMotion *event, gpoi
 		return FALSE;
 	}
 	float len;
+	float diff;
 	if (d->horiz) {
 		len = d->w_width - 8;
+		diff = (event->x - d->drag_x) / len;
 	} else {
 		len = d->w_height - 8;
+		diff = (d->drag_y - event->y) / len;
 	}
-
-	float diff = ((event->x - d->drag_x) - (event->y - d->drag_y)) / len;
+#if 0
+	diff = ((event->x - d->drag_x) - (event->y - d->drag_y)) / len;
+#endif
 	diff = rint(diff * (d->max - d->min) / d->acc ) * d->acc;
 	float val = d->drag_c + diff;
 
@@ -243,10 +283,18 @@ static void create_scale_pattern(GtkExtScale * d) {
 	} else {
 		d->dpat = cairo_pattern_create_linear (0.0, 0.0, GSC_GIRTH, 0);
 	}
-
 	cairo_pattern_add_color_stop_rgb (d->dpat, 0.0, .3, .3, .33);
 	cairo_pattern_add_color_stop_rgb (d->dpat, 0.4, .5, .5, .55);
 	cairo_pattern_add_color_stop_rgb (d->dpat, 1.0, .2, .2, .22);
+
+	if (d->horiz) {
+		d->fpat = cairo_pattern_create_linear (0.0, 0.0, 0.0, GSC_GIRTH);
+	} else {
+		d->fpat = cairo_pattern_create_linear (0.0, 0.0, GSC_GIRTH, 0);
+	}
+	cairo_pattern_add_color_stop_rgb (d->fpat, 0.0, .0, .0, .0);
+	cairo_pattern_add_color_stop_rgb (d->fpat, 0.4,  1,  1,  1);
+	cairo_pattern_add_color_stop_rgb (d->fpat, 1.0, .1, .1, .1);
 }
 
 #define SXX_W(minus) (d->w_width  + minus - ((d->bg && !d->horiz) ? d->mark_space : 0))
@@ -334,25 +382,62 @@ static gboolean gtkext_scale_expose_event(GtkWidget *w, GdkEventExpose *ev, gpoi
 	cairo_stroke_preserve (cr);
 	cairo_clip (cr);
 
-	if (d->sensitive) {
-		cairo_set_source_rgba (cr, .95, .95, .95, 1.0);
-	} else {
-		cairo_set_source_rgba (cr, .5, .5, .5, .7);
-	}
-	cairo_set_line_width(cr, 3.0);
 	float val = gtkext_scale_round_length(d, d->cur);
-	if (d->horiz) {
-		cairo_move_to(cr, 4.5 + val, SXX_T(4.5));
-		cairo_line_to(cr, 4.5 + val, SXX_T(0) + SXX_H(-4.5));
+#if 1
+	if (d->sensitive) {
+		cairo_set_source_rgba (cr, .5, .0, .0, 0.3);
 	} else {
-		cairo_move_to(cr, 4.5        , SXX_T(4.5) + val);
-		cairo_line_to(cr, SXX_W(-4.5), SXX_T(4.5) + val);
+		cairo_set_source_rgba (cr, .5, .0, .0, 0.2);
 	}
-	cairo_stroke (cr);
+	if (d->horiz) {
+		cairo_rectangle(cr, 3.0 + 0, SXX_T(4.5), val, SXX_T(4.5));
+	} else {
+		cairo_rectangle(cr, 4.5, SXX_T(3), SXX_W(-8), val);
+	}
+	cairo_fill(cr);
+	if (d->sensitive) {
+		cairo_set_source_rgba (cr, .0, .5, .0, 0.3);
+	} else {
+		cairo_set_source_rgba (cr, .0, .5, .0, 0.2);
+	}
+	if (d->horiz) {
+		cairo_rectangle(cr, 3.0 + val, SXX_T(4.5), SXX_W(-8) - val, SXX_T(4.5));
+	} else {
+		cairo_rectangle(cr, 4.5, SXX_T(3) + val, SXX_W(-8), SXX_H(-8) - val);
+	}
+	cairo_fill(cr);
+#endif
+	if (d->sensitive) {
+#if 1
+		cairo_set_source(cr, d->fpat);
+		cairo_matrix_t matrix;
+		cairo_matrix_init_translate(&matrix, 0.0, -SXX_T(0));
+		cairo_pattern_set_matrix (d->fpat, &matrix);
+#else
+		cairo_set_source_rgba (cr, .95, .95, .95, 1.0);
+#endif
+		if (d->horiz) {
+			cairo_rectangle(cr, 3.0 + val, SXX_T(4.5), 3, SXX_T(4.5));
+		} else {
+			cairo_rectangle(cr, 4.5, SXX_T(3) + val, SXX_W(-8), 3);
+		}
+		cairo_fill(cr);
+	} else {
+		cairo_set_line_width(cr, 3.0);
+		cairo_set_source_rgba (cr, .7, .7, .7, .7);
+		if (d->horiz) {
+			cairo_move_to(cr, 4.5 + val, SXX_T(4.5));
+			cairo_line_to(cr, 4.5 + val, SXX_T(0) + SXX_H(-4.5));
+		} else {
+			cairo_move_to(cr, 4.5        , SXX_T(4.5) + val);
+			cairo_line_to(cr, SXX_W(-4.5), SXX_T(4.5) + val);
+		}
+		cairo_stroke (cr);
+	}
 
 	if (d->sensitive && (d->prelight || d->drag_x > 0)) {
 		cairo_reset_clip (cr);
-		cairo_set_source_rgba (cr, 1.0, 1.0, 1.0, .15);
+		cairo_set_source_rgba (cr, 1.0, 1.0, 1.0, .1);
 		rounded_rectangle(cr, 4.5, SXX_T(4.5), SXX_W(-8), SXX_H(-8), 6);
 		cairo_fill_preserve(cr);
 		cairo_set_line_width(cr, .75);
@@ -439,6 +524,7 @@ static void gtkext_scale_destroy(GtkExtScale *d) {
 	gtk_widget_destroy(d->w);
 	gtk_widget_destroy(d->c);
 	cairo_pattern_destroy(d->dpat);
+	cairo_pattern_destroy(d->fpat);
 	pthread_mutex_destroy(&d->_mutex);
 	for (int i = 0; i < d->mark_cnt; ++i) {
 		free(d->mark_txt[i]);

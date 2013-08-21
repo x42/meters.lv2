@@ -48,7 +48,7 @@ typedef void Stcorrdsp;
 #define PC_BOUNDS ( 40.0f)
 
 #define PC_TOP    ( 12.5f)
-#define PC_BLOCK  (  8.0f)
+#define PC_BLOCK  (  9.0f)
 #define PC_LEFT   ( 10.0f)
 #define PC_WIDTH  ( 20.0f)
 #define PC_HEIGHT (380.0f)
@@ -60,6 +60,9 @@ typedef void Stcorrdsp;
 #define GM_RAD2   (100.0f)
 
 #define MAX_CAIRO_PATH 32
+
+#define GAINSCALE(x) (x > .01 ? ((20 * log10f(x) + 40) / 6.60206) : 0)
+#define INV_GAINSCALE(x) (powf(10, .05*((x * 6.602059) - 40)))
 
 using namespace LV2M;
 
@@ -461,10 +464,10 @@ static void draw_rb(GMUI* ui, gmringbuf *rb) {
 		if (gain < .001) gain = .001;
 
 		float fgain = gain;
-		if (fgain > 6.0) fgain = 6.0;
-		if (fgain < .001) fgain = .001;
-		if (rint(50 * fgain) != rint(50 * gtkext_scale_get_value(ui->fader))) {
-			gtkext_scale_set_value(ui->fader, fgain);
+		if (fgain > 20.0) fgain = 20.0;
+		if (fgain < .03) fgain = .03;
+		if (rint(500 * GAINSCALE(fgain)) != rint(500 * gtkext_scale_get_value(ui->fader))) { // XXX
+			gtkext_scale_set_value(ui->fader, GAINSCALE(fgain));
 		}
 		//printf("autogain:  %+6.2f dB (*%f)\n", 20 * log10f(ui->gain), ui->gain);
 		ui->gain = gain;
@@ -509,8 +512,8 @@ static void draw_pc_annotation(GMUI* ui, cairo_t* cr) {
 	cairo_set_line_width(cr, 1.5);
 
 #define PC_ANNOTATION(YPOS) \
-	cairo_move_to(cr, PC_LEFT + 2.0, PC_TOP + YPOS); \
-	cairo_line_to(cr, PC_LEFT + PC_WIDTH - 2.0, PC_TOP + YPOS);\
+	cairo_move_to(cr, PC_LEFT + 2.0, PC_TOP + YPOS - 1.0); \
+	cairo_line_to(cr, PC_LEFT + PC_WIDTH - 2.0, PC_TOP + YPOS - 1.0);\
 	cairo_stroke(cr);
 
 	PC_ANNOTATION(PC_HEIGHT * 0.1);
@@ -525,7 +528,7 @@ static void draw_pc_annotation(GMUI* ui, cairo_t* cr) {
 	DRAW_LABEL(5, PC_LEFT + 16, PC_TOP + 14);
 	DRAW_LABEL(6, PC_LEFT + 16, PC_TOP + PC_HEIGHT - 2);
 
-	cairo_set_line_width(cr, 2.0);
+	cairo_set_line_width(cr, 1.5);
 	cairo_set_source_rgba (cr, .7, .7, .8, 1.0);
 	PC_ANNOTATION(PC_HEIGHT * 0.5);
 }
@@ -637,7 +640,7 @@ static gboolean cb_save_state(GtkWidget *w, gpointer handle) {
 
 static gboolean set_gain(GtkWidget* w, gpointer handle) {
 	GMUI* ui = (GMUI*)handle;
-	ui->gain = gtkext_scale_get_value(ui->fader);
+	ui->gain = INV_GAINSCALE(gtkext_scale_get_value(ui->fader));
 	const bool autogain = gtkext_cbtn_get_active(ui->cbn_autogain);
 	if (!ui->disable_signals && !autogain) {
 		ui->write(ui->controller, 4, sizeof(float), 0, (const void*) &ui->gain);
@@ -853,7 +856,7 @@ instantiate(const LV2UI_Descriptor*   descriptor,
 	ui->box   = gtk_vbox_new(FALSE, 2);
 	ui->align = gtk_alignment_new(.5, .5, 0, 0);
 	ui->m0    = gtk_drawing_area_new();
-	ui->fader = gtkext_scale_new(0, 6.0, .001, TRUE);
+	ui->fader = gtkext_scale_new(3.0, 9.1, .01, TRUE);
 	ui->cbn_autogain = gtkext_cbtn_new("Auto Gain", GBT_LED_LEFT, false);
 
 	ui->b_box = gtk_hbox_new(TRUE, 6);
@@ -923,19 +926,21 @@ instantiate(const LV2UI_Descriptor*   descriptor,
 
 	/* fader init */
 	//gtk_scale_set_draw_value(GTK_SCALE(ui->fader), FALSE);
-	gtkext_scale_set_value(ui->fader, 1.0);
+	gtkext_scale_set_value(ui->fader, GAINSCALE(1.0));
 
-	gtkext_scale_add_mark(ui->fader, 5.6234, (const char*) "" /* "+15dB"*/);
-	gtkext_scale_add_mark(ui->fader, 3.9810, (const char*) "+12dB");
-	gtkext_scale_add_mark(ui->fader, 2.8183, (const char*) "" /* "+9dB" */);
-	gtkext_scale_add_mark(ui->fader, 1.9952, (const char*) "+6dB");
-	gtkext_scale_add_mark(ui->fader, 1.4125, (const char*) "" /* "+3dB" */);
-	gtkext_scale_add_mark(ui->fader, 1.0000, (const char*) "0dB");
-	gtkext_scale_add_mark(ui->fader, 0.7079, (const char*) "" /* "-3dB" */);
-	gtkext_scale_add_mark(ui->fader, 0.5012, (const char*) "-6dB");
-	gtkext_scale_add_mark(ui->fader, 0.3548, (const char*) "" /* "-9dB" */);
-	gtkext_scale_add_mark(ui->fader, 0.2511, (const char*) "-12dB");
-	gtkext_scale_add_mark(ui->fader, 0.1778, (const char*) "" /* "-15dB"*/);
+	gtkext_scale_add_mark(ui->fader, GAINSCALE(7.9432), (const char*) "+18dB");
+	gtkext_scale_add_mark(ui->fader, GAINSCALE(5.6234), (const char*) "+15dB");
+	gtkext_scale_add_mark(ui->fader, GAINSCALE(3.9810), (const char*) "+12dB");
+	gtkext_scale_add_mark(ui->fader, GAINSCALE(2.8183), (const char*)  "+9dB");
+	gtkext_scale_add_mark(ui->fader, GAINSCALE(1.9952), (const char*)  "+6dB");
+	gtkext_scale_add_mark(ui->fader, GAINSCALE(1.4125), (const char*)  "+3dB");
+	gtkext_scale_add_mark(ui->fader, GAINSCALE(1.0000), (const char*)   "0dB");
+	gtkext_scale_add_mark(ui->fader, GAINSCALE(0.7079), (const char*)  "-3dB");
+	gtkext_scale_add_mark(ui->fader, GAINSCALE(0.5012), (const char*)  "-6dB");
+	gtkext_scale_add_mark(ui->fader, GAINSCALE(0.3548), (const char*)  "-9dB");
+	gtkext_scale_add_mark(ui->fader, GAINSCALE(0.2511), (const char*) "-12dB");
+	gtkext_scale_add_mark(ui->fader, GAINSCALE(0.1778), (const char*) "-15dB");
+	gtkext_scale_add_mark(ui->fader, GAINSCALE(0.1258), (const char*) "-18dB");
 
 	gtk_drawing_area_size(GTK_DRAWING_AREA(ui->m0), PC_BOUNDS + GM_BOUNDS, GM_BOUNDS);
 	gtk_widget_set_size_request(ui->m0, PC_BOUNDS + GM_BOUNDS, GM_BOUNDS);
@@ -1100,7 +1105,7 @@ static void invalidate_gm(GMUI* ui) {
 static void invalidate_pc(GMUI* ui) {
 	float c;
 #define PC_BLOCKSIZE (PC_HEIGHT - PC_BLOCK)
-	if (rint(PC_BLOCKSIZE * ui->cor_u) ==rint (PC_BLOCKSIZE * ui->cor)) return;
+	if (rint(PC_BLOCKSIZE * ui->cor_u * 2) == rint (PC_BLOCKSIZE * ui->cor * 2)) return;
 	c = PC_BLOCKSIZE * ui->cor_u;
 	gtk_widget_queue_draw_area(ui->m0, PC_LEFT, PC_TOP + c -1 , PC_WIDTH, PC_BLOCK + 2);
 	ui->cor_u = ui->cor;
@@ -1123,9 +1128,9 @@ port_event(LV2UI_Handle handle,
 	if (format != 0) return;
 	if (port_index == 4) {
 		float v = *(float *)buffer;
-		if (v >= 0 && v <= 6.0) {
+		if (v >= 0.001 && v <= 20.0) {
 			ui->disable_signals = true;
-			gtkext_scale_set_value(ui->fader, v);
+			gtkext_scale_set_value(ui->fader, GAINSCALE(v));
 			ui->disable_signals = false;
 		}
 	} else
