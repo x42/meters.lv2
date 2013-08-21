@@ -60,6 +60,8 @@ typedef struct {
 	float c_txt[4];
 	float mark_space;
 
+	pthread_mutex_t _mutex;
+
 } GtkExtScale;
 
 
@@ -149,6 +151,7 @@ static gboolean gtkext_scale_mousemove(GtkWidget *w, GdkEventMotion *event, gpoi
 
 	/* snap to mark */
 	const int snc = gtkext_scale_round_length(d, val);
+	// lock ?!
 	for (int i = 0; i < d->mark_cnt; ++i) {
 		int sn = gtkext_scale_round_length(d, d->mark_val[i]);
 		if (abs(sn-snc) < 3) {
@@ -250,6 +253,7 @@ static void create_scale_pattern(GtkExtScale * d) {
 
 #define SXX_W(minus) (d->w_width  + minus - ((d->bg && !d->horiz) ? d->mark_space : 0))
 #define SXX_H(minus) (d->w_height + minus - ((d->bg &&  d->horiz) ? d->mark_space : 0))
+#define SXX_T(plus)  (plus + ((d->bg && d->horiz) ? d->mark_space : 0))
 
 static void gtkext_scale_render_metrics(GtkExtScale* d) {
 	if (d->bg) {
@@ -269,10 +273,10 @@ static void gtkext_scale_render_metrics(GtkExtScale* d) {
 		float v = 4.0 + gtkext_scale_round_length(d, d->mark_val[i]);
 		if (d->horiz) {
 			if (d->mark_txt[i]) {
-				write_text_full(cr, d->mark_txt[i], d->mark_font, v, d->w_height - d->mark_space + 1, -M_PI/2, 1, d->c_txt);
+				write_text_full(cr, d->mark_txt[i], d->mark_font, v, /* d->w_height - d->mark_space + 1 */ 1, -M_PI/2, 1, d->c_txt);
 			}
-			cairo_move_to(cr, v+.5, 1.5);
-			cairo_line_to(cr, v+.5, SXX_H(-.5));
+			cairo_move_to(cr, v+.5, SXX_T(1.5));
+			cairo_line_to(cr, v+.5, SXX_T(0) + SXX_H(-.5));
 		} else {
 			if (d->mark_txt[i]) {
 				write_text_full(cr, d->mark_txt[i], d->mark_font, d->w_width -2, v, 0, 1, d->c_txt);
@@ -299,10 +303,10 @@ static gboolean gtkext_scale_expose_event(GtkWidget *w, GdkEventExpose *ev, gpoi
 	cairo_fill(cr);
 
 	if (d->mark_cnt > 0 && d->mark_expose) {
-		// todo lock
+		pthread_mutex_lock (&d->_mutex);
 		d->mark_expose = FALSE;
 		gtkext_scale_render_metrics(d);
-		// todo unlock
+		pthread_mutex_unlock (&d->_mutex);
 	}
 
 	if (d->bg) {
@@ -321,7 +325,7 @@ static gboolean gtkext_scale_expose_event(GtkWidget *w, GdkEventExpose *ev, gpoi
 	if (d->sensitive) {
 		cairo_set_source(cr, d->dpat);
 	}
-	rounded_rectangle(cr, 4.5, 4.5, SXX_W(-8), SXX_H(-8), 6);
+	rounded_rectangle(cr, 4.5, SXX_T(4.5), SXX_W(-8), SXX_H(-8), 6);
 	cairo_fill_preserve (cr);
 	cairo_set_line_width(cr, .75);
 	cairo_set_source_rgba (cr, .0, .0, .0, 1.0);
@@ -336,18 +340,18 @@ static gboolean gtkext_scale_expose_event(GtkWidget *w, GdkEventExpose *ev, gpoi
 	cairo_set_line_width(cr, 3.0);
 	float val = gtkext_scale_round_length(d, d->cur);
 	if (d->horiz) {
-		cairo_move_to(cr, 4.5 + val, 4.5);
-		cairo_line_to(cr, 4.5 + val, SXX_H(-4.5));
+		cairo_move_to(cr, 4.5 + val, SXX_T(4.5));
+		cairo_line_to(cr, 4.5 + val, SXX_T(0) + SXX_H(-4.5));
 	} else {
-		cairo_move_to(cr, 4.5         , 4.5 + val);
-		cairo_line_to(cr, SXX_W(-4.5) , 4.5 + val);
+		cairo_move_to(cr, 4.5        , SXX_T(4.5) + val);
+		cairo_line_to(cr, SXX_W(-4.5), SXX_T(4.5) + val);
 	}
 	cairo_stroke (cr);
 
 	if (d->sensitive && (d->prelight || d->drag_x > 0)) {
 		cairo_reset_clip (cr);
 		cairo_set_source_rgba (cr, 1.0, 1.0, 1.0, .15);
-		rounded_rectangle(cr, 4.5, 4.5, SXX_W(-8), SXX_H(-8), 6);
+		rounded_rectangle(cr, 4.5, SXX_T(4.5), SXX_W(-8), SXX_H(-8), 6);
 		cairo_fill_preserve(cr);
 		cairo_set_line_width(cr, .75);
 		cairo_set_source_rgba (cr, .0, .0, .0, 1.0);
@@ -376,7 +380,8 @@ static GtkExtScale * gtkext_scale_new_with_size(float min, float max, float step
 	d->mark_font = get_font_from_gtk();
 	get_cairo_color_from_gtk(0, d->c_txt);
 
-	d->mark_space = 40.0; // XXX longest annotation text
+	pthread_mutex_init (&d->_mutex, 0);
+	d->mark_space = 0.0; // XXX longest annotation text
 
 	d->horiz = horiz;
 	if (horiz) {
@@ -432,6 +437,7 @@ static void gtkext_scale_destroy(GtkExtScale *d) {
 	gtk_widget_destroy(d->w);
 	gtk_widget_destroy(d->c);
 	cairo_pattern_destroy(d->dpat);
+	pthread_mutex_destroy(&d->_mutex);
 	for (int i = 0; i < d->mark_cnt; ++i) {
 		free(d->mark_txt[i]);
 	}
@@ -468,13 +474,21 @@ static float gtkext_scale_get_value(GtkExtScale *d) {
 
 
 static void gtkext_scale_add_mark(GtkExtScale *d, float v, const char *txt) {
-	// lock
+	int tw = 0;
+	int th = 0;
+	if (txt && strlen(txt)) {
+		get_text_geometry(txt, d->mark_font, &tw, &th);
+	}
+	pthread_mutex_lock (&d->_mutex);
+	if ((tw + 3) > d->mark_space) {
+		d->mark_space = tw + 3;
+	}
 	d->mark_val = (float *) realloc(d->mark_val, sizeof(float) * (d->mark_cnt+1));
 	d->mark_txt = (char **) realloc(d->mark_txt, sizeof(char*) * (d->mark_cnt+1));
 	d->mark_val[d->mark_cnt] = v;
 	d->mark_txt[d->mark_cnt] = txt ? strdup(txt): NULL;
 	d->mark_cnt++;
 	d->mark_expose = TRUE;
-	// unlock
+	pthread_mutex_unlock (&d->_mutex);
 }
 #endif
