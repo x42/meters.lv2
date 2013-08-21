@@ -29,6 +29,7 @@
 #include "common_cairo.h"
 #include "gtkextdial.h"
 #include "gtkextscale.h"
+#include "gtkextlbl.h"
 
 #include "lv2/lv2plug.in/ns/extensions/ui/ui.h"
 #define MTR_URI "http://gareus.org/oss/lv2/meters#"
@@ -81,8 +82,8 @@ typedef struct {
 	GtkWidget* m0;
 	GtkWidget* c_box;
 	GtkExtScale* fader;
-	GtkWidget* lbl_attack;
-	GtkWidget* lbl_decay;
+	GtkExtLbl* lbl_attack;
+	GtkExtLbl* lbl_decay;
 
 	GtkExtDial* spn_attack;
 	GtkExtDial* spn_decay;
@@ -768,8 +769,8 @@ instantiate(const LV2UI_Descriptor*   descriptor,
 
 	ui->spn_attack = gtkext_dial_new(0, 100, .5);
 	ui->spn_decay  = gtkext_dial_new(0, 100, .5);
-	ui->lbl_attack = gtk_label_new("Attack:");
-	ui->lbl_decay  = gtk_label_new("Decay:");
+	ui->lbl_attack = gtkext_lbl_new("Attack:");
+	ui->lbl_decay  = gtkext_lbl_new("Decay:");
 
 	gtkext_dial_set_surface(ui->spn_attack, ui->dial);
 	gtkext_dial_set_surface(ui->spn_decay, ui->dial);
@@ -799,9 +800,9 @@ instantiate(const LV2UI_Descriptor*   descriptor,
 
 	if (ui->display_freq) {
 		gtk_box_pack_start(GTK_BOX(ui->c_box), gtkext_scale_widget(ui->fader), TRUE, TRUE, 0);
-		gtk_box_pack_start(GTK_BOX(ui->c_box), ui->lbl_attack, FALSE, FALSE, 0);
+		gtk_box_pack_start(GTK_BOX(ui->c_box), gtkext_lbl_widget(ui->lbl_attack), FALSE, FALSE, 0);
 		gtk_box_pack_start(GTK_BOX(ui->c_box), gtkext_dial_widget(ui->spn_attack), FALSE, FALSE, 0);
-		gtk_box_pack_start(GTK_BOX(ui->c_box), ui->lbl_decay, FALSE, FALSE, 0);
+		gtk_box_pack_start(GTK_BOX(ui->c_box), gtkext_lbl_widget(ui->lbl_decay), FALSE, FALSE, 0);
 		gtk_box_pack_start(GTK_BOX(ui->c_box), gtkext_dial_widget(ui->spn_decay), FALSE, FALSE, 0);
 		gtk_box_pack_start(GTK_BOX(ui->box), ui->c_box, TRUE, FALSE, 0);
 	}
@@ -853,8 +854,8 @@ cleanup(LV2UI_Handle handle)
 	gtkext_scale_destroy(ui->fader);
 	gtkext_dial_destroy(ui->spn_attack);
 	gtkext_dial_destroy(ui->spn_decay);
-	gtk_widget_destroy(ui->lbl_attack);
-	gtk_widget_destroy(ui->lbl_decay);
+	gtkext_lbl_destroy(ui->lbl_attack);
+	gtkext_lbl_destroy(ui->lbl_decay);
 	gtk_widget_destroy(ui->align);
 	gtk_widget_destroy(ui->c_box);
 

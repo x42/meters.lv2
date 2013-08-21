@@ -24,6 +24,7 @@
 #include <cairo/cairo.h>
 
 #include "gtkextdial.h"
+#include "gtkextlbl.h"
 
 #define GSP_WIDTH 25
 #define GSP_HEIGHT 29
@@ -34,7 +35,7 @@
 typedef struct {
 	GtkExtDial *dial;
 	GtkWidget* c;
-	GtkWidget* lbl;
+	GtkExtLbl* lbl;
 
 	gboolean sensitive;
 	gboolean prelight;
@@ -48,7 +49,6 @@ static gboolean gtkext_spin_enter_notify(GtkWidget *w, GdkEvent *event, gpointer
 	GtkExtSpin * d = (GtkExtSpin *)handle;
 	if (!d->prelight) {
 		d->prelight = TRUE;
-		gtk_widget_queue_draw(d->lbl);
 	}
 	return FALSE;
 }
@@ -56,7 +56,6 @@ static gboolean gtkext_spin_leave_notify(GtkWidget *w, GdkEvent *event, gpointer
 	GtkExtSpin * d = (GtkExtSpin *)handle;
 	if (d->prelight) {
 		d->prelight = FALSE;
-		gtk_widget_queue_draw(d->lbl);
 	}
 	return FALSE;
 }
@@ -66,7 +65,7 @@ static gboolean gtkext_spin_callback(GtkWidget *w, gpointer handle) {
 	char buf[32];
 	snprintf(buf, 32, d->prec_fmt, gtkext_dial_get_value(d->dial));
 	buf[31] = '\0';
-	gtk_label_set_text(GTK_LABEL(d->lbl), buf);
+	gtkext_lbl_set_text(d->lbl, buf);
 	if (d->cb) d->cb(gtkext_dial_widget(d->dial), d->handle);
 	return TRUE;
 }
@@ -99,22 +98,19 @@ static GtkExtSpin * gtkext_spin_new(float min, float max, float step) {
 
 	gtkext_dial_set_callback(d->dial, gtkext_spin_callback, d);
 
-	d->lbl = gtk_label_new("");
+	d->lbl = gtkext_lbl_new("");
 	d->c = gtk_hbox_new(FALSE, 2);
 	gtk_box_pack_start(GTK_BOX(d->c), gtkext_dial_widget(d->dial), FALSE, FALSE, 0);
-	gtk_box_pack_start(GTK_BOX(d->c), d->lbl, FALSE, FALSE, 0);
+	gtk_box_pack_start(GTK_BOX(d->c), gtkext_lbl_widget(d->lbl), FALSE, FALSE, 0);
 	gtk_widget_show_all(d->c);
 
-	//gtk_widget_add_events(d->lbl, GDK_ENTER_NOTIFY_MASK | GDK_LEAVE_NOTIFY_MASK);
-	//g_signal_connect (G_OBJECT (d->lbl), "enter-notify-event",  G_CALLBACK (gtkext_spin_enter_notify), d);
-	//g_signal_connect (G_OBJECT (d->lbl), "leave-notify-event",  G_CALLBACK (gtkext_spin_leave_notify), d);
 	gtkext_spin_callback(0, d); // set value
 	return d;
 }
 
 static void gtkext_spin_destroy(GtkExtSpin *d) {
 	gtkext_dial_destroy(d->dial);
-	gtk_widget_destroy(d->lbl);
+	gtkext_lbl_destroy(d->lbl);
 	gtk_widget_destroy(d->c);
 	free(d);
 }
@@ -135,8 +131,7 @@ static void gtkext_spin_set_value(GtkExtSpin *d, float v) {
 static void gtkext_spin_set_sensitive(GtkExtSpin *d, gboolean s) {
 	if (d->sensitive != s) {
 		d->sensitive = s;
-		gtk_widget_set_sensitive(GTK_WIDGET(d->lbl), s);
-		gtk_widget_queue_draw(d->lbl);
+		gtkext_lbl_set_sensitive(d->lbl, s);
 	}
 	gtkext_dial_set_sensitive(d->dial, s);
 }

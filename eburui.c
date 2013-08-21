@@ -31,11 +31,13 @@
 #include "gtkextrbtn.h"
 #include "gtkextspin.h"
 #include "gtkextpbtn.h"
+#include "gtkextlbl.h"
 
 #define GBT_W(PTR) gtkext_cbtn_widget(PTR)
 #define GRB_W(PTR) gtkext_rbtn_widget(PTR)
 #define GSP_W(PTR) gtkext_spin_widget(PTR)
 #define GPB_W(PTR) gtkext_pbtn_widget(PTR)
+#define GLB_W(PTR) gtkext_lbl_widget(PTR)
 
 #include "lv2/lv2plug.in/ns/extensions/ui/ui.h"
 #include "./uris.h"
@@ -81,8 +83,8 @@ typedef struct {
 	GtkExtRBtn* cbx_histogram;
 
 	GtkExtSpin* spn_radartime;
-	GtkWidget* lbl_ringinfo;
-	GtkWidget* lbl_radarinfo;
+	GtkExtLbl* lbl_ringinfo;
+	GtkExtLbl* lbl_radarinfo;
 	GtkWidget* sep_v0;
 
 	GtkWidget* m0;
@@ -1023,17 +1025,17 @@ instantiate(const LV2UI_Descriptor*   descriptor,
 	ui->cbx_transport  = gtkext_cbtn_new("Host Transport", GBT_LED_LEFT, true);
 	ui->cbx_autoreset  = gtkext_cbtn_new("Reset on Start", GBT_LED_LEFT, true);
 	ui->spn_radartime  = gtkext_spin_new(30, 600, 15);
-	ui->lbl_radarinfo  = gtk_label_new("History Length [s]:");
-	ui->lbl_ringinfo   = gtk_label_new("Level Diplay");
+	ui->lbl_radarinfo  = gtkext_lbl_new("History Length [s]:");
+	ui->lbl_ringinfo   = gtkext_lbl_new("Level Diplay");
 	ui->cbx_truepeak   = gtkext_cbtn_new("Compute True-Peak", GBT_LED_LEFT, true);
 	ui->sep_v0         = gtk_vseparator_new();
 
 	ui->cbx_radar      = gtkext_rbtn_new("History", NULL);
 	ui->cbx_histogram  = gtkext_rbtn_new("Histogram", gtkext_rbtn_group(ui->cbx_radar));
 
-	gtk_misc_set_alignment(GTK_MISC(ui->lbl_radarinfo), 0.0f, 0.5f);
+	gtkext_lbl_set_alignment(ui->lbl_radarinfo, 0.0f, 0.5f);
 
-	gtk_table_attach(GTK_TABLE(ui->cbx_box), ui->lbl_ringinfo, 0, 2, 0, 1, GTK_SHRINK, GTK_SHRINK, 3, 0);
+	gtk_table_attach(GTK_TABLE(ui->cbx_box), GLB_W(ui->lbl_ringinfo), 0, 2, 0, 1, GTK_SHRINK, GTK_SHRINK, 3, 0);
 	gtk_table_attach_defaults(GTK_TABLE(ui->cbx_box), GRB_W(ui->cbx_lu)   , 0, 1, 1, 2);
 	gtk_table_attach_defaults(GTK_TABLE(ui->cbx_box), GRB_W(ui->cbx_lufs) , 1, 2, 1, 2);
 	gtk_table_attach_defaults(GTK_TABLE(ui->cbx_box), GRB_W(ui->cbx_sc18) , 0, 1, 2, 3);
@@ -1052,7 +1054,7 @@ instantiate(const LV2UI_Descriptor*   descriptor,
 	gtk_table_attach_defaults(GTK_TABLE(ui->cbx_box), GRB_W(ui->cbx_radar)     , 4, 5, 0, 1);
 	gtk_table_attach_defaults(GTK_TABLE(ui->cbx_box), GRB_W(ui->cbx_histogram) , 3, 4, 0, 1);
 
-	gtk_table_attach(GTK_TABLE(ui->cbx_box), ui->lbl_radarinfo, 3, 4, 1, 2, GTK_FILL, GTK_SHRINK, 3, 0);
+	gtk_table_attach(GTK_TABLE(ui->cbx_box), GLB_W(ui->lbl_radarinfo), 3, 4, 1, 2, GTK_FILL, GTK_SHRINK, 3, 0);
 	gtk_table_attach(GTK_TABLE(ui->cbx_box), GSP_W(ui->spn_radartime), 4, 5, 1, 2, GTK_EXPAND | GTK_FILL, GTK_EXPAND, 3, 0);
 
 	gtk_table_attach_defaults(GTK_TABLE(ui->cbx_box), GBT_W(ui->cbx_autoreset), 3, 4, 2, 3);
@@ -1141,8 +1143,8 @@ cleanup(LV2UI_Handle handle)
 	gtkext_spin_destroy(ui->spn_radartime);
 	gtkext_cbtn_destroy(ui->btn_start);
 	gtkext_pbtn_destroy(ui->btn_reset);
-	gtk_widget_destroy(ui->lbl_ringinfo);
-	gtk_widget_destroy(ui->lbl_radarinfo);
+	gtkext_lbl_destroy(ui->lbl_ringinfo);
+	gtkext_lbl_destroy(ui->lbl_radarinfo);
 	gtk_widget_destroy(ui->sep_v0);
 	gtk_widget_destroy(ui->m0);
 	gtk_widget_destroy(ui->align);
