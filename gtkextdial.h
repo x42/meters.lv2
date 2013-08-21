@@ -313,6 +313,10 @@ static void gtkext_dial_destroy(GtkExtDial *d) {
 	free(d);
 }
 
+static void gtkext_dial_set_alignment(GtkExtDial *d, float x, float y) {
+	gtk_alignment_set(GTK_ALIGNMENT(d->c), x, y, 0, 0);
+}
+
 static GtkWidget * gtkext_dial_widget(GtkExtDial *d) {
 	return d->c;
 }

@@ -31,6 +31,9 @@ typedef struct {
 	gboolean sensitive;
 	cairo_surface_t* sf_txt;
 	float w_width, w_height;
+	float min_width;
+	float min_height;
+	char *txt;
 } GtkExtLbl;
 
 static gboolean gtkext_lbl_expose_event(GtkWidget *w, GdkEventExpose *ev, gpointer handle) {
@@ -79,17 +82,16 @@ static void create_lbl_text_surface(GtkExtLbl * d, const char * txt, PangoFontDe
 	cairo_destroy (cr);
 }
 
-/******************************************************************************
- * public functions
- */
-
-static void gtkext_lbl_set_text(GtkExtLbl *d, const char *txt) {
+static void gtkext_lbl_render_text(GtkExtLbl *d, const char *txt) {
 	int ww, wh;
 	PangoFontDescription *fd = get_font_from_gtk();
 
 	get_text_geometry(txt, fd, &ww, &wh);
 	d->w_width = ww + 4;
 	d->w_height = wh + 4;
+
+	if (d->w_width < d->min_width) d->w_width = d->min_width;
+	if (d->w_height < d->min_height) d->w_height = d->min_height;
 
 	create_lbl_text_surface(d, txt, fd);
 	pango_font_description_free(fd);
@@ -99,11 +101,25 @@ static void gtkext_lbl_set_text(GtkExtLbl *d, const char *txt) {
 	gtk_widget_queue_draw(d->w);
 }
 
+/******************************************************************************
+ * public functions
+ */
+
+static void gtkext_lbl_set_text(GtkExtLbl *d, const char *txt) {
+	assert(txt);
+	free(d->txt);
+	d->txt=strdup(txt);
+	gtkext_lbl_render_text(d, d->txt);
+}
+
 static GtkExtLbl * gtkext_lbl_new(const char * txt) {
 	assert(txt);
 	GtkExtLbl *d = (GtkExtLbl *) malloc(sizeof(GtkExtLbl));
 
 	d->sf_txt = NULL;
+	d->min_width = 0;
+	d->min_height = 0;
+	d->txt = NULL;
 	d->sensitive = TRUE;
 	d->w = gtk_drawing_area_new();
 	d->c = gtk_alignment_new(.5, .5, 0, 0);
@@ -121,11 +137,19 @@ static void gtkext_lbl_destroy(GtkExtLbl *d) {
 	gtk_widget_destroy(d->w);
 	gtk_widget_destroy(d->c);
 	cairo_surface_destroy(d->sf_txt);
+	free(d->txt);
 	free(d);
 }
 
 static void gtkext_lbl_set_alignment(GtkExtLbl *d, float x, float y) {
 	gtk_alignment_set(GTK_ALIGNMENT(d->c), x, y, 0, 0);
+}
+
+static void gtkext_lbl_set_min_geometry(GtkExtLbl *d, float w, float h) {
+	d->min_width = w;
+	d->min_height = h;
+	assert(d->txt);
+	gtkext_lbl_render_text(d, d->txt);
 }
 
 static GtkWidget * gtkext_lbl_widget(GtkExtLbl *d) {

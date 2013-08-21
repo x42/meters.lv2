@@ -221,6 +221,10 @@ static void gtkext_pbtn_destroy(GtkExtPBtn *d) {
 	free(d);
 }
 
+static void gtkext_pbtn_set_alignment(GtkExtPBtn *d, float x, float y) {
+	gtk_alignment_set(GTK_ALIGNMENT(d->c), x, y, 0, 0);
+}
+
 static GtkWidget * gtkext_pbtn_widget(GtkExtPBtn *d) {
 	return d->c;
 }

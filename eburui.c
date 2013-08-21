@@ -18,7 +18,7 @@
  * Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#define _XOPEN_SOURCE
+#define _XOPEN_SOURCE 500
 #define MAX_CAIRO_PATH 32
 
 #include <stdio.h>

@@ -303,6 +303,10 @@ static void gtkext_cbtn_destroy(GtkExtCBtn *d) {
 	free(d);
 }
 
+static void gtkext_cbtn_set_alignment(GtkExtCBtn *d, float x, float y) {
+	gtk_alignment_set(GTK_ALIGNMENT(d->c), x, y, 0, 0);
+}
+
 static GtkWidget * gtkext_cbtn_widget(GtkExtCBtn *d) {
 	return d->c;
 }
