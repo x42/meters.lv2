@@ -84,6 +84,7 @@ typedef struct {
 	GtkExtScale* fader;
 	GtkExtLbl* lbl_attack;
 	GtkExtLbl* lbl_decay;
+	GtkWidget* sep_h0;
 
 	GtkExtDial* spn_attack;
 	GtkExtDial* spn_decay;
@@ -805,6 +806,8 @@ instantiate(const LV2UI_Descriptor*   descriptor,
 	gtk_box_pack_start(GTK_BOX(ui->box), ui->align, TRUE, TRUE, 0);
 
 	if (ui->display_freq) {
+		ui->sep_h0 = gtk_vseparator_new();
+		gtk_box_pack_start(GTK_BOX(ui->box), ui->sep_h0, FALSE, FALSE, 2);
 		gtk_box_pack_start(GTK_BOX(ui->c_box), gtkext_scale_widget(ui->fader), TRUE, TRUE, 0);
 		gtk_box_pack_start(GTK_BOX(ui->c_box), gtkext_lbl_widget(ui->lbl_attack), FALSE, FALSE, 0);
 		gtk_box_pack_start(GTK_BOX(ui->c_box), gtkext_dial_widget(ui->spn_attack), FALSE, FALSE, 0);
@@ -863,6 +866,7 @@ cleanup(LV2UI_Handle handle)
 	gtkext_lbl_destroy(ui->lbl_attack);
 	gtkext_lbl_destroy(ui->lbl_decay);
 	gtk_widget_destroy(ui->align);
+	gtk_widget_destroy(ui->sep_h0);
 	gtk_widget_destroy(ui->c_box);
 
 	free(ui);
