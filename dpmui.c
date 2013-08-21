@@ -106,6 +106,7 @@ typedef struct {
 	bool display_freq;
 	bool reset_toggle;
 	bool initialized;
+	bool metrics_changed;
 
 	float cache_sf;
 	float cache_ma;
@@ -512,6 +513,11 @@ static void render_meter(SAUI* ui, int i, int old, int new, int m_old, int m_new
 
 static gboolean expose_event(GtkWidget *w, GdkEventExpose *ev, gpointer handle) {
 	SAUI* ui = (SAUI*)handle;
+	if (ui->metrics_changed) {
+		ui->metrics_changed = false;
+		realloc_metrics(ui);
+		prepare_metersurface(ui);
+	}
 
 	cairo_t* cr = gdk_cairo_create(GDK_DRAWABLE(w->window));
 	cairo_rectangle (cr, ev->area.x, ev->area.y, ev->area.width, ev->area.height);
@@ -651,8 +657,7 @@ static gboolean set_gain(GtkWidget* w, gpointer handle) {
 	if (!ui->disable_signals) {
 		ui->write(ui->controller, 4, sizeof(float), 0, (const void*) &ui->gain);
 	}
-	realloc_metrics(ui);
-	prepare_metersurface(ui);
+	ui->metrics_changed = true;
 	return cb_reset_peak(NULL, NULL, handle);
 }
 
@@ -740,6 +745,7 @@ instantiate(const LV2UI_Descriptor*   descriptor,
 	ui->cache_sf = -100;
 	ui->cache_ma = -100;
 	ui->highlight = -1;
+	ui->metrics_changed = false;
 
 	initialize_font_cache(ui);
 	alloc_annotations(ui);
