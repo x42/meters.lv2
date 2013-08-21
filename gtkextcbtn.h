@@ -92,16 +92,20 @@ static gboolean gtkext_cbtn_expose_event(GtkWidget *w, GdkEventExpose *ev, gpoin
 
 
 	if (!d->flat_button) {
-		if (!d->sensitive) {
-			cairo_set_source_rgb (cr, c->red/65536.0, c->green/65536.0, c->blue/65536.0);
-		} else if (d->enabled) {
+		if (d->enabled) {
 			cairo_set_source(cr, d->btn_active);
+		} else if (!d->sensitive) {
+			cairo_set_source_rgb (cr, c->red/65536.0, c->green/65536.0, c->blue/65536.0);
 		} else {
 			cairo_set_source(cr, d->btn_inactive);
 		}
 
 		rounded_rectangle(cr, 2.5, 2.5, d->w_width - 4, d->w_height -4, 6);
 		cairo_fill_preserve (cr);
+		if (!d->sensitive && d->enabled) {
+			cairo_set_source_rgba (cr, c->red/65536.0, c->green/65536.0, c->blue/65536.0, .7);
+			cairo_fill_preserve (cr);
+		}
 		cairo_set_line_width (cr, .75);
 		cairo_set_source_rgba (cr, .0, .0, .0, 1.0);
 		cairo_stroke(cr);

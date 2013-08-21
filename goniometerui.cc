@@ -917,6 +917,10 @@ instantiate(const LV2UI_Descriptor*   descriptor,
 	gtkext_lbl_set_alignment(ui->lbl_src_fact, 1.0f, 0.5f);
 	gtkext_lbl_set_alignment(ui->lbl_psize,    1.0f, 0.5f);
 
+	gtkext_spin_label_width(ui->spn_src_fact, 32, 32);
+	gtkext_spin_label_width(ui->spn_psize,    32, 32);
+	gtkext_spin_label_width(ui->spn_vfreq,    32, 32);
+
 	gtkext_dial_set_surface(ui->spn_gattack,  ui->dial[0]);
 	gtkext_dial_set_surface(ui->spn_gdecay,   ui->dial[0]);
 	gtkext_dial_set_surface(ui->spn_gtarget,  ui->dial[3]);
@@ -974,7 +978,6 @@ instantiate(const LV2UI_Descriptor*   descriptor,
 	row++;
 	gtk_table_attach(GTK_TABLE(ui->c_tbl), ui->sep_v0, 3, 4, row, row+3, GTK_SHRINK, (GtkAttachOptions) (GTK_EXPAND | GTK_FILL), 6, 0);
 
-	//gtk_table_attach_defaults(GTK_TABLE(ui->c_tbl), GBT_W(ui->cbn_src)     , 0, 1, row, row+1);
 	gtk_table_attach(GTK_TABLE(ui->c_tbl), GLB_W(ui->lbl_src_fact)         , 1, 2, row, row+1, GTK_FILL, GTK_FILL, 4, 0);
 	gtk_table_attach_defaults(GTK_TABLE(ui->c_tbl), GSP_W(ui->spn_src_fact), 2, 3, row, row+1);
 

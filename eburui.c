@@ -1034,6 +1034,10 @@ instantiate(const LV2UI_Descriptor*   descriptor,
 	ui->cbx_histogram  = gtkext_rbtn_new("Histogram", gtkext_rbtn_group(ui->cbx_radar));
 
 	gtkext_lbl_set_alignment(ui->lbl_radarinfo, 0.0f, 0.5f);
+	gtkext_spin_set_label_pos(ui->spn_radartime, 1);
+	gtkext_spin_set_alignment(ui->spn_radartime, 1.0f, 0.5f);
+	gtkext_pbtn_set_alignment(ui->btn_reset, 1.0, 0.5);
+	gtkext_cbtn_set_alignment(ui->btn_start, 1.0, 0.5);
 
 	gtk_table_attach(GTK_TABLE(ui->cbx_box), GLB_W(ui->lbl_ringinfo), 0, 2, 0, 1, GTK_SHRINK, GTK_SHRINK, 3, 0);
 	gtk_table_attach_defaults(GTK_TABLE(ui->cbx_box), GRB_W(ui->cbx_lu)   , 0, 1, 1, 2);
