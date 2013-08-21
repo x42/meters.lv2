@@ -28,7 +28,7 @@
  * for calling gtkext_scale_new_with_size()
  */
 #define GSC_LENGTH 250
-#define GSC_GIRTH 22
+#define GSC_GIRTH 18
 
 typedef struct {
 	GtkWidget* w;
@@ -238,17 +238,15 @@ static gboolean gtkext_scale_scroll(GtkWidget *w, GdkEventScroll *ev, gpointer h
 }
 
 static void create_scale_pattern(GtkExtScale * d) {
-	cairo_pattern_t* pat;
 	if (d->horiz) {
-		pat = cairo_pattern_create_linear (0.0, 0.0, 0.0, d->w_height);
+		d->dpat = cairo_pattern_create_linear (0.0, 0.0, 0.0, GSC_GIRTH);
 	} else {
-		pat = cairo_pattern_create_linear (0.0, 0.0, d->w_width, 0);
+		d->dpat = cairo_pattern_create_linear (0.0, 0.0, GSC_GIRTH, 0);
 	}
 
-	cairo_pattern_add_color_stop_rgb (pat, 0.0, .1, .1, .12);
-	cairo_pattern_add_color_stop_rgb (pat, 1.0, .3, .3, .33);
-
-	d->dpat = pat;
+	cairo_pattern_add_color_stop_rgb (d->dpat, 0.0, .3, .3, .33);
+	cairo_pattern_add_color_stop_rgb (d->dpat, 0.4, .5, .5, .55);
+	cairo_pattern_add_color_stop_rgb (d->dpat, 1.0, .2, .2, .22);
 }
 
 #define SXX_W(minus) (d->w_width  + minus - ((d->bg && !d->horiz) ? d->mark_space : 0))
@@ -323,8 +321,12 @@ static gboolean gtkext_scale_expose_event(GtkWidget *w, GdkEventExpose *ev, gpoi
 	cairo_set_operator (cr, CAIRO_OPERATOR_OVER);
 
 	if (d->sensitive) {
+		cairo_matrix_t matrix;
+		cairo_matrix_init_translate(&matrix, 0, -SXX_T(0));
+		cairo_pattern_set_matrix (d->dpat, &matrix);
 		cairo_set_source(cr, d->dpat);
 	}
+
 	rounded_rectangle(cr, 4.5, SXX_T(4.5), SXX_W(-8), SXX_H(-8), 6);
 	cairo_fill_preserve (cr);
 	cairo_set_line_width(cr, .75);
