@@ -48,7 +48,8 @@
  * All plugins run single threaded in the host's process context.
  *
  * That will avoid various threading issues - particularly with
- * libcairo < 1.12.10 and libpango < 1.32.6 which are not threadsafe)
+ * libcairo < 1.12.10, libpixman < 0.30.2 and libpango < 1.32.6
+ * which are not threadsafe)
  *
  * The plugin UI launching its own thread yields generally better
  * performance (the host's idle call's timing is inaccurate and

@@ -15,16 +15,18 @@ and the following stereo plugins
 
 *   Stereo Phase Correlation Meter (Needle Display)
 *   EBU R128 Meter with Histogram and History
-*   True-Peak (4x Oversampling)
-*   Goniometer
+*   Digital True-Peak Meter (4x Oversampling)
+*   Goniometer (Stereo Phase Scope)
 *   31 Band Spectrum-Analyzer
 
+Currently the plugins come in both Gtk and openGL variants (both
+versions are installed in parallel).
 
 Install
 -------
 
 Compiling these plugin requires the LV2 SDK, gnu-make, a c-compiler,
-gtk+2.0, libpango and libcairo.
+gtk+2.0, libpango, libcairo and openGL (glu).
 
 ```bash
   git clone git://github.com/x42/meters.lv2.git
@@ -33,7 +35,7 @@ gtk+2.0, libpango and libcairo.
   sudo make install PREFIX=/usr
   
   # test run
-  jalv.gtk 'http://gareus.org/oss/lv2/meters#DINmono'
+  jalv.gtk 'http://gareus.org/oss/lv2/meters#DINmono_gtk'
 ```
 
 Note to packagers: The Makefile honors `PREFIX` and `DESTDIR` variables as well
