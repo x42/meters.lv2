@@ -1,0 +1,1181 @@
+
+
+mtr:VUmono@URI_SUFFIX@
+	a lv2:Plugin, lv2:AnalyserPlugin, doap:Project ;
+	doap:license <http://usefulinc.com/doap/licenses/gpl> ;
+	doap:name "VU Meter (Mono)@NAME_SUFFIX@";
+	lv2:project <http://gareus.org/oss/lv2/meters> ;
+	lv2:optionalFeature lv2:hardRTCapable ;
+	ui:ui @MTRGUI@ ;
+	lv2:port [
+		a lv2:ControlPort ,
+			lv2:InputPort ;
+		lv2:index 0 ;
+		lv2:symbol "ref" ;
+		lv2:name "Reference Level 0dBu" ;
+		lv2:default -22.0 ;
+		lv2:minimum -30.0 ;
+		lv2:maximum 0.0 ;
+		units:unit units:db;
+	] , [
+		a lv2:AudioPort ,
+			lv2:InputPort ;
+		lv2:index 1 ;
+		lv2:symbol "in" ;
+		lv2:name "In"
+	] , [
+		a lv2:AudioPort ,
+			lv2:OutputPort ;
+		lv2:index 2 ;
+		lv2:symbol "out" ;
+		lv2:name "Out"
+	] , [
+		a lv2:ControlPort ,
+			lv2:OutputPort ;
+		lv2:index 3 ;
+		lv2:symbol "level1" ;
+		lv2:name "Level1" ;
+		lv2:default 0.0 ;
+		lv2:minimum 0.0 ;
+		lv2:maximum 1.0 ;
+	] ;
+	.
+
+mtr:VUstereo@URI_SUFFIX@
+	a lv2:Plugin, lv2:AnalyserPlugin, doap:Project ;
+	doap:license <http://usefulinc.com/doap/licenses/gpl> ;
+	doap:name "VU Meter (Stereo)@NAME_SUFFIX@";
+	lv2:project <http://gareus.org/oss/lv2/meters> ;
+	lv2:optionalFeature lv2:hardRTCapable ;
+	ui:ui @MTRGUI@ ;
+	lv2:port [
+		a lv2:ControlPort ,
+			lv2:InputPort ;
+		lv2:index 0 ;
+		lv2:symbol "ref" ;
+		lv2:name "Reference Level 0dBu" ;
+		lv2:default -22.0 ;
+		lv2:minimum -30.0 ;
+		lv2:maximum 0.0 ;
+		units:unit units:db;
+	] , [
+		a lv2:AudioPort ,
+			lv2:InputPort ;
+		lv2:index 1 ;
+		lv2:symbol "inL" ;
+		lv2:name "InL"
+	] , [
+		a lv2:AudioPort ,
+			lv2:OutputPort ;
+		lv2:index 2 ;
+		lv2:symbol "outL" ;
+		lv2:name "OutL"
+	] , [
+		a lv2:ControlPort ,
+			lv2:OutputPort ;
+		lv2:index 3 ;
+		lv2:symbol "levelL" ;
+		lv2:name "LevelL" ;
+		lv2:default 0.0 ;
+		lv2:minimum 0.0 ;
+		lv2:maximum 1.0 ;
+	] , [
+		a lv2:AudioPort ,
+			lv2:InputPort ;
+		lv2:index 4 ;
+		lv2:symbol "inR" ;
+		lv2:name "InR"
+	] , [
+		a lv2:AudioPort ,
+			lv2:OutputPort ;
+		lv2:index 5 ;
+		lv2:symbol "outR" ;
+		lv2:name "OutR"
+	] , [
+		a lv2:ControlPort ,
+			lv2:OutputPort ;
+		lv2:index 6 ;
+		lv2:symbol "levelR" ;
+		lv2:name "LevelR" ;
+		lv2:default 0.0 ;
+		lv2:minimum 0.0 ;
+		lv2:maximum 1.0 ;
+	] ;
+	.
+
+
+mtr:BBCmono@URI_SUFFIX@
+	a lv2:Plugin, lv2:AnalyserPlugin, doap:Project ;
+	doap:license <http://usefulinc.com/doap/licenses/gpl> ;
+	doap:name "BBC Meter (Mono)@NAME_SUFFIX@";
+	lv2:project <http://gareus.org/oss/lv2/meters> ;
+	lv2:optionalFeature lv2:hardRTCapable ;
+	ui:ui @MTRGUI@ ;
+	lv2:port [
+		a lv2:ControlPort ,
+			lv2:InputPort ;
+		lv2:index 0 ;
+		lv2:symbol "ref" ;
+		lv2:name "Reference Level 0dBu" ;
+		lv2:default -18.0 ;
+		lv2:minimum -30.0 ;
+		lv2:maximum 0.0 ;
+		units:unit units:db;
+	] , [
+		a lv2:AudioPort ,
+			lv2:InputPort ;
+		lv2:index 1 ;
+		lv2:symbol "in" ;
+		lv2:name "In"
+	] , [
+		a lv2:AudioPort ,
+			lv2:OutputPort ;
+		lv2:index 2 ;
+		lv2:symbol "out" ;
+		lv2:name "Out"
+	] , [
+		a lv2:ControlPort ,
+			lv2:OutputPort ;
+		lv2:index 3 ;
+		lv2:symbol "level1" ;
+		lv2:name "Level 1" ;
+		lv2:default 0.0 ;
+		lv2:minimum 0.0 ;
+		lv2:maximum 1.0 ;
+	] ;
+	.
+
+mtr:BBCstereo@URI_SUFFIX@
+	a lv2:Plugin, lv2:AnalyserPlugin, doap:Project ;
+	doap:license <http://usefulinc.com/doap/licenses/gpl> ;
+	doap:name "BBC Meter (Stereo)@NAME_SUFFIX@";
+	lv2:project <http://gareus.org/oss/lv2/meters> ;
+	lv2:optionalFeature lv2:hardRTCapable ;
+	ui:ui @MTRGUI@ ;
+	lv2:port [
+		a lv2:ControlPort ,
+			lv2:InputPort ;
+		lv2:index 0 ;
+		lv2:symbol "ref" ;
+		lv2:name "Reference Level 0dBu" ;
+		lv2:default -18.0 ;
+		lv2:minimum -30.0 ;
+		lv2:maximum 0.0 ;
+		units:unit units:db;
+	] , [
+		a lv2:AudioPort ,
+			lv2:InputPort ;
+		lv2:index 1 ;
+		lv2:symbol "inL" ;
+		lv2:name "InL"
+	] , [
+		a lv2:AudioPort ,
+			lv2:OutputPort ;
+		lv2:index 2 ;
+		lv2:symbol "outL" ;
+		lv2:name "OutL"
+	] , [
+		a lv2:ControlPort ,
+			lv2:OutputPort ;
+		lv2:index 3 ;
+		lv2:symbol "levelL" ;
+		lv2:name "LevelL" ;
+		lv2:default 0.0 ;
+		lv2:minimum 0.0 ;
+		lv2:maximum 1.0 ;
+	] , [
+		a lv2:AudioPort ,
+			lv2:InputPort ;
+		lv2:index 4 ;
+		lv2:symbol "inR" ;
+		lv2:name "InR"
+	] , [
+		a lv2:AudioPort ,
+			lv2:OutputPort ;
+		lv2:index 5 ;
+		lv2:symbol "outR" ;
+		lv2:name "OutR"
+	] , [
+		a lv2:ControlPort ,
+			lv2:OutputPort ;
+		lv2:index 6 ;
+		lv2:symbol "levelR" ;
+		lv2:name "LevelR" ;
+		lv2:default 0.0 ;
+		lv2:minimum 0.0 ;
+		lv2:maximum 1.0 ;
+	] ;
+	.
+
+
+mtr:EBUmono@URI_SUFFIX@
+	a lv2:Plugin, lv2:AnalyserPlugin, doap:Project ;
+	doap:license <http://usefulinc.com/doap/licenses/gpl> ;
+	doap:name "EBU Meter (Mono)@NAME_SUFFIX@";
+	lv2:project <http://gareus.org/oss/lv2/meters> ;
+	lv2:optionalFeature lv2:hardRTCapable ;
+	ui:ui @MTRGUI@ ;
+	lv2:port [
+		a lv2:ControlPort ,
+			lv2:InputPort ;
+		lv2:index 0 ;
+		lv2:symbol "ref" ;
+		lv2:name "Reference Level 0dBu" ;
+		lv2:default -18.0 ;
+		lv2:minimum -30.0 ;
+		lv2:maximum 0.0 ;
+		units:unit units:db;
+	] , [
+		a lv2:AudioPort ,
+			lv2:InputPort ;
+		lv2:index 1 ;
+		lv2:symbol "in" ;
+		lv2:name "In"
+	] , [
+		a lv2:AudioPort ,
+			lv2:OutputPort ;
+		lv2:index 2 ;
+		lv2:symbol "out" ;
+		lv2:name "Out"
+	] , [
+		a lv2:ControlPort ,
+			lv2:OutputPort ;
+		lv2:index 3 ;
+		lv2:symbol "level1" ;
+		lv2:name "Level 1" ;
+		lv2:default 0.0 ;
+		lv2:minimum 0.0 ;
+		lv2:maximum 1.0 ;
+	] ;
+	.
+
+mtr:EBUstereo@URI_SUFFIX@
+	a lv2:Plugin, lv2:AnalyserPlugin, doap:Project ;
+	doap:license <http://usefulinc.com/doap/licenses/gpl> ;
+	doap:name "EBU Meter (Stereo)@NAME_SUFFIX@";
+	lv2:project <http://gareus.org/oss/lv2/meters> ;
+	lv2:optionalFeature lv2:hardRTCapable ;
+	ui:ui @MTRGUI@ ;
+	lv2:port [
+		a lv2:ControlPort ,
+			lv2:InputPort ;
+		lv2:index 0 ;
+		lv2:symbol "ref" ;
+		lv2:name "Reference Level 0dBu" ;
+		lv2:default -18.0 ;
+		lv2:minimum -30.0 ;
+		lv2:maximum 0.0 ;
+		units:unit units:db;
+	] , [
+		a lv2:AudioPort ,
+			lv2:InputPort ;
+		lv2:index 1 ;
+		lv2:symbol "inL" ;
+		lv2:name "InL"
+	] , [
+		a lv2:AudioPort ,
+			lv2:OutputPort ;
+		lv2:index 2 ;
+		lv2:symbol "outL" ;
+		lv2:name "OutL"
+	] , [
+		a lv2:ControlPort ,
+			lv2:OutputPort ;
+		lv2:index 3 ;
+		lv2:symbol "levelL" ;
+		lv2:name "LevelL" ;
+		lv2:default 0.0 ;
+		lv2:minimum 0.0 ;
+		lv2:maximum 1.0 ;
+	] , [
+		a lv2:AudioPort ,
+			lv2:InputPort ;
+		lv2:index 4 ;
+		lv2:symbol "inR" ;
+		lv2:name "InR"
+	] , [
+		a lv2:AudioPort ,
+			lv2:OutputPort ;
+		lv2:index 5 ;
+		lv2:symbol "outR" ;
+		lv2:name "OutR"
+	] , [
+		a lv2:ControlPort ,
+			lv2:OutputPort ;
+		lv2:index 6 ;
+		lv2:symbol "levelR" ;
+		lv2:name "LevelR" ;
+		lv2:default 0.0 ;
+		lv2:minimum 0.0 ;
+		lv2:maximum 1.0 ;
+	] ;
+	.
+
+
+mtr:DINmono@URI_SUFFIX@
+	a lv2:Plugin, lv2:AnalyserPlugin, doap:Project ;
+	doap:license <http://usefulinc.com/doap/licenses/gpl> ;
+	doap:name "DIN Meter (Mono)@NAME_SUFFIX@";
+	lv2:project <http://gareus.org/oss/lv2/meters> ;
+	lv2:optionalFeature lv2:hardRTCapable ;
+	ui:ui @MTRGUI@ ;
+	lv2:port [
+		a lv2:ControlPort ,
+			lv2:InputPort ;
+		lv2:index 0 ;
+		lv2:symbol "ref" ;
+		lv2:name "Reference Level 0dBu" ;
+		lv2:default -15.0 ;
+		lv2:minimum -30.0 ;
+		lv2:maximum 0.0 ;
+		units:unit units:db;
+	] , [
+		a lv2:AudioPort ,
+			lv2:InputPort ;
+		lv2:index 1 ;
+		lv2:symbol "in" ;
+		lv2:name "In"
+	] , [
+		a lv2:AudioPort ,
+			lv2:OutputPort ;
+		lv2:index 2 ;
+		lv2:symbol "out" ;
+		lv2:name "Out"
+	] , [
+		a lv2:ControlPort ,
+			lv2:OutputPort ;
+		lv2:index 3 ;
+		lv2:symbol "level1" ;
+		lv2:name "Level 1" ;
+		lv2:default 0.0 ;
+		lv2:minimum 0.0 ;
+		lv2:maximum 1.0 ;
+	] ;
+	.
+
+mtr:DINstereo@URI_SUFFIX@
+	a lv2:Plugin, lv2:AnalyserPlugin, doap:Project ;
+	doap:license <http://usefulinc.com/doap/licenses/gpl> ;
+	doap:name "DIN Meter (Stereo)@NAME_SUFFIX@";
+	lv2:project <http://gareus.org/oss/lv2/meters> ;
+	lv2:optionalFeature lv2:hardRTCapable ;
+	ui:ui @MTRGUI@ ;
+	lv2:port [
+		a lv2:ControlPort ,
+			lv2:InputPort ;
+		lv2:index 0 ;
+		lv2:symbol "ref" ;
+		lv2:name "Reference Level 0dBu" ;
+		lv2:default -15.0 ;
+		lv2:minimum -30.0 ;
+		lv2:maximum 0.0 ;
+		units:unit units:db;
+	] , [
+		a lv2:AudioPort ,
+			lv2:InputPort ;
+		lv2:index 1 ;
+		lv2:symbol "inL" ;
+		lv2:name "InL"
+	] , [
+		a lv2:AudioPort ,
+			lv2:OutputPort ;
+		lv2:index 2 ;
+		lv2:symbol "outL" ;
+		lv2:name "OutL"
+	] , [
+		a lv2:ControlPort ,
+			lv2:OutputPort ;
+		lv2:index 3 ;
+		lv2:symbol "levelL" ;
+		lv2:name "LevelL" ;
+		lv2:default 0.0 ;
+		lv2:minimum 0.0 ;
+		lv2:maximum 1.0 ;
+	] , [
+		a lv2:AudioPort ,
+			lv2:InputPort ;
+		lv2:index 4 ;
+		lv2:symbol "inR" ;
+		lv2:name "InR"
+	] , [
+		a lv2:AudioPort ,
+			lv2:OutputPort ;
+		lv2:index 5 ;
+		lv2:symbol "outR" ;
+		lv2:name "OutR"
+	] , [
+		a lv2:ControlPort ,
+			lv2:OutputPort ;
+		lv2:index 6 ;
+		lv2:symbol "levelR" ;
+		lv2:name "LevelR" ;
+		lv2:default 0.0 ;
+		lv2:minimum 0.0 ;
+		lv2:maximum 1.0 ;
+	] ;
+	.
+
+
+mtr:NORmono@URI_SUFFIX@
+	a lv2:Plugin, lv2:AnalyserPlugin, doap:Project ;
+	doap:license <http://usefulinc.com/doap/licenses/gpl> ;
+	doap:name "Nordic Meter (Mono)@NAME_SUFFIX@";
+	lv2:project <http://gareus.org/oss/lv2/meters> ;
+	lv2:optionalFeature lv2:hardRTCapable ;
+	ui:ui @MTRGUI@ ;
+	lv2:port [
+		a lv2:ControlPort ,
+			lv2:InputPort ;
+		lv2:index 0 ;
+		lv2:symbol "ref" ;
+		lv2:name "Reference Level 0dBu" ;
+		lv2:default -18.0 ;
+		lv2:minimum -30.0 ;
+		lv2:maximum 0.0 ;
+		units:unit units:db;
+	] , [
+		a lv2:AudioPort ,
+			lv2:InputPort ;
+		lv2:index 1 ;
+		lv2:symbol "in" ;
+		lv2:name "In"
+	] , [
+		a lv2:AudioPort ,
+			lv2:OutputPort ;
+		lv2:index 2 ;
+		lv2:symbol "out" ;
+		lv2:name "Out"
+	] , [
+		a lv2:ControlPort ,
+			lv2:OutputPort ;
+		lv2:index 3 ;
+		lv2:symbol "level1" ;
+		lv2:name "Level 1" ;
+		lv2:default 0.0 ;
+		lv2:minimum 0.0 ;
+		lv2:maximum 1.0 ;
+	] ;
+	.
+
+mtr:NORstereo@URI_SUFFIX@
+	a lv2:Plugin, lv2:AnalyserPlugin, doap:Project ;
+	doap:license <http://usefulinc.com/doap/licenses/gpl> ;
+	doap:name "Nordic Meter (Stereo)@NAME_SUFFIX@";
+	lv2:project <http://gareus.org/oss/lv2/meters> ;
+	lv2:optionalFeature lv2:hardRTCapable ;
+	ui:ui @MTRGUI@ ;
+	lv2:port [
+		a lv2:ControlPort ,
+			lv2:InputPort ;
+		lv2:index 0 ;
+		lv2:symbol "ref" ;
+		lv2:name "Reference Level 0dBu" ;
+		lv2:default -18.0 ;
+		lv2:minimum -30.0 ;
+		lv2:maximum 0.0 ;
+		units:unit units:db;
+	] , [
+		a lv2:AudioPort ,
+			lv2:InputPort ;
+		lv2:index 1 ;
+		lv2:symbol "inL" ;
+		lv2:name "InL"
+	] , [
+		a lv2:AudioPort ,
+			lv2:OutputPort ;
+		lv2:index 2 ;
+		lv2:symbol "outL" ;
+		lv2:name "OutL"
+	] , [
+		a lv2:ControlPort ,
+			lv2:OutputPort ;
+		lv2:index 3 ;
+		lv2:symbol "levelL" ;
+		lv2:name "LevelL" ;
+		lv2:default 0.0 ;
+		lv2:minimum 0.0 ;
+		lv2:maximum 1.0 ;
+	] , [
+		a lv2:AudioPort ,
+			lv2:InputPort ;
+		lv2:index 4 ;
+		lv2:symbol "inR" ;
+		lv2:name "InR"
+	] , [
+		a lv2:AudioPort ,
+			lv2:OutputPort ;
+		lv2:index 5 ;
+		lv2:symbol "outR" ;
+		lv2:name "OutR"
+	] , [
+		a lv2:ControlPort ,
+			lv2:OutputPort ;
+		lv2:index 6 ;
+		lv2:symbol "levelR" ;
+		lv2:name "LevelR" ;
+		lv2:default 0.0 ;
+		lv2:minimum 0.0 ;
+		lv2:maximum 1.0 ;
+	] ;
+	.
+
+mtr:COR@URI_SUFFIX@
+	a lv2:Plugin, lv2:AnalyserPlugin, doap:Project ;
+	doap:license <http://usefulinc.com/doap/licenses/gpl> ;
+	doap:name "Stereo Phase-Correlation Meter@NAME_SUFFIX@";
+	lv2:project <http://gareus.org/oss/lv2/meters> ;
+	lv2:optionalFeature lv2:hardRTCapable ;
+	ui:ui @MTRGUI@ ;
+	lv2:port [
+		a lv2:ControlPort ,
+			lv2:InputPort ;
+		lv2:index 0 ;
+		lv2:symbol "unused" ;
+		lv2:name "unused" ;
+		lv2:portProperty pprop:notOnGUI ;
+		lv2:default 0.0 ;
+		lv2:minimum 0.0 ;
+		lv2:maximum 1.0 ;
+	] , [
+		a lv2:AudioPort ,
+			lv2:InputPort ;
+		lv2:index 1 ;
+		lv2:symbol "inL" ;
+		lv2:name "InL"
+	] , [
+		a lv2:AudioPort ,
+			lv2:OutputPort ;
+		lv2:index 2 ;
+		lv2:symbol "outL" ;
+		lv2:name "OutL"
+	] , [
+		a lv2:ControlPort ,
+			lv2:OutputPort ;
+		lv2:index 3 ;
+		lv2:symbol "levelL" ;
+		lv2:name "LevelL" ;
+		lv2:default 0.0 ;
+		lv2:minimum 0.0 ;
+		lv2:maximum 1.0 ;
+	] , [
+		a lv2:AudioPort ,
+			lv2:InputPort ;
+		lv2:index 4 ;
+		lv2:symbol "inR" ;
+		lv2:name "InR"
+	] , [
+		a lv2:AudioPort ,
+			lv2:OutputPort ;
+		lv2:index 5 ;
+		lv2:symbol "outR" ;
+		lv2:name "OutR"
+	] ;
+	.
+
+mtr:EBUr128@URI_SUFFIX@
+	a lv2:Plugin, lv2:AnalyserPlugin, doap:Project ;
+	doap:license <http://usefulinc.com/doap/licenses/gpl> ;
+	doap:name "EBU R128 Meter@NAME_SUFFIX@";
+	lv2:project <http://gareus.org/oss/lv2/meters> ;
+	lv2:optionalFeature lv2:hardRTCapable ;
+	lv2:requiredFeature urid:map ;
+	lv2:extensionData state:interface ;
+	ui:ui @EBUGUI@ ;
+	lv2:port [
+		a atom:AtomPort ,
+			lv2:InputPort ;
+		atom:bufferType atom:Sequence ;
+		lv2:designation lv2:control ;
+		atom:supports time:Position;
+		lv2:index 0 ;
+		lv2:symbol "control" ;
+		lv2:name "UI to plugin communication"
+	] , [
+		a atom:AtomPort ,
+			lv2:OutputPort ;
+		atom:bufferType atom:Sequence ;
+		lv2:designation lv2:control ;
+		lv2:index 1 ;
+		lv2:symbol "notify" ;
+		lv2:name "plugin to UI communication" ;
+		rsz:minimumSize 4096;
+	] , [
+		a lv2:AudioPort ,
+			lv2:InputPort ;
+		lv2:index 2 ;
+		lv2:symbol "inL" ;
+		lv2:name "InL" ;
+		lv2:designation pg:left ;
+	] , [
+		a lv2:AudioPort ,
+			lv2:OutputPort ;
+		lv2:index 3 ;
+		lv2:symbol "outL" ;
+		lv2:name "OutL";
+		lv2:designation pg:left ;
+	] , [
+		a lv2:AudioPort ,
+			lv2:InputPort ;
+		lv2:index 4 ;
+		lv2:symbol "inR" ;
+		lv2:name "InR" ;
+		lv2:designation pg:right ;
+	] , [
+		a lv2:AudioPort ,
+			lv2:OutputPort ;
+		lv2:index 5 ;
+		lv2:symbol "outR" ;
+		lv2:name "OutR" ;
+		lv2:designation pg:right ;
+	] ;
+	.
+
+
+mtr:goniometer@URI_SUFFIX@
+	a lv2:Plugin, lv2:AnalyserPlugin, doap:Project ;
+	doap:license <http://usefulinc.com/doap/licenses/gpl> ;
+	doap:name "Stereo Phase Scope@NAME_SUFFIX@";
+	lv2:project <http://gareus.org/oss/lv2/meters> ;
+	lv2:optionalFeature lv2:hardRTCapable ;
+	lv2:extensionData state:interface ;
+	ui:ui @GONGUI@ ;
+	lv2:port [
+		a lv2:AudioPort ,
+			lv2:InputPort ;
+		lv2:index 0 ;
+		lv2:symbol "inL" ;
+		lv2:name "InL" ;
+		lv2:designation pg:left ;
+	] , [
+		a lv2:AudioPort ,
+			lv2:OutputPort ;
+		lv2:index 1 ;
+		lv2:symbol "outL" ;
+		lv2:name "OutL";
+		lv2:designation pg:left ;
+	] , [
+		a lv2:AudioPort ,
+			lv2:InputPort ;
+		lv2:index 2 ;
+		lv2:symbol "inR" ;
+		lv2:name "InR" ;
+		lv2:designation pg:right ;
+	] , [
+		a lv2:AudioPort ,
+			lv2:OutputPort ;
+		lv2:index 3 ;
+		lv2:symbol "outR" ;
+		lv2:name "OutR" ;
+		lv2:designation pg:right ;
+	] , [
+		a lv2:ControlPort ,
+			lv2:InputPort ;
+		lv2:index 4 ;
+		lv2:symbol "UIgain" ;
+		lv2:name "UI gain" ;
+		lv2:default 1.0 ;
+		lv2:minimum 0.0 ;
+		lv2:maximum 6.0 ;
+		lv2:portProperty pprop:notOnGUI ;
+	] , [
+		a lv2:ControlPort ,
+			lv2:OutputPort ;
+		lv2:index 5 ;
+		lv2:symbol "UIcorrelation" ;
+		lv2:name "UI correlation" ;
+		lv2:portProperty pprop:notOnGUI ;
+		lv2:default 0.0 ;
+		lv2:minimum 0.0 ;
+		lv2:maximum 1.0 ;
+	] , [
+		a lv2:ControlPort ,
+			lv2:OutputPort ;
+		lv2:index 6 ;
+		lv2:symbol "UInotify" ;
+		lv2:name "UI notify" ;
+		lv2:portProperty pprop:notOnGUI ;
+		lv2:default 0.0 ;
+		lv2:minimum 0.0 ;
+		lv2:maximum 1.0 ;
+	] ;
+	.
+
+
+mtr:spectrum@URI_SUFFIX@
+	a lv2:Plugin, lv2:AnalyserPlugin, doap:Project ;
+	doap:license <http://usefulinc.com/doap/licenses/gpl> ;
+	doap:name "Spectrum Analyzer@NAME_SUFFIX@";
+	lv2:project <http://gareus.org/oss/lv2/meters> ;
+	lv2:optionalFeature lv2:hardRTCapable ;
+	ui:ui @DPMGUI@ ;
+	lv2:port [
+		a lv2:AudioPort ,
+			lv2:InputPort ;
+		lv2:index 0 ;
+		lv2:symbol "inL" ;
+		lv2:name "InL" ;
+		lv2:designation pg:left ;
+	] , [
+		a lv2:AudioPort ,
+			lv2:OutputPort ;
+		lv2:index 1 ;
+		lv2:symbol "outL" ;
+		lv2:name "OutL";
+		lv2:designation pg:left ;
+	] , [
+		a lv2:AudioPort ,
+			lv2:InputPort ;
+		lv2:index 2 ;
+		lv2:symbol "inR" ;
+		lv2:name "InR" ;
+		lv2:designation pg:right ;
+	] , [
+		a lv2:AudioPort ,
+			lv2:OutputPort ;
+		lv2:index 3 ;
+		lv2:symbol "outR" ;
+		lv2:name "OutR" ;
+		lv2:designation pg:right ;
+	] , [
+		a lv2:ControlPort ,
+			lv2:InputPort ;
+		lv2:index 4 ;
+		lv2:symbol "UIgain" ;
+		lv2:name "UI gain" ;
+		lv2:default 3.162 ;
+		lv2:minimum 0.0 ;
+		lv2:maximum 40.0 ;
+	] , [
+		a lv2:OutputPort, lv2:ControlPort ;
+		lv2:index 5 ;
+		lv2:symbol "band20" ;
+		lv2:name "20Hz" ;
+		lv2:default -70.0 ;
+		lv2:minimum -70.0 ;
+		lv2:maximum   6.0 ;
+		units:unit units:db ;
+	] , [
+		a lv2:OutputPort, lv2:ControlPort ;
+		lv2:index 6 ;
+		lv2:symbol "band25" ;
+		lv2:name "25Hz" ;
+		lv2:default -70.0 ;
+		lv2:minimum -70.0 ;
+		lv2:maximum   6.0 ;
+		units:unit units:db ;
+	] , [
+		a lv2:OutputPort, lv2:ControlPort ;
+		lv2:index 7 ;
+		lv2:symbol "band31" ;
+		lv2:name "31Hz" ;
+		lv2:default -70.0 ;
+		lv2:minimum -70.0 ;
+		lv2:maximum   6.0 ;
+		units:unit units:db ;
+	] , [
+		a lv2:OutputPort, lv2:ControlPort ;
+		lv2:index 8 ;
+		lv2:symbol "band40" ;
+		lv2:name "40Hz" ;
+		lv2:default -70.0 ;
+		lv2:minimum -70.0 ;
+		lv2:maximum   6.0 ;
+		units:unit units:db ;
+	] , [
+		a lv2:OutputPort, lv2:ControlPort ;
+		lv2:index 9 ;
+		lv2:symbol "band50" ;
+		lv2:name "50Hz" ;
+		lv2:default -70.0 ;
+		lv2:minimum -70.0 ;
+		lv2:maximum   6.0 ;
+		units:unit units:db ;
+	] , [
+		a lv2:OutputPort, lv2:ControlPort ;
+		lv2:index 10 ;
+		lv2:symbol "band63" ;
+		lv2:name "63Hz" ;
+		lv2:default -70.0 ;
+		lv2:minimum -70.0 ;
+		lv2:maximum   6.0 ;
+		units:unit units:db ;
+	] , [
+		a lv2:OutputPort, lv2:ControlPort ;
+		lv2:index 11 ;
+		lv2:symbol "band80" ;
+		lv2:name "80Hz" ;
+		lv2:default -70.0 ;
+		lv2:minimum -70.0 ;
+		lv2:maximum   6.0 ;
+		units:unit units:db ;
+	] , [
+		a lv2:OutputPort, lv2:ControlPort ;
+		lv2:index 12 ;
+		lv2:symbol "band100" ;
+		lv2:name "100Hz" ;
+		lv2:default -70.0 ;
+		lv2:minimum -70.0 ;
+		lv2:maximum   6.0 ;
+		units:unit units:db ;
+	] , [
+		a lv2:OutputPort, lv2:ControlPort ;
+		lv2:index 13 ;
+		lv2:symbol "band125" ;
+		lv2:name "125Hz" ;
+		lv2:default -70.0 ;
+		lv2:minimum -70.0 ;
+		lv2:maximum   6.0 ;
+		units:unit units:db ;
+	] , [
+		a lv2:OutputPort, lv2:ControlPort ;
+		lv2:index 14 ;
+		lv2:symbol "band160" ;
+		lv2:name "160Hz" ;
+		lv2:default -70.0 ;
+		lv2:minimum -70.0 ;
+		lv2:maximum   6.0 ;
+		units:unit units:db ;
+	] , [
+		a lv2:OutputPort, lv2:ControlPort ;
+		lv2:index 15 ;
+		lv2:symbol "band200" ;
+		lv2:name "200Hz" ;
+		lv2:default -70.0 ;
+		lv2:minimum -70.0 ;
+		lv2:maximum   6.0 ;
+		units:unit units:db ;
+	] , [
+		a lv2:OutputPort, lv2:ControlPort ;
+		lv2:index 16 ;
+		lv2:symbol "band250" ;
+		lv2:name "250Hz" ;
+		lv2:default -70.0 ;
+		lv2:minimum -70.0 ;
+		lv2:maximum   6.0 ;
+		units:unit units:db ;
+	] , [
+		a lv2:OutputPort, lv2:ControlPort ;
+		lv2:index 17 ;
+		lv2:symbol "band315" ;
+		lv2:name "315Hz" ;
+		lv2:default -70.0 ;
+		lv2:minimum -70.0 ;
+		lv2:maximum   6.0 ;
+		units:unit units:db ;
+	] , [
+		a lv2:OutputPort, lv2:ControlPort ;
+		lv2:index 18 ;
+		lv2:symbol "band400" ;
+		lv2:name "400Hz" ;
+		lv2:default -70.0 ;
+		lv2:minimum -70.0 ;
+		lv2:maximum   6.0 ;
+		units:unit units:db ;
+	] , [
+		a lv2:OutputPort, lv2:ControlPort ;
+		lv2:index 19 ;
+		lv2:symbol "band500" ;
+		lv2:name "500Hz" ;
+		lv2:default -70.0 ;
+		lv2:minimum -70.0 ;
+		lv2:maximum   6.0 ;
+		units:unit units:db ;
+	] , [
+		a lv2:OutputPort, lv2:ControlPort ;
+		lv2:index 20 ;
+		lv2:symbol "band630" ;
+		lv2:name "630Hz" ;
+		lv2:default -70.0 ;
+		lv2:minimum -70.0 ;
+		lv2:maximum   6.0 ;
+		units:unit units:db ;
+	] , [
+		a lv2:OutputPort, lv2:ControlPort ;
+		lv2:index 21 ;
+		lv2:symbol "band800" ;
+		lv2:name "800Hz" ;
+		lv2:default -70.0 ;
+		lv2:minimum -70.0 ;
+		lv2:maximum   6.0 ;
+		units:unit units:db ;
+	] , [
+		a lv2:OutputPort, lv2:ControlPort ;
+		lv2:index 22 ;
+		lv2:symbol "band1000" ;
+		lv2:name "1kHz" ;
+		lv2:default -70.0 ;
+		lv2:minimum -70.0 ;
+		lv2:maximum   6.0 ;
+		units:unit units:db ;
+	] , [
+		a lv2:OutputPort, lv2:ControlPort ;
+		lv2:index 23 ;
+		lv2:symbol "band1250" ;
+		lv2:name "1.25kHz" ;
+		lv2:default -70.0 ;
+		lv2:minimum -70.0 ;
+		lv2:maximum   6.0 ;
+		units:unit units:db ;
+	] , [
+		a lv2:OutputPort, lv2:ControlPort ;
+		lv2:index 24 ;
+		lv2:symbol "band1600" ;
+		lv2:name "1.6kHz" ;
+		lv2:default -70.0 ;
+		lv2:minimum -70.0 ;
+		lv2:maximum   6.0 ;
+		units:unit units:db ;
+	] , [
+		a lv2:OutputPort, lv2:ControlPort ;
+		lv2:index 25 ;
+		lv2:symbol "band2000" ;
+		lv2:name "2kHz" ;
+		lv2:default -70.0 ;
+		lv2:minimum -70.0 ;
+		lv2:maximum   6.0 ;
+		units:unit units:db ;
+	] , [
+		a lv2:OutputPort, lv2:ControlPort ;
+		lv2:index 26 ;
+		lv2:symbol "band2500" ;
+		lv2:name "2.5Hz" ;
+		lv2:default -70.0 ;
+		lv2:minimum -70.0 ;
+		lv2:maximum   6.0 ;
+		units:unit units:db ;
+	] , [
+		a lv2:OutputPort, lv2:ControlPort ;
+		lv2:index 27 ;
+		lv2:symbol "band3150" ;
+		lv2:name "3.15Hz" ;
+		lv2:default -70.0 ;
+		lv2:minimum -70.0 ;
+		lv2:maximum   6.0 ;
+		units:unit units:db ;
+	] , [
+		a lv2:OutputPort, lv2:ControlPort ;
+		lv2:index 28 ;
+		lv2:symbol "band4000" ;
+		lv2:name "4Hz" ;
+		lv2:default -70.0 ;
+		lv2:minimum -70.0 ;
+		lv2:maximum   6.0 ;
+		units:unit units:db ;
+	] , [
+		a lv2:OutputPort, lv2:ControlPort ;
+		lv2:index 29 ;
+		lv2:symbol "band5000" ;
+		lv2:name "5kHz" ;
+		lv2:default -70.0 ;
+		lv2:minimum -70.0 ;
+		lv2:maximum   6.0 ;
+		units:unit units:db ;
+	] , [
+		a lv2:OutputPort, lv2:ControlPort ;
+		lv2:index 30 ;
+		lv2:symbol "band6300" ;
+		lv2:name "6.3kHz" ;
+		lv2:default -70.0 ;
+		lv2:minimum -70.0 ;
+		lv2:maximum   6.0 ;
+		units:unit units:db ;
+	] , [
+		a lv2:OutputPort, lv2:ControlPort ;
+		lv2:index 31 ;
+		lv2:symbol "band8000" ;
+		lv2:name "8Hz" ;
+		lv2:default -70.0 ;
+		lv2:minimum -70.0 ;
+		lv2:maximum   6.0 ;
+		units:unit units:db ;
+	] , [
+		a lv2:OutputPort, lv2:ControlPort ;
+		lv2:index 32 ;
+		lv2:symbol "band10000" ;
+		lv2:name "10Hz" ;
+		lv2:default -70.0 ;
+		lv2:minimum -70.0 ;
+		lv2:maximum   6.0 ;
+		units:unit units:db ;
+	] , [
+		a lv2:OutputPort, lv2:ControlPort ;
+		lv2:index 33 ;
+		lv2:symbol "band12500" ;
+		lv2:name "12.5Hz" ;
+		lv2:default -70.0 ;
+		lv2:minimum -70.0 ;
+		lv2:maximum   6.0 ;
+		units:unit units:db ;
+	] , [
+		a lv2:OutputPort, lv2:ControlPort ;
+		lv2:index 34 ;
+		lv2:symbol "band16000" ;
+		lv2:name "16kHz" ;
+		lv2:default -70.0 ;
+		lv2:minimum -70.0 ;
+		lv2:maximum   6.0 ;
+		units:unit units:db ;
+	] , [
+		a lv2:OutputPort, lv2:ControlPort ;
+		lv2:index 35 ;
+		lv2:symbol "band20000" ;
+		lv2:name "20kHz" ;
+		lv2:default -70.0 ;
+		lv2:minimum -70.0 ;
+		lv2:maximum   6.0 ;
+		units:unit units:db ;
+	] , [
+		a lv2:ControlPort ,
+			lv2:InputPort ;
+		lv2:index 36 ;
+		lv2:symbol "UIattack" ;
+		lv2:name "UI attack" ;
+		lv2:default 180.0 ;
+		lv2:minimum 1.0 ;
+		lv2:maximum 1000.0 ;
+		lv2:portProperty pprop:notOnGUI ;
+	] , [
+		a lv2:ControlPort ,
+			lv2:InputPort ;
+		lv2:index 37 ;
+		lv2:symbol "UIdecay" ;
+		lv2:name "UI decay" ;
+		lv2:default 0.5 ;
+		lv2:minimum 0.02 ;
+		lv2:maximum 15.0 ;
+		lv2:portProperty pprop:notOnGUI ;
+	] ;
+	.
+
+mtr:dBTPmono@URI_SUFFIX@
+	a lv2:Plugin, lv2:AnalyserPlugin, doap:Project ;
+	doap:license <http://usefulinc.com/doap/licenses/gpl> ;
+	doap:name "True-Peak Meter (Mono)@NAME_SUFFIX@";
+	lv2:project <http://gareus.org/oss/lv2/meters> ;
+	lv2:optionalFeature lv2:hardRTCapable ;
+	ui:ui @DPMGUI@ ;
+	lv2:port [
+		a lv2:ControlPort ,
+			lv2:InputPort ;
+		lv2:index 0 ;
+		lv2:symbol "ref" ;
+		lv2:name "Reference Level 0dBu" ;
+		lv2:default -18.0 ;
+		lv2:minimum -30.0 ;
+		lv2:maximum 0.0 ;
+		units:unit units:db;
+	] , [
+		a lv2:AudioPort ,
+			lv2:InputPort ;
+		lv2:index 1 ;
+		lv2:symbol "in" ;
+		lv2:name "In"
+	] , [
+		a lv2:AudioPort ,
+			lv2:OutputPort ;
+		lv2:index 2 ;
+		lv2:symbol "out" ;
+		lv2:name "Out"
+	] , [
+		a lv2:ControlPort ,
+			lv2:OutputPort ;
+		lv2:index 3 ;
+		lv2:symbol "level1" ;
+		lv2:name "Level1" ;
+		lv2:default 0.0 ;
+		lv2:minimum 0.0 ;
+		lv2:maximum 1.0 ;
+	] , [
+		a lv2:ControlPort ,
+			lv2:OutputPort ;
+		lv2:index 4 ;
+		lv2:symbol "peak" ;
+		lv2:name "peak" ;
+		lv2:portProperty pprop:notOnGUI ;
+		lv2:default 0.0 ;
+		lv2:minimum 0.0 ;
+		lv2:maximum 1.0 ;
+	] ;
+	.
+
+mtr:dBTPstereo@URI_SUFFIX@
+	a lv2:Plugin, lv2:AnalyserPlugin, doap:Project ;
+	doap:license <http://usefulinc.com/doap/licenses/gpl> ;
+	doap:name "True-Peak Meter (Stereo)@NAME_SUFFIX@";
+	lv2:project <http://gareus.org/oss/lv2/meters> ;
+	lv2:optionalFeature lv2:hardRTCapable ;
+	ui:ui @DPMGUI@ ;
+	lv2:port [
+		a lv2:ControlPort ,
+			lv2:InputPort ;
+		lv2:index 0 ;
+		lv2:symbol "ref" ;
+		lv2:name "Reference Level 0dBu" ;
+		lv2:default -18.0 ;
+		lv2:minimum -30.0 ;
+		lv2:maximum 0.0 ;
+		units:unit units:db;
+	] , [
+		a lv2:AudioPort ,
+			lv2:InputPort ;
+		lv2:index 1 ;
+		lv2:symbol "inL" ;
+		lv2:name "InL"
+	] , [
+		a lv2:AudioPort ,
+			lv2:OutputPort ;
+		lv2:index 2 ;
+		lv2:symbol "outL" ;
+		lv2:name "OutL"
+	] , [
+		a lv2:ControlPort ,
+			lv2:OutputPort ;
+		lv2:index 3 ;
+		lv2:symbol "levelL" ;
+		lv2:name "LevelL" ;
+		lv2:default 0.0 ;
+		lv2:minimum 0.0 ;
+		lv2:maximum 1.0 ;
+	] , [
+		a lv2:AudioPort ,
+			lv2:InputPort ;
+		lv2:index 4 ;
+		lv2:symbol "inR" ;
+		lv2:name "InR"
+	] , [
+		a lv2:AudioPort ,
+			lv2:OutputPort ;
+		lv2:index 5 ;
+		lv2:symbol "outR" ;
+		lv2:name "OutR"
+	] , [
+		a lv2:ControlPort ,
+			lv2:OutputPort ;
+		lv2:index 6 ;
+		lv2:symbol "levelR" ;
+		lv2:name "LevelR" ;
+		lv2:default 0.0 ;
+		lv2:minimum 0.0 ;
+		lv2:maximum 1.0 ;
+	] , [
+		a lv2:ControlPort ,
+			lv2:OutputPort ;
+		lv2:index 7 ;
+		lv2:symbol "peakL" ;
+		lv2:name "peakL" ;
+		lv2:portProperty pprop:notOnGUI ;
+		lv2:default 0.0 ;
+		lv2:minimum 0.0 ;
+		lv2:maximum 1.0 ;
+	] , [
+		a lv2:ControlPort ,
+			lv2:OutputPort ;
+		lv2:index 8 ;
+		lv2:symbol "peakR" ;
+		lv2:name "peakR" ;
+		lv2:portProperty pprop:notOnGUI ;
+		lv2:default 0.0 ;
+		lv2:minimum 0.0 ;
+		lv2:maximum 1.0 ;
+	] ;
+	.

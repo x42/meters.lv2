@@ -48,8 +48,8 @@ void Iec2ppmdsp::process (float *p, int n)
 {
     float z1, z2, m, t;
 
-    z1 = _z1;
-    z2 = _z2;
+    z1 = _z1 > 20 ? 20 : (_z1 < 0 ? 0 : _z1);
+    z2 = _z2 > 20 ? 20 : (_z2 < 0 ? 0 : _z2);
     m = _res ? 0: _m;
     _res = false;
 
@@ -96,3 +96,4 @@ void Iec2ppmdsp::init (float fsamp)
 }
 
 }
+/* vi:set ts=8 sts=8 sw=4: */

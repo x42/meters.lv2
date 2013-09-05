@@ -46,8 +46,8 @@ void Vumeterdsp::process (float *p, int n)
 {
     float z1, z2, m, t1, t2;
 
-    z1 = _z1;
-    z2 = _z2;
+    z1 = _z1 > 20 ? 20 : (_z1 < -20 ? -20 : _z1);
+    z2 = _z2 > 20 ? 20 : (_z2 < -20 ? -20 : _z2);
     m = _res ? 0: _m;
     _res = false;
 
@@ -67,8 +67,8 @@ void Vumeterdsp::process (float *p, int n)
 	if (z2 > m) m = z2;
     }
 
-    _z1 = z1;
-    _z2 = z2 + 1e-10f;
+    if (!finite(z1)) {_z1 = 0; m = INFINITY;} else _z1 = z1;
+    if (!finite(z2)) {_z2 = 0; m = INFINITY;} else _z2 = z2 + 1e-10f;
     _m = m;
 }
 
@@ -87,3 +87,4 @@ void Vumeterdsp::init (float fsamp)
 }
 
 };
+/* vi:set ts=8 sts=8 sw=4: */

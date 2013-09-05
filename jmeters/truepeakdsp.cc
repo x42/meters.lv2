@@ -50,8 +50,8 @@ void TruePeakdsp::process (float *data, int n)
 	float v;
 	float m = _res ? 0: _m;
 	float p = _res ? 0: _p;
-	float z1 = _z1;
-	float z2 = _z2;
+	float z1 = _z1 > 20 ? 20 : (_z1 < 0 ? 0 : _z1);
+	float z2 = _z2 > 20 ? 20 : (_z2 < 0 ? 0 : _z2);
 	float *b = _buf;
 
 	while (n--) {

@@ -1,9 +1,7 @@
-/manifest.ttl
-/meters.ttl
-/img/*.png
-/img/*.xcf
+/build
+/gui/img/*.png
+/gui/img/*.xcf
 /tools/gen_image
-*.so
 
 *.swp
 cscope.*
