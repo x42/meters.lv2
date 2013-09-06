@@ -184,22 +184,14 @@ static void set_needle_sizes(MetersLV2UI* ui) {
 }
 
 static void draw_background (MetersLV2UI* ui, cairo_t* cr, float xoff, float yoff) {
-	cairo_save(cr);
-#if 1
 	float w =  cairo_image_surface_get_width (ui->bg);
 	float h =  cairo_image_surface_get_height (ui->bg);
-#if 0
-	printf("draw_background %.1fx%.1f  %.1fx%.1f  %.1f %.1f xoff:%.1f\n",
-		w,h,  ui->m_width, ui->m_height, ui->m_width / w, ui->m_height / h, xoff);
-#endif
+
+	cairo_save(cr);
 	cairo_scale(cr, ui->m_width / w, ui->m_height / h);
 	cairo_set_source_surface(cr, ui->bg, xoff * w / ui->m_width, yoff);
 	cairo_rectangle (cr, xoff * w / ui->m_width, 0, w, h);
 	cairo_fill(cr);
-#else
-	cairo_set_source_surface(cr, ui->bg, xoff, yoff);
-	cairo_paint(cr);
-#endif
 	cairo_restore(cr);
 }
 
@@ -294,6 +286,7 @@ static void draw_needle (MetersLV2UI* ui, cairo_t* cr, float val,
 
 	cairo_restore(cr);
 }
+
 #define NANED(X,Y, COL) \
 	cairo_save(cr); \
 	rounded_rectangle (cr, (X) - 30 * ui->scale, (Y) - 5 * ui->scale, 60 * ui->scale,  20 * ui->scale, 4*ui->scale); \
