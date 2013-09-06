@@ -22,11 +22,12 @@ and the following stereo plugins
 Currently the plugins come in both Gtk and openGL variants (both
 versions are installed in parallel).
 
+
 Install
 -------
 
 Compiling these plugin requires the LV2 SDK, gnu-make, a c-compiler,
-gtk+2.0, libpango, libcairo and openGL (glu).
+gtk+2.0, libpango, libcairo and openGL (sometimes called: glu, glx, mesa).
 
 ```bash
   git clone git://github.com/x42/meters.lv2.git
@@ -40,6 +41,28 @@ gtk+2.0, libpango, libcairo and openGL (glu).
 
 Note to packagers: The Makefile honors `PREFIX` and `DESTDIR` variables as well
 as `CFLAGS`, `LDFLAGS` and `OPTIMIZATIONS` (additions to `CFLAGS`).
+
+
+Note on build-dependencies
+--------------------------
+
+These plugins count on rather recent (Jan 2013) fixes^Wfeatures of
+some libraries (but may work with older versions too):
+
+In particular multi-threading in cairo, pixman and pango.
+Versions of those libraries earlier than libcairo < 1.12.10,
+libpixman < 0.30.2 and libpango < 1.32.6 are not thread-safe.
+As with all concurrency issues, things may or may not work and
+if you only open one meter GUI at a time it's usually fine.
+
+Also note that the plugins use the LV2 idle-interface (lv2 >= 1.4.2)
+The plugin-host (eg. ardour or qtractori) needs to be compiled with
+this or a later version of the LV2 SDK to support the features.
+
+The plugin-host must also support http://lv2plug.in/ns/ext/resize-port/
+
+At the time of writing Ardour 3.4 and jalv.gtk do fulfill these criteria.
+
 
 Screenshots
 -----------
