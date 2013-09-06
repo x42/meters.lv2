@@ -514,6 +514,10 @@ static bool expose_event(RobWidget* handle, cairo_t* cr, cairo_rectangle_t *ev) 
 
 	if (ev->x == 0 && ev->y == 0 && ev->width == COORD_ALL_W && ev->height == COORD_ALL_H) {
 		redraw_part = 3;
+#ifdef GTK_BACKEND
+	} else if (rect_intersect(ev, &rect_is_radar) && rect_intersect(ev, &rect_is_level)) {
+		redraw_part = 3;
+#endif
 	} else if (ev->x == COORD_BR_X && ev->y == COORD_BINFO_Y-1
 			&& ev->width == COORD_BINFO_W && ev->height == COORD_BINFO_H+1) {
 		// bottom right info box (when integrating)
