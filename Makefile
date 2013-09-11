@@ -143,7 +143,8 @@ DSPDEPS=$(DSPSRC) jmeters/jmeterdsp.h jmeters/vumeterdsp.h \
   zita-resampler/resampler.h zita-resampler/resampler-table.h
 
 UITOOLKIT=$(WD)checkbutton.h $(WD)dial.h $(WD)label.h $(WD)pushbutton.h\
-          $(WD)radiobutton.h $(WD)scale.h $(WD)separator.h $(WD)spinner.h
+          $(WD)radiobutton.h $(WD)scale.h $(WD)separator.h $(WD)spinner.h \
+          $(WD)xyplot.h
 
 ROBGL= Makefile $(UITOOLKIT) $(RW)ui_gl.c $(PUGL_SRC) \
   $(RW)gl/common_cgl.h $(RW)gl/layout.h $(RW)gl/robwidget_gl.h $(RW)robtk.h \

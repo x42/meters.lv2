@@ -202,5 +202,6 @@ static void rect_combine(const cairo_rectangle_t *r1, const cairo_rectangle_t *r
 #include "widgets/robtk_scale.h"
 #include "widgets/robtk_separator.h"
 #include "widgets/robtk_spinner.h"
+#include "widgets/robtk_xyplot.h"
 
 #endif
