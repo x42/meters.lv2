@@ -54,14 +54,14 @@ ifeq ($(UNAME),Darwin)
   LV2LDFLAGS=-dynamiclib
   LIB_EXT=.dylibA
   UI_TYPE=ui:CocoaUI
-  PUGL_SRC=pugl/pugl_osx.m
+  PUGL_SRC=robtk/pugl/pugl_osx.m
   $(error OSX is not yet supported)
 # TODO set flags (see setBfree) set pugl sources...
 else
   LV2LDFLAGS=-Wl,-Bstatic -Wl,-Bdynamic
   LIB_EXT=.so
   UI_TYPE=ui:X11UI
-  PUGL_SRC=pugl/pugl_x11.c
+  PUGL_SRC=robtk/pugl/pugl_x11.c
 endif
 
 ifeq ($(EXTERNALUI), yes)

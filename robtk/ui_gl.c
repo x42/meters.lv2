@@ -81,8 +81,8 @@
 #endif
 
 #define ROBTK_MOD_SHIFT PUGL_MOD_SHIFT
-#include "robtk/gl/posringbuf.h"
-#include "robtk/robtk.h"
+#include "gl/posringbuf.h"
+#include "robtk.h"
 
 /*****************************************************************************/
 

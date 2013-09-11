@@ -32,7 +32,7 @@
 
 #define ROBTK_MOD_SHIFT GDK_SHIFT_MASK
 #define GTK_BACKEND
-#include "robtk/robtk.h"
+#include "robtk.h"
 
 /*****************************************************************************/
 
