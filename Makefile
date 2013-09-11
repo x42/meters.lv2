@@ -145,12 +145,12 @@ DSPDEPS=$(DSPSRC) jmeters/jmeterdsp.h jmeters/vumeterdsp.h \
 UITOOLKIT=$(WD)checkbutton.h $(WD)dial.h $(WD)label.h $(WD)pushbutton.h\
           $(WD)radiobutton.h $(WD)scale.h $(WD)separator.h $(WD)spinner.h
 
-ROBGL= Makefile $(UITOOLKIT) src/ui_gl.c $(PUGL_SRC) \
+ROBGL= Makefile $(UITOOLKIT) $(RW)ui_gl.c $(PUGL_SRC) \
   $(RW)gl/common_cgl.h $(RW)gl/layout.h $(RW)gl/robwidget_gl.h $(RW)robtk.h \
 	$(RT)common.h $(RT)style.h \
   $(RW)gl/xternalui.c $(RW)gl/xternalui.h
 
-ROBGTK = Makefile $(UITOOLKIT) src/ui_gtk.c \
+ROBGTK = Makefile $(UITOOLKIT) $(RW)ui_gtk.c \
   $(RW)gtk2/common_cgtk.h $(RW)gtk2/robwidget_gtk.h $(RW)robtk.h \
 	$(RT)common.h $(RT)style.h
 
@@ -197,7 +197,7 @@ $(BUILDDIR)$(LV2GTK1)$(LIB_EXT): $(ROBGTK) \
 	@mkdir -p $(BUILDDIR)
 	$(CC) $(CPPFLAGS) $(CFLAGS) -std=c99  $(GTKUICFLAGS) \
 	  -DPLUGIN_SOURCE="\"gui/needle.c\"" \
-	  -o $(BUILDDIR)$(LV2GTK1)$(LIB_EXT) src/ui_gtk.c \
+	  -o $(BUILDDIR)$(LV2GTK1)$(LIB_EXT) $(RW)ui_gtk.c \
 	  -shared $(LV2LDFLAGS) $(LDFLAGS) $(GTKUILIBS)
 
 $(BUILDDIR)$(LV2GTK2)$(LIB_EXT): $(ROBGTK) \
@@ -205,7 +205,7 @@ $(BUILDDIR)$(LV2GTK2)$(LIB_EXT): $(ROBGTK) \
 	@mkdir -p $(BUILDDIR)
 	$(CC) $(CPPFLAGS) $(CFLAGS) -std=c99 $(GTKUICFLAGS) \
 	  -DPLUGIN_SOURCE="\"gui/ebur.c\"" \
-	  -o $(BUILDDIR)$(LV2GTK2)$(LIB_EXT) src/ui_gtk.c \
+	  -o $(BUILDDIR)$(LV2GTK2)$(LIB_EXT) $(RW)ui_gtk.c \
 	  -shared $(LV2LDFLAGS) $(LDFLAGS) $(GTKUILIBS)
 
 $(BUILDDIR)$(LV2GTK3)$(LIB_EXT): $(ROBGTK) \
@@ -215,7 +215,7 @@ $(BUILDDIR)$(LV2GTK3)$(LIB_EXT): $(ROBGTK) \
 	@mkdir -p $(BUILDDIR)
 	$(CXX) $(CPPFLAGS) $(CFLAGS) $(GTKUICFLAGS) $(CXXFLAGS) \
 	  -DPLUGIN_SOURCE="\"gui/goniometerui.cc\"" \
-	  -o $(BUILDDIR)$(LV2GTK3)$(LIB_EXT) src/ui_gtk.c \
+	  -o $(BUILDDIR)$(LV2GTK3)$(LIB_EXT) $(RW)ui_gtk.c \
 	  zita-resampler/resampler.cc zita-resampler/resampler-table.cc \
 	  -shared $(LV2LDFLAGS) $(LDFLAGS) $(GTKUILIBS)
 
@@ -224,7 +224,7 @@ $(BUILDDIR)$(LV2GTK4)$(LIB_EXT): $(ROBGTK) \
 	@mkdir -p $(BUILDDIR)
 	$(CC) $(CPPFLAGS) $(CFLAGS) -std=c99 $(GTKUICFLAGS) \
 	  -DPLUGIN_SOURCE="\"gui/dpm.c\"" \
-	  -o $(BUILDDIR)$(LV2GTK4)$(LIB_EXT) src/ui_gtk.c \
+	  -o $(BUILDDIR)$(LV2GTK4)$(LIB_EXT) $(RW)ui_gtk.c \
 	  -shared $(LV2LDFLAGS) $(LDFLAGS) $(GTKUILIBS)
 
 $(BUILDDIR)$(LV2GUI2)$(LIB_EXT): $(ROBGL) \
@@ -233,7 +233,7 @@ $(BUILDDIR)$(LV2GUI2)$(LIB_EXT): $(ROBGL) \
 	$(CC) $(CPPFLAGS) $(CFLAGS) -std=c99 $(GLUICFLAGS) \
 	  -DPLUGIN_SOURCE="\"gui/ebur.c\"" \
 	  `pkg-config --cflags glu` \
-	  -o $(BUILDDIR)$(LV2GUI2)$(LIB_EXT) src/ui_gl.c \
+	  -o $(BUILDDIR)$(LV2GUI2)$(LIB_EXT) $(RW)ui_gl.c \
 	  $(PUGL_SRC) \
 	  -shared $(LV2LDFLAGS) $(LDFLAGS) $(GLUILIBS)
 
@@ -245,7 +245,7 @@ $(BUILDDIR)$(LV2GUI3)$(LIB_EXT):$(ROBGL) \
 	$(CXX) $(CPPFLAGS) $(CFLAGS) $(GLUICFLAGS) $(CXXFLAGS) \
 	  -DPLUGIN_SOURCE="\"gui/goniometerui.cc\"" \
 	  `pkg-config --cflags glu` \
-	  -o $(BUILDDIR)$(LV2GUI3)$(LIB_EXT) src/ui_gl.c \
+	  -o $(BUILDDIR)$(LV2GUI3)$(LIB_EXT) $(RW)ui_gl.c \
 	  $(PUGL_SRC) \
 	  zita-resampler/resampler.cc zita-resampler/resampler-table.cc \
 	  -shared $(LV2LDFLAGS) $(LDFLAGS) $(GLUILIBS)
@@ -256,7 +256,7 @@ $(BUILDDIR)$(LV2GUI4)$(LIB_EXT): $(ROBGL) \
 	$(CC) $(CPPFLAGS) $(CFLAGS) -std=c99 $(GLUICFLAGS) \
 	  -DPLUGIN_SOURCE="\"gui/dpm.c\"" \
 	  `pkg-config --cflags glu` \
-	  -o $(BUILDDIR)$(LV2GUI4)$(LIB_EXT) src/ui_gl.c \
+	  -o $(BUILDDIR)$(LV2GUI4)$(LIB_EXT) $(RW)ui_gl.c \
 	  $(PUGL_SRC) \
 	  -shared $(LV2LDFLAGS) $(LDFLAGS) $(GLUILIBS)
 
@@ -266,7 +266,7 @@ $(BUILDDIR)$(LV2GUI1)$(LIB_EXT): $(ROBGL) \
 	$(CC) $(CPPFLAGS) $(CFLAGS) -std=gnu99 $(GLUICFLAGS) \
 	  -DPLUGIN_SOURCE="\"gui/needle.c\"" \
 	  `pkg-config --cflags glu` \
-	  -o $(BUILDDIR)$(LV2GUI1)$(LIB_EXT) src/ui_gl.c \
+	  -o $(BUILDDIR)$(LV2GUI1)$(LIB_EXT) $(RW)ui_gl.c \
 	  $(PUGL_SRC) \
 	  -shared $(LV2LDFLAGS) $(LDFLAGS) $(GLUILIBS)
 

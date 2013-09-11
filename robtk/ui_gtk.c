@@ -58,7 +58,7 @@ gtk_instantiate(const LV2UI_Descriptor*   descriptor,
                 LV2UI_Widget*             widget,
                 const LV2_Feature* const* features)
 {
-	GtkMetersLV2UI* self = (GtkMetersLV2UI*)malloc(sizeof(GtkMetersLV2UI));
+	GtkMetersLV2UI* self = (GtkMetersLV2UI*)calloc(1, sizeof(GtkMetersLV2UI));
 	GtkWidget *parent = NULL;
 	*widget = NULL;
 

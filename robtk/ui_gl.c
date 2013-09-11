@@ -993,7 +993,7 @@ gl_instantiate(const LV2UI_Descriptor*   descriptor,
 #ifdef DEBUG_UI
 	printf("gl_instantiate: %s\n", plugin_uri);
 #endif
-	GlMetersLV2UI* self = (GlMetersLV2UI*)malloc(sizeof(GlMetersLV2UI));
+	GlMetersLV2UI* self = (GlMetersLV2UI*)calloc(1, sizeof(GlMetersLV2UI));
 	if (!self) {
 		fprintf (stderr, "meters.lv2: out of memory.\n");
 		return NULL;
