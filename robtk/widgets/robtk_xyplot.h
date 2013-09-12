@@ -28,10 +28,10 @@ typedef struct {
 	float line_width;
 	float col[4];
 
+	pthread_mutex_t _mutex;
 	uint32_t n_points;
 	float *points_x;
 	float *points_y;
-
 } RobTkXYp;
 
 static bool robtk_xydraw_expose_event(RobWidget* handle, cairo_t* cr, cairo_rectangle_t* ev) {
@@ -53,6 +53,7 @@ static bool robtk_xydraw_expose_event(RobWidget* handle, cairo_t* cr, cairo_rect
 	float yavg = 0;
 	int ycnt = 0;
 
+	pthread_mutex_lock (&d->_mutex);
 	for (uint32_t i = 0; i < d->n_points; ++i) {
 		float x = d->points_x[i] * d->w_width;
 		float y = (1.0 - d->points_y[i]) * d->w_height;
@@ -77,6 +78,7 @@ static bool robtk_xydraw_expose_event(RobWidget* handle, cairo_t* cr, cairo_rect
 		if (i==0) cairo_move_to(cr, x, y);
 		else cairo_line_to(cr, x, y);
 	}
+	pthread_mutex_unlock (&d->_mutex);
 	if (d->n_points > 0) {
 		cairo_set_line_width (cr, d->line_width);
 		cairo_set_source_rgba(cr, d->col[0], d->col[1], d->col[2], d->col[3]);
@@ -117,6 +119,7 @@ static RobTkXYp * robtk_xydraw_new(int w, int h) {
 	d->col[2] =  .2;
 	d->col[3] = 1.0;
 
+	pthread_mutex_init (&d->_mutex, 0);
 	d->rw = robwidget_new(d);
 	ROBWIDGET_SETNAME(d->rw, "xydraw");
 	robwidget_set_expose_event(d->rw, robtk_xydraw_expose_event);
@@ -126,6 +129,7 @@ static RobTkXYp * robtk_xydraw_new(int w, int h) {
 }
 
 static void robtk_xydraw_destroy(RobTkXYp *d) {
+	pthread_mutex_destroy(&d->_mutex);
 	robwidget_destroy(d->rw);
 	d->n_points = 0;
 	free(d->points_x);
@@ -149,11 +153,13 @@ static void robtk_xydraw_set_color(RobTkXYp *d, float r, float g, float b, float
 }
 
 static void robtk_xydraw_set_points(RobTkXYp *d, uint32_t np, float *xp, float *yp) {
+	pthread_mutex_lock (&d->_mutex);
 	d->points_x = (float*) realloc(d->points_x, sizeof(float) * np);
 	d->points_y = (float*) realloc(d->points_y, sizeof(float) * np);
 	memcpy(d->points_x, xp, sizeof(float) * np);
 	memcpy(d->points_y, yp, sizeof(float) * np);
 	d->n_points = np;
+	pthread_mutex_unlock (&d->_mutex);
 	queue_draw(d->rw);
 }
 
