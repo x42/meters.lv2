@@ -292,7 +292,8 @@ static RobTkCBtn * robtk_cbtn_new(const char * txt, enum GedLedMode led, bool fl
 	PangoFontDescription *fd = get_font_from_theme();
 
 	get_text_geometry(txt, fd, &ww, &wh);
-	d->w_width = ww + 14 + (d->show_led ? GBT_LED_RADIUS + 6 : 0);
+	assert(d->show_led || ww > 0);
+	d->w_width = ((ww > 0) ? (ww + 14) : 7) + (d->show_led ? GBT_LED_RADIUS + 6 : 0);
 	d->w_height = wh + 8;
 	d->l_width = d->w_width;
 
