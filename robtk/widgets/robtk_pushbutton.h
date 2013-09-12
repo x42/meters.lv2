@@ -29,6 +29,10 @@ typedef struct {
 
 	bool (*cb) (RobWidget* w, void* handle);
 	void* handle;
+	bool (*cb_up) (RobWidget* w, void* handle);
+	void* handle_up;
+	bool (*cb_down) (RobWidget* w, void* handle);
+	void* handle_down;
 
 	cairo_pattern_t* btn_active;
 	cairo_pattern_t* btn_inactive;
@@ -100,6 +104,7 @@ static RobWidget* robtk_pbtn_mousedown(RobWidget *handle, RobTkBtnEvent *event) 
 	if (!d->sensitive) { return NULL; }
 	if (!d->prelight) { return NULL; }
 	d->enabled = TRUE;
+	if (d->cb_down) d->cb_down(d->rw, d->handle_down);
 	queue_draw(d->rw);
 	return handle;
 }
@@ -107,8 +112,11 @@ static RobWidget* robtk_pbtn_mousedown(RobWidget *handle, RobTkBtnEvent *event) 
 static RobWidget* robtk_pbtn_mouseup(RobWidget *handle, RobTkBtnEvent *event) {
 	RobTkPBtn * d = (RobTkPBtn *)GET_HANDLE(handle);
 	if (!d->sensitive) { return NULL; }
+	if (d->enabled && d->cb_up) {
+		d->cb_up(d->rw, d->handle_up);
+	}
 	if (d->prelight && d->enabled) {
-		if (d->cb) d->cb(d->rw, d->handle); // emit
+		if (d->cb) d->cb(d->rw, d->handle);
 	}
 	d->enabled = FALSE;
 	queue_draw(d->rw);
@@ -183,6 +191,10 @@ static RobTkPBtn * robtk_pbtn_new(const char * txt) {
 
 	d->cb = NULL;
 	d->handle = NULL;
+	d->cb_up = NULL;
+	d->handle_up = NULL;
+	d->cb_down = NULL;
+	d->handle_down = NULL;
 	d->sf_txt = NULL;
 	d->sensitive = TRUE;
 	d->prelight = FALSE;
@@ -235,10 +247,24 @@ static void robtk_pbtn_set_callback(RobTkPBtn *d, bool (*cb) (RobWidget* w, void
 	d->handle = handle;
 }
 
+static void robtk_pbtn_set_callback_up(RobTkPBtn *d, bool (*cb) (RobWidget* w, void* handle), void* handle) {
+	d->cb_up = cb;
+	d->handle_up = handle;
+}
+
+static void robtk_pbtn_set_callback_down(RobTkPBtn *d, bool (*cb) (RobWidget* w, void* handle), void* handle) {
+	d->cb_down = cb;
+	d->handle_down = handle;
+}
+
 static void robtk_pbtn_set_sensitive(RobTkPBtn *d, bool s) {
 	if (d->sensitive != s) {
 		d->sensitive = s;
 		queue_draw(d->rw);
 	}
+}
+
+static bool robtk_pbtn_get_pushed(RobTkPBtn *d) {
+	return (d->enabled);
 }
 #endif
