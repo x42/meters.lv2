@@ -351,7 +351,7 @@ static void rhbox_size_allocate(RobWidget* rw, int w, int h) {
 		RobWidget * c = (RobWidget *) rw->children[i];
 		if (c->hidden) continue;
 		if (c->size_allocate) {
-			c->size_allocate(c, c->area.width + floorf(xtra_space), hh);
+			c->size_allocate(c, c->area.width + (grow ? 0 : floorf(xtra_space)), hh);
 		}
 #ifdef DEBUG_HBOX
 		printf("HBOXCHILD %d use %.1fx%.1f\n", i, c->area.width, c->area.height);
@@ -511,8 +511,8 @@ static void rvbox_size_allocate(RobWidget* rw, int w, int h) {
 #ifdef DEBUG_VBOX
 			printf("expand %d widgets by %.1f height (%d, %d)\n", exp, xtra_space, cnt, padding);
 #endif
-		} else {
-			xtra_space = (w - rw->area.height) / 2.0;
+		} else if (!rw->position_set) {
+			xtra_space = (h - rw->area.height) / 2.0;
 			grow = TRUE;
 #ifdef DEBUG_VBOX
 			printf("grow self by %.1f height\n", xtra_space);
@@ -531,7 +531,7 @@ static void rvbox_size_allocate(RobWidget* rw, int w, int h) {
 		RobWidget * c = (RobWidget *) rw->children[i];
 		if (c->hidden) continue;
 		if (c->size_allocate) {
-			c->size_allocate(c, ww, c->area.height + floorf(xtra_space));
+			c->size_allocate(c, ww, c->area.height + (grow ? 0 : floorf(xtra_space)));
 		}
 #ifdef DEBUG_VBOX
 		printf("VBOXCHILD %d ('%s') use %.1fx%.1f\n", i,
