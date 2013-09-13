@@ -23,6 +23,7 @@
 typedef struct {
 	RobWidget *rw;
 	bool horiz;
+	float m_width, m_height;
 	float w_width, w_height;
 	float line_width;
 } RobTkSep;
@@ -62,8 +63,9 @@ static bool robtk_sep_expose_event(RobWidget* handle, cairo_t* cr, cairo_rectang
 
 static void
 priv_sep_size_request(RobWidget* handle, int *w, int *h) {
-	*w = 4;
-	*h = 4;
+	RobTkSep* d = (RobTkSep*)GET_HANDLE(handle);
+	*w = d->m_width;
+	*h = d->m_height;
 }
 
 
@@ -85,6 +87,8 @@ static RobTkSep * robtk_sep_new(bool horizontal) {
 	d->horiz = horizontal;
 	d->w_width = 4;
 	d->w_height = 4;
+	d->m_width = 4;
+	d->m_height = 4;
 	d->line_width = 1.0;
 
 	d->rw = robwidget_new(d);
