@@ -452,7 +452,8 @@ static void rvbox_size_request(RobWidget* rw, int *w, int *h) {
 		c->area.height = ch;
 		cnt++;
 #ifdef DEBUG_VBOX
-		printf("VBOXCHILD %d wants %dx%d (new total: %dx%d)\n", i, cw, ch, ww, hh);
+		printf("VBOXCHILD %d ('%s') wants %dx%d (new total: %dx%d)\n", i,
+				ROBWIDGET_NAME(rw->children[i]), cw, ch, ww, hh);
 #endif
 	}
 
@@ -481,7 +482,8 @@ static void rvbox_size_request(RobWidget* rw, int *w, int *h) {
 
 static void rvbox_size_allocate(RobWidget* rw, int w, int h) {
 #ifdef DEBUG_VBOX
-	printf("rvbox_size_allocate %d, %d (%.1f, %.1f)\n", w, h, rw->area.width, rw->area.height);
+	printf("rvbox_size_allocate %s: %d, %d (%.1f, %.1f)\n",
+			ROBWIDGET_NAME(rw), w, h, rw->area.width, rw->area.height);
 #endif
 	int padding = ((struct rob_container*)rw->self)->padding;
 	bool expand = ((struct rob_container*)rw->self)->expand;
@@ -513,7 +515,11 @@ static void rvbox_size_allocate(RobWidget* rw, int w, int h) {
 			xtra_space = (w - rw->area.height) / 2.0;
 			grow = TRUE;
 #ifdef DEBUG_VBOX
-			printf("grow self by %.1f width\n", xtra_space);
+			printf("grow self by %.1f height\n", xtra_space);
+#endif
+		} else {
+#ifdef DEBUG_VBOX
+			printf("don't grow\n");
 #endif
 		}
 	}
@@ -528,7 +534,8 @@ static void rvbox_size_allocate(RobWidget* rw, int w, int h) {
 			c->size_allocate(c, ww, c->area.height + floorf(xtra_space));
 		}
 #ifdef DEBUG_VBOX
-		printf("VBOXCHILD %d use %.1fx%.1f\n", i, c->area.width, c->area.height);
+		printf("VBOXCHILD %d ('%s') use %.1fx%.1f\n", i,
+				ROBWIDGET_NAME(rw->children[i]), c->area.width, c->area.height);
 #endif
 	}
 
