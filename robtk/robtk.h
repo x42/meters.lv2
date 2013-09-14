@@ -38,7 +38,11 @@ typedef struct {
 } RobTkBtnEvent;
 
 #ifndef ROBTK_MOD_SHIFT
-#error backend implementation misses ROBTK_MOD_SHIFT define
+#error backend implementation misses ROBTK_MOD_SHIFT
+#endif
+
+#ifndef ROBTK_MOD_CTRL
+#error backend implementation misses ROBTK_MOD_CTRL
 #endif
 
 enum {
