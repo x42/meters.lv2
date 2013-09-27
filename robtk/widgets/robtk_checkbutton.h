@@ -49,7 +49,8 @@ typedef struct {
 	cairo_surface_t* sf_txt_enabled;
 
 	float w_width, w_height, l_width;
-
+	float c_on[4];
+	float coff[4];
 } RobTkCBtn;
 
 /******************************************************************************
@@ -115,7 +116,7 @@ static bool robtk_cbtn_expose_event(RobWidget* handle, cairo_t* cr, cairo_rectan
 	RobTkCBtn * d = (RobTkCBtn *)GET_HANDLE(handle);
 	cairo_rectangle (cr, ev->x, ev->y, ev->width, ev->height);
 	cairo_clip (cr);
-	float led_r, led_g, led_b;
+	float led_r, led_g, led_b; // TODO consolidate with c[]
 
 	if (handle->area.width > d->w_width) {
 		d->w_width = handle->area.width;
@@ -139,13 +140,13 @@ static bool robtk_cbtn_expose_event(RobWidget* handle, cairo_t* cr, cairo_rectan
 			if (d->radiomode) {
 				led_r = .3; led_g = .8; led_b = .1;
 			} else {
-				led_r = .8; led_g = .3; led_b = .1;
+				led_r = d->c_on[0]; led_g = d->c_on[1]; led_b = d->c_on[2];
 			}
 		} else {
 			if (d->radiomode) {
 				led_r = .1; led_g = .3; led_b = .1;
 			} else {
-				led_r = .3; led_g = .1; led_b = .1;
+				led_r = d->coff[0]; led_g = d->coff[1]; led_b = d->coff[2];
 			}
 		}
 
@@ -284,6 +285,9 @@ static RobTkCBtn * robtk_cbtn_new(const char * txt, enum GedLedMode led, bool fl
 	d->prelight = FALSE;
 	d->enabled = FALSE;
 
+	d->c_on[0] = .8; d->c_on[1] = .3; d->c_on[2] = .1; d->c_on[3] = 1.0;
+	d->coff[0] = .3; d->coff[1] = .1; d->coff[2] = .1; d->coff[3] = 1.0;
+
 	if (led == GBT_LED_RADIO) {
 		d->radiomode = TRUE;
 	}
@@ -347,6 +351,18 @@ static void robtk_cbtn_set_sensitive(RobTkCBtn *d, bool s) {
 		d->sensitive = s;
 		queue_draw(d->rw);
 	}
+}
+
+static void robtk_cbtn_set_color_on(RobTkCBtn *d, float r, float g, float b) {
+	d->c_on[0] = r;
+	d->c_on[1] = g;
+	d->c_on[2] = b;
+}
+
+static void robtk_cbtn_set_color_off(RobTkCBtn *d, float r, float g, float b) {
+	d->coff[0] = r;
+	d->coff[1] = g;
+	d->coff[2] = b;
 }
 
 static bool robtk_cbtn_get_active(RobTkCBtn *d) {
