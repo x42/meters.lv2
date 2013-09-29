@@ -1033,7 +1033,7 @@ instantiate(
 	ui->cbn_autogain = robtk_cbtn_new("Auto Gain", GBT_LED_LEFT, false);
 
 
-	ui->cbn_preferences = robtk_cbtn_new((const char*) "Show Settings", GBT_LED_OFF, false);
+	ui->cbn_preferences = robtk_cbtn_new((const char*) "Show Settings", /* GBT_LED_OFF */ GBT_LED_LEFT, false);
 	ui->c_tbl        = rob_table_new(/*rows*/6, /*cols*/ 5, FALSE);
 	ui->cbn_src      = robtk_cbtn_new("Oversample", GBT_LED_LEFT, false);
 	ui->spn_src_fact = robtk_spin_new(2, 32, 1);
@@ -1051,6 +1051,11 @@ instantiate(
 
 	ui->spn_vfreq    = robtk_spin_new(10, 100, 5);
 	ui->spn_alpha    = robtk_dial_new(0, 100, .5);
+
+	robtk_cbtn_set_color_on(ui->cbn_preferences, .2, .8, .1);
+	robtk_cbtn_set_color_off(ui->cbn_preferences, .1, .3, .1);
+	robtk_cbtn_set_color_on(ui->cbn_lines, .1, .3, .8);
+	robtk_cbtn_set_color_off(ui->cbn_lines, .1, .1, .3);
 
 	/* see also src/goniometerlv2.c -TOD  coax the defaults out of there */
 	robtk_dial_set_default(ui->spn_compress, 0.0);
