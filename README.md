@@ -56,7 +56,7 @@ As with all concurrency issues, things may or may not work and
 if you only open one meter GUI at a time it's usually fine.
 
 Also note that the plugins use the LV2 idle-interface (lv2 >= 1.4.2)
-The plugin-host (eg. ardour or qtractori) needs to be compiled with
+The plugin-host (eg. ardour or qtractor) needs to be compiled with
 this or a later version of the LV2 SDK to support the features.
 
 The plugin-host must also support http://lv2plug.in/ns/ext/resize-port/
