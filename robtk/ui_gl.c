@@ -2,20 +2,19 @@
  *
  * Copyright (C) 2013 Robin Gareus <robin@gareus.org>
  *
- * This source code is provided for the sole purpose of allowing you
- * to compile, install and use the software application of which it
- * is a part.
- *
- * You may download, compile, install and use a copy of the software for
- * whatever purpose, privately or professionally.
- *
- * You may not bundle, rename, sell, redistribute, repackage or in any other
- * way alter whole or part of the software and its distribution without prior,
- * express and written permission from the author.
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2, or (at your option)
+ * any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software Foundation,
+ * Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
 //#undef HAVE_IDLE_IFACE // simulate old LV2
