@@ -69,4 +69,5 @@ Screenshots
 
 ![screenshot](https://raw.github.com/x42/meters.lv2/master/doc/LV2ebur128.png "EBU R128 Meter GUI")
 ![screenshot](https://raw.github.com/x42/meters.lv2/master/doc/LV2meters.png "Various Needle Meters in Ardour")
+![screenshot](https://raw.github.com/x42/meters.lv2/master/doc/spectr_and_goni.png "Spectum Analyzer and Stereo Phase Scope")
 
