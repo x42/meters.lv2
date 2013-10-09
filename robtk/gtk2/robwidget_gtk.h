@@ -160,7 +160,7 @@ static void robtk_size_allocate(GtkWidget *w, GdkRectangle *r, gpointer handle) 
 }
 
 #define robwidget_set_mousemove(RW, EVT) { \
-	gtk_widget_add_events((RW)->m0, GDK_BUTTON1_MOTION_MASK); \
+	gtk_widget_add_events((RW)->m0, GDK_BUTTON1_MOTION_MASK | GDK_POINTER_MOTION_MASK); \
 	(RW)->mousemove=EVT; \
 	g_signal_connect (G_OBJECT ((RW)->m0), "motion-notify-event", G_CALLBACK (robtk_mousemove), (RW)); \
 }
