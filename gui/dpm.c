@@ -359,7 +359,7 @@ static void alloc_annotations(SAUI* ui) {
 }
 
 static void realloc_metrics(SAUI* ui) {
-	const float dboff = ui->gain > 0.01 ? 20.0 * log10f(ui->gain) : -20;
+	const float dboff = ui->gain > 0.1 ? 20.0 * log10f(ui->gain) : -20;
 	if (rint(ui->cache_ma * 5) == rint(dboff * 5)) {
 		return;
 	}
@@ -413,7 +413,7 @@ static void realloc_metrics(SAUI* ui) {
 }
 
 static void prepare_metersurface(SAUI* ui) {
-	const float dboff = ui->gain > 0.01 ? 20.0 * log10f(ui->gain) : -20;
+	const float dboff = ui->gain > .1 ? 20.0 * log10f(ui->gain) : -20;
 
 	if (rint(ui->cache_sf * 5) == rint(dboff * 5)) {
 		return;
@@ -611,7 +611,7 @@ static bool expose_event(RobWidget* handle, cairo_t* cr, cairo_rectangle_t *ev) 
 	/* highlight */
 	if (ui->highlight >= 0 && ui->highlight < ui->num_meters &&
 			rect_intersect_a(ev, MA_WIDTH + GM_WIDTH * ui->highlight + GM_WIDTH/2 - 32, GM_TXT -4.5, 64, 46)) {
-		const float dboff = ui->gain > 0.01 ? 20.0 * log10f(ui->gain) : -20;
+		const float dboff = ui->gain > .1 ? 20.0 * log10f(ui->gain) : -20;
 		cairo_set_operator (cr, CAIRO_OPERATOR_OVER);
 		const int i = ui->highlight;
 		char buf[32];
@@ -663,7 +663,7 @@ static bool set_gain(RobWidget* w, void* handle) {
 	float oldgain = ui->gain;
 	ui->gain = INV_GAINSCALE(robtk_scale_get_value(ui->fader));
 #if 1
-	if (ui->gain <  .250) ui->gain = 0.01;
+	if (ui->gain < .1) ui->gain = .1;
 	if (ui->gain >= 40.0) ui->gain = 40.0;
 #endif
 	if (oldgain == ui->gain) return TRUE;
