@@ -124,6 +124,7 @@ typedef struct {
 	float* output[2];
 
 	float* gain;
+	float gain_h;
 	float* spec[FILTER_COUNT];
 	float* attack_p;
 	float* decay_p;
@@ -171,6 +172,7 @@ spectrum_instantiate(
 
 	self->attack_h = 15.0;
 	self->decay_h = .5;
+	self->gain_h = 1.0;
 	self->rate = rate;
 
 	// 1.0 - e^(-2.0 * π * v / 48000)
@@ -256,6 +258,13 @@ spectrum_run(LV2_Handle instance, uint32_t n_samples)
 		spec_f[i] = self->spec_f[i];
 		flt[i] = &self->flt[i];
 		mx[i] = 0;
+	}
+
+	if (self->gain_h != gain) {
+		self->gain_h = gain;
+		for(int i = 0; i < FILTER_COUNT; ++i) {
+			spec_f[i] = 0;
+		}
 	}
 
 	/* .. and go */
