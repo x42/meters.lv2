@@ -778,7 +778,7 @@ static RobWidget * toplevel(SAUI* ui, void * const top)
 
 	robtk_scale_set_default(ui->fader, GAINSCALE(3.1623));
 	robtk_scale_set_value(ui->fader, GAINSCALE(1.0000));
-	robtk_scale_add_mark(ui->fader,GAINSCALE(0.2511), "-12db");
+	robtk_scale_add_mark(ui->fader,GAINSCALE(0.2511), "-12dB");
 	robtk_scale_add_mark(ui->fader,GAINSCALE(0.3548),  "-9dB");
 	robtk_scale_add_mark(ui->fader,GAINSCALE(0.5012),  "-6dB");
 	robtk_scale_add_mark(ui->fader,GAINSCALE(0.7079),  "-3dB");
