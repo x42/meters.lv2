@@ -25,3 +25,8 @@ mtr:eburui@UI_URI_SUFFIX@
 		ui:notifyType atom:Blank
 	]
 	.
+
+mtr:kmeterui@UI_URI_SUFFIX@
+	a @UI_TYPE@;
+	@UI_REQ@
+	.

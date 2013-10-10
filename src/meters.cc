@@ -29,6 +29,7 @@
 #include "../jmeters/iec2ppmdsp.h"
 #include "../jmeters/stcorrdsp.h"
 #include "../jmeters/truepeakdsp.h"
+#include "../jmeters/kmeterdsp.h"
 #include "../ebumeter/ebu_r128_proc.h"
 
 #include "uris.h"
@@ -133,6 +134,9 @@ instantiate(const LV2_Descriptor*     descriptor,
 	MTRDEF("DIN", Iec1ppmdsp)
 	MTRDEF("NOR", Iec1ppmdsp)
 	MTRDEF("dBTP", TruePeakdsp)
+	MTRDEF("K12", Kmeterdsp)
+	MTRDEF("K14", Kmeterdsp)
+	MTRDEF("K20", Kmeterdsp)
 	else {
 		free(self);
 		return NULL;
@@ -363,6 +367,20 @@ mkdesc(25, "NORstereo_gtk",run)
 mkdesc(29,"dBTPmono_gtk",   dbtp_run)
 mkdesc(30,"dBTPstereo_gtk", dbtp_run)
 
+mkdesc(32,"K12mono", run)
+mkdesc(33,"K14mono", run)
+mkdesc(34,"K20mono", run)
+mkdesc(35,"K12stereo", run)
+mkdesc(36,"K14stereo", run)
+mkdesc(37,"K20stereo", run)
+
+mkdesc(38,"K12mono_gtk", run)
+mkdesc(39,"K14mono_gtk", run)
+mkdesc(40,"K20mono_gtk", run)
+mkdesc(41,"K12stereo_gtk", run)
+mkdesc(42,"K14stereo_gtk", run)
+mkdesc(43,"K20stereo_gtk", run)
+
 static const LV2_Descriptor descriptorCor = {
 	MTR_URI "COR",
 	instantiate,
@@ -422,6 +440,18 @@ lv2_descriptor(uint32_t index)
 	case 29: return &descriptor29;
 	case 30: return &descriptor30;
 	case 31: return &descriptorEBUr128Gtk;
+	case 32: return &descriptor32;
+	case 33: return &descriptor33;
+	case 34: return &descriptor34;
+	case 35: return &descriptor35;
+	case 36: return &descriptor36;
+	case 37: return &descriptor37;
+	case 38: return &descriptor38;
+	case 39: return &descriptor39;
+	case 40: return &descriptor40;
+	case 41: return &descriptor41;
+	case 42: return &descriptor42;
+	case 43: return &descriptor43;
 	default: return NULL;
 	}
 }

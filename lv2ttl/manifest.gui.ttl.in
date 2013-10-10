@@ -20,6 +20,11 @@ mtr:eburui_gtk
 	ui:binary <@LV2GTK2@@LIB_EXT@> ;
 	rdfs:seeAlso <@LV2NAME@.ttl> .
 
+mtr:kmeterui_gtk
+	a ui:GtkUI ;
+	ui:binary <@LV2GTK5@@LIB_EXT@> ;
+	rdfs:seeAlso <@LV2NAME@.ttl> .
+
 
 mtr:needle_gl
 	a @UI_TYPE@;
@@ -39,4 +44,9 @@ mtr:dpmui_gl
 mtr:eburui_gl
 	a @UI_TYPE@;
 	ui:binary <@LV2GUI2@@LIB_EXT@> ;
+	rdfs:seeAlso <@LV2NAME@.ttl> .
+
+mtr:kmeterui_gl
+	a @UI_TYPE@;
+	ui:binary <@LV2GUI5@@LIB_EXT@> ;
 	rdfs:seeAlso <@LV2NAME@.ttl> .
