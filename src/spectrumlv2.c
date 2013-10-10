@@ -107,7 +107,7 @@ static float bandpass_proc (struct FilterParam *f, const float in) {
  */
 
 #define FILTER_COUNT (31)
-#define BP_Q (.33)
+#define BP_Q (.333)
 
 typedef enum {
 	SA_INPUT0   = 0,
@@ -290,7 +290,6 @@ spectrum_run(LV2_Handle instance, uint32_t n_samples)
 		if (!finite(flt[i]->y2[2])) flt[i]->y2[2] = 0;
 		if (!finite(flt[i]->y2[1])) flt[i]->y2[1] = 0;
 		self->spec_f[i] = spec_f[i] + 10e-12 ;
-		mx[i] *= 1.0592f;
 		*(self->spec[i]) = mx[i] > .000316f ? 20.0 * log10f(mx[i]) : -70.0;
 	}
 

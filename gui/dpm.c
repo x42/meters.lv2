@@ -1024,6 +1024,7 @@ static void handle_spectrum_connections(SAUI* ui, uint32_t port_index, float v) 
 	if (port_index > 4 && port_index < 5 + ui->num_meters) {
 		int pidx = port_index -5;
 		float np = ui->peak_val[pidx];
+		v+=.07;
 		if (v > np) { np = v; }
 		invalidate_meter(ui, pidx, v, np);
 	}
