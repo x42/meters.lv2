@@ -36,7 +36,7 @@ static const float c_an1[4] = {0.5, 0.5, 0.8, 0.75}; // radar annotation
 static const float c_gml[4] = {0.88, 0.88, 0.15, 0.6}; // goni lines
 static const float c_gmp[4] = {0.88, 0.88, 0.15, 0.7}; // goni points
 
-static const float c_hlt[4] = {1.0, 1.0, 1.0, 0.2}; // dpm highlight
+static const float c_hlt[4] = {1.0, 1.0, 1.0, 0.3}; // dpm highlight
 static const float c_xfb[4] = {0.0, 0.0, 0.0, 0.8}; // dpm ann bg
 static const float c_scr[4] = {0.2, 0.2, 0.2, 0.8}; // screw mount
 
