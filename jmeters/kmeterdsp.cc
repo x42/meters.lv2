@@ -121,7 +121,7 @@ void Kmeterdsp::process (float *p, int n)
     }
 
     // Digital peak hold and fallback.
-    if (t > _peak)
+    if (t >= _peak)
     {
 	// If higher than current value, update and set hold counter.
 	_peak = t;

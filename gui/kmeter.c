@@ -370,6 +370,7 @@ static void render_meter(KMUI* ui, int i, int old, int new, int m_old, int m_new
 	cairo_fill_preserve(cr);
 	cairo_clip(cr);
 
+	/* rms value */
 	cairo_set_source(cr, ui->mpat);
 	cairo_rectangle (cr, GM_LEFT, GM_TOP + GM_SCALE - new - 1, GM_GIRTH, new + 1);
 	cairo_fill(cr);
@@ -646,6 +647,7 @@ static void invalidate_peak(KMUI* ui, int mtr, float val) {
 
 	ui->peak_val[mtr] = val;
 	ui->peak_def[mtr] = new;
+
 	if (val > ui->peak_max) {
 		ui->peak_max = val;
 		INVALIDATE_RECT((ui->width - PK_WIDTH) / 2.0f - 1, GM_TOP/2 - 9, PK_WIDTH+2, 18);
