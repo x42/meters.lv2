@@ -551,7 +551,6 @@ instantiate(
 	ui->write      = write_function;
 	ui->controller = controller;
 
-	printf("ui: %s %d\n", plugin_uri, ui->num_meters);
 	get_color_from_theme(0, ui->c_txt);
 	ui->c_bgr[0] = 84/255.0;
 	ui->c_bgr[1] = 85/255.0;
