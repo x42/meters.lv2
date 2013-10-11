@@ -216,6 +216,48 @@ run(LV2_Handle instance, uint32_t n_samples)
 	}
 }
 
+
+static void
+kmeter_run(LV2_Handle instance, uint32_t n_samples)
+{
+	LV2meter* self = (LV2meter*)instance;
+
+	if (self->p_refl != *self->reflvl) {
+		self->p_refl = *self->reflvl;
+		self->rlgain = powf (10.0f, 0.05f * (self->p_refl + 18.0));
+	}
+
+	int c;
+	for (c = 0; c < self->chn; ++c) {
+
+		float* const input  = self->input[c];
+		float* const output = self->output[c];
+
+		self->mtr[c]->process(input, n_samples);
+
+
+		if (input != output) {
+			memcpy(output, input, sizeof(float) * n_samples);
+		}
+	}
+	if (self->chn == 1) {
+		float m, p;
+		static_cast<Kmeterdsp*>(self->mtr[0])->read(m, p);
+		*self->level[0] = self->rlgain * m;
+		*self->input[1] = self->rlgain * p; // portindex 4
+	} else if (self->chn == 2) {
+		float m, p;
+		static_cast<Kmeterdsp*>(self->mtr[0])->read(m, p);
+		*self->level[0] = self->rlgain * m;
+		*self->peak[0] = self->rlgain * p;
+
+		static_cast<Kmeterdsp*>(self->mtr[1])->read(m, p);
+		*self->level[1] = self->rlgain * m;
+		*self->peak[1] = self->rlgain * p;
+	}
+}
+
+
 static void
 cleanup(LV2_Handle instance)
 {
@@ -367,19 +409,19 @@ mkdesc(25, "NORstereo_gtk",run)
 mkdesc(29,"dBTPmono_gtk",   dbtp_run)
 mkdesc(30,"dBTPstereo_gtk", dbtp_run)
 
-mkdesc(32,"K12mono", run)
-mkdesc(33,"K14mono", run)
-mkdesc(34,"K20mono", run)
-mkdesc(35,"K12stereo", run)
-mkdesc(36,"K14stereo", run)
-mkdesc(37,"K20stereo", run)
+mkdesc(32,"K12mono", kmeter_run)
+mkdesc(33,"K14mono", kmeter_run)
+mkdesc(34,"K20mono", kmeter_run)
+mkdesc(35,"K12stereo", kmeter_run)
+mkdesc(36,"K14stereo", kmeter_run)
+mkdesc(37,"K20stereo", kmeter_run)
 
-mkdesc(38,"K12mono_gtk", run)
-mkdesc(39,"K14mono_gtk", run)
-mkdesc(40,"K20mono_gtk", run)
-mkdesc(41,"K12stereo_gtk", run)
-mkdesc(42,"K14stereo_gtk", run)
-mkdesc(43,"K20stereo_gtk", run)
+mkdesc(38,"K12mono_gtk", kmeter_run)
+mkdesc(39,"K14mono_gtk", kmeter_run)
+mkdesc(40,"K20mono_gtk", kmeter_run)
+mkdesc(41,"K12stereo_gtk", kmeter_run)
+mkdesc(42,"K14stereo_gtk", kmeter_run)
+mkdesc(43,"K20stereo_gtk", kmeter_run)
 
 static const LV2_Descriptor descriptorCor = {
 	MTR_URI "COR",

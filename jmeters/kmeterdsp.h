@@ -30,8 +30,8 @@ public:
     ~Kmeterdsp (void);
 
     void process (float *p, int n);
-    void process_max (float *p, int n);
     float read (void);
+    void read (float &rms, float &peak);
     void reset (void);
 
     void init (float fsamp);
@@ -41,9 +41,15 @@ private:
 		float          _z1;          // filter state
 		float          _z2;          // filter state
 		float          _rms;         // max rms value since last read()
+		float          _peak;        // max peak value since last read()
+		int            _cnt;	       // digital peak hold counter
+		int            _fpp;	       // frames per period
+		float          _fall;        // peak fallback
 		bool           _flag;        // flag set by read(), resets _rms
 
 		static float   _omega;       // ballistics filter constant.
+		static int     _hold;        // peak hold timeoute
+		static float   _fsamp;       // sample-rate
 
 };
 

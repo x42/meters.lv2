@@ -370,14 +370,12 @@ static void render_meter(KMUI* ui, int i, int old, int new, int m_old, int m_new
 	cairo_rectangle (cr, GM_LEFT, GM_TOP + GM_SCALE - new - 1, GM_GIRTH, new + 1);
 	cairo_fill(cr);
 
-#if 0
-	/* peak hold */
+	/* peak */
 	cairo_set_operator (cr, CAIRO_OPERATOR_OVER);
 	cairo_rectangle (cr, GM_LEFT, GM_TOP + GM_SCALE - m_new - 0.5, GM_GIRTH, 3);
 	cairo_fill_preserve (cr);
 	CairoSetSouerceRGBA(c_hlt);
 	cairo_fill(cr);
-#endif
 
 	/* border */
 	cairo_reset_clip(cr);
@@ -438,6 +436,7 @@ static bool expose_event(RobWidget* handle, cairo_t* cr, cairo_rectangle_t *ev) 
 			ui->peak_vis[i] = m_new;
 			render_meter(ui, i, old, new, m_old, m_new);
 		}
+
 		cairo_set_source_surface(cr, ui->sf[i], MA_WIDTH + GM_WIDTH * i, 0);
 		cairo_paint (cr);
 	}
@@ -590,12 +589,13 @@ extension_data(const char* uri)
 /******************************************************************************
  * backend communication
  */
+
+#define INVALIDATE_RECT(XX,YY,WW,HH) queue_tiny_area(ui->m0, XX, YY, WW, HH);
+
 static void invalidate_meter(KMUI* ui, int mtr, float val) {
 	const int old = ui->val_def[mtr];
 	const int new = deflect(ui, val);
 	int t, h;
-
-#define INVALIDATE_RECT(XX,YY,WW,HH) queue_tiny_area(ui->m0, XX, YY, WW, HH);
 
 	ui->val[mtr] = val;
 	ui->val_def[mtr] = new;
@@ -616,6 +616,30 @@ static void invalidate_meter(KMUI* ui, int mtr, float val) {
 	}
 }
 
+static void invalidate_peak(KMUI* ui, int mtr, float val) {
+	const int old = ui->peak_def[mtr];
+	const int new = deflect(ui, val);
+	int t, h;
+
+	ui->peak_val[mtr] = val;
+	ui->peak_def[mtr] = new;
+
+	if (old != new) {
+		if (old > new) {
+			t = old;
+			h = old - new;
+		} else {
+			t = new;
+			h = new - old;
+		}
+
+		INVALIDATE_RECT(
+				mtr * GM_WIDTH + MA_WIDTH + GM_LEFT - 1,
+				GM_TOP + GM_SCALE - t - 1,
+				GM_GIRTH + 2, h+4);
+	}
+}
+
 /******************************************************************************
  * handle data from backend
  */
@@ -627,6 +651,15 @@ static void handle_meter_connections(KMUI* ui, uint32_t port_index, float v) {
 	}
 	else if (port_index == 6) {
 		invalidate_meter(ui, 1, v);
+	}
+	else if (port_index == 4 && ui->num_meters == 1) {
+		invalidate_peak(ui, 0, v);
+	}
+	else if (port_index == 7 && ui->num_meters == 2) {
+		invalidate_peak(ui, 0, v);
+	}
+	else if (port_index == 8 && ui->num_meters == 2) {
+		invalidate_peak(ui, 1, v);
 	}
 }
 

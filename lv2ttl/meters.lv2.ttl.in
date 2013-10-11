@@ -1219,6 +1219,16 @@ mtr:K12mono@URI_SUFFIX@
 		lv2:default 0.0 ;
 		lv2:minimum 0.0 ;
 		lv2:maximum 1.0 ;
+	] , [
+		a lv2:ControlPort ,
+			lv2:OutputPort ;
+		lv2:index 4 ;
+		lv2:symbol "peak" ;
+		lv2:name "peak" ;
+		lv2:portProperty pprop:notOnGUI ;
+		lv2:default 0.0 ;
+		lv2:minimum 0.0 ;
+		lv2:maximum 1.0 ;
 	] ;
 	.
 
@@ -1281,6 +1291,26 @@ mtr:K12stereo@URI_SUFFIX@
 		lv2:default 0.0 ;
 		lv2:minimum 0.0 ;
 		lv2:maximum 1.0 ;
+	] , [
+		a lv2:ControlPort ,
+			lv2:OutputPort ;
+		lv2:index 7 ;
+		lv2:symbol "peakL" ;
+		lv2:name "peakL" ;
+		lv2:portProperty pprop:notOnGUI ;
+		lv2:default 0.0 ;
+		lv2:minimum 0.0 ;
+		lv2:maximum 1.0 ;
+	] , [
+		a lv2:ControlPort ,
+			lv2:OutputPort ;
+		lv2:index 8 ;
+		lv2:symbol "peakR" ;
+		lv2:name "peakR" ;
+		lv2:portProperty pprop:notOnGUI ;
+		lv2:default 0.0 ;
+		lv2:minimum 0.0 ;
+		lv2:maximum 1.0 ;
 	] ;
 	.
 
@@ -1320,6 +1350,16 @@ mtr:K14mono@URI_SUFFIX@
 		lv2:index 3 ;
 		lv2:symbol "level1" ;
 		lv2:name "Level1" ;
+		lv2:default 0.0 ;
+		lv2:minimum 0.0 ;
+		lv2:maximum 1.0 ;
+	] , [
+		a lv2:ControlPort ,
+			lv2:OutputPort ;
+		lv2:index 4 ;
+		lv2:symbol "peak" ;
+		lv2:name "peak" ;
+		lv2:portProperty pprop:notOnGUI ;
 		lv2:default 0.0 ;
 		lv2:minimum 0.0 ;
 		lv2:maximum 1.0 ;
@@ -1385,6 +1425,26 @@ mtr:K14stereo@URI_SUFFIX@
 		lv2:default 0.0 ;
 		lv2:minimum 0.0 ;
 		lv2:maximum 1.0 ;
+	] , [
+		a lv2:ControlPort ,
+			lv2:OutputPort ;
+		lv2:index 7 ;
+		lv2:symbol "peakL" ;
+		lv2:name "peakL" ;
+		lv2:portProperty pprop:notOnGUI ;
+		lv2:default 0.0 ;
+		lv2:minimum 0.0 ;
+		lv2:maximum 1.0 ;
+	] , [
+		a lv2:ControlPort ,
+			lv2:OutputPort ;
+		lv2:index 8 ;
+		lv2:symbol "peakR" ;
+		lv2:name "peakR" ;
+		lv2:portProperty pprop:notOnGUI ;
+		lv2:default 0.0 ;
+		lv2:minimum 0.0 ;
+		lv2:maximum 1.0 ;
 	] ;
 	.
 
@@ -1424,6 +1484,16 @@ mtr:K20mono@URI_SUFFIX@
 		lv2:index 3 ;
 		lv2:symbol "level1" ;
 		lv2:name "Level1" ;
+		lv2:default 0.0 ;
+		lv2:minimum 0.0 ;
+		lv2:maximum 1.0 ;
+	] , [
+		a lv2:ControlPort ,
+			lv2:OutputPort ;
+		lv2:index 4 ;
+		lv2:symbol "peak" ;
+		lv2:name "peak" ;
+		lv2:portProperty pprop:notOnGUI ;
 		lv2:default 0.0 ;
 		lv2:minimum 0.0 ;
 		lv2:maximum 1.0 ;
@@ -1486,6 +1556,26 @@ mtr:K20stereo@URI_SUFFIX@
 		lv2:index 6 ;
 		lv2:symbol "levelR" ;
 		lv2:name "LevelR" ;
+		lv2:default 0.0 ;
+		lv2:minimum 0.0 ;
+		lv2:maximum 1.0 ;
+	] , [
+		a lv2:ControlPort ,
+			lv2:OutputPort ;
+		lv2:index 7 ;
+		lv2:symbol "peakL" ;
+		lv2:name "peakL" ;
+		lv2:portProperty pprop:notOnGUI ;
+		lv2:default 0.0 ;
+		lv2:minimum 0.0 ;
+		lv2:maximum 1.0 ;
+	] , [
+		a lv2:ControlPort ,
+			lv2:OutputPort ;
+		lv2:index 8 ;
+		lv2:symbol "peakR" ;
+		lv2:name "peakR" ;
+		lv2:portProperty pprop:notOnGUI ;
 		lv2:default 0.0 ;
 		lv2:minimum 0.0 ;
 		lv2:maximum 1.0 ;
