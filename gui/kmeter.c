@@ -26,14 +26,16 @@
 #define MTR_URI "http://gareus.org/oss/lv2/meters#"
 #define MTR_GUI "kmeterui"
 
-#define GM_TOP     7.5f
+#define GM_TOP    25.5f
+#define GM_BOTTOM  7.5f
 #define GM_LEFT    4.5f
 #define GM_GIRTH  10.0f
 #define GM_WIDTH  (GM_GIRTH + GM_LEFT + GM_LEFT)
 #define MA_WIDTH  21.0f
+#define PK_WIDTH  26.0f
 
 #define GM_HEIGHT (460.0f)
-#define GM_SCALE  (GM_HEIGHT - GM_TOP - GM_TOP - 2.0)
+#define GM_SCALE  (GM_HEIGHT - GM_TOP - GM_BOTTOM - 2.0)
 
 #define MAX_METERS 2
 
@@ -58,6 +60,7 @@ typedef struct {
 	cairo_surface_t* an[MAX_METERS];
 	cairo_surface_t* ma[2];
 	cairo_pattern_t* mpat;
+	PangoFontDescription *font;
 
 	float val[MAX_METERS];
 	int   val_def[MAX_METERS];
@@ -66,6 +69,7 @@ typedef struct {
 	float peak_val[MAX_METERS];
 	int   peak_def[MAX_METERS];
 	int   peak_vis[MAX_METERS];
+	float peak_max;
 
 	uint32_t num_meters;
 	//bool reset_toggle;
@@ -244,9 +248,9 @@ static void write_text(
 		const char *txt,
 		PangoFontDescription *font,
 		const float x, const float y,
-		const float ang, const int align,
+		const int align,
 		const float * const col) {
-	write_text_full(cr, txt, font, x, y, ang, align, col);
+	write_text_full(cr, txt, font, x, y, 0, align, col);
 }
 
 #define INIT_ANN_BG(VAR, WIDTH, HEIGHT) \
@@ -266,7 +270,7 @@ static void create_metrics(KMUI* ui) {
 
 #define DO_THE_METER(DB, TXT) \
 	if (DB <= ui->kstandard) \
-		write_text(cr, TXT , font, MA_WIDTH - 3, YPOS(deflect(ui, DB - ui->kstandard)), 0, 1, c_g90);
+		write_text(cr, TXT , font, MA_WIDTH - 3, YPOS(deflect(ui, DB - ui->kstandard)), 1, c_g90);
 
 #define DO_THE_METRICS \
 	DO_THE_METER(  20, "+20") \
@@ -440,6 +444,35 @@ static bool expose_event(RobWidget* handle, cairo_t* cr, cairo_rectangle_t *ev) 
 		cairo_set_source_surface(cr, ui->sf[i], MA_WIDTH + GM_WIDTH * i, 0);
 		cairo_paint (cr);
 	}
+
+	/* numerical peak */
+	if (ui->peak_max > -90) {
+		cairo_set_operator (cr, CAIRO_OPERATOR_OVER);
+		char buf[24];
+		if (rect_intersect_a(ev, (ui->width - PK_WIDTH) / 2.0f, GM_TOP/2 - 8, PK_WIDTH, 16)) {
+			cairo_save(cr);
+			rounded_rectangle (cr, (ui->width - PK_WIDTH)/2.0f, GM_TOP/2 - 8, PK_WIDTH, 16, 4);
+			if (ui->peak_max >= -1.0) {
+				CairoSetSouerceRGBA(c_ptr);
+			} else {
+				CairoSetSouerceRGBA(c_blk);
+			}
+			cairo_fill_preserve (cr);
+			cairo_set_line_width(cr, 0.75);
+			CairoSetSouerceRGBA(c_g60);
+			cairo_stroke_preserve (cr);
+			cairo_clip (cr);
+
+			if (ui->peak_max <= -10.0) {
+				sprintf(buf, "%.0f ", ui->peak_max);
+			} else {
+				sprintf(buf, "%+.1f", ui->peak_max);
+			}
+			write_text(cr, buf, ui->font, (ui->width + PK_WIDTH) / 2.0f - 4, GM_TOP/2, 1, c_g90);
+			cairo_restore(cr);
+		}
+	}
+
 	return TRUE;
 }
 
@@ -447,25 +480,12 @@ static bool expose_event(RobWidget* handle, cairo_t* cr, cairo_rectangle_t *ev) 
  * UI callbacks
  */
 
-#if 0
 static RobWidget* cb_reset_peak (RobWidget* handle, RobTkBtnEvent *event) {
 	KMUI* ui = (KMUI*)GET_HANDLE(handle);
-	if (!ui->display_freq) {
-		/* reset peak-hold in backend
-		 * -- use unused reflevel in dBTP to notify plugin
-		 */
-		ui->reset_toggle = !ui->reset_toggle;
-		float temp = ui->reset_toggle ? 1.0 : 0.0;
-		ui->write(ui->controller, 0, sizeof(float), 0, (const void*) &temp);
-	}
-	for (int i=0; i < ui->num_meters ; ++i) {
-		ui->peak_val[i] = -90;
-		ui->peak_def[i] = deflect(ui, -90);
-	}
+	ui->peak_max = -90;
 	queue_draw(ui->m0);
 	return NULL;
 }
-#endif
 
 /******************************************************************************
  * widget hackery
@@ -490,7 +510,7 @@ static RobWidget * toplevel(KMUI* ui, void * const top)
 
 	robwidget_set_expose_event(ui->m0, expose_event);
 	robwidget_set_size_request(ui->m0, size_request);
-	//robwidget_set_mousedown(ui->m0, cb_reset_peak);
+	robwidget_set_mousedown(ui->m0, cb_reset_peak);
 
 	rob_hbox_child_pack(ui->rw, ui->m0, TRUE);
 	return ui->rw;
@@ -540,6 +560,7 @@ instantiate(
 	ui->metrics_changed = true;
 
 	create_meter_pattern(ui);
+	ui->font = pango_font_description_from_string("Mono 7");
 
 	for (int i=0; i < ui->num_meters ; ++i) {
 		ui->val[i] = -90.0;
@@ -547,6 +568,7 @@ instantiate(
 		ui->peak_val[i] = -90.0;
 		ui->peak_def[i] = deflect(ui, -90);
 	}
+	ui->peak_max = -90.0;
 
 	ui->width = 2.0 * MA_WIDTH + ui->num_meters * GM_WIDTH;
 	ui->height = GM_HEIGHT;
@@ -573,6 +595,7 @@ cleanup(LV2UI_Handle handle)
 	cairo_pattern_destroy(ui->mpat);
 	cairo_surface_destroy(ui->ma[0]);
 	cairo_surface_destroy(ui->ma[1]);
+	pango_font_description_free(ui->font);
 
 	robwidget_destroy(ui->m0);
 	rob_box_destroy(ui->rw);
@@ -623,6 +646,10 @@ static void invalidate_peak(KMUI* ui, int mtr, float val) {
 
 	ui->peak_val[mtr] = val;
 	ui->peak_def[mtr] = new;
+	if (val > ui->peak_max) {
+		ui->peak_max = val;
+		INVALIDATE_RECT((ui->width - PK_WIDTH) / 2.0f - 1, GM_TOP/2 - 9, PK_WIDTH+2, 18);
+	}
 
 	if (old != new) {
 		if (old > new) {
