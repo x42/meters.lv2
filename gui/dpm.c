@@ -884,6 +884,7 @@ instantiate(
 	if (!ui->display_freq) {
 		/* dBTP run() re-sends peak-data */
 		ui->initialized = false;
+		ui->reset_toggle = false;
 		float temp = -1;
 		ui->write(ui->controller, 0, sizeof(float), 0, (const void*) &temp);
 	} else {
