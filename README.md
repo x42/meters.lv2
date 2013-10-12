@@ -23,6 +23,16 @@ Currently the plugins come in both Gtk and openGL variants (both
 versions are installed in parallel).
 
 
+Usage
+-----
+
+Should be pretty much self-explanatory. A few notes:
+
+* click + drag on the calibration-screw allows to modify the reference
+	level of the needle meters
+* shift + click on the calibration-screw resets to default
+* clicking anywhere on the bar-graph meters resets the peak-hold
+
 Install
 -------
 
