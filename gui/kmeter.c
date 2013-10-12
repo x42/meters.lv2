@@ -271,8 +271,10 @@ static void create_metrics(KMUI* ui) {
 	PangoFontDescription *font = pango_font_description_from_string("Sans 6");
 
 #define DO_THE_METER(DB, TXT) \
-	if (DB <= ui->kstandard) \
-		write_text(cr, TXT , font, MA_WIDTH - 3, YPOS(deflect(ui, DB - ui->kstandard)), 1, c_g90);
+	if (DB <= ui->kstandard) { \
+		write_text(cr, TXT , font, MA_WIDTH - 3, YPOS(deflect(ui, DB - ui->kstandard)), 1, \
+				(DB >= 4 ? c_red : (DB >= 0 ? c_nyl : c_g90)) ); \
+	}
 
 #define DO_THE_METRICS \
 	DO_THE_METER(  20, "+20") \
