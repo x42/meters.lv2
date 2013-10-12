@@ -76,6 +76,8 @@ typedef struct {
 	bool metrics_changed;
 
 	float kstandard;
+	bool initialized;
+	bool reset_toggle;
 
 	int width;
 	int height;
@@ -483,6 +485,11 @@ static bool expose_event(RobWidget* handle, cairo_t* cr, cairo_rectangle_t *ev) 
 
 static RobWidget* cb_reset_peak (RobWidget* handle, RobTkBtnEvent *event) {
 	KMUI* ui = (KMUI*)GET_HANDLE(handle);
+
+	ui->reset_toggle = !ui->reset_toggle;
+	float temp = ui->reset_toggle ? 1.0 : 0.0;
+	ui->write(ui->controller, 0, sizeof(float), 0, (const void*) &temp);
+
 	ui->peak_max = -90;
 	queue_draw(ui->m0);
 	return NULL;
@@ -575,6 +582,9 @@ instantiate(
 
 	*widget = toplevel(ui, ui_toplevel);
 
+	ui->initialized = false;
+	ui->reset_toggle = false;
+
 	return ui;
 }
 
@@ -647,11 +657,6 @@ static void invalidate_peak(KMUI* ui, int mtr, float val) {
 	ui->peak_val[mtr] = val;
 	ui->peak_def[mtr] = new;
 
-	if (val > ui->peak_max) {
-		ui->peak_max = val;
-		INVALIDATE_RECT((ui->width - PK_WIDTH) / 2.0f - 1, GM_TOP/2 - 9, PK_WIDTH+2, 18);
-	}
-
 	if (old != new) {
 		if (old > new) {
 			t = old;
@@ -668,6 +673,12 @@ static void invalidate_peak(KMUI* ui, int mtr, float val) {
 	}
 }
 
+static void invalidate_hold(KMUI* ui, float val) {
+	//if (ui->peak_max == val) return;
+	ui->peak_max = val;
+	INVALIDATE_RECT((ui->width - PK_WIDTH) / 2.0f - 1, GM_TOP/2 - 9, PK_WIDTH+2, 18);
+}
+
 /******************************************************************************
  * handle data from backend
  */
@@ -676,6 +687,9 @@ static void handle_meter_connections(KMUI* ui, uint32_t port_index, float v) {
 	v = v > .000031623f ? 20.0 * log10f(v) : -90.0;
 	if (port_index == 3) {
 		invalidate_meter(ui, 0, v);
+	}
+	else if (port_index == 5 && ui->num_meters == 1) {
+		invalidate_hold(ui, v);
 	}
 	else if (port_index == 6) {
 		invalidate_meter(ui, 1, v);
@@ -689,6 +703,9 @@ static void handle_meter_connections(KMUI* ui, uint32_t port_index, float v) {
 	else if (port_index == 8 && ui->num_meters == 2) {
 		invalidate_peak(ui, 1, v);
 	}
+	else if (port_index == 9 && ui->num_meters == 2) {
+		invalidate_hold(ui, v);
+	}
 }
 
 static void
@@ -700,5 +717,16 @@ port_event(LV2UI_Handle handle,
 {
 	KMUI* ui = (KMUI*)handle;
 	if (format != 0) return;
+
+	if (!ui->initialized && port_index == 0 && *(float *)buffer != -1) {
+		float temp = -1;
+		ui->write(ui->controller, 0, sizeof(float), 0, (const void*) &temp);
+	}
+	if (!ui->initialized && port_index != 0) {
+		ui->initialized = true;
+		float temp = -2;
+		ui->write(ui->controller, 0, sizeof(float), 0, (const void*) &temp);
+	}
+
 	handle_meter_connections(ui, port_index, *(float *)buffer);
 }

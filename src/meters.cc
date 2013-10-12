@@ -45,7 +45,8 @@ typedef enum {
 	MTR_OUTPUT1  = 5,
 	MTR_LEVEL1   = 6,
 	MTR_PEAK0    = 7,
-	MTR_PEAK1    = 8
+	MTR_PEAK1    = 8,
+	MTR_HOLD     = 9
 } PortIndex;
 
 typedef struct {
@@ -61,9 +62,11 @@ typedef struct {
 	float* input[2];
 	float* output[2];
 	float* peak[2];
+	float* hold;
 
 	int chn;
 	float peak_max[2];
+	float peak_hold;
 
 	/* ebur specific */
   LV2_URID_Map* map;
@@ -147,6 +150,7 @@ instantiate(const LV2_Descriptor*     descriptor,
 
 	self->peak_max[0] = 0;
 	self->peak_max[1] = 0;
+	self->peak_hold   = 0;
 
 	return (LV2_Handle)self;
 }
@@ -186,6 +190,9 @@ connect_port(LV2_Handle instance,
 	case MTR_PEAK1:
 		self->peak[1] = (float*) data;
 		break;
+	case MTR_HOLD:
+		self->hold = (float*) data;
+		break;
 	}
 }
 
@@ -221,10 +228,20 @@ static void
 kmeter_run(LV2_Handle instance, uint32_t n_samples)
 {
 	LV2meter* self = (LV2meter*)instance;
+	bool reinit_gui = false;
 
+	/* re-use port 0 to request/notify UI about
+	 * peak values - force change to ports */
 	if (self->p_refl != *self->reflvl) {
-		self->p_refl = *self->reflvl;
-		self->rlgain = powf (10.0f, 0.05f * (self->p_refl + 18.0));
+		if (*self->reflvl >= 0) {
+			self->peak_hold = 0;
+		}
+
+		if (*self->reflvl == -1) {
+			reinit_gui = true;
+		} else {
+			self->p_refl = *self->reflvl;
+		}
 	}
 
 	int c;
@@ -240,20 +257,43 @@ kmeter_run(LV2_Handle instance, uint32_t n_samples)
 			memcpy(output, input, sizeof(float) * n_samples);
 		}
 	}
+
+	if (reinit_gui) {
+		/* force parameter change */
+		if (self->chn == 1) {
+			*self->level[0] = -1 - (rand() & 0xffff);
+			*self->input[1] = -1; // portindex 4
+			*self->output[1] = 0; // portindex 5
+		} else if (self->chn == 2) {
+			*self->level[0] = -1 - (rand() & 0xffff);
+			*self->level[1] = -1;
+			*self->peak[0]  = -1;
+			*self->peak[1]  = -1;
+			*self->hold     = -1;
+		}
+		return;
+	}
+
 	if (self->chn == 1) {
 		float m, p;
 		static_cast<Kmeterdsp*>(self->mtr[0])->read(m, p);
 		*self->level[0] = self->rlgain * m;
 		*self->input[1] = self->rlgain * p; // portindex 4
+		if (*self->input[1] > self->peak_hold) self->peak_hold = *self->input[1];
+		*self->output[1] = self->peak_hold; // portindex 5
 	} else if (self->chn == 2) {
 		float m, p;
 		static_cast<Kmeterdsp*>(self->mtr[0])->read(m, p);
 		*self->level[0] = self->rlgain * m;
 		*self->peak[0] = self->rlgain * p;
+		if (*self->peak[0] > self->peak_hold) self->peak_hold = *self->peak[0];
 
 		static_cast<Kmeterdsp*>(self->mtr[1])->read(m, p);
 		*self->level[1] = self->rlgain * m;
 		*self->peak[1] = self->rlgain * p;
+		if (*self->peak[1] > self->peak_hold) self->peak_hold = *self->peak[1];
+
+		*self->hold = self->peak_hold;
 	}
 }
 
@@ -274,12 +314,13 @@ dbtp_run(LV2_Handle instance, uint32_t n_samples)
 	LV2meter* self = (LV2meter*)instance;
 	bool reinit_gui = false;
 
+	/* re-use port 0 to request/notify UI about
+	 * peak values - force change to ports */
 	if (self->p_refl != *self->reflvl) {
 		if (*self->reflvl >= 0) {
 			self->peak_max[0] = 0;
 			self->peak_max[1] = 0;
 		}
-
 		if (*self->reflvl == -1) {
 			reinit_gui = true;
 		} else {
@@ -304,7 +345,7 @@ dbtp_run(LV2_Handle instance, uint32_t n_samples)
 		/* force parameter change */
 		if (self->chn == 1) {
 			*self->level[0] = -1 - (rand() & 0xffff);
-			*self->input[1] = -1;
+			*self->input[1] = -1; // portindex 4
 		} else if (self->chn == 2) {
 			*self->level[0] = -1 - (rand() & 0xffff);
 			*self->level[1] = -1;
