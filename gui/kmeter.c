@@ -451,23 +451,27 @@ static bool expose_event(RobWidget* handle, cairo_t* cr, cairo_rectangle_t *ev) 
 	}
 
 	/* numerical peak */
-	if (ui->peak_max > -90) {
+	if (rect_intersect_a(ev, (ui->width - PK_WIDTH) / 2.0f, GM_TOP/2 - 8, PK_WIDTH, 16)) {
 		cairo_set_operator (cr, CAIRO_OPERATOR_OVER);
-		char buf[24];
-		if (rect_intersect_a(ev, (ui->width - PK_WIDTH) / 2.0f, GM_TOP/2 - 8, PK_WIDTH, 16)) {
-			cairo_save(cr);
-			rounded_rectangle (cr, (ui->width - PK_WIDTH)/2.0f, GM_TOP/2 - 8, PK_WIDTH, 16, 4);
-			if (ui->peak_max >= -1.0) {
-				CairoSetSouerceRGBA(c_ptr);
-			} else {
-				CairoSetSouerceRGBA(c_blk);
-			}
-			cairo_fill_preserve (cr);
-			cairo_set_line_width(cr, 0.75);
-			CairoSetSouerceRGBA(c_g60);
-			cairo_stroke_preserve (cr);
-			cairo_clip (cr);
+		cairo_save(cr);
+		rounded_rectangle (cr, (ui->width - PK_WIDTH)/2.0f, GM_TOP/2 - 8, PK_WIDTH, 16, 4);
 
+		if (ui->peak_max >= -1.0) {
+			CairoSetSouerceRGBA(c_ptr);
+		} else if (ui->peak_max > -90.0) {
+			CairoSetSouerceRGBA(c_blk);
+		} else {
+			CairoSetSouerceRGBA(c_g60);
+		}
+
+		cairo_fill_preserve (cr);
+		cairo_set_line_width(cr, 0.75);
+		CairoSetSouerceRGBA(c_g60);
+		cairo_stroke_preserve (cr);
+		cairo_clip (cr);
+
+		if (ui->peak_max > -90) {
+			char buf[24];
 			if (ui->peak_max <= -10.0) {
 				sprintf(buf, "%.0f ", ui->peak_max);
 			} else {
