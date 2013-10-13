@@ -461,7 +461,7 @@ static bool expose_event(RobWidget* handle, cairo_t* cr, cairo_rectangle_t *ev) 
 		} else if (ui->peak_max > -90.0) {
 			CairoSetSouerceRGBA(c_blk);
 		} else {
-			CairoSetSouerceRGBA(c_g60);
+			CairoSetSouerceRGBA(c_g30);
 		}
 
 		cairo_fill_preserve (cr);
