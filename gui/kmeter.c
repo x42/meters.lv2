@@ -94,7 +94,7 @@ typedef struct {
 static inline float meter_deflect_k (float db, float krange) {
   db+=krange;
   if (db < -40.0f) {
-		return (db > -318.8f ? pow (10.0f, db * 0.05f) : 0.0f) * 500.0f / (krange + 45.0f);
+		return (db > -90.0f ? pow (10.0f, db * 0.05f) : 0.0f) * 500.0f / (krange + 45.0f);
   } else {
     const float rv = (db + 45.0f) / (krange + 45.0f);
     if (rv < 1.0) {
@@ -478,8 +478,8 @@ static bool expose_event(RobWidget* handle, cairo_t* cr, cairo_rectangle_t *ev) 
 				sprintf(buf, "%+.1f", ui->peak_max);
 			}
 			write_text(cr, buf, ui->font, (ui->width + PK_WIDTH) / 2.0f - 4, GM_TOP/2, 1, c_g90);
-			cairo_restore(cr);
 		}
+		cairo_restore(cr);
 	}
 
 	return TRUE;
@@ -495,9 +495,6 @@ static RobWidget* cb_reset_peak (RobWidget* handle, RobTkBtnEvent *event) {
 	ui->reset_toggle = !ui->reset_toggle;
 	float temp = ui->reset_toggle ? 1.0 : 0.0;
 	ui->write(ui->controller, 0, sizeof(float), 0, (const void*) &temp);
-
-	ui->peak_max = -90;
-	queue_draw(ui->m0);
 	return NULL;
 }
 
@@ -634,12 +631,12 @@ extension_data(const char* uri)
 static void invalidate_meter(KMUI* ui, int mtr, float val) {
 	const int old = ui->val_def[mtr];
 	const int new = deflect(ui, val);
-	int t, h;
 
 	ui->val[mtr] = val;
 	ui->val_def[mtr] = new;
 
 	if (old != new) {
+		int t, h;
 		if (old > new) {
 			t = old;
 			h = old - new;
@@ -658,12 +655,12 @@ static void invalidate_meter(KMUI* ui, int mtr, float val) {
 static void invalidate_peak(KMUI* ui, int mtr, float val) {
 	const int old = ui->peak_def[mtr];
 	const int new = deflect(ui, val);
-	int t, h;
 
 	ui->peak_val[mtr] = val;
 	ui->peak_def[mtr] = new;
 
 	if (old != new) {
+		int t, h;
 		if (old > new) {
 			t = old;
 			h = old - new;
@@ -728,7 +725,7 @@ port_event(LV2UI_Handle handle,
 		float temp = -1;
 		ui->write(ui->controller, 0, sizeof(float), 0, (const void*) &temp);
 	}
-	if (!ui->initialized && port_index != 0) {
+	else if (!ui->initialized && port_index != 0) {
 		ui->initialized = true;
 		float temp = -2;
 		ui->write(ui->controller, 0, sizeof(float), 0, (const void*) &temp);
