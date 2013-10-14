@@ -55,25 +55,28 @@ GTKUICFLAGS=-I.
 UNAME=$(shell uname)
 ifeq ($(UNAME),Darwin)
   LV2LDFLAGS=-dynamiclib
-  LIB_EXT=.dylibA
+  LIB_EXT=.dylib
   UI_TYPE=ui:CocoaUI
   PUGL_SRC=robtk/pugl/pugl_osx.m
-  $(error OSX is not yet supported)
-# TODO set flags (see setBfree) set pugl sources...
+  PKG_LIBS=
+  GLUILIBS=-framework Cocoa -framework OpenGL
 else
   LV2LDFLAGS=-Wl,-Bstatic -Wl,-Bdynamic
   LIB_EXT=.so
   UI_TYPE=ui:X11UI
   PUGL_SRC=robtk/pugl/pugl_x11.c
+  PKG_LIBS=glu
+  GLUILIBS=-lX11
+  GLUICFLAGS+=`pkg-config --cflags glu`
 endif
 
 ifeq ($(EXTERNALUI), yes)
   ifeq ($(KXURI), yes)
     UI_TYPE=kx:Widget
-    LV2UIREQ+=lv2:requiredFeature kx:Widget;\\n\\t
+    LV2UIREQ+=lv2:requiredFeature kx:Widget;
     override CFLAGS += -DXTERNAL_UI
   else
-    LV2UIREQ+=lv2:requiredFeature ui:external;\\n\\t
+    LV2UIREQ+=lv2:requiredFeature ui:external;
     override CFLAGS += -DXTERNAL_UI
     UI_TYPE=ui:external
   endif
@@ -100,7 +103,7 @@ ifeq ($(shell pkg-config --exists lv2 || echo no), no)
   $(error "LV2 SDK was not found")
 endif
 
-ifeq ($(shell pkg-config --exists glib-2.0 gtk+-2.0 pango cairo glu || echo no), no)
+ifeq ($(shell pkg-config --exists glib-2.0 gtk+-2.0 pango cairo $(PKG_LIBS) || echo no), no)
   $(error "This plugin requires cairo, pango, openGL, glib-2.0 and gtk+-2.0")
 endif
 
@@ -108,7 +111,7 @@ endif
 ifeq ($(shell pkg-config --atleast-version=1.4.2 lv2 && echo yes), yes)
   GLUICFLAGS+=-DHAVE_IDLE_IFACE
   GTKUICFLAGS+=-DHAVE_IDLE_IFACE
-  LV2UIREQ+=lv2:requiredFeature ui:idleInterface;\\n\\tlv2:extensionData ui:idleInterface;
+  LV2UIREQ+=lv2:requiredFeature ui:idleInterface; lv2:extensionData ui:idleInterface;
 endif
 
 override CFLAGS += -fPIC
@@ -123,8 +126,8 @@ UIIMGS=$(IM)meter-bright.c $(IM)meter-dark.c $(IM)screw.c
 GTKUICFLAGS+=`pkg-config --cflags gtk+-2.0 cairo pango`
 GTKUILIBS+=`pkg-config --libs gtk+-2.0 cairo pango`
 
-GLUICFLAGS+=`pkg-config --cflags glu cairo pango`
-GLUILIBS+=`pkg-config --libs glu cairo pango` -lX11
+GLUICFLAGS+=`pkg-config --cflags cairo pango`
+GLUILIBS+=`pkg-config --libs cairo pango pangocairo`
 
 ifeq ($(GLTHREADSYNC), yes)
   GLUICFLAGS+=-DTHREADSYNC
@@ -246,7 +249,6 @@ $(BUILDDIR)$(LV2GUI2)$(LIB_EXT): $(ROBGL) \
 	@mkdir -p $(BUILDDIR)
 	$(CC) $(CPPFLAGS) $(CFLAGS) -std=c99 $(GLUICFLAGS) \
 	  -DPLUGIN_SOURCE="\"gui/ebur.c\"" \
-	  `pkg-config --cflags glu` \
 	  -o $(BUILDDIR)$(LV2GUI2)$(LIB_EXT) $(RW)ui_gl.c \
 	  $(PUGL_SRC) \
 	  -shared $(LV2LDFLAGS) $(LDFLAGS) $(GLUILIBS)
@@ -258,7 +260,6 @@ $(BUILDDIR)$(LV2GUI3)$(LIB_EXT):$(ROBGL) \
 	@mkdir -p $(BUILDDIR)
 	$(CXX) $(CPPFLAGS) $(CFLAGS) $(GLUICFLAGS) $(CXXFLAGS) \
 	  -DPLUGIN_SOURCE="\"gui/goniometerui.cc\"" \
-	  `pkg-config --cflags glu` \
 	  -o $(BUILDDIR)$(LV2GUI3)$(LIB_EXT) $(RW)ui_gl.c \
 	  $(PUGL_SRC) \
 	  zita-resampler/resampler.cc zita-resampler/resampler-table.cc \
@@ -269,7 +270,6 @@ $(BUILDDIR)$(LV2GUI4)$(LIB_EXT): $(ROBGL) \
 	@mkdir -p $(BUILDDIR)
 	$(CC) $(CPPFLAGS) $(CFLAGS) -std=c99 $(GLUICFLAGS) \
 	  -DPLUGIN_SOURCE="\"gui/dpm.c\"" \
-	  `pkg-config --cflags glu` \
 	  -o $(BUILDDIR)$(LV2GUI4)$(LIB_EXT) $(RW)ui_gl.c \
 	  $(PUGL_SRC) \
 	  -shared $(LV2LDFLAGS) $(LDFLAGS) $(GLUILIBS)
@@ -279,7 +279,6 @@ $(BUILDDIR)$(LV2GUI5)$(LIB_EXT): $(ROBGL) \
 	@mkdir -p $(BUILDDIR)
 	$(CC) $(CPPFLAGS) $(CFLAGS) -std=c99 $(GLUICFLAGS) \
 	  -DPLUGIN_SOURCE="\"gui/kmeter.c\"" \
-	  `pkg-config --cflags glu` \
 	  -o $(BUILDDIR)$(LV2GUI5)$(LIB_EXT) $(RW)ui_gl.c \
 	  $(PUGL_SRC) \
 	  -shared $(LV2LDFLAGS) $(LDFLAGS) $(GLUILIBS)
@@ -289,7 +288,6 @@ $(BUILDDIR)$(LV2GUI1)$(LIB_EXT): $(ROBGL) \
 	@mkdir -p $(BUILDDIR)
 	$(CC) $(CPPFLAGS) $(CFLAGS) -std=gnu99 $(GLUICFLAGS) \
 	  -DPLUGIN_SOURCE="\"gui/needle.c\"" \
-	  `pkg-config --cflags glu` \
 	  -o $(BUILDDIR)$(LV2GUI1)$(LIB_EXT) $(RW)ui_gl.c \
 	  $(PUGL_SRC) \
 	  -shared $(LV2LDFLAGS) $(LDFLAGS) $(GLUILIBS)
@@ -325,6 +323,7 @@ clean:
 	  $(BUILDDIR)$(LV2GTK1)$(LIB_EXT) $(BUILDDIR)$(LV2GTK2)$(LIB_EXT) \
 	  $(BUILDDIR)$(LV2GTK3)$(LIB_EXT) $(BUILDDIR)$(LV2GTK4)$(LIB_EXT) \
 	  $(BUILDDIR)$(LV2GUI5)$(LIB_EXT) $(BUILDDIR)$(LV2GTK5)$(LIB_EXT)
+	rm -rf $(BUILDDIR)*.dSYM
 	-test -d $(BUILDDIR) && rmdir $(BUILDDIR) || true
 
 distclean: clean
