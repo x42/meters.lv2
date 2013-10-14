@@ -42,10 +42,6 @@
 
 @implementation PuglWindow
 
-- (BOOL) canBecomeKeyWindow{ // forward key-events
-	return NO;
-}
-
 - (id)initWithContentRect:(NSRect)contentRect
                 styleMask:(unsigned int)aStyle
                   backing:(NSBackingStoreType)bufferingType
@@ -78,7 +74,12 @@
 
 - (void)becomeKeyWindow:(id)sender
 {
-	// TODO
+
+}
+
+- (BOOL) canBecomeKeyWindow:(id)sender{
+	// forward key-events
+	return NO;
 }
 
 @end
@@ -89,24 +90,6 @@ puglDisplay(PuglView* view)
 	if (view->displayFunc) {
 		view->displayFunc(view);
 	}
-}
-
-void
-puglResize(PuglView* view)
-{
-	view->resize = false;
-	if (!view->resizeFunc) { return; }
-	view->resizeFunc(view, &view->width, &view->height);
-	// TODO
-	//SizeWindow(view->impl->window, view->width, view->height, 1);
-	//[[self openGLContext] makeCurrentContext];
-	//[window reshape];
-}
-
-void
-puglPostResize(PuglView* view)
-{
-	view->resize = true;
 }
 
 @interface PuglOpenGLView : NSOpenGLView
@@ -446,6 +429,23 @@ puglProcessEvents(PuglView* view)
 #endif
 
 	return PUGL_SUCCESS;
+}
+
+void
+puglResize(PuglView* view)
+{
+	view->resize = false;
+	if (!view->resizeFunc) { return; }
+	view->resizeFunc(view, &view->width, &view->height);
+	[view->impl->window setContentSize:NSMakeSize(view->width, view->height) ];
+	[view->impl->glview reshape];
+}
+
+void
+puglPostResize(PuglView* view)
+{
+	view->resize = true;
+	puglResize(view);
 }
 
 void
