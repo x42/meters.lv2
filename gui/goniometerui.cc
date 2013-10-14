@@ -455,8 +455,8 @@ static void draw_rb(GMUI* ui, gmringbuf *rb) {
 
 	cairo_destroy(cr);
 
-	if (!finite(ui->lp0)) ui->lp0 = 0;
-	if (!finite(ui->lp1)) ui->lp1 = 0;
+	if (!isfinite(ui->lp0)) ui->lp0 = 0;
+	if (!isfinite(ui->lp1)) ui->lp1 = 0;
 
 	if (autogain) {
 		LV2gm* self = (LV2gm*) ui->instance;
@@ -467,7 +467,7 @@ static void draw_rb(GMUI* ui, gmringbuf *rb) {
 
 		max *= .707;
 
-		if (rms_c > 0 && g_rms > 0 && finite(g_rms)) {
+		if (rms_c > 0 && g_rms > 0 && isfinite(g_rms)) {
 			const float rms = 5.436 /* 2e */ * (rms_0 > rms_1 ? sqrt(rms_0 / rms_c) : sqrt(rms_1 / rms_c));
 			//printf("max: %f <> rms %f (tgt:%f)\n", max, rms, g_target);
 			max = max * (1.0 - g_rms) + rms * g_rms;
@@ -475,7 +475,7 @@ static void draw_rb(GMUI* ui, gmringbuf *rb) {
 
 		max *= g_target;
 
-		if (!finite(max)) max = 0;
+		if (!isfinite(max)) max = 0;
 		float gain;
 		if (max < .01) {
 			gain = 100.0;
