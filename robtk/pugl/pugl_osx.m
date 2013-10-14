@@ -92,20 +92,6 @@ puglDisplay(PuglView* view)
 }
 
 void
-puglShowWindow(PuglView* view)
-{
-	id window = view->impl->window;
-	[window setIsVisible:YES];
-}
-
-void
-puglHideWindow(PuglView* view)
-{
-	id window = view->impl->window;
-	[window setIsVisible:NO];
-}
-
-void
 puglResize(PuglView* view)
 {
 	view->resize = false;
@@ -353,7 +339,7 @@ getModifiers(PuglView* view, NSEvent* ev)
 - (void) flagsChanged:(NSEvent*)event
 {
 	if (puglview->specialFunc) {
-		const unsigned mods = getModifiers(puglview, [event modifierFlags]);
+		const unsigned mods = getModifiers(puglview, event);
 		if ((mods & PUGL_MOD_SHIFT) != (puglview->mods & PUGL_MOD_SHIFT)) {
 			puglview->specialFunc(puglview, mods & PUGL_MOD_SHIFT, PUGL_KEY_SHIFT);
 		} else if ((mods & PUGL_MOD_CTRL) != (puglview->mods & PUGL_MOD_CTRL)) {
@@ -463,9 +449,21 @@ puglProcessEvents(PuglView* view)
 }
 
 void
+puglShowWindow(PuglView* view)
+{
+	[view->impl->window setIsVisible:YES];
+}
+
+void
+puglHideWindow(PuglView* view)
+{
+	[view->impl->window setIsVisible:NO];
+}
+
+void
 puglPostRedisplay(PuglView* view)
 {
-	//view->redisplay = true;
+	//view->redisplay = true; // unused
 }
 
 PuglNativeWindow
