@@ -117,6 +117,12 @@ puglResize(PuglView* view)
 	//[window reshape];
 }
 
+void
+puglPostResize(PuglView* view)
+{
+	view->resize = true;
+}
+
 @interface PuglOpenGLView : NSOpenGLView
 {
 	int colorBits;
@@ -272,6 +278,7 @@ getModifiers(PuglView* view, NSEvent* ev)
 }
 
 - (void) rightMouseDragged:(NSEvent*)event
+{
 	if (puglview->motionFunc) {
 		NSPoint loc = [event locationInWindow];
 		puglview->motionFunc(puglview, loc.x, puglview->height - loc.y);
