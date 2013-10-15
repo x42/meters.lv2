@@ -1,31 +1,5 @@
 
 
-mtr:needle_gtk
-	a ui:GtkUI ;
-	ui:binary <@LV2GTK1@@LIB_EXT@> ;
-	rdfs:seeAlso <@LV2NAME@.ttl> .
-
-mtr:goniometerui_gtk
-	a ui:GtkUI ;
-	ui:binary <@LV2GTK3@@LIB_EXT@> ;
-	rdfs:seeAlso <@LV2NAME@.ttl> .
-
-mtr:dpmui_gtk
-	a ui:GtkUI ;
-	ui:binary <@LV2GTK4@@LIB_EXT@> ;
-	rdfs:seeAlso <@LV2NAME@.ttl> .
-
-mtr:eburui_gtk
-	a ui:GtkUI ;
-	ui:binary <@LV2GTK2@@LIB_EXT@> ;
-	rdfs:seeAlso <@LV2NAME@.ttl> .
-
-mtr:kmeterui_gtk
-	a ui:GtkUI ;
-	ui:binary <@LV2GTK5@@LIB_EXT@> ;
-	rdfs:seeAlso <@LV2NAME@.ttl> .
-
-
 mtr:needle_gl
 	a @UI_TYPE@;
 	ui:binary <@LV2GUI1@@LIB_EXT@> ;

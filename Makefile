@@ -21,6 +21,7 @@ LV2DIR ?= $(PREFIX)/$(LIBDIR)/lv2
 LOADLIBES=-lm
 
 LV2NAME=meters
+BUNDLE=meters.lv2
 
 LV2GTK1=needle_gtk
 LV2GTK2=eburUI_gtk
@@ -34,24 +35,18 @@ LV2GUI3=goniometerUI_gl
 LV2GUI4=dpmUI_gl
 LV2GUI5=kmeterUI_gl
 
-BUNDLE=meters.lv2
-
-#########
-#override CFLAGS+=-DVISIBLE_EXPOSE
 MTRGUI=mtr:needle
 EBUGUI=mtr:eburui
 GONGUI=mtr:goniometerui
 DPMGUI=mtr:dpmui
 KMRGUI=mtr:kmeterui
 
-#########
-
+###############################################################################
 
 LV2UIREQ=
 GLUICFLAGS=-I.
 GTKUICFLAGS=-I.
 
-## TODO OSX gl/x11
 UNAME=$(shell uname)
 ifeq ($(UNAME),Darwin)
   LV2LDFLAGS=-dynamiclib
@@ -83,6 +78,10 @@ ifeq ($(EXTERNALUI), yes)
   endif
 endif
 
+ifeq ($(BUILDOPENGL)$(BUILDGTK), nono)
+  $(error at least one of gtk or openGL needs to be enabled)
+endif
+
 targets=$(BUILDDIR)$(LV2NAME)$(LIB_EXT)
 
 ifneq ($(BUILDOPENGL), no)
@@ -101,7 +100,9 @@ targets+=$(BUILDDIR)$(LV2GTK4)$(LIB_EXT)
 targets+=$(BUILDDIR)$(LV2GTK5)$(LIB_EXT)
 endif
 
+###############################################################################
 # check for build-dependencies
+
 ifeq ($(shell pkg-config --exists lv2 || echo no), no)
   $(error "LV2 SDK was not found")
 endif
@@ -119,6 +120,8 @@ endif
 
 override CFLAGS += -fPIC
 override CFLAGS += `pkg-config --cflags lv2`
+
+###############################################################################
 
 IM=gui/img/
 RW=robtk/
@@ -167,6 +170,7 @@ ROBGTK = Makefile $(UITOOLKIT) $(RW)ui_gtk.c \
 	$(RT)common.h $(RT)style.h
 
 
+###############################################################################
 # build target definitions
 default: all
 
@@ -179,13 +183,15 @@ $(BUILDDIR)manifest.ttl: lv2ttl/manifest.gui.ttl.in lv2ttl/manifest.lv2.ttl.in l
 ifneq ($(BUILDOPENGL), no)
 	sed "s/@LV2NAME@/$(LV2NAME)/g;s/@LIB_EXT@/$(LIB_EXT)/g;s/@URI_SUFFIX@//g" \
 	    lv2ttl/manifest.lv2.ttl.in >> $(BUILDDIR)manifest.ttl
+	sed "s/@LV2NAME@/$(LV2NAME)/g;s/@LIB_EXT@/$(LIB_EXT)/g;s/@UI_TYPE@/$(UI_TYPE)/;s/@LV2GUI1@/$(LV2GUI1)/g;s/@LV2GUI2@/$(LV2GUI2)/g;s/@LV2GUI3@/$(LV2GUI3)/g;s/@LV2GUI4@/$(LV2GUI4)/g;s/@LV2GUI5@/$(LV2GUI5)/g" \
+	    lv2ttl/manifest.gui.ttl.in >> $(BUILDDIR)manifest.ttl
 endif
 ifneq ($(BUILDGTK), no)
 	sed "s/@LV2NAME@/$(LV2NAME)/g;s/@LIB_EXT@/$(LIB_EXT)/g;s/@URI_SUFFIX@/_gtk/g" \
 	    lv2ttl/manifest.lv2.ttl.in >> $(BUILDDIR)manifest.ttl
+	sed "s/@LV2NAME@/$(LV2NAME)/g;s/@LIB_EXT@/$(LIB_EXT)/g;s/@LV2GTK1@/$(LV2GTK1)/g;s/@LV2GTK2@/$(LV2GTK2)/g;s/@LV2GTK3@/$(LV2GTK3)/g;s/@LV2GTK4@/$(LV2GTK4)/g;s/@LV2GTK5@/$(LV2GTK5)/g" \
+	    lv2ttl/manifest.gtk.ttl.in >> $(BUILDDIR)manifest.ttl
 endif
-	sed "s/@LV2NAME@/$(LV2NAME)/g;s/@LIB_EXT@/$(LIB_EXT)/g;s/@UI_TYPE@/$(UI_TYPE)/;s/@LV2GUI1@/$(LV2GUI1)/g;s/@LV2GUI2@/$(LV2GUI2)/g;s/@LV2GUI3@/$(LV2GUI3)/g;s/@LV2GUI4@/$(LV2GUI4)/g;s/@LV2GUI5@/$(LV2GUI5)/g;s/@LV2GTK1@/$(LV2GTK1)/g;s/@LV2GTK2@/$(LV2GTK2)/g;s/@LV2GTK3@/$(LV2GTK3)/g;s/@LV2GTK4@/$(LV2GTK4)/g;s/@LV2GTK5@/$(LV2GTK5)/g" \
-	    lv2ttl/manifest.gui.ttl.in >> $(BUILDDIR)manifest.ttl
 
 $(BUILDDIR)$(LV2NAME).ttl: lv2ttl/$(LV2NAME).ttl.in lv2ttl/$(LV2NAME).lv2.ttl.in lv2ttl/$(LV2NAME).gui.ttl.in Makefile
 	@mkdir -p $(BUILDDIR)
@@ -303,6 +309,7 @@ $(BUILDDIR)$(LV2GUI1)$(LIB_EXT): $(ROBGL) \
 	  $(PUGL_SRC) \
 	  -shared $(LV2LDFLAGS) $(LDFLAGS) $(GLUILIBS)
 
+###############################################################################
 # install/uninstall/clean target definitions
 
 install: all
