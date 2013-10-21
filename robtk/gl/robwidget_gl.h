@@ -149,6 +149,10 @@ static void robwidget_set_alignment(RobWidget *rw, float xalign, float yalign) {
 	rw->yalign = yalign;
 }
 
+static void robwidget_resize_toplevel(RobWidget *rw, int w, int h) {
+	resize_toplevel(rw, w, h);
+}
+
 static void robwidget_show(RobWidget *rw, bool resize_window) {
 	// XXX never call from expose_event
 	if (rw->hidden) {

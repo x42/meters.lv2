@@ -398,6 +398,12 @@ static bool expose_event(RobWidget* handle, cairo_t* cr, cairo_rectangle_t* ev) 
 /* calibration screw drag/drop handling */
 static RobWidget* mousedown(RobWidget* handle, RobTkBtnEvent *event) {
 	MetersLV2UI* ui = (MetersLV2UI*)GET_HANDLE(handle);
+
+	if (event->state & ROBTK_MOD_CTRL) {
+		robwidget_resize_toplevel(ui->rw, 300 * width_scale(ui), 170);
+		return NULL;
+	}
+
 	if (ui->naned[0]) { ui->naned[0] = FALSE; queue_draw(ui->rw); }
 	if (ui->naned[1]) { ui->naned[1] = FALSE; queue_draw(ui->rw); }
 	if (   event->x < ui->s_xc - ui->s_w2

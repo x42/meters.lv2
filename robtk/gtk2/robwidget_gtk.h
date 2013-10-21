@@ -217,6 +217,13 @@ static void robwidget_set_alignment(RobWidget *rw, float xalign, float yalign) {
 	gtk_alignment_set(GTK_ALIGNMENT(rw->c), xalign, yalign, 0, 0);
 }
 
+static void robwidget_resize_toplevel(RobWidget *rw, int w, int h) {
+	GtkWidget *tlw = gtk_widget_get_toplevel(rw->c);
+	if (tlw) {
+		gtk_window_resize (GTK_WINDOW(tlw), w, h);
+	}
+}
+
 static void robwidget_show(RobWidget *rw, bool resize_window) {
 	gtk_widget_show(rw->c);
 }

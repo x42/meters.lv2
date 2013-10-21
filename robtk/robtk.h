@@ -112,6 +112,7 @@ typedef struct _robwidget {
 /* provided by host */
 
 static void resize_self(RobWidget *rw); // dangerous :) -- never call from expose_event
+static void resize_toplevel(RobWidget *rw, int w, int h); // ditto
 static void queue_draw(RobWidget *);
 static void queue_draw_area(RobWidget *, int, int, int, int);
 static void queue_tiny_area(RobWidget *rw, float x, float y, float w, float h);

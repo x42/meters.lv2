@@ -211,6 +211,7 @@ typedef struct {
 	bool                 ui_initialized;
 #endif
 	bool                 resize_in_progress;
+	bool                 resize_toplevel;
 
 #ifdef USE_GUI_THREAD
 	int                  ui_queue_puglXWindow;
@@ -518,6 +519,18 @@ static void resize_self(RobWidget *rw) {
 	robwidget_layout(self, TRUE, FALSE);
 }
 
+static void resize_toplevel(RobWidget *rw, int w, int h) {
+	GlMetersLV2UI * const self =
+		(GlMetersLV2UI*) robwidget_get_toplevel_handle(rw);
+	if (!self || !self->view) { return; }
+	self->width = w;
+	self->height = h;
+	resize_self(rw);
+	self->resize_in_progress = TRUE;
+	self->resize_toplevel = TRUE;
+	puglPostResize(self->view);
+}
+
 /*****************************************************************************/
 /* helper functions */
 static uint64_t microtime(float offset) {
@@ -582,6 +595,7 @@ onRealReshape(PuglView* view, int width, int height)
 {
 	GlMetersLV2UI* self = (GlMetersLV2UI*)puglGetHandle(view);
 	self->resize_in_progress = FALSE;
+	self->resize_toplevel = FALSE;
 #ifdef DEBUG_RESIZE
 	printf("onRealReshape (%s) %dx%d\n",
 			ROBWIDGET_NAME(self->tl), width, height);
@@ -669,7 +683,7 @@ static void onClose(PuglView* view) {
 }
 
 // callback from puGL -outsize GLX context(!) when we requested a resize
-static void onResize(PuglView* view, int *width, int *height) {
+static void onResize(PuglView* view, int *width, int *height, int *set_hints) {
 	GlMetersLV2UI* self = (GlMetersLV2UI*)puglGetHandle(view);
 	assert(width && height);
 #ifdef DEBUG_RESIZE
@@ -678,6 +692,9 @@ static void onResize(PuglView* view, int *width, int *height) {
 
 	*width = self->width;
 	*height = self->height;
+	if (self->resize_toplevel) {
+		*set_hints = 0;
+	}
 
 	if (self->extui) { return ; } // all taken care of already
 	if (!self->resize) { return ; }
@@ -1095,6 +1112,7 @@ gl_instantiate(const LV2UI_Descriptor*   descriptor,
 	self->mousefocus = NULL;
 	self->mousehover = NULL;
 	self->resize_in_progress = FALSE;
+	self->resize_toplevel = FALSE;
 
 #ifdef INIT_PUGL_IN_THREAD
 	self->ui_initialized   = 0;
