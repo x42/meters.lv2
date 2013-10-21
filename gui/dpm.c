@@ -943,7 +943,7 @@ static void invalidate_meter(SAUI* ui, int mtr, float val, float peak) {
 	const int old = ui->val_def[mtr];
 	const int new = deflect(ui, val);
 	const int m_old = ui->peak_def[mtr];
-	const int m_new = deflect(ui, peak);
+	const int m_new = ceilf(deflect(ui, peak) / 2.0) * 2.0;
 	int t, h;
 
 #define INVALIDATE_RECT(XX,YY,WW,HH) { \
