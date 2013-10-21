@@ -61,7 +61,7 @@ else
   LIB_EXT=.so
   UI_TYPE=ui:X11UI
   PUGL_SRC=robtk/pugl/pugl_x11.c
-  PKG_LIBS=glu
+  PKG_LIBS=glu gl
   GLUILIBS=-lX11
   GLUICFLAGS+=`pkg-config --cflags glu`
 endif
