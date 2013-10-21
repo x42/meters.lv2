@@ -27,7 +27,7 @@
 #define MTR_GUI "kmeterui"
 
 #define GM_TOP    25.5f
-#define GM_BOTTOM  7.5f
+#define GM_BOTTOM  9.5f
 #define GM_LEFT    4.5f
 #define GM_GIRTH  10.0f
 #define GM_WIDTH  (GM_GIRTH + GM_LEFT + GM_LEFT)
@@ -75,7 +75,7 @@ typedef struct {
 	//bool reset_toggle;
 	bool metrics_changed;
 
-	float kstandard;
+	int  kstandard;
 	bool initialized;
 	bool reset_toggle;
 
@@ -306,6 +306,11 @@ static void create_metrics(KMUI* ui) {
 	cairo_rectangle (cr, 0, 0, MA_WIDTH, GM_HEIGHT);
 	cairo_fill (cr);
 	DO_THE_METRICS
+
+	char kstd[6];
+	snprintf(kstd, 5, "K%d", ui->kstandard);
+	write_text(cr, kstd , font, MA_WIDTH - 3, GM_HEIGHT, 4, c_blk);
+
 	cairo_destroy (cr);
 	pango_font_description_free(font);
 
