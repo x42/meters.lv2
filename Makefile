@@ -133,7 +133,7 @@ GTKUICFLAGS+=`pkg-config --cflags gtk+-2.0 cairo pango`
 GTKUILIBS+=`pkg-config --libs gtk+-2.0 cairo pango`
 
 GLUICFLAGS+=`pkg-config --cflags cairo pango`
-GLUILIBS+=`pkg-config --libs cairo pango pangocairo`
+GLUILIBS+=`pkg-config --libs cairo pango pangocairo $(PKG_LIBS)`
 
 ifeq ($(GLTHREADSYNC), yes)
   GLUICFLAGS+=-DTHREADSYNC
