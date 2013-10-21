@@ -190,10 +190,11 @@ puglDisplay(PuglView* view)
 static void
 puglResize(PuglView* view)
 {
+	int set_hints; // ignored for now
 	view->resize = false;
 	if (!view->resizeFunc) { return; }
 	/* ask the plugin about the new size */
-	view->resizeFunc(view, &view->width, &view->height);
+	view->resizeFunc(view, &view->width, &view->height, &set_hints);
 
 	int winFlags = WS_POPUPWINDOW | WS_CAPTION | (view->resizable ? WS_SIZEBOX : 0);
 	RECT wr = { 0, 0, (long)width, (long)height };

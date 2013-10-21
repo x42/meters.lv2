@@ -434,9 +434,10 @@ puglProcessEvents(PuglView* view)
 void
 puglResize(PuglView* view)
 {
+	int set_hints; // ignored
 	view->resize = false;
 	if (!view->resizeFunc) { return; }
-	view->resizeFunc(view, &view->width, &view->height);
+	view->resizeFunc(view, &view->width, &view->height, &set_hints);
 	[view->impl->window setContentSize:NSMakeSize(view->width, view->height) ];
 	[view->impl->glview reshape];
 }

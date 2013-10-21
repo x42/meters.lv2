@@ -267,10 +267,11 @@ puglDisplay(PuglView* view)
 static void
 puglResize(PuglView* view)
 {
+	int set_hints = 1;
 	view->resize = false;
 	if (!view->resizeFunc) { return; }
 	/* ask the plugin about the new size */
-	view->resizeFunc(view, &view->width, &view->height);
+	view->resizeFunc(view, &view->width, &view->height, &set_hints);
 
 	XSizeHints *hints = XAllocSizeHints();
 	hints->min_width = view->width;
@@ -279,8 +280,9 @@ puglResize(PuglView* view)
 	hints->max_height = view->user_resizable ? 2048 : view->height;
 	hints->flags = PMaxSize | PMinSize;
 
-	//XSetNormalHints(view->impl->display, view->impl->win, hints);
-	XSetWMNormalHints(view->impl->display, view->impl->win, hints);
+	if (set_hints) {
+		XSetWMNormalHints(view->impl->display, view->impl->win, hints);
+	}
 	XResizeWindow(view->impl->display, view->impl->win, view->width, view->height);
 	XFlush(view->impl->display);
 	XFree(hints);

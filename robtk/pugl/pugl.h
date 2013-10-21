@@ -193,8 +193,9 @@ typedef void (*PuglReshapeFunc)(PuglView* view, int width, int height);
    @param view The view being resized.
    @param width view width to resize to (variable is initialized to current size)
    @param height view height to resize to (variable is initialized to current size)
+   @param set_hints if non-zero set window-hints
  */
-typedef void (*PuglResizeFunc)(PuglView* view, int *width, int *height);
+typedef void (*PuglResizeFunc)(PuglView* view, int *width, int *height, int *set_hints);
 
 /**
    A function called on scrolling (e.g. mouse wheel or track pad).
