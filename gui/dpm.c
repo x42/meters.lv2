@@ -31,7 +31,7 @@
 #define GM_GIRTH  (ui->display_freq ?  8.0f : 12.0f)
 #define GM_WIDTH  (ui->display_freq ? 13.0f : 28.0f)
 
-#define GM_HEIGHT (400.0f)
+#define GM_HEIGHT (ui->display_freq ? 400.0f:460.0f)
 #define GM_TXT    (GM_HEIGHT - (ui->display_freq ? 52.0f : 8.0f))
 #define GM_SCALE  (GM_TXT - GM_TOP - GM_TOP + 2.0)
 
