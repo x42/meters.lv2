@@ -138,6 +138,7 @@ typedef struct {
 
 	int w_width;
 	int w_height;
+	int xrundisplay;
 } GMUI;
 
 static bool cb_preferences(RobWidget *w, gpointer handle);
@@ -729,6 +730,25 @@ static bool expose_event(RobWidget* handle, cairo_t* cr, cairo_rectangle_t *ev) 
 			}
 		}
 		draw_gm_labels(ui, cr);
+
+		if (ui->xrundisplay < 0) { ui->xrundisplay++; }
+		else if (self->rb_overrun) ui->xrundisplay = 50;
+		else if (ui->xrundisplay > 0) ui->xrundisplay--;
+		self->rb_overrun = false;
+
+		if (ui->xrundisplay > 0) {
+			//printf("goiometer.lv2: buffer overflow -- your system is not fast enough.\n");
+			if ((ui->xrundisplay / 3 )%2) {
+				CairoSetSouerceRGBA(c_red);
+			} else {
+				CairoSetSouerceRGBA(c_g60);
+			}
+			rounded_rectangle (cr, PC_BOUNDS + GM_BOUNDS - 155, GM_BOUNDS - 30, 150, 25, 6);
+			cairo_fill(cr);
+			write_text(cr, "Buffer-Overflow\nYour system is not fast enough.",
+					FONT_LB, GM_BOUNDS - 100, GM_BOUNDS - 25,
+					0, c_wht);
+		}
 	}
 
 	if (rect_intersect_a(ev, 0, 0, PC_BOUNDS, GM_BOUNDS)) {
@@ -1236,6 +1256,7 @@ instantiate(
 	*widget = ui->box;
 
 	gmrb_read_clear(self->rb);
+	ui->xrundisplay = -100;
 	self->ui_active = true;
 	return ui;
 }

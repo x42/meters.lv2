@@ -115,6 +115,7 @@ typedef struct {
 	/* shared with ui */
 	gmringbuf *rb;
 	bool ui_active;
+	bool rb_overrun;
 
 	/* ui state/settings */
 	volatile bool  s_autogain;

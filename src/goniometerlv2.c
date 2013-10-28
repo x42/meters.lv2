@@ -76,6 +76,7 @@ goniometer_instantiate(
 
 	self->rate = rate;
 	self->ui_active = false;
+	self->rb_overrun = false;
 
 	self->apv = rint(rate / UPDATE_FPS);
 	self->sample_cnt = 0;
@@ -144,9 +145,7 @@ goniometer_run(LV2_Handle instance, uint32_t n_samples)
 
 	if (self->ui_active) {
 		if (gmrb_write(self->rb, self->input[0], self->input[1], n_samples) < 0) {
-#if 1 // debug -- TODO print only once -- or rather notify UI to reset
-			printf("goiometer.lv2: buffer overflow -- your system is not fast enough.\n");
-#endif
+			self->rb_overrun = true; // reset by UI
 		}
 
 		/* notify UI by creating a port-event */
@@ -157,6 +156,8 @@ goniometer_run(LV2_Handle instance, uint32_t n_samples)
 		}
 		*self->notify = self->ntfy;
 		*self->correlation = self->cor->read();
+	} else {
+		self->rb_overrun = false;
 	}
 
 	if (self->input[0] != self->output[0]) {
