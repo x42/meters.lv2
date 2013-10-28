@@ -732,22 +732,41 @@ static bool expose_event(RobWidget* handle, cairo_t* cr, cairo_rectangle_t *ev) 
 		draw_gm_labels(ui, cr);
 
 		if (ui->xrundisplay < 0) { ui->xrundisplay++; }
-		else if (self->rb_overrun) ui->xrundisplay = 50;
+		else if (self->rb_overrun) ui->xrundisplay = 36;
 		else if (ui->xrundisplay > 0) ui->xrundisplay--;
 		self->rb_overrun = false;
 
 		if (ui->xrundisplay > 0) {
-			//printf("goiometer.lv2: buffer overflow -- your system is not fast enough.\n");
-			if ((ui->xrundisplay / 3 )%2) {
-				CairoSetSouerceRGBA(c_red);
-			} else {
-				CairoSetSouerceRGBA(c_g60);
+			cairo_save(cr);
+			cairo_set_line_cap(cr, CAIRO_LINE_CAP_ROUND);
+			float c_warn[4] = {1.0, 0.0, 0.0, 0.75};
+			if (ui->xrundisplay < 30) {
+				c_warn[3] = ui->xrundisplay * .025;
 			}
-			rounded_rectangle (cr, PC_BOUNDS + GM_BOUNDS - 155, GM_BOUNDS - 30, 150, 25, 6);
+			CairoSetSouerceRGBA(c_warn);
+			rounded_rectangle (cr, PC_BOUNDS + GM_BOUNDS - 175, GM_BOUNDS - 33, 170, 28, 6);
 			cairo_fill(cr);
-			write_text(cr, "Buffer-Overflow\nYour system is not fast enough.",
-					FONT_LB, GM_BOUNDS - 100, GM_BOUNDS - 25,
-					0, c_wht);
+			write_text(cr, "Buffer Overflow\nYour system is not fast enough.",
+					FONT_LB, GM_BOUNDS - 102, GM_BOUNDS - 27,
+					0, c_g90);
+
+			CairoSetSouerceRGBA(c_blk);
+			cairo_set_line_width(cr, 1.5);
+			float tx,ty;
+			tx = PC_BOUNDS + GM_BOUNDS - 157.5;
+			ty = GM_BOUNDS - 27.5;
+			cairo_move_to(cr, tx, ty);
+			cairo_line_to(cr, tx-10, ty+17);
+			cairo_line_to(cr, tx+10, ty+17);
+			cairo_close_path (cr);
+			cairo_stroke(cr);
+			cairo_move_to(cr, tx, ty+6);
+			cairo_line_to(cr, tx, ty+11);
+			cairo_stroke(cr);
+			cairo_move_to(cr, tx, ty+14);
+			cairo_line_to(cr, tx, ty+14);
+			cairo_stroke(cr);
+			cairo_restore(cr);
 		}
 	}
 
