@@ -143,7 +143,11 @@ goniometer_run(LV2_Handle instance, uint32_t n_samples)
 	self->cor->process(self->input[0], self->input[1] , n_samples);
 
 	if (self->ui_active) {
-		gmrb_write(self->rb, self->input[0], self->input[1], n_samples);
+		if (gmrb_write(self->rb, self->input[0], self->input[1], n_samples) < 0) {
+#if 1 // debug -- TODO print only once -- or rather notify UI to reset
+			printf("goiometer.lv2: buffer overflow -- your system is not fast enough.\n");
+#endif
+		}
 
 		/* notify UI by creating a port-event */
 		self->sample_cnt += n_samples;
