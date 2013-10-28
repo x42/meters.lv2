@@ -904,7 +904,7 @@ static bool cb_vfreq(RobWidget *w, gpointer handle) {
 static bool cb_src(RobWidget *w, gpointer handle) {
 	GMUI* ui = (GMUI*)handle;
 	if (robtk_cbtn_get_active(ui->cbn_src)) {
-		setup_src(ui, robtk_spin_get_value(ui->spn_src_fact), 8, .7);
+		setup_src(ui, robtk_spin_get_value(ui->spn_src_fact), 12, 1.0);
 	} else {
 		setup_src(ui, 0, 0, 0);
 	}
