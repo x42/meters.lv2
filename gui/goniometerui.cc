@@ -143,6 +143,8 @@ typedef struct {
 static bool cb_preferences(RobWidget *w, gpointer handle);
 
 static void setup_src(GMUI* ui, float oversample, int hlen, float frel) {
+	LV2gm* self = (LV2gm*) ui->instance;
+
 	if (ui->src != 0) {
 		delete ui->src;
 		free(ui->scratch);
@@ -150,6 +152,7 @@ static void setup_src(GMUI* ui, float oversample, int hlen, float frel) {
 		ui->src = 0;
 		ui->scratch = 0;
 		ui->resampl = 0;
+		ui->hpw = expf(-2.0 * M_PI * 20 / self->rate);
 	}
 
 	if (oversample <= 1) {
@@ -157,9 +160,9 @@ static void setup_src(GMUI* ui, float oversample, int hlen, float frel) {
 		return;
 	}
 
-	LV2gm* self = (LV2gm*) ui->instance;
 	uint32_t bsiz = self->rate * 2;
 
+	ui->hpw = expf(-2.0 * M_PI * 20 / (self->rate * oversample));
 	ui->src_fact = oversample;
 	ui->src = new Resampler();
 	ui->src->setup(self->rate, self->rate * oversample, 2, hlen, frel);
