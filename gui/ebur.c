@@ -1273,7 +1273,7 @@ instantiate(
 	ui->cbx_autoreset  = robtk_cbtn_new("Reset on Start", GBT_LED_LEFT, true);
 	ui->spn_radartime  = robtk_spin_new(30, 600, 15);
 	ui->lbl_radarinfo  = robtk_lbl_new("History Length [s]:");
-	ui->lbl_ringinfo   = robtk_lbl_new("Level Diplay");
+	ui->lbl_ringinfo   = robtk_lbl_new("Level Display");
 	ui->cbx_truepeak   = robtk_cbtn_new("Compute True-Peak", GBT_LED_LEFT, true);
 
 	ui->sep_h0         = robtk_sep_new(TRUE);
