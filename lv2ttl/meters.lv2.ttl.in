@@ -39,6 +39,7 @@ mtr:VUmono@URI_SUFFIX@
 		lv2:minimum 0.0 ;
 		lv2:maximum 1.0 ;
 	] ;
+	rdfs:comment "Mono audio level meter according to IEC 60268-17 standard (VU meter)."
 	.
 
 mtr:VUstereo@URI_SUFFIX@
@@ -101,6 +102,7 @@ mtr:VUstereo@URI_SUFFIX@
 		lv2:minimum 0.0 ;
 		lv2:maximum 1.0 ;
 	] ;
+	rdfs:comment "Stereo audio level meter according to IEC 60268-17 standard (VU meter)."
 	.
 
 
@@ -143,6 +145,7 @@ mtr:BBCmono@URI_SUFFIX@
 		lv2:minimum 0.0 ;
 		lv2:maximum 1.0 ;
 	] ;
+	rdfs:comment "Mono audio level meter according to IEC 60268-10 / Type IIa (BBC scale)."
 	.
 
 mtr:BBCstereo@URI_SUFFIX@
@@ -205,6 +208,7 @@ mtr:BBCstereo@URI_SUFFIX@
 		lv2:minimum 0.0 ;
 		lv2:maximum 1.0 ;
 	] ;
+	rdfs:comment "Stereo audio level meter according to IEC 60268-10 / Type IIa (BBC scale)."
 	.
 
 
@@ -247,6 +251,7 @@ mtr:EBUmono@URI_SUFFIX@
 		lv2:minimum 0.0 ;
 		lv2:maximum 1.0 ;
 	] ;
+	rdfs:comment "Mono audio level meter according to IEC 60268-10 / Type IIb (EBU scale)."
 	.
 
 mtr:EBUstereo@URI_SUFFIX@
@@ -309,6 +314,7 @@ mtr:EBUstereo@URI_SUFFIX@
 		lv2:minimum 0.0 ;
 		lv2:maximum 1.0 ;
 	] ;
+	rdfs:comment "Stereo audio level meter according to IEC 60268-10 / Type IIb (EBU scale)."
 	.
 
 
@@ -351,6 +357,7 @@ mtr:DINmono@URI_SUFFIX@
 		lv2:minimum 0.0 ;
 		lv2:maximum 1.0 ;
 	] ;
+	rdfs:comment "Mono audio level meter according to IEC 60268-10 Type I with DIN scale."
 	.
 
 mtr:DINstereo@URI_SUFFIX@
@@ -413,6 +420,7 @@ mtr:DINstereo@URI_SUFFIX@
 		lv2:minimum 0.0 ;
 		lv2:maximum 1.0 ;
 	] ;
+	rdfs:comment "Stereo audio level meter according to IEC 60268-10 Type I with DIN scale."
 	.
 
 
@@ -455,6 +463,7 @@ mtr:NORmono@URI_SUFFIX@
 		lv2:minimum 0.0 ;
 		lv2:maximum 1.0 ;
 	] ;
+	rdfs:comment "Mono audio level meter according to IEC 60268-10 Type I with Nordic scale."
 	.
 
 mtr:NORstereo@URI_SUFFIX@
@@ -517,6 +526,7 @@ mtr:NORstereo@URI_SUFFIX@
 		lv2:minimum 0.0 ;
 		lv2:maximum 1.0 ;
 	] ;
+	rdfs:comment "Stereo audio level meter according to IEC 60268-10 Type I with Nordic scale."
 	.
 
 mtr:COR@URI_SUFFIX@
@@ -570,6 +580,7 @@ mtr:COR@URI_SUFFIX@
 		lv2:symbol "outR" ;
 		lv2:name "OutR"
 	] ;
+	rdfs:comment "Stereo phase correlation meter."
 	.
 
 mtr:EBUr128@URI_SUFFIX@
@@ -628,6 +639,7 @@ mtr:EBUr128@URI_SUFFIX@
 		lv2:name "OutR" ;
 		lv2:designation pg:right ;
 	] ;
+	rdfs:comment "Stereo audio level meter according to EBU Recommendation 128."
 	.
 
 
@@ -698,6 +710,7 @@ mtr:goniometer@URI_SUFFIX@
 		lv2:minimum 0.0 ;
 		lv2:maximum 1.0 ;
 	] ;
+	rdfs:comment "Stereo phase scope (goniometer)."
 	.
 
 
@@ -1045,6 +1058,7 @@ mtr:spectrum@URI_SUFFIX@
 		lv2:maximum 15.0 ;
 		lv2:portProperty pprop:notOnGUI ;
 	] ;
+	rdfs:comment "31-band (1/3 octave) spectrum analyzer. Currently not conform to ITU standard."
 	.
 
 mtr:dBTPmono@URI_SUFFIX@
@@ -1096,6 +1110,7 @@ mtr:dBTPmono@URI_SUFFIX@
 		lv2:minimum 0.0 ;
 		lv2:maximum 1.0 ;
 	] ;
+	rdfs:comment "Mono audio Level true-peak meter. Digital peak meter with 4 time oversampling, 13.3dB/s falloff."
 	.
 
 mtr:dBTPstereo@URI_SUFFIX@
@@ -1178,6 +1193,7 @@ mtr:dBTPstereo@URI_SUFFIX@
 		lv2:minimum 0.0 ;
 		lv2:maximum 1.0 ;
 	] ;
+	rdfs:comment "Stereo audio Level true-peak meter. Digital peak meter with 4 time oversampling, 13.3dB/s falloff."
 	.
 
 
@@ -1240,6 +1256,7 @@ mtr:K12mono@URI_SUFFIX@
 		lv2:minimum 0.0 ;
 		lv2:maximum 1.0 ;
 	] ;
+	rdfs:comment "Mono audio level meter according to the K-system. K-12/RMS variant (Broadcast)"
 	.
 
 mtr:K12stereo@URI_SUFFIX@
@@ -1332,6 +1349,7 @@ mtr:K12stereo@URI_SUFFIX@
 		lv2:minimum 0.0 ;
 		lv2:maximum 1.0 ;
 	] ;
+	rdfs:comment "Stereo audio level meter according to the K-system. K-12/RMS variant (Broadcast)"
 	.
 
 
@@ -1394,6 +1412,7 @@ mtr:K14mono@URI_SUFFIX@
 		lv2:minimum 0.0 ;
 		lv2:maximum 1.0 ;
 	] ;
+	rdfs:comment "Mono audio level meter according to the K-system. K-14/RMS variant (Home Theatre, pop-music)"
 	.
 
 mtr:K14stereo@URI_SUFFIX@
@@ -1486,6 +1505,7 @@ mtr:K14stereo@URI_SUFFIX@
 		lv2:minimum 0.0 ;
 		lv2:maximum 1.0 ;
 	] ;
+	rdfs:comment "Stereo audio level meter according to the K-system. K-14/RMS variant (Home Theatre, pop-music)"
 	.
 
 
@@ -1548,6 +1568,7 @@ mtr:K20mono@URI_SUFFIX@
 		lv2:minimum 0.0 ;
 		lv2:maximum 1.0 ;
 	] ;
+	rdfs:comment "Mono audio level meter according to the K-system. K-20/RMS variant (Large Theatre, wide-range-music)"
 	.
 
 mtr:K20stereo@URI_SUFFIX@
@@ -1640,4 +1661,5 @@ mtr:K20stereo@URI_SUFFIX@
 		lv2:minimum 0.0 ;
 		lv2:maximum 1.0 ;
 	] ;
+	rdfs:comment "Stereo audio level meter according to the K-system. K-20/RMS variant (Large Theatre, wide-range-music)"
 	.
