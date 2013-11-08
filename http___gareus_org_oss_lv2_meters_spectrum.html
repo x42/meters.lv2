@@ -1,0 +1,875 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+  <head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />  <title>Spectrum Analyzer [LV2 Plugin Doc]</title>
+  <link rel="shortcut icon" type="image/x-icon" href="data:image/x-icon;base64,AAABAAEAEBAAAAEACABoBQAAFgAAACgAAAAQAAAAIAAAAAEACAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQEBAAGxsbAB0dHQA5Kx4ANywhAD0wJABAMSIAQDEjAEEyJABDMyUAQDQmAEM0JQAyMjIAQzQmAEY2JgA0NDQASzclAEY3KQBHNyoASDgoAEk4KQBFOCwATDkoAE86JQBKOSsATTonAFA8KQBMPCwASDwwAFE+KwBUPyoAPT09AFJBMABTQTAAVkIuAFZCLwBWQy8AV0Y2AF1ILwBfTDIAXEs6AF9NNABeTDoAY040AGhPMABjTTkAbVE5AGhSPQBrVTsAalU/AGxbSQBzXUAAeWJEAF9fXwB1ZEsAc2RPAHpoTwB8aU8Agm9XAIFuXQB/b14AgXJeAIp1WQCHdl8AinhjAIt4ZgCPeWYAi3lqAI97YgCPfGwAkX1sAJB/aQCYgmYAmYFqAJOCcQCCgoIAmohyAJqHdgCXiXYAmIp3AJeKeACZi3YAn4xxAJmLeACZi3kAmox+AI2NjQCekIIAo5N/AKOUiACnl38AqpeGAK2bhQComo0AqpuJALCciwCsnpIAs6GLALKijgC0opIAsKKUALGklwCyppIAuKWWALCmnQC1p5kAtqiWALWnnACxp54AsKifALSrogC5rJ8AuK2fAL+uoQC+sqYAwrWjAMK1qAC1tbUAx7epAMe4rgDIvLEAy7ywAMi+rgDIvbIAzL2xAMzCsgDMwbYAzsOwAM3DuQDSxLcA08W5AMTExADSyLcA1Mm9ANbNvQDUzcUA2M7DAM3NzQDf1swA39fNANfX1wDi28oA5d3OAOfe1QDd3d0A5t7XAN/f3wDn4NkA4ODgAObk3gDr5t0A5ubmAO7n4ADv6toA8uvcAPLs3ADv6+QA9e7eAPPu3wDw7OcA9O3mAPfv4QD27uYA8O/qAPjw5QD48esA9/byAPT29AD39/cA+Pj4APz59AD5+vcA/vz3APz//gD///8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAr6mSkqivr6iXqa+pkpKpr6+MAQ+DqamDNYOokAIflK+viQBLH5KSH1YfklYMdamvr4kASx+Skh9WH5JWDHWpr6+MAQ+DqamDNYOokAIflK+vqZKSqK+vqJepr6mSkqmvrx0aFxgUEw4LDQkIBwYDrxsmVFFOTz89UDcQGRYSEQQgLZ6bmaFmjZ1/JyQjIh4FJTCgfTY4U5qFpECEho8pCiozpXosMXORRaJpcI5HKxU8NKZ+LkKfiEOKljlYiy8cbXesk2OArXJMeKpeRJw6IW55rphqo6diWmSre5WHPihogoF8dHZxZ2FcX1tSSUgyr2xva2VgXVlXVU1KRkE7r4YhAACAAQAAgAEAAIABAACAAQAAhiEAAIABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAIABAAA=" />
+  <style type="text/css">
+body {font-size:12px; background:#aaa;}
+h1, h2, h3 {margin:.25em .5em;}
+.plugintable {border:0px; border-spacing:0; border-collapse:separate; margin:0em auto;}
+.plugintable td div {min-height:20px;}
+.plugintable td {padding:.5em 2em 0em 2em; border-width:0; cursor:crosshair;}
+td.bgL {background-position:left; padding-left:28px; background-repeat:no-repeat;}
+td.bgR {background-position:right; padding-right:28px; background-repeat:no-repeat;}
+td.midiport {border-bottom:2px solid blue;}
+td.audioport {border-bottom:2px solid red;}
+td.controlport {border-bottom:2px solid green;}
+td.atomport {border-bottom:2px solid yellow;}
+td.pbody {background:#cccccc; font-size:90%; padding: .25em 1em;}
+.left {text-align:left;}
+.right {text-align:right;}
+.toplink {float:right; margin:1em 0 0 0;}
+.toplink a {color:black; text-decoration:none;}
+p {margin: .25em 0;}
+p.port {background-position:top left; line-height:24px; padding-left:28px; background-repeat:no-repeat; min-height:24px;}
+.midiport { background-image: url(data:image/png;base64,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)}
+.audioport {background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAAZiS0dEAAAAAAAA+UO7fwAAA1ZJREFUSMe1lk9MXFUUxn/3zpspA6VNKohmgKQxOmmRamyN0nahiXbiggqJEkhal5Ao6aJpUleksqpJV4omw8ZoSSBPExA2TnXZlh0bpHVMjQ1/Fq1/UoHyb+a9rwvvNPNotZji2dycl/O+75xzv3fOM5SZpC+Al4AngXXgpjHmNR7D7CbfAOazi18/BSSBWkk5R56V9Kmkj/8LgbfJjwH28pXLfHDy3STwBBCXNAUUgABYkzQOLAGLwF/GmA+3WsEOwLt+7TpAYnBkrM61qxHYmx0ebQGeA5qAF4GXgVcljUsakjQgqe/fCHYBFZ7nAcRm52YBKoFqYPfS0hKuqjogNTgydhB4tozwEHBI0icPEEi6CNQ6QAB7KXcJwMsOjyaAuO/7AAl3Pzvn5xcA9jjC+uzw6CtAGjgg6cv7BJKGgGc2EZgwDAHMxMREuW8/H/rGAnZ8/FuAxMBXfhVQ5eLqgL1As6TvraQfgP1Afd+FgQaXYUlRACwsLET6+OP0NIBxrbSTk5MAMRdX2XdhoBFoANLWXVoDsCeXy5WUFJVWLProytWrEX9mZgbAuDjP4ewCaixQMzgyVgNUFIvFh138AxaPx6Na9yJqNw4nPjgylrTAjnw+D2CNMWyHORyTz+eJPZ1+4SPf9zEVO83U1BRKVLJdp+/7j27HY5uk4PS585IUHnz9LUnSdp2nz52XBdbT6TRAKGm7kgZQOp3GA37v7mxLAknP86qA8FFKKhQKEd+p5j6+53kGKHR3tgUe8LP73GsymUyVm5gRgiAIIoBHDh+O+E1NTQAKgsAAxUwmE3eTdtUaY94ArgHz/Wd654CNUiYlgFQqFQF8vrkZQC7zsKWlBSBwcSv9Z3pngTkgb51uTwC/AL8BKyUCa/8eVa2treV++P6Jd0IgPH78bYCN3vc67gJ3Xdwt4Fdg2hjzplf2cZyU9J0bxwDhscwxCxR7utoF0NHRkXAVBkCxvj61G/gTWANWe7rafwJuu1V76mEbbRFYc6UHjQ2NnquoCITV1dW1wB9uX691d7bdAJbde4vAHeC2Mab/n1bmOlDct38fwEZ3Z9sd9+IyUOjpar/hsl3e6srcTBAA4dEjRwFWXbbzxpiMpKxrz4ox5uyW59L//dtyD6cqpLhqn3SnAAAAAElFTkSuQmCC);}
+.controlport {background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAAZiS0dEAL8AvwC//ggzigAAAphJREFUSMe1lcFKG1EUhr9MTE0WJTZhFEID3TQJmAxZSXHVuOgg6XvoVsjGZfYBN67yEq5mMc0iheJAwWKYVFBXXdi0sdgaW6qZxEw3Z8oQTWIUBy4DM/f8373n3PsfeOQnMOGfIiN4y1wXuAYGMtxpAAoQBqJATN4RAbkieAlcAGdAB7iS7xMBQRF8ASwCaSAJPANCMscBzoET4BA4AL4IsD8OEBShHFAAljRNy+i6Pp/L5WaTyaTiOA7tdnvQbDa7pmme2rZ9BHwE3gNN4JcfEhhKSxTIA2+B16VSabFYLM6OK6JhGN1KpXIgAANoyO4G3oo9UAR4CawCb5aXl/MrKyuheDw+9pSkUqmZbDar1mq1CNADvgug7wcEgTjwClgtlUpL6+vroc3NTdLpNJMgiURCUVU1ZllWXwAt4C/gKr70xIC0pmkZLy3VapVKpcLx8fHE814sFmc1TcsAGdEKesL+/Cd1XZ/3B04D0XVdBZ6LljIMCAPRXC53o6jVapW1tbWJAImNilbAD/DqEFpYWFBuC67X6xQKBRqNxkiAxIb8N1+Zxle2trbY2NiYyov8gGug1263B6Mm5/N56vX6SDGJ7fu9yQMMxEs6zWaze1/nlNhz8akbgA5wYprm6X0Bpmn+EH+68G6yH/ATOLRt+8gwjKl3YRhG17btQzG/M0n5/5vs1cAFnlqWNZfNZtVEInGnQ7C3t9cvl8ufgTrwAfgqtnEDcAl0gSe1Wi2iqmoslUrNTFp5uVz2zK4mO/jj1SA41KF6wG+pR8+yrP7+/n7Idd0n4XA4GI1GA47j0Gq1Bru7u1fb29vfdnZ2Pon4O7HrjpeeuzaczFDDcR/ScEa1zLmhlnn9kJY5rukHfOm8U9N/9Ocf6hEA/E8MtboAAAAASUVORK5CYII=);}
+.atomport {background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAAZiS0dEAAAAAAD/1EFU8gAABgNJREFUSMd1Vl1sFNcV/u7szs56/1mPYddh1waSwCLHtEBC3IeE2rR5SyVXSsgTAr8FMK4fkKJKVZ30AQmCQc4bUiPFlvsAQnKhxrbMQ6WkaaAOqtsmNI5jE3vNj9cs++fd2Z25Xx98bTlVe6Qjzcy9852/e893QFKQdJHUSXpJBknGSL5C8hTJqyRnrl+/vro9sV3G4jF56dKlMskZtXZK7Y2TDJH0kTQUnuYG4AGgA/ACqFMaBpAEEAcQnpycDHR2dta1tbXZQhPo+VWPd+Xpivl+3/thtSeJNSkAqAKoACgDqAiSMQBBAFGlEQBbADQCeNG27d26rrcuLy9nTNO0FJAuNLE19yz3j1AodB/ADIAlAEUAqwCeAcgAWHEDeBHAVgUYA1CvIogC2Ham58yud0++WzFN01beAYBr9tvZZ6m9qb3pxTSVQ1kFXlTg3wNYECTfU8BxAFu/uPPFNsdxvLpb96ZSKU84HI46jlMCYKnQodJpBAIB/9jYWC6dTldzuZyte/RaU7Kp2N7evgBgEcACSI6S/Ovp06dXIEDDa8hIJCIjkYj0+Xw0vAYPHz4sR0ZGLJJ5kvmxsbHKwYMHZTAUYLQ+Kvf9aJ/9atur1UQyYbvdbnrrvLJSqXxJchwkH1y5ciUHgFevXi2QfETyMcnsyMiI5TiOTdJ56+23JASoaRo7OjokSYekE2+MS5JPSS6QnCeZDoaCsuWllhrJBZB8dvTo0VpTc5ND8gnJB0qftLa2OiTt27dvS8MwODExIUnKYDDIY8eOkaTjcrmoHPqG5L9IzvX29pbNBlOSLLkBFOONcUMI4QFAlWMBQEsvpcXzLzyvvfHzN1CpVNa/I5/PrxXC69XC4TDn5+fdzc3NGgANgPbV11+5UntSBCBA8s8k7ytPllUUmenp6ZIQgiQlN0m1Wt38Ktva2uT+A/ttFUWa5JNgMCjHx8cLJB+C5EckJ48fP5577fXXaiQL/f391UQyIb1e74aBUqlETdMIAXZ3n96wMDExIS98eME2vAYdxymcPXvWat3Xaqt63AXJbpKDJKfNBlN2d3fbqVSKxWJRBkPBDSDDMAiBNQWYzWZJkrdu3ZLXrl2TJG1d16mcWiY5TfKPbnWlLQB232/7Vk+eOumnpCwWi0JKiXWp1WobzxCAbdtrj0KI9doJTUDTNGwWDUADgNCjR498vb29PkpWAsGANjc3R7tmb2ycmppagyGwo3kHTNMEABCkx+ORLpfLtZReWh34aMDauXNnFEAIQBwkh0h+9tz25+zJyckcySzJ3MuvvOxsrgFJlstl5vP5HxS5r6/P0T06LctaUYXOxGIxOTg4WFov8pezs7MLuq6vn+dFdRqehkIh+nw+/j/ZtWsXY7EY7927V1T/fEdy8fLly6vJZFKSXNUAbBscGqzfEt0iAUjV0CwAtZaWFlkqlZw3f/EmYvEYVK45MDDAaDSKGzdukCQaGxu5Oe+HDh2yl5aWhMogvzt//nxenfnHJL9X1z5z8+ZNa3R01CHpWJZlG16DbrebXV1dUqVOCk2QZIlkhuRDko9Te/fY9Wa9Q3IRJMdJTkWjUVv36PJE14nip599uvL5538pfDL4iRUKhej3+9n2kzZnbHyslM1mC+fOnasmEgkZiUToD/jZ09NT7T7TXT5y5IgVDAalEILz83P/JDkpSP5GMdL2/v7+3cPDww3pdNrTvKNZdrR3OBc+vOArr5b/V7v2dv6y0ziw/0C1rq6uWigUbCmlvSe1J//O0XfmAKQBLAqSPwOQUEZMAAEAPkUiW4eGhhLDfxgOjP5pdEXdGah1r9BE2KpYMx6P56EimaLSZcUHi4JkUrGYqejSp4w0AnjBtu3dukdvzSxnMvX19ZZqeJ79B34cOfz6TwsXL168C+A+gAeK1YoAcpspc93yExW6R3F0EgDcbnfkzp07D82GhvjvPvig0tnZWTvRdcL37/vfaH+7OzUDYBbA3wF8C+Dpps6wCqACkpoaMQw1coTUCPKDseXjj39f9vv9BMCmpiapOOMWyV+TbCfZRDLy32PLfwDTRmvpPWEoTgAAAABJRU5ErkJggg==);}
+dt,.desc {font-style:italic;}
+dd {margin-left:1em; white-space: pre-line; white-space: pre; white-space: pre-wrap; word-wrap: break-word;}
+dd ul {margin-left:1em; white-space: normal;}
+ul {padding:0 0 0 1.25em; margin:0;}
+p.backlink {margin: .5em 2.0em 0 1.0em; float:left;}
+p.docs {max-width:30em;}
+div.screenshot {text-align:center;}
+img.screenshot {max-width:100%; max-height:300px; margin:.5em auto .25em auto; cursor:pointer;}
+#pluginmeta {margin:0 1em; padding:1em; border:1px solid #ccc; float:left; max-width:22em; background-color:#fff;}
+#portwrapper {max-width:60em; margin:0em auto; float:left; background-color:#fff; border:1px solid #ccc;}
+#plugintable {margin:1em 0; padding:1em;}
+#portlist {margin:1em auto; padding:1em; min-width:45em;}
+#lightbox {position:fixed; z-index:100; margin:0; top:0; left:0; width:100%; height:100%; text-align:center; background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAAZiS0dEAP8A/wD/oL2nkwAAAAlwSFlzAAALEwAACxMBAJqcGAAAAAd0SU1FB9gLCgMmI0krqZgAAAAZdEVYdENvbW1lbnQAQ3JlYXRlZCB3aXRoIEdJTVBXgQ4XAAAAHUlEQVQ4y2NkYGCoZ6AAMDFQCEYNGDVg1IDBYgAARyIAn4UMLlsAAAAASUVORK5CYII=);}
+#lightbox div {background:#fff; border-radius:10px; display:inline-block; margin:3em 0;}
+#lightbox img {margin:1.5em; border:1px solid black;}
+#inputportlist  {width:45%; float:left;}
+#outputportlist {width:45%; float:right;}
+td.ptbl div {position:relative;}
+td.ptblLL div.portinfo {position:absolute; left:0px; background-position: top left; background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABgAAAANCAYAAACzbK7QAAAAAXNSR0IArs4c6QAAAAZiS0dEAL8AvwC//ggzigAAAZdJREFUOMud1LFqk2EUBuDny58acLDWptJBimhjA0KkZCgKDoLo5gVkk5Ir6IVkL70GEWdBsriFEKh1VTupre3gYLB/jssfrSG1jWc5w8d533Pe9zsnmRIRUUIZJYyQp5Ry/xFpCniGq7iJK/iOT/iWUvo5K0F5SueXcQfPivwZr/E2Ir7OOkn5FPgcrmEV9/FwMBjcrdfrR5VKJcMX/IiI4QVwRzhJKeXplCxLeIAnuIfVlFJ1MBgMG41GHy+xh/MIchzjA47HBBU08BxP2+32Sq/Xy/r9foqIHEf4WOTzJBpiFy+wO5aohHmspJRuZVmmVquBZrOZRcQiFiMi/oV8eHiYIiL29/fhDUrlKdrZ3NyM7e3tVK1WbW1tWVtbi4g4Gb+fFQcHBynP8+E0k0fF+HsRsYDV5eXlpU6nk3W73Wi1WkdjTS8o0bsCb3Ta5AXcLgx+jI319fUbzWbzZGdnp4dXM5j827M0sWCXcB0beISVouD9DARjkj/fdGLZ5rBYgM8j/upoxkVLZ9yirPAnm+xo1lPxC9xTrtz4WAF1AAAAAElFTkSuQmCC);}
+td.ptblRR div.portinfo {position:absolute; right:0px; background-position: top right; background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABgAAAANCAYAAACzbK7QAAAAAXNSR0IArs4c6QAAAAZiS0dEAL8AvwC//ggzigAAAapJREFUOMutlM9KW1EQxn9zvCnFyG0hSrmthhJQGxChlbpxJVknfYD4Gt0L2eUZ7lskkEUgUMFFG+gi/lloV7VBxD+LlKiX9ma6mZtKNgnRA4ezmTPf9803M8KUR1Ud4AABFIhFREfjZMrkM8AckAGeA3fAJXArIoNHARhzH1gG1oAXwDnwHTgDoodKXPJJVVOq+mzcNcavgPV+v/++1WptAe+AFSAL+KYQAM8YzQIL9roxIlLAGyDbbrezhULhk6peA5sGfACcqmpPRAaiqilgEfgILAHeGAAHpIF5IC0iO7lc7iafz1/W6/UG0AG+AGci8sczH9LAUiaT2RUR8X3/fpwXIjL0L4oir9ForIjIqqp+tkoIo2yr1eqec84LgiCaIL/rdDovK5XKRrfb9YvF4mmtVlu2lv0f+KBEm/amJijRLLBQKpW2m83m23K5fByG4T5wAZwAX4FfSYli4Ar4BhxNYLJnRD7EcRwHQdALw3AP+AEcAj8tXzycA+ukmQnnIumiDeC1EboGjg2kB/xNBm7aQRt2keW4NZDfIhI/xaoYVZzsosFo7D8N5K8UUKG/kgAAAABJRU5ErkJggg==);}
+div.portinfo {z-index:20; top:1.25em; background-color:#eee; background-repeat:no-repeat; border-radius:10px; padding: 1em; border:1px solid #888; min-width:18em; text-align:left;}
+div.port {margin:.5em .5em 1em .5em; border-top:1px dotted #ccc; padding: 0 .5em; min-width:18em;}
+span.portproperty {padding:0 .5em 0 0; border-bottom:1px dotted #ccc;}
+table.portrange {width:100%; margin-bottom:1em;  border:1px solid #888;}
+td.ptbl{background:#cccccc; border-color: black; border-style: solid; background-clip: padding-box; position:relative;}
+td.ptblTL{border-width: 1px 0px 0px 1px; border-radius:10px 0px 0px 0px;}
+td.ptblTC{border-width: 1px 0px 0px 0px;}
+td.ptblTR{border-width: 1px 1px 0px 0px; border-radius:0px 10px 0px 0px;}
+td.ptblBL{border-width: 0px 0px 1px 1px; border-radius:0px 0px 0px 10px;}
+td.ptblBC{border-width: 0px 0px 1px 0px;}
+td.ptblBR{border-width: 0px 1px 1px 0px; border-radius:0px 0px 10px 0px;}
+td.ptblRR{border-width: 0px 1px 0px 0px;}
+td.ptblLL{border-width: 0px 0px 0px 1px;}
+div.footer {margin:1em auto; font-size:80%; color:#444; text-align:center; width:50%;}
+  </style>
+  <script type="text/javascript">
+  //<![CDATA[
+  function showdoc(p) {
+    for(i=0; i< num_ports; ++i) {
+      var el = document.getElementById('port'+i);
+      if (!el) {continue};
+      if (i==p) {el.style.display='block';}
+      else {el.style.display='none';}
+    }
+  }
+  function jumpto(p){window.location.hash='portdoc'+p;}
+  function hideimg(){
+    var lb = document.getElementById('lightbox');
+    if (lb) {lb.style.display='none';};
+  }
+  function showimg(){
+    var lb = document.getElementById('lightbox');
+    if (lb) {lb.style.display='block';};
+  }
+  //]]>
+  </script>
+  </head>
+  <body>
+<p class="backlink"><a href="index.html">Back to Index</a></p>
+<h1 class="title"><a name="top"/>LV2 Doc &laquo;Spectrum Analyzer&raquo;
+ [Analyser]
+</h1>
+<div id="pluginmeta">
+<p class="desc">Description</p>
+<p class="docs">31-band (1/3 octave) spectrum analyzer. Currently not conform to ITU standard.</p>
+<dl>
+ <dt>Title</dt><dd>Spectrum Analyzer</dd>
+ <dt>URI</dt><dd><a href="http://gareus.org/oss/lv2/meters#spectrum">http://gareus.org/oss/lv2/meters#spectrum</a></dd>
+ <dt>Class</dt><dd>Analyser</dd>
+ <dt>Author</dt><dd>Robin Gareus</dd>
+ <dt>Author's Email</dt><dd>mailto:robin@gareus.org</dd>
+ <dt>Author's Homepage</dt><dd><a href="http://gareus.org/">http://gareus.org/</a></dd>
+<dt>User Interface</dt><dd><ul>
+<li>External UI (KXstudio)</li>
+</ul></dd>
+<dt>Optional Feature</dt><dd><ul>
+<li>Hard Realtime Capable</li>
+</ul></dd>
+</dl>
+<div class="screenshot"><img alt="Screenshot" class="screenshot" src="http___gareus_org_oss_lv2_meters_spectrum.png" onclick="showimg();" /></div>
+</div>
+<div id="lightbox" style="display:none;" onclick="hideimg();">
+<div><img alt="Screenshot" src="http___gareus_org_oss_lv2_meters_spectrum.png"/></div>
+</div>
+<div id="portwrapper">
+<script type="text/javascript">
+var num_ports=38;
+</script>
+<div id="plugintable"><table class="plugintable">
+<tr><td></td><td class="ptbl ptblTL">&nbsp;</td><td class="ptbl ptblTC">&nbsp;</td><td class="ptbl ptblTR">&nbsp;</td><td></td></tr>
+<tr><td class="bgL audioport" onmouseover="showdoc(0);" onmouseout="showdoc(-1);" onclick="jumpto(0);">0) InL</td><td class="pbody left ptbl ptblLL" onmouseover="showdoc(0);" onmouseout="showdoc(-1);" onclick="jumpto(0);"><div>(inL)<div class="portinfo" id="port0" style="display:none">
+<h3>0) InL</h3>
+<p class="port audioport">(<span>Audio</span> <span>Input</span>)</p>
+<p>
+</p>
+<p class="desc">Designation:</p><ul>
+<li>Port-group: Left</li>
+</ul>
+</div>
+</div></td><td class="pbody"><div>&nbsp;</div></td><td class="pbody right ptbl ptblRR" onmouseover="showdoc(1);" onmouseout="showdoc(-1);" onclick="jumpto(1);"><div>(outL)<div class="portinfo" id="port1" style="display:none">
+<h3>1) OutL</h3>
+<p class="port audioport">(<span>Audio</span> <span>Output</span>)</p>
+<p>
+</p>
+<p class="desc">Designation:</p><ul>
+<li>Port-group: Left</li>
+</ul>
+</div>
+</div></td><td class="bgR audioport" onmouseover="showdoc(1);" onmouseout="showdoc(-1);" onclick="jumpto(1);">1) OutL</td></tr>
+<tr><td class="bgL audioport" onmouseover="showdoc(2);" onmouseout="showdoc(-1);" onclick="jumpto(2);">2) InR</td><td class="pbody left ptbl ptblLL" onmouseover="showdoc(2);" onmouseout="showdoc(-1);" onclick="jumpto(2);"><div>(inR)<div class="portinfo" id="port2" style="display:none">
+<h3>2) InR</h3>
+<p class="port audioport">(<span>Audio</span> <span>Input</span>)</p>
+<p>
+</p>
+<p class="desc">Designation:</p><ul>
+<li>Port-group: Right</li>
+</ul>
+</div>
+</div></td><td class="pbody"><div>&nbsp;</div></td><td class="pbody right ptbl ptblRR" onmouseover="showdoc(3);" onmouseout="showdoc(-1);" onclick="jumpto(3);"><div>(outR)<div class="portinfo" id="port3" style="display:none">
+<h3>3) OutR</h3>
+<p class="port audioport">(<span>Audio</span> <span>Output</span>)</p>
+<p>
+</p>
+<p class="desc">Designation:</p><ul>
+<li>Port-group: Right</li>
+</ul>
+</div>
+</div></td><td class="bgR audioport" onmouseover="showdoc(3);" onmouseout="showdoc(-1);" onclick="jumpto(3);">3) OutR</td></tr>
+<tr><td class="bgL controlport" onmouseover="showdoc(4);" onmouseout="showdoc(-1);" onclick="jumpto(4);">4) UI gain</td><td class="pbody left ptbl ptblLL" onmouseover="showdoc(4);" onmouseout="showdoc(-1);" onclick="jumpto(4);"><div>(UIgain)<div class="portinfo" id="port4" style="display:none">
+<h3>4) UI gain</h3>
+<p class="port controlport">(<span>Control</span> <span>Input</span>)</p>
+<p>
+</p>
+</div>
+</div></td><td class="pbody"><div>&nbsp;</div></td><td class="pbody right ptbl ptblRR" onmouseover="showdoc(5);" onmouseout="showdoc(-1);" onclick="jumpto(5);"><div>(band20)<div class="portinfo" id="port5" style="display:none">
+<h3>5) 20Hz</h3>
+<p class="port controlport">(<span>Control</span> <span>Output</span>)</p>
+<p>
+</p>
+</div>
+</div></td><td class="bgR controlport" onmouseover="showdoc(5);" onmouseout="showdoc(-1);" onclick="jumpto(5);">5) 20Hz</td></tr>
+<tr><td class="bgL controlport" onmouseover="showdoc(36);" onmouseout="showdoc(-1);" onclick="jumpto(36);">36) UI attack</td><td class="pbody left ptbl ptblLL" onmouseover="showdoc(36);" onmouseout="showdoc(-1);" onclick="jumpto(36);"><div>(UIattack)<div class="portinfo" id="port36" style="display:none">
+<h3>36) UI attack</h3>
+<p class="port controlport">(<span>Control</span> <span>Input</span>)</p>
+<p class="desc">Port Property:</p>
+<ul>
+<li class="portproperty">Not On GUI</li>
+</ul>
+<p>
+</p>
+</div>
+</div></td><td class="pbody"><div>&nbsp;</div></td><td class="pbody right ptbl ptblRR" onmouseover="showdoc(6);" onmouseout="showdoc(-1);" onclick="jumpto(6);"><div>(band25)<div class="portinfo" id="port6" style="display:none">
+<h3>6) 25Hz</h3>
+<p class="port controlport">(<span>Control</span> <span>Output</span>)</p>
+<p>
+</p>
+</div>
+</div></td><td class="bgR controlport" onmouseover="showdoc(6);" onmouseout="showdoc(-1);" onclick="jumpto(6);">6) 25Hz</td></tr>
+<tr><td class="bgL controlport" onmouseover="showdoc(37);" onmouseout="showdoc(-1);" onclick="jumpto(37);">37) UI decay</td><td class="pbody left ptbl ptblLL" onmouseover="showdoc(37);" onmouseout="showdoc(-1);" onclick="jumpto(37);"><div>(UIdecay)<div class="portinfo" id="port37" style="display:none">
+<h3>37) UI decay</h3>
+<p class="port controlport">(<span>Control</span> <span>Input</span>)</p>
+<p class="desc">Port Property:</p>
+<ul>
+<li class="portproperty">Not On GUI</li>
+</ul>
+<p>
+</p>
+</div>
+</div></td><td class="pbody"><div>&nbsp;</div></td><td class="pbody right ptbl ptblRR" onmouseover="showdoc(7);" onmouseout="showdoc(-1);" onclick="jumpto(7);"><div>(band31)<div class="portinfo" id="port7" style="display:none">
+<h3>7) 31Hz</h3>
+<p class="port controlport">(<span>Control</span> <span>Output</span>)</p>
+<p>
+</p>
+</div>
+</div></td><td class="bgR controlport" onmouseover="showdoc(7);" onmouseout="showdoc(-1);" onclick="jumpto(7);">7) 31Hz</td></tr>
+<tr><td></td><td class="pbody ptbl ptblLL"></td><td class="pbody"><div>&nbsp;</div></td><td class="pbody right ptbl ptblRR" onmouseover="showdoc(8);" onmouseout="showdoc(-1);" onclick="jumpto(8);"><div>(band40)<div class="portinfo" id="port8" style="display:none">
+<h3>8) 40Hz</h3>
+<p class="port controlport">(<span>Control</span> <span>Output</span>)</p>
+<p>
+</p>
+</div>
+</div></td><td class="bgR controlport" onmouseover="showdoc(8);" onmouseout="showdoc(-1);" onclick="jumpto(8);">8) 40Hz</td></tr>
+<tr><td></td><td class="pbody ptbl ptblLL"></td><td class="pbody"><div>&nbsp;</div></td><td class="pbody right ptbl ptblRR" onmouseover="showdoc(9);" onmouseout="showdoc(-1);" onclick="jumpto(9);"><div>(band50)<div class="portinfo" id="port9" style="display:none">
+<h3>9) 50Hz</h3>
+<p class="port controlport">(<span>Control</span> <span>Output</span>)</p>
+<p>
+</p>
+</div>
+</div></td><td class="bgR controlport" onmouseover="showdoc(9);" onmouseout="showdoc(-1);" onclick="jumpto(9);">9) 50Hz</td></tr>
+<tr><td></td><td class="pbody ptbl ptblLL"></td><td class="pbody"><div>&nbsp;</div></td><td class="pbody right ptbl ptblRR" onmouseover="showdoc(10);" onmouseout="showdoc(-1);" onclick="jumpto(10);"><div>(band63)<div class="portinfo" id="port10" style="display:none">
+<h3>10) 63Hz</h3>
+<p class="port controlport">(<span>Control</span> <span>Output</span>)</p>
+<p>
+</p>
+</div>
+</div></td><td class="bgR controlport" onmouseover="showdoc(10);" onmouseout="showdoc(-1);" onclick="jumpto(10);">10) 63Hz</td></tr>
+<tr><td></td><td class="pbody ptbl ptblLL"></td><td class="pbody"><div>&nbsp;</div></td><td class="pbody right ptbl ptblRR" onmouseover="showdoc(11);" onmouseout="showdoc(-1);" onclick="jumpto(11);"><div>(band80)<div class="portinfo" id="port11" style="display:none">
+<h3>11) 80Hz</h3>
+<p class="port controlport">(<span>Control</span> <span>Output</span>)</p>
+<p>
+</p>
+</div>
+</div></td><td class="bgR controlport" onmouseover="showdoc(11);" onmouseout="showdoc(-1);" onclick="jumpto(11);">11) 80Hz</td></tr>
+<tr><td></td><td class="pbody ptbl ptblLL"></td><td class="pbody"><div>&nbsp;</div></td><td class="pbody right ptbl ptblRR" onmouseover="showdoc(12);" onmouseout="showdoc(-1);" onclick="jumpto(12);"><div>(band100)<div class="portinfo" id="port12" style="display:none">
+<h3>12) 100Hz</h3>
+<p class="port controlport">(<span>Control</span> <span>Output</span>)</p>
+<p>
+</p>
+</div>
+</div></td><td class="bgR controlport" onmouseover="showdoc(12);" onmouseout="showdoc(-1);" onclick="jumpto(12);">12) 100Hz</td></tr>
+<tr><td></td><td class="pbody ptbl ptblLL"></td><td class="pbody"><div>&nbsp;</div></td><td class="pbody right ptbl ptblRR" onmouseover="showdoc(13);" onmouseout="showdoc(-1);" onclick="jumpto(13);"><div>(band125)<div class="portinfo" id="port13" style="display:none">
+<h3>13) 125Hz</h3>
+<p class="port controlport">(<span>Control</span> <span>Output</span>)</p>
+<p>
+</p>
+</div>
+</div></td><td class="bgR controlport" onmouseover="showdoc(13);" onmouseout="showdoc(-1);" onclick="jumpto(13);">13) 125Hz</td></tr>
+<tr><td></td><td class="pbody ptbl ptblLL"></td><td class="pbody"><div>&nbsp;</div></td><td class="pbody right ptbl ptblRR" onmouseover="showdoc(14);" onmouseout="showdoc(-1);" onclick="jumpto(14);"><div>(band160)<div class="portinfo" id="port14" style="display:none">
+<h3>14) 160Hz</h3>
+<p class="port controlport">(<span>Control</span> <span>Output</span>)</p>
+<p>
+</p>
+</div>
+</div></td><td class="bgR controlport" onmouseover="showdoc(14);" onmouseout="showdoc(-1);" onclick="jumpto(14);">14) 160Hz</td></tr>
+<tr><td></td><td class="pbody ptbl ptblLL"></td><td class="pbody"><div>&nbsp;</div></td><td class="pbody right ptbl ptblRR" onmouseover="showdoc(15);" onmouseout="showdoc(-1);" onclick="jumpto(15);"><div>(band200)<div class="portinfo" id="port15" style="display:none">
+<h3>15) 200Hz</h3>
+<p class="port controlport">(<span>Control</span> <span>Output</span>)</p>
+<p>
+</p>
+</div>
+</div></td><td class="bgR controlport" onmouseover="showdoc(15);" onmouseout="showdoc(-1);" onclick="jumpto(15);">15) 200Hz</td></tr>
+<tr><td></td><td class="pbody ptbl ptblLL"></td><td class="pbody"><div>&nbsp;</div></td><td class="pbody right ptbl ptblRR" onmouseover="showdoc(16);" onmouseout="showdoc(-1);" onclick="jumpto(16);"><div>(band250)<div class="portinfo" id="port16" style="display:none">
+<h3>16) 250Hz</h3>
+<p class="port controlport">(<span>Control</span> <span>Output</span>)</p>
+<p>
+</p>
+</div>
+</div></td><td class="bgR controlport" onmouseover="showdoc(16);" onmouseout="showdoc(-1);" onclick="jumpto(16);">16) 250Hz</td></tr>
+<tr><td></td><td class="pbody ptbl ptblLL"></td><td class="pbody"><div>&nbsp;</div></td><td class="pbody right ptbl ptblRR" onmouseover="showdoc(17);" onmouseout="showdoc(-1);" onclick="jumpto(17);"><div>(band315)<div class="portinfo" id="port17" style="display:none">
+<h3>17) 315Hz</h3>
+<p class="port controlport">(<span>Control</span> <span>Output</span>)</p>
+<p>
+</p>
+</div>
+</div></td><td class="bgR controlport" onmouseover="showdoc(17);" onmouseout="showdoc(-1);" onclick="jumpto(17);">17) 315Hz</td></tr>
+<tr><td></td><td class="pbody ptbl ptblLL"></td><td class="pbody"><div>&nbsp;</div></td><td class="pbody right ptbl ptblRR" onmouseover="showdoc(18);" onmouseout="showdoc(-1);" onclick="jumpto(18);"><div>(band400)<div class="portinfo" id="port18" style="display:none">
+<h3>18) 400Hz</h3>
+<p class="port controlport">(<span>Control</span> <span>Output</span>)</p>
+<p>
+</p>
+</div>
+</div></td><td class="bgR controlport" onmouseover="showdoc(18);" onmouseout="showdoc(-1);" onclick="jumpto(18);">18) 400Hz</td></tr>
+<tr><td></td><td class="pbody ptbl ptblLL"></td><td class="pbody"><div>&nbsp;</div></td><td class="pbody right ptbl ptblRR" onmouseover="showdoc(19);" onmouseout="showdoc(-1);" onclick="jumpto(19);"><div>(band500)<div class="portinfo" id="port19" style="display:none">
+<h3>19) 500Hz</h3>
+<p class="port controlport">(<span>Control</span> <span>Output</span>)</p>
+<p>
+</p>
+</div>
+</div></td><td class="bgR controlport" onmouseover="showdoc(19);" onmouseout="showdoc(-1);" onclick="jumpto(19);">19) 500Hz</td></tr>
+<tr><td></td><td class="pbody ptbl ptblLL"></td><td class="pbody"><div>&nbsp;</div></td><td class="pbody right ptbl ptblRR" onmouseover="showdoc(20);" onmouseout="showdoc(-1);" onclick="jumpto(20);"><div>(band630)<div class="portinfo" id="port20" style="display:none">
+<h3>20) 630Hz</h3>
+<p class="port controlport">(<span>Control</span> <span>Output</span>)</p>
+<p>
+</p>
+</div>
+</div></td><td class="bgR controlport" onmouseover="showdoc(20);" onmouseout="showdoc(-1);" onclick="jumpto(20);">20) 630Hz</td></tr>
+<tr><td></td><td class="pbody ptbl ptblLL"></td><td class="pbody"><div>&nbsp;</div></td><td class="pbody right ptbl ptblRR" onmouseover="showdoc(21);" onmouseout="showdoc(-1);" onclick="jumpto(21);"><div>(band800)<div class="portinfo" id="port21" style="display:none">
+<h3>21) 800Hz</h3>
+<p class="port controlport">(<span>Control</span> <span>Output</span>)</p>
+<p>
+</p>
+</div>
+</div></td><td class="bgR controlport" onmouseover="showdoc(21);" onmouseout="showdoc(-1);" onclick="jumpto(21);">21) 800Hz</td></tr>
+<tr><td></td><td class="pbody ptbl ptblLL"></td><td class="pbody"><div>&nbsp;</div></td><td class="pbody right ptbl ptblRR" onmouseover="showdoc(22);" onmouseout="showdoc(-1);" onclick="jumpto(22);"><div>(band1000)<div class="portinfo" id="port22" style="display:none">
+<h3>22) 1kHz</h3>
+<p class="port controlport">(<span>Control</span> <span>Output</span>)</p>
+<p>
+</p>
+</div>
+</div></td><td class="bgR controlport" onmouseover="showdoc(22);" onmouseout="showdoc(-1);" onclick="jumpto(22);">22) 1kHz</td></tr>
+<tr><td></td><td class="pbody ptbl ptblLL"></td><td class="pbody"><div>&nbsp;</div></td><td class="pbody right ptbl ptblRR" onmouseover="showdoc(23);" onmouseout="showdoc(-1);" onclick="jumpto(23);"><div>(band1250)<div class="portinfo" id="port23" style="display:none">
+<h3>23) 1.25kHz</h3>
+<p class="port controlport">(<span>Control</span> <span>Output</span>)</p>
+<p>
+</p>
+</div>
+</div></td><td class="bgR controlport" onmouseover="showdoc(23);" onmouseout="showdoc(-1);" onclick="jumpto(23);">23) 1.25kHz</td></tr>
+<tr><td></td><td class="pbody ptbl ptblLL"></td><td class="pbody"><div>&nbsp;</div></td><td class="pbody right ptbl ptblRR" onmouseover="showdoc(24);" onmouseout="showdoc(-1);" onclick="jumpto(24);"><div>(band1600)<div class="portinfo" id="port24" style="display:none">
+<h3>24) 1.6kHz</h3>
+<p class="port controlport">(<span>Control</span> <span>Output</span>)</p>
+<p>
+</p>
+</div>
+</div></td><td class="bgR controlport" onmouseover="showdoc(24);" onmouseout="showdoc(-1);" onclick="jumpto(24);">24) 1.6kHz</td></tr>
+<tr><td></td><td class="pbody ptbl ptblLL"></td><td class="pbody"><div>&nbsp;</div></td><td class="pbody right ptbl ptblRR" onmouseover="showdoc(25);" onmouseout="showdoc(-1);" onclick="jumpto(25);"><div>(band2000)<div class="portinfo" id="port25" style="display:none">
+<h3>25) 2kHz</h3>
+<p class="port controlport">(<span>Control</span> <span>Output</span>)</p>
+<p>
+</p>
+</div>
+</div></td><td class="bgR controlport" onmouseover="showdoc(25);" onmouseout="showdoc(-1);" onclick="jumpto(25);">25) 2kHz</td></tr>
+<tr><td></td><td class="pbody ptbl ptblLL"></td><td class="pbody"><div>&nbsp;</div></td><td class="pbody right ptbl ptblRR" onmouseover="showdoc(26);" onmouseout="showdoc(-1);" onclick="jumpto(26);"><div>(band2500)<div class="portinfo" id="port26" style="display:none">
+<h3>26) 2.5Hz</h3>
+<p class="port controlport">(<span>Control</span> <span>Output</span>)</p>
+<p>
+</p>
+</div>
+</div></td><td class="bgR controlport" onmouseover="showdoc(26);" onmouseout="showdoc(-1);" onclick="jumpto(26);">26) 2.5Hz</td></tr>
+<tr><td></td><td class="pbody ptbl ptblLL"></td><td class="pbody"><div>&nbsp;</div></td><td class="pbody right ptbl ptblRR" onmouseover="showdoc(27);" onmouseout="showdoc(-1);" onclick="jumpto(27);"><div>(band3150)<div class="portinfo" id="port27" style="display:none">
+<h3>27) 3.15Hz</h3>
+<p class="port controlport">(<span>Control</span> <span>Output</span>)</p>
+<p>
+</p>
+</div>
+</div></td><td class="bgR controlport" onmouseover="showdoc(27);" onmouseout="showdoc(-1);" onclick="jumpto(27);">27) 3.15Hz</td></tr>
+<tr><td></td><td class="pbody ptbl ptblLL"></td><td class="pbody"><div>&nbsp;</div></td><td class="pbody right ptbl ptblRR" onmouseover="showdoc(28);" onmouseout="showdoc(-1);" onclick="jumpto(28);"><div>(band4000)<div class="portinfo" id="port28" style="display:none">
+<h3>28) 4Hz</h3>
+<p class="port controlport">(<span>Control</span> <span>Output</span>)</p>
+<p>
+</p>
+</div>
+</div></td><td class="bgR controlport" onmouseover="showdoc(28);" onmouseout="showdoc(-1);" onclick="jumpto(28);">28) 4Hz</td></tr>
+<tr><td></td><td class="pbody ptbl ptblLL"></td><td class="pbody"><div>&nbsp;</div></td><td class="pbody right ptbl ptblRR" onmouseover="showdoc(29);" onmouseout="showdoc(-1);" onclick="jumpto(29);"><div>(band5000)<div class="portinfo" id="port29" style="display:none">
+<h3>29) 5kHz</h3>
+<p class="port controlport">(<span>Control</span> <span>Output</span>)</p>
+<p>
+</p>
+</div>
+</div></td><td class="bgR controlport" onmouseover="showdoc(29);" onmouseout="showdoc(-1);" onclick="jumpto(29);">29) 5kHz</td></tr>
+<tr><td></td><td class="pbody ptbl ptblLL"></td><td class="pbody"><div>&nbsp;</div></td><td class="pbody right ptbl ptblRR" onmouseover="showdoc(30);" onmouseout="showdoc(-1);" onclick="jumpto(30);"><div>(band6300)<div class="portinfo" id="port30" style="display:none">
+<h3>30) 6.3kHz</h3>
+<p class="port controlport">(<span>Control</span> <span>Output</span>)</p>
+<p>
+</p>
+</div>
+</div></td><td class="bgR controlport" onmouseover="showdoc(30);" onmouseout="showdoc(-1);" onclick="jumpto(30);">30) 6.3kHz</td></tr>
+<tr><td></td><td class="pbody ptbl ptblLL"></td><td class="pbody"><div>&nbsp;</div></td><td class="pbody right ptbl ptblRR" onmouseover="showdoc(31);" onmouseout="showdoc(-1);" onclick="jumpto(31);"><div>(band8000)<div class="portinfo" id="port31" style="display:none">
+<h3>31) 8Hz</h3>
+<p class="port controlport">(<span>Control</span> <span>Output</span>)</p>
+<p>
+</p>
+</div>
+</div></td><td class="bgR controlport" onmouseover="showdoc(31);" onmouseout="showdoc(-1);" onclick="jumpto(31);">31) 8Hz</td></tr>
+<tr><td></td><td class="pbody ptbl ptblLL"></td><td class="pbody"><div>&nbsp;</div></td><td class="pbody right ptbl ptblRR" onmouseover="showdoc(32);" onmouseout="showdoc(-1);" onclick="jumpto(32);"><div>(band10000)<div class="portinfo" id="port32" style="display:none">
+<h3>32) 10Hz</h3>
+<p class="port controlport">(<span>Control</span> <span>Output</span>)</p>
+<p>
+</p>
+</div>
+</div></td><td class="bgR controlport" onmouseover="showdoc(32);" onmouseout="showdoc(-1);" onclick="jumpto(32);">32) 10Hz</td></tr>
+<tr><td></td><td class="pbody ptbl ptblLL"></td><td class="pbody"><div>&nbsp;</div></td><td class="pbody right ptbl ptblRR" onmouseover="showdoc(33);" onmouseout="showdoc(-1);" onclick="jumpto(33);"><div>(band12500)<div class="portinfo" id="port33" style="display:none">
+<h3>33) 12.5Hz</h3>
+<p class="port controlport">(<span>Control</span> <span>Output</span>)</p>
+<p>
+</p>
+</div>
+</div></td><td class="bgR controlport" onmouseover="showdoc(33);" onmouseout="showdoc(-1);" onclick="jumpto(33);">33) 12.5Hz</td></tr>
+<tr><td></td><td class="pbody ptbl ptblLL"></td><td class="pbody"><div>&nbsp;</div></td><td class="pbody right ptbl ptblRR" onmouseover="showdoc(34);" onmouseout="showdoc(-1);" onclick="jumpto(34);"><div>(band16000)<div class="portinfo" id="port34" style="display:none">
+<h3>34) 16kHz</h3>
+<p class="port controlport">(<span>Control</span> <span>Output</span>)</p>
+<p>
+</p>
+</div>
+</div></td><td class="bgR controlport" onmouseover="showdoc(34);" onmouseout="showdoc(-1);" onclick="jumpto(34);">34) 16kHz</td></tr>
+<tr><td></td><td class="pbody ptbl ptblLL"></td><td class="pbody"><div>&nbsp;</div></td><td class="pbody right ptbl ptblRR" onmouseover="showdoc(35);" onmouseout="showdoc(-1);" onclick="jumpto(35);"><div>(band20000)<div class="portinfo" id="port35" style="display:none">
+<h3>35) 20kHz</h3>
+<p class="port controlport">(<span>Control</span> <span>Output</span>)</p>
+<p>
+</p>
+</div>
+</div></td><td class="bgR controlport" onmouseover="showdoc(35);" onmouseout="showdoc(-1);" onclick="jumpto(35);">35) 20kHz</td></tr>
+<tr><td></td><td class="ptbl ptblBL">&nbsp;</td><td class="ptbl ptblBC">&nbsp;</td><td class="ptbl ptblBR">&nbsp;</td><td></td></tr>
+</table></div>
+<div id="portlist">
+<h2 style="text-align:center;">Port List</h2>
+<div id="inputportlist">
+<div class="port">
+<div class="toplink"><a href="#top">&nbsp;&uarr;&nbsp;</a></div>
+<h3><a name="portdoc0">0</a>) InL</h3>
+<p class="port audioport">(<span>Audio</span> <span>Input</span>)</p>
+<p>
+</p>
+<p class="desc">Designation:</p><ul>
+<li>Port-group: Left</li>
+</ul>
+</div>
+<div class="port">
+<div class="toplink"><a href="#top">&nbsp;&uarr;&nbsp;</a></div>
+<h3><a name="portdoc2">2</a>) InR</h3>
+<p class="port audioport">(<span>Audio</span> <span>Input</span>)</p>
+<p>
+</p>
+<p class="desc">Designation:</p><ul>
+<li>Port-group: Right</li>
+</ul>
+</div>
+<div class="port">
+<div class="toplink"><a href="#top">&nbsp;&uarr;&nbsp;</a></div>
+<h3><a name="portdoc4">4</a>) UI gain</h3>
+<p class="port controlport">(<span>Control</span> <span>Input</span>)</p>
+<p>
+</p>
+<table class="portrange">
+<tr><th colspan="2">Range</th></tr>
+<tr><th>min</th><td>0.000000</td></tr>
+<tr><th>max</th><td>40.000000</td></tr>
+<tr><th>default</th><td>3.162000</td></tr>
+</table>
+</div>
+<div class="port">
+<div class="toplink"><a href="#top">&nbsp;&uarr;&nbsp;</a></div>
+<h3><a name="portdoc36">36</a>) UI attack</h3>
+<p class="port controlport">(<span>Control</span> <span>Input</span>)</p>
+<p class="desc">Port Property:</p>
+<ul>
+<li class="portproperty">Not On GUI</li>
+</ul>
+<p>
+</p>
+<table class="portrange">
+<tr><th colspan="2">Range</th></tr>
+<tr><th>min</th><td>1.000000</td></tr>
+<tr><th>max</th><td>1000.000000</td></tr>
+<tr><th>default</th><td>180.000000</td></tr>
+</table>
+</div>
+<div class="port">
+<div class="toplink"><a href="#top">&nbsp;&uarr;&nbsp;</a></div>
+<h3><a name="portdoc37">37</a>) UI decay</h3>
+<p class="port controlport">(<span>Control</span> <span>Input</span>)</p>
+<p class="desc">Port Property:</p>
+<ul>
+<li class="portproperty">Not On GUI</li>
+</ul>
+<p>
+</p>
+<table class="portrange">
+<tr><th colspan="2">Range</th></tr>
+<tr><th>min</th><td>0.020000</td></tr>
+<tr><th>max</th><td>15.000000</td></tr>
+<tr><th>default</th><td>0.500000</td></tr>
+</table>
+</div>
+</div>
+<div id="outputportlist">
+<div class="port">
+<div class="toplink"><a href="#top">&nbsp;&uarr;&nbsp;</a></div>
+<h3><a name="portdoc1">1</a>) OutL</h3>
+<p class="port audioport">(<span>Audio</span> <span>Output</span>)</p>
+<p>
+</p>
+<p class="desc">Designation:</p><ul>
+<li>Port-group: Left</li>
+</ul>
+</div>
+<div class="port">
+<div class="toplink"><a href="#top">&nbsp;&uarr;&nbsp;</a></div>
+<h3><a name="portdoc3">3</a>) OutR</h3>
+<p class="port audioport">(<span>Audio</span> <span>Output</span>)</p>
+<p>
+</p>
+<p class="desc">Designation:</p><ul>
+<li>Port-group: Right</li>
+</ul>
+</div>
+<div class="port">
+<div class="toplink"><a href="#top">&nbsp;&uarr;&nbsp;</a></div>
+<h3><a name="portdoc5">5</a>) 20Hz</h3>
+<p class="port controlport">(<span>Control</span> <span>Output</span>)</p>
+<p>
+</p>
+<table class="portrange">
+<tr><th colspan="2">Range</th></tr>
+<tr><th>min</th><td>-70.000000</td></tr>
+<tr><th>max</th><td>6.000000</td></tr>
+</table>
+</div>
+<div class="port">
+<div class="toplink"><a href="#top">&nbsp;&uarr;&nbsp;</a></div>
+<h3><a name="portdoc6">6</a>) 25Hz</h3>
+<p class="port controlport">(<span>Control</span> <span>Output</span>)</p>
+<p>
+</p>
+<table class="portrange">
+<tr><th colspan="2">Range</th></tr>
+<tr><th>min</th><td>-70.000000</td></tr>
+<tr><th>max</th><td>6.000000</td></tr>
+</table>
+</div>
+<div class="port">
+<div class="toplink"><a href="#top">&nbsp;&uarr;&nbsp;</a></div>
+<h3><a name="portdoc7">7</a>) 31Hz</h3>
+<p class="port controlport">(<span>Control</span> <span>Output</span>)</p>
+<p>
+</p>
+<table class="portrange">
+<tr><th colspan="2">Range</th></tr>
+<tr><th>min</th><td>-70.000000</td></tr>
+<tr><th>max</th><td>6.000000</td></tr>
+</table>
+</div>
+<div class="port">
+<div class="toplink"><a href="#top">&nbsp;&uarr;&nbsp;</a></div>
+<h3><a name="portdoc8">8</a>) 40Hz</h3>
+<p class="port controlport">(<span>Control</span> <span>Output</span>)</p>
+<p>
+</p>
+<table class="portrange">
+<tr><th colspan="2">Range</th></tr>
+<tr><th>min</th><td>-70.000000</td></tr>
+<tr><th>max</th><td>6.000000</td></tr>
+</table>
+</div>
+<div class="port">
+<div class="toplink"><a href="#top">&nbsp;&uarr;&nbsp;</a></div>
+<h3><a name="portdoc9">9</a>) 50Hz</h3>
+<p class="port controlport">(<span>Control</span> <span>Output</span>)</p>
+<p>
+</p>
+<table class="portrange">
+<tr><th colspan="2">Range</th></tr>
+<tr><th>min</th><td>-70.000000</td></tr>
+<tr><th>max</th><td>6.000000</td></tr>
+</table>
+</div>
+<div class="port">
+<div class="toplink"><a href="#top">&nbsp;&uarr;&nbsp;</a></div>
+<h3><a name="portdoc10">10</a>) 63Hz</h3>
+<p class="port controlport">(<span>Control</span> <span>Output</span>)</p>
+<p>
+</p>
+<table class="portrange">
+<tr><th colspan="2">Range</th></tr>
+<tr><th>min</th><td>-70.000000</td></tr>
+<tr><th>max</th><td>6.000000</td></tr>
+</table>
+</div>
+<div class="port">
+<div class="toplink"><a href="#top">&nbsp;&uarr;&nbsp;</a></div>
+<h3><a name="portdoc11">11</a>) 80Hz</h3>
+<p class="port controlport">(<span>Control</span> <span>Output</span>)</p>
+<p>
+</p>
+<table class="portrange">
+<tr><th colspan="2">Range</th></tr>
+<tr><th>min</th><td>-70.000000</td></tr>
+<tr><th>max</th><td>6.000000</td></tr>
+</table>
+</div>
+<div class="port">
+<div class="toplink"><a href="#top">&nbsp;&uarr;&nbsp;</a></div>
+<h3><a name="portdoc12">12</a>) 100Hz</h3>
+<p class="port controlport">(<span>Control</span> <span>Output</span>)</p>
+<p>
+</p>
+<table class="portrange">
+<tr><th colspan="2">Range</th></tr>
+<tr><th>min</th><td>-70.000000</td></tr>
+<tr><th>max</th><td>6.000000</td></tr>
+</table>
+</div>
+<div class="port">
+<div class="toplink"><a href="#top">&nbsp;&uarr;&nbsp;</a></div>
+<h3><a name="portdoc13">13</a>) 125Hz</h3>
+<p class="port controlport">(<span>Control</span> <span>Output</span>)</p>
+<p>
+</p>
+<table class="portrange">
+<tr><th colspan="2">Range</th></tr>
+<tr><th>min</th><td>-70.000000</td></tr>
+<tr><th>max</th><td>6.000000</td></tr>
+</table>
+</div>
+<div class="port">
+<div class="toplink"><a href="#top">&nbsp;&uarr;&nbsp;</a></div>
+<h3><a name="portdoc14">14</a>) 160Hz</h3>
+<p class="port controlport">(<span>Control</span> <span>Output</span>)</p>
+<p>
+</p>
+<table class="portrange">
+<tr><th colspan="2">Range</th></tr>
+<tr><th>min</th><td>-70.000000</td></tr>
+<tr><th>max</th><td>6.000000</td></tr>
+</table>
+</div>
+<div class="port">
+<div class="toplink"><a href="#top">&nbsp;&uarr;&nbsp;</a></div>
+<h3><a name="portdoc15">15</a>) 200Hz</h3>
+<p class="port controlport">(<span>Control</span> <span>Output</span>)</p>
+<p>
+</p>
+<table class="portrange">
+<tr><th colspan="2">Range</th></tr>
+<tr><th>min</th><td>-70.000000</td></tr>
+<tr><th>max</th><td>6.000000</td></tr>
+</table>
+</div>
+<div class="port">
+<div class="toplink"><a href="#top">&nbsp;&uarr;&nbsp;</a></div>
+<h3><a name="portdoc16">16</a>) 250Hz</h3>
+<p class="port controlport">(<span>Control</span> <span>Output</span>)</p>
+<p>
+</p>
+<table class="portrange">
+<tr><th colspan="2">Range</th></tr>
+<tr><th>min</th><td>-70.000000</td></tr>
+<tr><th>max</th><td>6.000000</td></tr>
+</table>
+</div>
+<div class="port">
+<div class="toplink"><a href="#top">&nbsp;&uarr;&nbsp;</a></div>
+<h3><a name="portdoc17">17</a>) 315Hz</h3>
+<p class="port controlport">(<span>Control</span> <span>Output</span>)</p>
+<p>
+</p>
+<table class="portrange">
+<tr><th colspan="2">Range</th></tr>
+<tr><th>min</th><td>-70.000000</td></tr>
+<tr><th>max</th><td>6.000000</td></tr>
+</table>
+</div>
+<div class="port">
+<div class="toplink"><a href="#top">&nbsp;&uarr;&nbsp;</a></div>
+<h3><a name="portdoc18">18</a>) 400Hz</h3>
+<p class="port controlport">(<span>Control</span> <span>Output</span>)</p>
+<p>
+</p>
+<table class="portrange">
+<tr><th colspan="2">Range</th></tr>
+<tr><th>min</th><td>-70.000000</td></tr>
+<tr><th>max</th><td>6.000000</td></tr>
+</table>
+</div>
+<div class="port">
+<div class="toplink"><a href="#top">&nbsp;&uarr;&nbsp;</a></div>
+<h3><a name="portdoc19">19</a>) 500Hz</h3>
+<p class="port controlport">(<span>Control</span> <span>Output</span>)</p>
+<p>
+</p>
+<table class="portrange">
+<tr><th colspan="2">Range</th></tr>
+<tr><th>min</th><td>-70.000000</td></tr>
+<tr><th>max</th><td>6.000000</td></tr>
+</table>
+</div>
+<div class="port">
+<div class="toplink"><a href="#top">&nbsp;&uarr;&nbsp;</a></div>
+<h3><a name="portdoc20">20</a>) 630Hz</h3>
+<p class="port controlport">(<span>Control</span> <span>Output</span>)</p>
+<p>
+</p>
+<table class="portrange">
+<tr><th colspan="2">Range</th></tr>
+<tr><th>min</th><td>-70.000000</td></tr>
+<tr><th>max</th><td>6.000000</td></tr>
+</table>
+</div>
+<div class="port">
+<div class="toplink"><a href="#top">&nbsp;&uarr;&nbsp;</a></div>
+<h3><a name="portdoc21">21</a>) 800Hz</h3>
+<p class="port controlport">(<span>Control</span> <span>Output</span>)</p>
+<p>
+</p>
+<table class="portrange">
+<tr><th colspan="2">Range</th></tr>
+<tr><th>min</th><td>-70.000000</td></tr>
+<tr><th>max</th><td>6.000000</td></tr>
+</table>
+</div>
+<div class="port">
+<div class="toplink"><a href="#top">&nbsp;&uarr;&nbsp;</a></div>
+<h3><a name="portdoc22">22</a>) 1kHz</h3>
+<p class="port controlport">(<span>Control</span> <span>Output</span>)</p>
+<p>
+</p>
+<table class="portrange">
+<tr><th colspan="2">Range</th></tr>
+<tr><th>min</th><td>-70.000000</td></tr>
+<tr><th>max</th><td>6.000000</td></tr>
+</table>
+</div>
+<div class="port">
+<div class="toplink"><a href="#top">&nbsp;&uarr;&nbsp;</a></div>
+<h3><a name="portdoc23">23</a>) 1.25kHz</h3>
+<p class="port controlport">(<span>Control</span> <span>Output</span>)</p>
+<p>
+</p>
+<table class="portrange">
+<tr><th colspan="2">Range</th></tr>
+<tr><th>min</th><td>-70.000000</td></tr>
+<tr><th>max</th><td>6.000000</td></tr>
+</table>
+</div>
+<div class="port">
+<div class="toplink"><a href="#top">&nbsp;&uarr;&nbsp;</a></div>
+<h3><a name="portdoc24">24</a>) 1.6kHz</h3>
+<p class="port controlport">(<span>Control</span> <span>Output</span>)</p>
+<p>
+</p>
+<table class="portrange">
+<tr><th colspan="2">Range</th></tr>
+<tr><th>min</th><td>-70.000000</td></tr>
+<tr><th>max</th><td>6.000000</td></tr>
+</table>
+</div>
+<div class="port">
+<div class="toplink"><a href="#top">&nbsp;&uarr;&nbsp;</a></div>
+<h3><a name="portdoc25">25</a>) 2kHz</h3>
+<p class="port controlport">(<span>Control</span> <span>Output</span>)</p>
+<p>
+</p>
+<table class="portrange">
+<tr><th colspan="2">Range</th></tr>
+<tr><th>min</th><td>-70.000000</td></tr>
+<tr><th>max</th><td>6.000000</td></tr>
+</table>
+</div>
+<div class="port">
+<div class="toplink"><a href="#top">&nbsp;&uarr;&nbsp;</a></div>
+<h3><a name="portdoc26">26</a>) 2.5Hz</h3>
+<p class="port controlport">(<span>Control</span> <span>Output</span>)</p>
+<p>
+</p>
+<table class="portrange">
+<tr><th colspan="2">Range</th></tr>
+<tr><th>min</th><td>-70.000000</td></tr>
+<tr><th>max</th><td>6.000000</td></tr>
+</table>
+</div>
+<div class="port">
+<div class="toplink"><a href="#top">&nbsp;&uarr;&nbsp;</a></div>
+<h3><a name="portdoc27">27</a>) 3.15Hz</h3>
+<p class="port controlport">(<span>Control</span> <span>Output</span>)</p>
+<p>
+</p>
+<table class="portrange">
+<tr><th colspan="2">Range</th></tr>
+<tr><th>min</th><td>-70.000000</td></tr>
+<tr><th>max</th><td>6.000000</td></tr>
+</table>
+</div>
+<div class="port">
+<div class="toplink"><a href="#top">&nbsp;&uarr;&nbsp;</a></div>
+<h3><a name="portdoc28">28</a>) 4Hz</h3>
+<p class="port controlport">(<span>Control</span> <span>Output</span>)</p>
+<p>
+</p>
+<table class="portrange">
+<tr><th colspan="2">Range</th></tr>
+<tr><th>min</th><td>-70.000000</td></tr>
+<tr><th>max</th><td>6.000000</td></tr>
+</table>
+</div>
+<div class="port">
+<div class="toplink"><a href="#top">&nbsp;&uarr;&nbsp;</a></div>
+<h3><a name="portdoc29">29</a>) 5kHz</h3>
+<p class="port controlport">(<span>Control</span> <span>Output</span>)</p>
+<p>
+</p>
+<table class="portrange">
+<tr><th colspan="2">Range</th></tr>
+<tr><th>min</th><td>-70.000000</td></tr>
+<tr><th>max</th><td>6.000000</td></tr>
+</table>
+</div>
+<div class="port">
+<div class="toplink"><a href="#top">&nbsp;&uarr;&nbsp;</a></div>
+<h3><a name="portdoc30">30</a>) 6.3kHz</h3>
+<p class="port controlport">(<span>Control</span> <span>Output</span>)</p>
+<p>
+</p>
+<table class="portrange">
+<tr><th colspan="2">Range</th></tr>
+<tr><th>min</th><td>-70.000000</td></tr>
+<tr><th>max</th><td>6.000000</td></tr>
+</table>
+</div>
+<div class="port">
+<div class="toplink"><a href="#top">&nbsp;&uarr;&nbsp;</a></div>
+<h3><a name="portdoc31">31</a>) 8Hz</h3>
+<p class="port controlport">(<span>Control</span> <span>Output</span>)</p>
+<p>
+</p>
+<table class="portrange">
+<tr><th colspan="2">Range</th></tr>
+<tr><th>min</th><td>-70.000000</td></tr>
+<tr><th>max</th><td>6.000000</td></tr>
+</table>
+</div>
+<div class="port">
+<div class="toplink"><a href="#top">&nbsp;&uarr;&nbsp;</a></div>
+<h3><a name="portdoc32">32</a>) 10Hz</h3>
+<p class="port controlport">(<span>Control</span> <span>Output</span>)</p>
+<p>
+</p>
+<table class="portrange">
+<tr><th colspan="2">Range</th></tr>
+<tr><th>min</th><td>-70.000000</td></tr>
+<tr><th>max</th><td>6.000000</td></tr>
+</table>
+</div>
+<div class="port">
+<div class="toplink"><a href="#top">&nbsp;&uarr;&nbsp;</a></div>
+<h3><a name="portdoc33">33</a>) 12.5Hz</h3>
+<p class="port controlport">(<span>Control</span> <span>Output</span>)</p>
+<p>
+</p>
+<table class="portrange">
+<tr><th colspan="2">Range</th></tr>
+<tr><th>min</th><td>-70.000000</td></tr>
+<tr><th>max</th><td>6.000000</td></tr>
+</table>
+</div>
+<div class="port">
+<div class="toplink"><a href="#top">&nbsp;&uarr;&nbsp;</a></div>
+<h3><a name="portdoc34">34</a>) 16kHz</h3>
+<p class="port controlport">(<span>Control</span> <span>Output</span>)</p>
+<p>
+</p>
+<table class="portrange">
+<tr><th colspan="2">Range</th></tr>
+<tr><th>min</th><td>-70.000000</td></tr>
+<tr><th>max</th><td>6.000000</td></tr>
+</table>
+</div>
+<div class="port">
+<div class="toplink"><a href="#top">&nbsp;&uarr;&nbsp;</a></div>
+<h3><a name="portdoc35">35</a>) 20kHz</h3>
+<p class="port controlport">(<span>Control</span> <span>Output</span>)</p>
+<p>
+</p>
+<table class="portrange">
+<tr><th colspan="2">Range</th></tr>
+<tr><th>min</th><td>-70.000000</td></tr>
+<tr><th>max</th><td>6.000000</td></tr>
+</table>
+</div>
+</div>
+<div style="clear:both;"></div>
+</div>
+</div>
+<!-- end of page !-->
+<div style="clear:both;"></div>
+<div class="footer"><hr/>Created by <a href="https://github.com/x42/lv2toweb">lv2toweb</a>. Generated on 2013-11-08 13:44:44 GMT</div>
+ </body>
+ </html>
