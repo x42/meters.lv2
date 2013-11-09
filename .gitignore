@@ -2,6 +2,7 @@
 /gui/img/*.png
 /gui/img/*.xcf
 /tools/gen_image
+/doc/html
 
 *.swp
 cscope.*
