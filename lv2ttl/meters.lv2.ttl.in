@@ -1110,7 +1110,7 @@ mtr:dBTPmono@URI_SUFFIX@
 		lv2:minimum 0.0 ;
 		lv2:maximum 1.0 ;
 	] ;
-	rdfs:comment "Mono audio Level true-peak meter. Digital peak meter with 4 time oversampling, 13.3dB/s falloff."
+	rdfs:comment "Mono audio Level true-peak meter. Digital peak meter with 4 times oversampling, 13.3dB/s falloff."
 	.
 
 mtr:dBTPstereo@URI_SUFFIX@
@@ -1193,7 +1193,7 @@ mtr:dBTPstereo@URI_SUFFIX@
 		lv2:minimum 0.0 ;
 		lv2:maximum 1.0 ;
 	] ;
-	rdfs:comment "Stereo audio Level true-peak meter. Digital peak meter with 4 time oversampling, 13.3dB/s falloff."
+	rdfs:comment "Stereo audio Level true-peak meter. Digital peak meter with 4 times oversampling, 13.3dB/s falloff."
 	.
 
 
