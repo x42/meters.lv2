@@ -26,7 +26,7 @@
 
 static PangoFontDescription * get_font_from_theme () {
   PangoFontDescription * rv;
-	rv = pango_font_description_from_string("Sans 10");
+	rv = pango_font_description_from_string("Sans 8");
 	assert(rv);
 	return rv;
 }

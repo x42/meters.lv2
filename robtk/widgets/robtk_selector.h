@@ -37,6 +37,7 @@ typedef struct {
 	int  lightarr;
 
 	bool wraparound;
+	cairo_pattern_t* btn_bg;
 
 	bool (*cb) (RobWidget* w, gpointer handle);
 	gpointer handle;
@@ -58,6 +59,12 @@ static bool robtk_select_expose_event(RobWidget* handle, cairo_t* cr, cairo_rect
 	assert(d->items != NULL);
 	assert(d->active_item < d->item_count);
 
+	if (!d->btn_bg) {
+		d->btn_bg = cairo_pattern_create_linear (0.0, 0.0, 0.0, d->w_height);
+		cairo_pattern_add_color_stop_rgb (d->btn_bg, 0.0, .65, .65, .66);
+		cairo_pattern_add_color_stop_rgb (d->btn_bg, 1.0, .25, .25, .3);
+	}
+
 	cairo_rectangle (cr, ev->x, ev->y, ev->width, ev->height);
 	cairo_clip (cr);
 
@@ -65,12 +72,8 @@ static bool robtk_select_expose_event(RobWidget* handle, cairo_t* cr, cairo_rect
 	cairo_clip(cr);
 
 	/* background */
-	float cbg[4];
-	// TODO get these colors from the theme..
-	float cbb[4] = {.2, .2, .2, 1.0 };
-	float cbp[4] = {.3, .3, .3, 1.0 };
-	float cfg[4] = {.4, .4, .4, 1.0 };
-
+	float cbg[4], cfg[4];
+	get_color_from_theme(0, cfg);
 	get_color_from_theme(1, cbg);
 	cairo_set_source_rgb (cr, cbg[0], cbg[1], cbg[2]);
 
@@ -83,38 +86,37 @@ static bool robtk_select_expose_event(RobWidget* handle, cairo_t* cr, cairo_rect
 
 	cairo_set_line_width(cr, 1.0);
 
-	if (!d->sensitive || (!d->wraparound && d->active_item == 0)) {
-		cairo_set_source_rgba(cr, cbg[0], cbg[1], cbg[2], 1.0);
-	} else if (d->sensitive && d->prelight && d->lightarr == -1) {
-		cairo_set_source_rgba(cr, cbp[0], cbp[1], cbp[2], 1.0);
-	} else {
-		cairo_set_source_rgba(cr, cbb[0], cbb[1], cbb[2], 1.0);
-	}
+	cairo_set_source(cr, d->btn_bg);
 	cairo_rectangle(cr, 2.5, 2.5, 14, d->w_height - 4);
-	cairo_fill(cr);
-
-	cairo_set_source_rgba(cr, cfg[0], cfg[1], cfg[2], 1.0);
-	cairo_set_source_rgba(cr, .4, .4, .4, 1.0);
-	cairo_move_to(cr, 12, w_h2 - 3.5);
-	cairo_line_to(cr,  8, w_h2 + 0.5);
-	cairo_line_to(cr, 12, w_h2 + 4.5);
-	cairo_stroke(cr);
-
-	if (!d->sensitive || (!d->wraparound && d->active_item == d->item_count -1)) {
-		cairo_set_source_rgba(cr, cbg[0], cbg[1], cbg[2], 1.0);
-	} else if (d->prelight && d->lightarr == 1) {
-		cairo_set_source_rgba(cr, cbp[0], cbp[1], cbp[2], 1.0);
-	} else {
-		cairo_set_source_rgba(cr, cbb[0], cbb[1], cbb[2], 1.0);
+	if (d->sensitive && d->prelight && d->lightarr == -1) {
+		cairo_fill_preserve(cr);
+		cairo_set_source_rgba (cr, 1.0, 1.0, 1.0, .1);
 	}
-	cairo_rectangle(cr, w_width - 15.5, 2.5, 14, d->w_height - 4);
 	cairo_fill(cr);
 
-	cairo_set_source_rgba(cr, cfg[0], cfg[1], cfg[2], 1.0);
-	cairo_move_to(cr, w_width - 10.5, w_h2 - 3.5);
-	cairo_line_to(cr, w_width -  6.5, w_h2 + 0.5);
-	cairo_line_to(cr, w_width - 10.5, w_h2 + 4.5);
-	cairo_stroke(cr);
+	if (d->sensitive && (d->wraparound || d->active_item != 0)) {
+		cairo_set_source_rgba(cr, cfg[0], cfg[1], cfg[2], 1.0);
+		cairo_move_to(cr, 12, w_h2 - 3.5);
+		cairo_line_to(cr,  8, w_h2 + 0.5);
+		cairo_line_to(cr, 12, w_h2 + 4.5);
+		cairo_stroke(cr);
+	}
+
+	cairo_set_source(cr, d->btn_bg);
+	cairo_rectangle(cr, w_width - 15.5, 2.5, 14, d->w_height - 4);
+	if (d->prelight && d->lightarr == 1) {
+		cairo_fill_preserve(cr);
+		cairo_set_source_rgba (cr, 1.0, 1.0, 1.0, .1);
+	}
+	cairo_fill(cr);
+
+	if (d->sensitive && (d->wraparound || d->active_item != d->item_count -1)) {
+		cairo_set_source_rgba(cr, cfg[0], cfg[1], cfg[2], 1.0);
+		cairo_move_to(cr, w_width - 10.5, w_h2 - 3.5);
+		cairo_line_to(cr, w_width -  6.5, w_h2 + 0.5);
+		cairo_line_to(cr, w_width - 10.5, w_h2 + 4.5);
+		cairo_stroke(cr);
+	}
 
 	cairo_save(cr);
 	const float off = floor(16 + (d->t_width - d->items[d->active_item].width) / 2.0);
@@ -125,6 +127,7 @@ static bool robtk_select_expose_event(RobWidget* handle, cairo_t* cr, cairo_rect
 	robtk_lbl_expose_event(d->items[d->active_item].lbl->rw, cr, &a);
 	cairo_restore(cr);
 
+	cairo_set_line_width (cr, .75);
 	rounded_rectangle(cr, 2.5, 2.5, d->w_width - 4, d->w_height -4, 6);
 	cairo_set_line_width(cr, 1.0);
 	cairo_set_source_rgba(cr, .0, .0, .0, 1.0);
@@ -264,6 +267,7 @@ static RobTkSelect * robtk_select_new() {
 
 	d->wraparound = FALSE;
 	d->items = NULL;
+	d->btn_bg = NULL;
 	d->item_count = d->active_item = d->dfl = 0;
 	d->w_width = d->w_height = 0;
 	d->t_width = d->t_height = 0;
@@ -271,7 +275,6 @@ static RobTkSelect * robtk_select_new() {
 	d->rw = robwidget_new(d);
 	ROBWIDGET_SETNAME(d->rw, "select");
 	robwidget_set_expose_event(d->rw, robtk_select_expose_event);
-	robwidget_set_size_request(d->rw, robtk_select_size_request);
 	robwidget_set_mouseup(d->rw, robtk_select_mouseup);
 	robwidget_set_mousemove(d->rw, robtk_select_mousemove);
 	robwidget_set_mousescroll(d->rw, robtk_select_scroll);
@@ -286,6 +289,7 @@ static void robtk_select_destroy(RobTkSelect *d) {
 		robtk_lbl_destroy(d->items[i].lbl);
 	}
 	robwidget_destroy(d->rw);
+	if (d->btn_bg) cairo_pattern_destroy(d->btn_bg);
 	free(d->items);
 	pthread_mutex_destroy(&d->_mutex);
 
@@ -306,6 +310,7 @@ static void robtk_select_add_item(RobTkSelect *d, float val, const char *txt) {
 	d->t_height = MAX(d->t_height, h);
 	d->items[d->item_count].width = w;
 	d->item_count++;
+	robwidget_set_size_request(d->rw, robtk_select_size_request);
 }
 
 static RobWidget * robtk_select_widget(RobTkSelect *d) {
@@ -354,5 +359,13 @@ static int robtk_select_get_item(RobTkSelect *d) {
 
 static float robtk_select_get_value(RobTkSelect *d) {
 	return d->items[d->active_item].value;
+}
+
+static void robtk_select_set_wrap(RobTkSelect *d, bool en) {
+	d->wraparound = en;
+}
+
+static bool robtk_select_get_wrap(RobTkSelect *d) {
+	return d->wraparound;
 }
 #endif
