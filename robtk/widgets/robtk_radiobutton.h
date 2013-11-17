@@ -128,9 +128,9 @@ static RobWidget * robtk_rbtn_widget(RobTkRBtn *d) {
 	return robtk_cbtn_widget(d->cbtn);
 }
 
-static void * robtk_rbtn_group(RobTkRBtn *d) {
+static RobTkRadioGrp * robtk_rbtn_group(RobTkRBtn *d) {
 	assert(d->cbtngrp);
-	return d->cbtngrp;
+	return (RobTkRadioGrp*) d->cbtngrp;
 }
 
 static void robtk_rbtn_set_callback(RobTkRBtn *d, bool (*cb) (RobWidget* w, void* handle), void* handle) {

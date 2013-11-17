@@ -41,8 +41,9 @@ cp -a $OUTDIR/*.png doc/html/
 
 echo -n "git add+push doc? [y/N] "
 read -n1 a
+echo
 if test "$a" != "y" -a "$a" != "Y"; then
 	exit
 fi
 
-cd doc/html && git add *.html *.png && git commit "update documentation" && git push
+cd doc/html && git add *.html *.png && git commit -m "update documentation" && git push

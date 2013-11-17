@@ -14,6 +14,7 @@ KXURI?=yes
 
 override CFLAGS += -g $(OPTIMIZATIONS)
 BUILDDIR=build/
+RW?=robtk/
 ###############################################################################
 LIB_EXT=.so
 
@@ -23,13 +24,13 @@ LOADLIBES=-lm
 LV2NAME=meters
 BUNDLE=meters.lv2
 
-LV2GTK1=needle_gtk
+LV2GTK1=needleUI_gtk
 LV2GTK2=eburUI_gtk
 LV2GTK3=goniometerUI_gtk
 LV2GTK4=dpmUI_gtk
 LV2GTK5=kmeterUI_gtk
 
-LV2GUI1=needle_gl
+LV2GUI1=needleUI_gl
 LV2GUI2=eburUI_gl
 LV2GUI3=goniometerUI_gl
 LV2GUI4=dpmUI_gl
@@ -52,7 +53,7 @@ ifeq ($(UNAME),Darwin)
   LV2LDFLAGS=-dynamiclib
   LIB_EXT=.dylib
   UI_TYPE=ui:CocoaUI
-  PUGL_SRC=robtk/pugl/pugl_osx.m
+  PUGL_SRC=$(RW)pugl/pugl_osx.m
   PKG_LIBS=
   GLUILIBS=-framework Cocoa -framework OpenGL
   BUILDGTK=no
@@ -60,7 +61,7 @@ else
   LV2LDFLAGS=-Wl,-Bstatic -Wl,-Bdynamic
   LIB_EXT=.so
   UI_TYPE=ui:X11UI
-  PUGL_SRC=robtk/pugl/pugl_x11.c
+  PUGL_SRC=$(RW)pugl/pugl_x11.c
   PKG_LIBS=glu gl
   GLUILIBS=-lX11
   GLUICFLAGS+=`pkg-config --cflags glu`
@@ -124,9 +125,6 @@ override CFLAGS += `pkg-config --cflags lv2`
 ###############################################################################
 
 IM=gui/img/
-RW=robtk/
-RT=$(RW)rtk/
-WD=$(RW)widgets/robtk_
 
 UIIMGS=$(IM)meter-bright.c $(IM)meter-dark.c $(IM)screw.c
 GTKUICFLAGS+=`pkg-config --cflags gtk+-2.0 cairo pango`
@@ -156,19 +154,9 @@ DSPDEPS=$(DSPSRC) jmeters/jmeterdsp.h jmeters/vumeterdsp.h \
   jmeters/truepeakdsp.h jmeters/kmeterdsp.h \
   zita-resampler/resampler.h zita-resampler/resampler-table.h
 
-UITOOLKIT=$(WD)checkbutton.h $(WD)dial.h $(WD)label.h $(WD)pushbutton.h\
-          $(WD)radiobutton.h $(WD)scale.h $(WD)separator.h $(WD)spinner.h \
-          $(WD)xyplot.h
+goniometer_UISRC=zita-resampler/resampler.cc zita-resampler/resampler-table.cc
 
-ROBGL= Makefile $(UITOOLKIT) $(RW)ui_gl.c $(PUGL_SRC) \
-  $(RW)gl/common_cgl.h $(RW)gl/layout.h $(RW)gl/robwidget_gl.h $(RW)robtk.h \
-	$(RT)common.h $(RT)style.h \
-  $(RW)gl/xternalui.c $(RW)gl/xternalui.h
-
-ROBGTK = Makefile $(UITOOLKIT) $(RW)ui_gtk.c \
-  $(RW)gtk2/common_cgtk.h $(RW)gtk2/robwidget_gtk.h $(RW)robtk.h \
-	$(RT)common.h $(RT)style.h
-
+include $(RW)robtk.mk
 
 ###############################################################################
 # build target definitions
@@ -176,7 +164,7 @@ default: all
 
 all: $(BUILDDIR)manifest.ttl $(BUILDDIR)$(LV2NAME).ttl $(targets)
 
-$(BUILDDIR)manifest.ttl: lv2ttl/manifest.gui.ttl.in lv2ttl/manifest.lv2.ttl.in lv2ttl/manifest.ttl.in Makefile
+$(BUILDDIR)manifest.ttl: lv2ttl/manifest.gui.ttl.in lv2ttl/manifest.gtk.ttl.in lv2ttl/manifest.lv2.ttl.in lv2ttl/manifest.ttl.in Makefile
 	@mkdir -p $(BUILDDIR)
 	sed "s/@LV2NAME@/$(LV2NAME)/g" \
 	    lv2ttl/manifest.ttl.in > $(BUILDDIR)manifest.ttl
@@ -218,96 +206,18 @@ $(BUILDDIR)$(LV2NAME)$(LIB_EXT): src/meters.cc $(DSPDEPS) src/ebulv2.cc src/uris
 	  -o $(BUILDDIR)$(LV2NAME)$(LIB_EXT) src/$(LV2NAME).cc $(DSPSRC) \
 	  -shared $(LV2LDFLAGS) $(LDFLAGS) $(LOADLIBES)
 
-$(BUILDDIR)$(LV2GTK1)$(LIB_EXT): $(ROBGTK) \
-	$(UIIMGS) src/uris.h gui/needle.c gui/meterimage.c
-	@mkdir -p $(BUILDDIR)
-	$(CC) $(CPPFLAGS) $(CFLAGS) -std=c99  $(GTKUICFLAGS) \
-	  -DPLUGIN_SOURCE="\"gui/needle.c\"" \
-	  -o $(BUILDDIR)$(LV2GTK1)$(LIB_EXT) $(RW)ui_gtk.c \
-	  -shared $(LV2LDFLAGS) $(LDFLAGS) $(GTKUILIBS)
-
-$(BUILDDIR)$(LV2GTK2)$(LIB_EXT): $(ROBGTK) \
-	gui/ebur.c src/uris.h
-	@mkdir -p $(BUILDDIR)
-	$(CC) $(CPPFLAGS) $(CFLAGS) -std=c99 $(GTKUICFLAGS) \
-	  -DPLUGIN_SOURCE="\"gui/ebur.c\"" \
-	  -o $(BUILDDIR)$(LV2GTK2)$(LIB_EXT) $(RW)ui_gtk.c \
-	  -shared $(LV2LDFLAGS) $(LDFLAGS) $(GTKUILIBS)
-
-$(BUILDDIR)$(LV2GTK3)$(LIB_EXT): $(ROBGTK) \
-	gui/goniometerui.cc src/goniometer.h \
-	zita-resampler/resampler.cc zita-resampler/resampler-table.cc \
-	zita-resampler/resampler.h zita-resampler/resampler-table.h
-	@mkdir -p $(BUILDDIR)
-	$(CXX) $(CPPFLAGS) $(CFLAGS) $(GTKUICFLAGS) $(CXXFLAGS) \
-	  -DPLUGIN_SOURCE="\"gui/goniometerui.cc\"" \
-	  -o $(BUILDDIR)$(LV2GTK3)$(LIB_EXT) $(RW)ui_gtk.c \
-	  zita-resampler/resampler.cc zita-resampler/resampler-table.cc \
-	  -shared $(LV2LDFLAGS) $(LDFLAGS) $(GTKUILIBS)
-
-$(BUILDDIR)$(LV2GTK4)$(LIB_EXT): $(ROBGTK) \
-	gui/dpm.c
-	@mkdir -p $(BUILDDIR)
-	$(CC) $(CPPFLAGS) $(CFLAGS) -std=c99 $(GTKUICFLAGS) \
-	  -DPLUGIN_SOURCE="\"gui/dpm.c\"" \
-	  -o $(BUILDDIR)$(LV2GTK4)$(LIB_EXT) $(RW)ui_gtk.c \
-	  -shared $(LV2LDFLAGS) $(LDFLAGS) $(GTKUILIBS)
-
-$(BUILDDIR)$(LV2GTK5)$(LIB_EXT): $(ROBGTK) \
-	gui/kmeter.c
-	@mkdir -p $(BUILDDIR)
-	$(CC) $(CPPFLAGS) $(CFLAGS) -std=c99 $(GTKUICFLAGS) \
-	  -DPLUGIN_SOURCE="\"gui/kmeter.c\"" \
-	  -o $(BUILDDIR)$(LV2GTK5)$(LIB_EXT) $(RW)ui_gtk.c \
-	  -shared $(LV2LDFLAGS) $(LDFLAGS) $(GTKUILIBS)
-
-$(BUILDDIR)$(LV2GUI2)$(LIB_EXT): $(ROBGL) \
-	gui/ebur.c src/uris.h
-	@mkdir -p $(BUILDDIR)
-	$(CC) $(CPPFLAGS) $(CFLAGS) -std=c99 $(GLUICFLAGS) \
-	  -DPLUGIN_SOURCE="\"gui/ebur.c\"" \
-	  -o $(BUILDDIR)$(LV2GUI2)$(LIB_EXT) $(RW)ui_gl.c \
-	  $(PUGL_SRC) \
-	  -shared $(LV2LDFLAGS) $(LDFLAGS) $(GLUILIBS)
-
-$(BUILDDIR)$(LV2GUI3)$(LIB_EXT):$(ROBGL) \
-	gui/goniometerui.cc src/goniometer.h \
-	zita-resampler/resampler.cc zita-resampler/resampler-table.cc \
-	zita-resampler/resampler.h zita-resampler/resampler-table.h
-	@mkdir -p $(BUILDDIR)
-	$(CXX) $(CPPFLAGS) $(CFLAGS) $(GLUICFLAGS) $(CXXFLAGS) \
-	  -DPLUGIN_SOURCE="\"gui/goniometerui.cc\"" \
-	  -o $(BUILDDIR)$(LV2GUI3)$(LIB_EXT) $(RW)ui_gl.c \
-	  $(PUGL_SRC) \
-	  zita-resampler/resampler.cc zita-resampler/resampler-table.cc \
-	  -shared $(LV2LDFLAGS) $(LDFLAGS) $(GLUILIBS)
-
-$(BUILDDIR)$(LV2GUI4)$(LIB_EXT): $(ROBGL) \
-	gui/dpm.c
-	@mkdir -p $(BUILDDIR)
-	$(CC) $(CPPFLAGS) $(CFLAGS) -std=c99 $(GLUICFLAGS) \
-	  -DPLUGIN_SOURCE="\"gui/dpm.c\"" \
-	  -o $(BUILDDIR)$(LV2GUI4)$(LIB_EXT) $(RW)ui_gl.c \
-	  $(PUGL_SRC) \
-	  -shared $(LV2LDFLAGS) $(LDFLAGS) $(GLUILIBS)
-
-$(BUILDDIR)$(LV2GUI5)$(LIB_EXT): $(ROBGL) \
-	gui/kmeter.c
-	@mkdir -p $(BUILDDIR)
-	$(CC) $(CPPFLAGS) $(CFLAGS) -std=c99 $(GLUICFLAGS) \
-	  -DPLUGIN_SOURCE="\"gui/kmeter.c\"" \
-	  -o $(BUILDDIR)$(LV2GUI5)$(LIB_EXT) $(RW)ui_gl.c \
-	  $(PUGL_SRC) \
-	  -shared $(LV2LDFLAGS) $(LDFLAGS) $(GLUILIBS)
-
-$(BUILDDIR)$(LV2GUI1)$(LIB_EXT): $(ROBGL) \
-	src/uris.h gui/needle.c gui/meterimage.c
-	@mkdir -p $(BUILDDIR)
-	$(CC) $(CPPFLAGS) $(CFLAGS) -std=gnu99 $(GLUICFLAGS) \
-	  -DPLUGIN_SOURCE="\"gui/needle.c\"" \
-	  -o $(BUILDDIR)$(LV2GUI1)$(LIB_EXT) $(RW)ui_gl.c \
-	  $(PUGL_SRC) \
-	  -shared $(LV2LDFLAGS) $(LDFLAGS) $(GLUILIBS)
+$(BUILDDIR)$(LV2GTK1)$(LIB_EXT): $(UIIMGS) src/uris.h gui/needle.c gui/meterimage.c
+$(BUILDDIR)$(LV2GTK2)$(LIB_EXT): gui/ebur.c src/uris.h
+$(BUILDDIR)$(LV2GTK3)$(LIB_EXT): gui/goniometer.c src/goniometer.h \
+    $(goniometer_UISRC) zita-resampler/resampler.h zita-resampler/resampler-table.h
+$(BUILDDIR)$(LV2GTK4)$(LIB_EXT): gui/dpm.c
+$(BUILDDIR)$(LV2GTK5)$(LIB_EXT): gui/kmeter.c
+$(BUILDDIR)$(LV2GUI2)$(LIB_EXT): gui/ebur.c src/uris.h
+$(BUILDDIR)$(LV2GUI3)$(LIB_EXT): gui/goniometer.c src/goniometer.h \
+    $(goniometer_UISRC) zita-resampler/resampler.h zita-resampler/resampler-table.h
+$(BUILDDIR)$(LV2GUI4)$(LIB_EXT): gui/dpm.c
+$(BUILDDIR)$(LV2GUI5)$(LIB_EXT): gui/kmeter.c
+$(BUILDDIR)$(LV2GUI1)$(LIB_EXT): src/uris.h gui/needle.c gui/meterimage.c
 
 ###############################################################################
 # install/uninstall/clean target definitions

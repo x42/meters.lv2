@@ -331,7 +331,7 @@ static void create_metrics(KMUI* ui) {
 		cairo_stroke(cr); \
 }
 
-	for (int i = 0; i < ui->num_meters; ++i) {
+	for (uint32_t i = 0; i < ui->num_meters; ++i) {
 		ALLOC_SF(ui->sf[i])
 
 		/* metric background */
@@ -370,7 +370,7 @@ static void create_metrics(KMUI* ui) {
 	}
 }
 
-static void render_meter(KMUI* ui, int i, int old, int new, int m_old, int m_new) {
+static void render_meter(KMUI* ui, int i, int v_old, int v_new, int m_old, int m_new) {
 	cairo_t* cr = cairo_create (ui->sf[i]);
 	cairo_set_operator (cr, CAIRO_OPERATOR_SOURCE);
 
@@ -381,7 +381,7 @@ static void render_meter(KMUI* ui, int i, int old, int new, int m_old, int m_new
 
 	/* rms value */
 	cairo_set_source(cr, ui->mpat);
-	cairo_rectangle (cr, GM_LEFT, GM_TOP + GM_SCALE - new - 1, GM_GIRTH, new + 1);
+	cairo_rectangle (cr, GM_LEFT, GM_TOP + GM_SCALE - v_new - 1, GM_GIRTH, v_new + 1);
 	cairo_fill(cr);
 
 	/* peak */
@@ -437,18 +437,18 @@ static bool expose_event(RobWidget* handle, cairo_t* cr, cairo_rectangle_t *ev) 
 	cairo_set_source_surface(cr, ui->ma[1], MA_WIDTH + GM_WIDTH * ui->num_meters, 0);
 	cairo_paint (cr);
 
-	for (int i = 0; i < ui->num_meters ; ++i) {
+	for (uint32_t i = 0; i < ui->num_meters ; ++i) {
 		if (!rect_intersect_a(ev, MA_WIDTH + GM_WIDTH * i, 0, GM_WIDTH, GM_HEIGHT)) continue;
 
-		const int old = ui->val_vis[i];
-		const int new = ui->val_def[i];
+		const int v_old = ui->val_vis[i];
+		const int v_new = ui->val_def[i];
 		const int m_old = ui->peak_vis[i];
 		const int m_new = ui->peak_def[i];
 
-		if (old != new || m_old != m_new) {
-			ui->val_vis[i] = new;
+		if (v_old != v_new || m_old != m_new) {
+			ui->val_vis[i] = v_new;
 			ui->peak_vis[i] = m_new;
-			render_meter(ui, i, old, new, m_old, m_new);
+			render_meter(ui, i, v_old, v_new, m_old, m_new);
 		}
 
 		cairo_set_source_surface(cr, ui->sf[i], MA_WIDTH + GM_WIDTH * i, 0);
@@ -577,7 +577,7 @@ instantiate(
 	create_meter_pattern(ui);
 	ui->font = pango_font_description_from_string("Mono 7");
 
-	for (int i=0; i < ui->num_meters ; ++i) {
+	for (uint32_t i=0; i < ui->num_meters ; ++i) {
 		ui->val[i] = -90.0;
 		ui->val_def[i] = deflect(ui, -90);
 		ui->peak_val[i] = -90.0;
@@ -606,7 +606,7 @@ static void
 cleanup(LV2UI_Handle handle)
 {
 	KMUI* ui = (KMUI*)handle;
-	for (int i=0; i < ui->num_meters ; ++i) {
+	for (uint32_t i=0; i < ui->num_meters ; ++i) {
 		cairo_surface_destroy(ui->sf[i]);
 		cairo_surface_destroy(ui->an[i]);
 	}
@@ -634,20 +634,20 @@ extension_data(const char* uri)
 #define INVALIDATE_RECT(XX,YY,WW,HH) queue_tiny_area(ui->m0, XX, YY, WW, HH);
 
 static void invalidate_meter(KMUI* ui, int mtr, float val) {
-	const int old = ui->val_def[mtr];
-	const int new = deflect(ui, val);
+	const int v_old = ui->val_def[mtr];
+	const int v_new = deflect(ui, val);
 
 	ui->val[mtr] = val;
-	ui->val_def[mtr] = new;
+	ui->val_def[mtr] = v_new;
 
-	if (old != new) {
+	if (v_old != v_new) {
 		int t, h;
-		if (old > new) {
-			t = old;
-			h = old - new;
+		if (v_old > v_new) {
+			t = v_old;
+			h = v_old - v_new;
 		} else {
-			t = new;
-			h = new - old;
+			t = v_new;
+			h = v_new - v_old;
 		}
 
 		INVALIDATE_RECT(
@@ -658,20 +658,20 @@ static void invalidate_meter(KMUI* ui, int mtr, float val) {
 }
 
 static void invalidate_peak(KMUI* ui, int mtr, float val) {
-	const int old = ui->peak_def[mtr];
-	const int new = deflect(ui, val);
+	const int v_old = ui->peak_def[mtr];
+	const int v_new = deflect(ui, val);
 
 	ui->peak_val[mtr] = val;
-	ui->peak_def[mtr] = new;
+	ui->peak_def[mtr] = v_new;
 
-	if (old != new) {
+	if (v_old != v_new) {
 		int t, h;
-		if (old > new) {
-			t = old;
-			h = old - new;
+		if (v_old > v_new) {
+			t = v_old;
+			h = v_old - v_new;
 		} else {
-			t = new;
-			h = new - old;
+			t = v_new;
+			h = v_new - v_old;
 		}
 
 		INVALIDATE_RECT(

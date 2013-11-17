@@ -339,7 +339,7 @@ static void alloc_annotations(SAUI* ui) {
 	cairo_t* cr;
 	if (ui->display_freq) {
 		/* frequecy table */
-		for (int i = 0; i < ui->num_meters; ++i) {
+		for (uint32_t i = 0; i < ui->num_meters; ++i) {
 			INIT_BLACK_BG(ui->an[i], 24, 64)
 			write_text(cr, freq_table[i], FONT_LBL, -1, 0, -M_PI/2, 7, c_g90);
 			cairo_destroy (cr);
@@ -438,7 +438,7 @@ static void prepare_metersurface(SAUI* ui) {
 		cairo_stroke(cr); \
 }
 
-	for (int i = 0; i < ui->num_meters; ++i) {
+	for (uint32_t i = 0; i < ui->num_meters; ++i) {
 		ALLOC_SF(ui->sf[i])
 
 		/* metric background */
@@ -471,7 +471,7 @@ static void prepare_metersurface(SAUI* ui) {
 	}
 }
 
-static void render_meter(SAUI* ui, int i, int old, int new, int m_old, int m_new) {
+static void render_meter(SAUI* ui, int i, int v_old, int v_new, int m_old, int m_new) {
 	cairo_t* cr = cairo_create (ui->sf[i]);
 	cairo_set_operator (cr, CAIRO_OPERATOR_SOURCE);
 
@@ -481,7 +481,7 @@ static void render_meter(SAUI* ui, int i, int old, int new, int m_old, int m_new
 	cairo_clip(cr);
 
 	cairo_set_source(cr, ui->mpat);
-	cairo_rectangle (cr, GM_LEFT, GM_TOP + GM_SCALE - new - 1, GM_GIRTH, new + 1);
+	cairo_rectangle (cr, GM_LEFT, GM_TOP + GM_SCALE - v_new - 1, GM_GIRTH, v_new + 1);
 	cairo_fill(cr);
 
 	/* peak hold */
@@ -538,18 +538,18 @@ static bool expose_event(RobWidget* handle, cairo_t* cr, cairo_rectangle_t *ev) 
 	cairo_set_source_surface(cr, ui->ma[1], MA_WIDTH + GM_WIDTH * ui->num_meters, 0);
 	cairo_paint (cr);
 
-	for (int i = 0; i < ui->num_meters ; ++i) {
+	for (uint32_t i = 0; i < ui->num_meters ; ++i) {
 		if (!rect_intersect_a(ev, MA_WIDTH + GM_WIDTH * i, 0, GM_WIDTH, GM_HEIGHT)) continue;
 
-		const int old = ui->val_vis[i];
-		const int new = ui->val_def[i];
+		const int v_old = ui->val_vis[i];
+		const int v_new = ui->val_def[i];
 		const int m_old = ui->peak_vis[i];
 		const int m_new = ui->peak_def[i];
 
-		if (old != new || m_old != m_new) {
-			ui->val_vis[i] = new;
+		if (v_old != v_new || m_old != m_new) {
+			ui->val_vis[i] = v_new;
 			ui->peak_vis[i] = m_new;
-			render_meter(ui, i, old, new, m_old, m_new);
+			render_meter(ui, i, v_old, v_new, m_old, m_new);
 		}
 		cairo_set_source_surface(cr, ui->sf[i], MA_WIDTH + GM_WIDTH * i, 0);
 		cairo_paint (cr);
@@ -558,7 +558,7 @@ static bool expose_event(RobWidget* handle, cairo_t* cr, cairo_rectangle_t *ev) 
 	/* numerical peak and value */
 	if (!ui->display_freq) {
 		cairo_set_operator (cr, CAIRO_OPERATOR_OVER);
-		for (int i = 0; i < ui->num_meters ; ++i) {
+		for (uint32_t i = 0; i < ui->num_meters ; ++i) {
 			char buf[24];
 			if (rect_intersect_a(ev, MA_WIDTH + GM_WIDTH * i + 2, GM_TOP/2 - 6, GM_WIDTH-4, 16)) {
 				cairo_save(cr);
@@ -601,7 +601,7 @@ static bool expose_event(RobWidget* handle, cairo_t* cr, cairo_rectangle_t *ev) 
 	/* labels */
 	if (ui->display_freq) {
 		cairo_set_operator (cr, CAIRO_OPERATOR_SCREEN);
-		for (int i = 0; i < ui->num_meters ; ++i) {
+		for (uint32_t i = 0; i < ui->num_meters ; ++i) {
 			if (!rect_intersect_a(ev, MA_WIDTH + GM_WIDTH * i, GM_TXT, 24, 64)) continue;
 			cairo_set_source_surface(cr, ui->an[i], MA_WIDTH + GM_WIDTH * i, GM_TXT);
 			cairo_paint (cr);
@@ -609,7 +609,7 @@ static bool expose_event(RobWidget* handle, cairo_t* cr, cairo_rectangle_t *ev) 
 	}
 
 	/* highlight */
-	if (ui->highlight >= 0 && ui->highlight < ui->num_meters &&
+	if (ui->highlight >= 0 && ui->highlight < (int) ui->num_meters &&
 			rect_intersect_a(ev, MA_WIDTH + GM_WIDTH * ui->highlight + GM_WIDTH/2 - 32, GM_TXT -4.5, 64, 46)) {
 		const float dboff = ui->gain > .1 ? 20.0 * log10f(ui->gain) : -20;
 		cairo_set_operator (cr, CAIRO_OPERATOR_OVER);
@@ -650,7 +650,7 @@ static RobWidget* cb_reset_peak (RobWidget* handle, RobTkBtnEvent *event) {
 		float temp = ui->reset_toggle ? 1.0 : 0.0;
 		ui->write(ui->controller, 0, sizeof(float), 0, (const void*) &temp);
 	}
-	for (int i=0; i < ui->num_meters ; ++i) {
+	for (uint32_t i=0; i < ui->num_meters ; ++i) {
 		ui->peak_val[i] = -70;
 		ui->peak_def[i] = deflect(ui, -70);
 	}
@@ -716,9 +716,9 @@ static RobWidget* mousemove(RobWidget* handle, RobTkBtnEvent *event) {
 		return NULL;
 	}
 
-	const int mtr = x / ((int) GM_WIDTH);
+	const uint32_t mtr = x / ((int) GM_WIDTH);
 	if (mtr >=0 && mtr < ui->num_meters) {
-		if (ui->highlight != mtr) { queue_draw(ui->m0); }
+		if (ui->highlight != (int) mtr) { queue_draw(ui->m0); }
 		ui->highlight = mtr;
 	} else {
 		if (ui->highlight != -1) { queue_draw(ui->m0); }
@@ -868,7 +868,7 @@ instantiate(
 	alloc_annotations(ui);
 	create_meter_pattern(ui);
 
-	for (int i=0; i < ui->num_meters ; ++i) {
+	for (uint32_t i=0; i < ui->num_meters ; ++i) {
 		ui->val[i] = -70.0;
 		ui->val_def[i] = deflect(ui, -70);
 		ui->peak_val[i] = -70.0;
@@ -904,7 +904,7 @@ static void
 cleanup(LV2UI_Handle handle)
 {
 	SAUI* ui = (SAUI*)handle;
-	for (int i=0; i < ui->num_meters ; ++i) {
+	for (uint32_t i=0; i < ui->num_meters ; ++i) {
 		cairo_surface_destroy(ui->sf[i]);
 		cairo_surface_destroy(ui->an[i]);
 	}
@@ -940,8 +940,8 @@ extension_data(const char* uri)
  * backend communication
  */
 static void invalidate_meter(SAUI* ui, int mtr, float val, float peak) {
-	const int old = ui->val_def[mtr];
-	const int new = deflect(ui, val);
+	const int v_old = ui->val_def[mtr];
+	const int v_new = deflect(ui, val);
 	const int m_old = ui->peak_def[mtr];
 	const int m_new = ceilf(deflect(ui, peak) / 2.0) * 2.0;
 	int t, h;
@@ -965,17 +965,17 @@ static void invalidate_meter(SAUI* ui, int mtr, float val, float peak) {
 	}
 
 	ui->val[mtr] = val;
-	ui->val_def[mtr] = new;
+	ui->val_def[mtr] = v_new;
 	ui->peak_val[mtr] = peak;
 	ui->peak_def[mtr] = m_new;
 
-	if (old != new) {
-		if (old > new) {
-			t = old;
-			h = old - new;
+	if (v_old != v_new) {
+		if (v_old > v_new) {
+			t = v_old;
+			h = v_old - v_new;
 		} else {
-			t = new;
-			h = new - old;
+			t = v_new;
+			h = v_new - v_old;
 		}
 
 		INVALIDATE_RECT(

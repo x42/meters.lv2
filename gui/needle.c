@@ -96,10 +96,10 @@ struct MyGimpImage {
 
 /* load gimp-exported .c image into cairo surface */
 static void img2surf (struct MyGimpImage const * img, cairo_surface_t **s, unsigned char **d) {
-	int x,y;
+	unsigned int x,y;
 	int stride = cairo_format_stride_for_width (CAIRO_FORMAT_ARGB32, img->width);
 
-	(*d) = malloc (stride * img->height);
+	(*d) = (unsigned char *) malloc (stride * img->height);
 	(*s) = cairo_image_surface_create_for_data(*d,
 			CAIRO_FORMAT_ARGB32, img->width, img->height, stride);
 
@@ -531,7 +531,6 @@ instantiate(
 	}
 	*widget = NULL;
 
-	ui->type = 0;
 	if      (!strcmp(plugin_uri, MTR_URI "VUmono"))    { ui->chn = 1; ui->type = MT_VU; }
 	else if (!strcmp(plugin_uri, MTR_URI "VUstereo"))  { ui->chn = 2; ui->type = MT_VU; }
 	else if (!strcmp(plugin_uri, MTR_URI "BBCmono"))   { ui->chn = 1; ui->type = MT_BBC; }
@@ -634,17 +633,17 @@ extension_data(const char* uri)
 #define MIN3(A,B,C) (  (A) < (B)  ? MIN2 (A,C) : MIN2 (B,C) )
 #define MAX3(A,B,C) (  (A) > (B)  ? MAX2 (A,C) : MAX2 (B,C) )
 
-static void invalidate_area(MetersLV2UI* ui, int c, float old, float new) {
-	if (!ui->naned[c] && (isnan(new) || isinf(new)))  {
+static void invalidate_area(MetersLV2UI* ui, int c, float oldval, float newval) {
+	if (!ui->naned[c] && (isnan(newval) || isinf(newval)))  {
 		ui->naned[c] = TRUE;
 		queue_draw(ui->rw);
 	}
-	if (old < 0.00f) old = 0.00f;
-	if (old > 1.05f) old = 1.05f;
-	if (new < 0.00f) new = 0.00f;
-	if (new > 1.05f) new = 1.05f;
+	if (oldval < 0.00f) oldval = 0.00f;
+	if (oldval > 1.05f) oldval = 1.05f;
+	if (newval < 0.00f) newval = 0.00f;
+	if (newval > 1.05f) newval = 1.05f;
 
-	if (rint(new * 540) == rint(old * 540)) {
+	if (rint(newval * 540) == rint(oldval * 540)) {
 		return;
 	}
 
@@ -653,8 +652,8 @@ static void invalidate_area(MetersLV2UI* ui, int c, float old, float new) {
 		xoff = 0;
 	}
 	cairo_rectangle_t r1, r2;
-	calc_needle_area(ui, old, xoff, &r1);
-	calc_needle_area(ui, new, xoff, &r2);
+	calc_needle_area(ui, oldval, xoff, &r1);
+	calc_needle_area(ui, newval, xoff, &r2);
 	rect_combine(&r1, &r2, &r1);
 	queue_tiny_area(ui->rw, r1.x, r1.y, r1.width, r1.height);
 }

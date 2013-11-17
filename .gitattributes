@@ -4,3 +4,5 @@
 /tools export-ignore
 /doc/LV2ebur128.png export-ignore
 /doc/LV2meters.png export-ignore
+/makedoc.sh export-ignore
+/osxdeploy.sh export-ignore

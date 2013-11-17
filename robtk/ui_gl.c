@@ -189,7 +189,7 @@ static cairo_t* opengl_create_cairo_t ( int width, int height, cairo_surface_t**
 
 /*****************************************************************************/
 
-#include "robtk/gl/xternalui.h"
+#include "gl/xternalui.h"
 
 typedef struct {
 	PuglView*            view;
@@ -254,7 +254,7 @@ typedef struct {
 
 } GlMetersLV2UI;
 
-#include "robtk/gl/xternalui.c"
+#include "gl/xternalui.c"
 
 static void reallocate_canvas(GlMetersLV2UI* self);
 
