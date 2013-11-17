@@ -807,9 +807,17 @@ static void rtable_size_allocate(RobWidget* rw, int w, int h) {
 #endif
 
 		if (c->size_allocate) {
+			int xpandx = 0;
+			int xpandy = 0;
+			for (int tci = tc->right; tci < tc->left; ++tci) {
+				if (rt->cols[tci].req_w != 0 && rt->cols[tci].is_expandable_x) xpandx++;
+			}
+			for (int tri = tc->top; tri < tc->bottom; ++tri) {
+				if (rt->rows[tri].req_h != 0 && rt->rows[tri].is_expandable_y) xpandy++;
+			}
 			c->size_allocate(c,
-					cw + floorf(xtra_width * (tc->right - tc->left)),
-					ch + floorf(xtra_height * (tc->bottom - tc->top)));
+					cw + floorf(xtra_width * xpandy),
+					ch + floorf(xtra_height * xpandy));
 #if 0
 			/* or rather assume child swallowed it all */
 			//c->area.width = cw + xtra_width * (tc->right - tc->left);
@@ -820,10 +828,10 @@ static void rtable_size_allocate(RobWidget* rw, int w, int h) {
 			ch /= (tc->bottom - tc->top);
 			cw /= (tc->right - tc->left);
 			for (int span_y = tc->top; span_y < tc->bottom; ++span_y) {
-				rt->rows[span_y].acq_h = MAX(rt->rows[span_y].acq_h, ch + xtra_height);
+				rt->rows[span_y].acq_h = MAX(rt->rows[span_y].acq_h, ch + xtra_height * xpandy);
 			}
 			for (int span_x = tc->left; span_x < tc->right; ++span_x) {
-				rt->cols[span_x].acq_w = MAX(rt->cols[span_x].acq_w, cw + xtra_width);
+				rt->cols[span_x].acq_w = MAX(rt->cols[span_x].acq_w, cw + xtra_width * xpandx);
 			}
 		} else {
 			ch /= (tc->bottom - tc->top);
