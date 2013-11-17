@@ -264,7 +264,7 @@ static RobTkDial * robtk_dial_new_with_size(float min, float max, float step,
 
 	assert(max > min);
 	assert(step > 0);
-	assert( (max - min) / step <= 250.0);
+	assert( (max - min) / step <= 2048.0); // TODO if > 250, use acceleration, mult
 	assert( (max - min) / step >= 1.0);
 
 	assert( (cx  + radius) < width);

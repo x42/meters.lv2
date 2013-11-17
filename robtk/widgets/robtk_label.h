@@ -76,6 +76,14 @@ static void priv_lbl_prepare_text(RobTkLbl *d, const char *txt) {
 	if (d->w_width < d->min_width) d->w_width = d->min_width;
 	if (d->w_height < d->min_height) d->w_height = d->min_height;
 
+#if 1 // never shrink
+	if (d->w_width > d->min_width) d->min_width = d->w_width;
+	if (d->w_height > d->min_height) d->min_height = d->w_height;
+#elif 0 // resize window|widget
+	robwidget_hide(d->rw, false);
+	robwidget_show(d->rw, true);
+#endif
+
 	create_text_surface(&d->sf_txt,
 			d->w_width, d->w_height,
 			d->w_width / 2.0 + 1,
