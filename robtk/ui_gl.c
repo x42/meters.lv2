@@ -391,6 +391,11 @@ static void queue_draw_area(RobWidget *rw, int x, int y, int width, int height) 
 		return;
 	}
 
+	if (x < 0) x = 0;
+	if (y < 0) y = 0;
+	if (x + width > rw->area.width) width = rw->area.width - x;
+	if (y + height > rw->area.height) height = rw->area.height - y;
+
 	if (self->expose_area.width == 0 || self->expose_area.height == 0) {
 		RobTkBtnEvent ev; ev.x = x; ev.y = y;
 #ifdef DEBUG_EXPOSURE
