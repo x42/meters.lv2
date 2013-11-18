@@ -38,7 +38,15 @@ typedef struct {
 	float cur;
 	float dfl;
 
+	float scroll_accel;
+#ifdef _POSIX_MONOTONIC_CLOCK
+#define ACCEL_THRESH 10
+	struct timespec scroll_accel_timeout;
+	int scroll_accel_thresh;
+#endif
+
 	float drag_x, drag_y, drag_c;
+	bool dragging;
 	bool sensitive;
 	bool prelight;
 
@@ -100,7 +108,7 @@ static bool robtk_dial_expose_event (RobWidget* handle, cairo_t* cr, cairo_recta
 	cairo_arc (cr, d->w_cx, d->w_cy, d->w_radius, ang-wid, ang+wid);
 	cairo_stroke (cr);
 
-	if (d->sensitive && (d->prelight || d->drag_x > 0)) {
+	if (d->sensitive && (d->prelight || d->dragging)) {
 		cairo_set_source_rgba (cr, 1.0, 1.0, 1.0, .15);
 		cairo_arc (cr, d->w_cx, d->w_cy, d->w_radius-1, 0, 2.0 * M_PI);
 		cairo_fill(cr);
@@ -124,6 +132,7 @@ static RobWidget* robtk_dial_mousedown(RobWidget* handle, RobTkBtnEvent *ev) {
 	if (ev->state & ROBTK_MOD_SHIFT) {
 		robtk_dial_update_value(d, d->dfl);
 	} else {
+		d->dragging = TRUE;
 		d->drag_x = ev->x;
 		d->drag_y = ev->y;
 		d->drag_c = d->cur;
@@ -135,25 +144,40 @@ static RobWidget* robtk_dial_mousedown(RobWidget* handle, RobTkBtnEvent *ev) {
 static RobWidget* robtk_dial_mouseup(RobWidget* handle, RobTkBtnEvent *ev) {
 	RobTkDial * d = (RobTkDial *)GET_HANDLE(handle);
 	if (!d->sensitive) { return NULL; }
-	d->drag_x = d->drag_y = -1;
+	d->dragging = FALSE;
 	queue_draw(d->rw);
 	return NULL;
 }
 
 static RobWidget* robtk_dial_mousemove(RobWidget* handle, RobTkBtnEvent *ev) {
 	RobTkDial * d = (RobTkDial *)GET_HANDLE(handle);
-	if (d->drag_x < 0 || d->drag_y < 0) return NULL;
+	if (!d->dragging) return NULL;
 
 	if (!d->sensitive) {
-		d->drag_x = d->drag_y = -1;
+		d->dragging = FALSE;
 		queue_draw(d->rw);
 		return NULL;
 	}
 
-	float diff = ((ev->x - d->drag_x) - (ev->y - d->drag_y)) * 0.004; // 250px full-scale
+#ifndef ABSOLUTE_DRAGGING
+	const float mult = (ev->state & ROBTK_MOD_CTRL) ? 0.0004 : 0.004; // 2500px || 250px
+#else
+	const float mult = 0.004;
+#endif
+
+	float diff = ((ev->x - d->drag_x) - (ev->y - d->drag_y)) * mult;
 	diff = rint(diff * (d->max - d->min) / d->acc ) * d->acc;
 	float val = d->drag_c + diff;
 	robtk_dial_update_value(d, val);
+
+#ifndef ABSOLUTE_DRAGGING
+	if (d->drag_c != d->cur) {
+		d->drag_x = ev->x;
+		d->drag_y = ev->y;
+		d->drag_c = d->cur;
+	}
+#endif
+
 	return handle;
 }
 
@@ -169,6 +193,10 @@ static void robtk_dial_leave_notify(RobWidget *handle) {
 	RobTkDial * d = (RobTkDial *)GET_HANDLE(handle);
 	if (d->prelight) {
 		d->prelight = FALSE;
+#ifdef _POSIX_MONOTONIC_CLOCK
+		d->scroll_accel = 1.0;
+		d->scroll_accel_thresh = 0;
+#endif
 		queue_draw(d->rw);
 	}
 }
@@ -177,20 +205,51 @@ static void robtk_dial_leave_notify(RobWidget *handle) {
 static RobWidget* robtk_dial_scroll(RobWidget* handle, RobTkBtnEvent *ev) {
 	RobTkDial * d = (RobTkDial *)GET_HANDLE(handle);
 	if (!d->sensitive) { return NULL; }
+	if (d->dragging) { d->dragging = FALSE; }
 
-	if (!(d->drag_x < 0 || d->drag_y < 0)) {
-		d->drag_x = d->drag_y = -1;
+#ifdef _POSIX_MONOTONIC_CLOCK
+	struct timespec now;
+	clock_gettime(CLOCK_MONOTONIC, &now);
+	int64_t ts0 =  now.tv_sec * 1000 + now.tv_nsec / 1000000;
+	int64_t ts1 =  d->scroll_accel_timeout.tv_sec * 1000 + d->scroll_accel_timeout.tv_nsec / 1000000;
+	if (ts0 - ts1 < 100) {
+		if (abs(d->scroll_accel_thresh) > ACCEL_THRESH && d->scroll_accel < 4) {
+			d->scroll_accel += .025;
+		}
+	} else {
+		d->scroll_accel_thresh = 0;
+		d->scroll_accel = 1.0;
 	}
+
+	d->scroll_accel_timeout.tv_sec = now.tv_sec;
+	d->scroll_accel_timeout.tv_nsec = now.tv_nsec;
+#endif
 
 	float val = d->cur;
 	switch (ev->direction) {
 		case ROBTK_SCROLL_RIGHT:
 		case ROBTK_SCROLL_UP:
-			val += d->acc;
+#ifdef _POSIX_MONOTONIC_CLOCK
+			if (d->scroll_accel_thresh < 0) {
+				d->scroll_accel_thresh = 0;
+				d->scroll_accel = 1.0;
+			} else if (d->scroll_accel_thresh <= ACCEL_THRESH) {
+				d->scroll_accel_thresh++;
+			}
+#endif
+			val += d->acc * d->scroll_accel;
 			break;
 		case ROBTK_SCROLL_LEFT:
 		case ROBTK_SCROLL_DOWN:
-			val -= d->acc;
+#ifdef _POSIX_MONOTONIC_CLOCK
+			if (d->scroll_accel_thresh > 0) {
+				d->scroll_accel_thresh = 0;
+				d->scroll_accel = 1.0;
+			} else if (d->scroll_accel_thresh >= -ACCEL_THRESH) {
+				d->scroll_accel_thresh--;
+			}
+#endif
+			val -= d->acc * d->scroll_accel;
 			break;
 		default:
 			break;
@@ -298,7 +357,13 @@ static RobTkDial * robtk_dial_new_with_size(float min, float max, float step,
 	d->dfl = min;
 	d->sensitive = TRUE;
 	d->prelight = FALSE;
-	d->drag_x = d->drag_y = -1;
+	d->dragging = FALSE;
+	d->drag_x = d->drag_y = 0;
+	d->scroll_accel = 1.0;
+#ifdef _POSIX_MONOTONIC_CLOCK
+	d->scroll_accel_thresh = 0;
+	clock_gettime(CLOCK_MONOTONIC, &d->scroll_accel_timeout);
+#endif
 	d->bg  = NULL;
 	create_dial_pattern(d);
 
