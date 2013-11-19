@@ -53,7 +53,7 @@ static void ebu_reset(LV2meter* self) {
 	self->integration_time = 0;
 	self->hist_maxM = 0;
 	self->hist_maxS = 0;
-	self->tp_max = 0;
+	self->tp_max = -INFINITY;
 }
 
 static void ebu_integrate(LV2meter* self, bool on) {
@@ -176,7 +176,7 @@ ebur128_instantiate(
 	self->integration_time = 0;
 	self->hist_maxM = 0;
 	self->hist_maxS = 0;
-	self->tp_max = 0;
+	self->tp_max = -INFINITY;
 
 	self->ebu = new Ebu_r128_proc();
 	self->ebu->init (2, rate);
@@ -213,6 +213,11 @@ ebur128_connect_port(LV2_Handle instance, uint32_t port, void* data)
 		self->control = (const LV2_Atom_Sequence*)data;
 		break;
 	}
+}
+
+static inline float coef_to_db (const float val) {
+	if (val == 0) return -INFINITY;
+	return 20.0 * log10f(val);
 }
 
 #define DEBUG_FORGE(VAR,NAME) \
@@ -346,10 +351,10 @@ ebur128_run(LV2_Handle instance, uint32_t n_samples)
 	if (self->dbtp_enable) {
 		const float tp0 = self->mtr[0]->read();
 		const float tp1 = self->mtr[1]->read();
-		const float tp = tp0 > tp1 ? tp0 : tp1;
+		const float tp = coef_to_db(tp0 > tp1 ? tp0 : tp1);
 		if (tp > self->tp_max) self->tp_max = tp;
 	} else {
-		self->tp_max = 0;
+		self->tp_max = -INFINITY;
 	}
 	
 	if (self->radar_resync >= 0) {

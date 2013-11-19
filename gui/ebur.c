@@ -192,14 +192,6 @@ static inline float fast_log10 (const float val)
 	return fast_log2(val) * 0.301029996f;
 }
 
-static inline float coef_to_db (const float val) {
-	if (val == 0) return -INFINITY;
-#if 1
-	return 20.0 * log10f(val);
-#else
-	return 20.0 * fast_log10(val);
-#endif
-}
 
 
 static float radar_deflect(const float v, const float r) {
@@ -549,7 +541,7 @@ static bool expose_event(RobWidget* handle, cairo_t* cr, cairo_rectangle_t *ev) 
 			redraw_part |= 1;
 		}
 	}
-	ui->fasttracked[0] = ui->fasttracked[1] = ui->fasttracked[2] = ui->fasttracked[4] = ui->fasttracked[3] = false;
+	ui->fasttracked[0] = ui->fasttracked[1] = ui->fasttracked[2] = ui->fasttracked[3] = ui->fasttracked[4] = false;
 	ui->fasthist = false;
 	ui->fastradar = -1;
 
@@ -613,7 +605,7 @@ static bool expose_event(RobWidget* handle, cairo_t* cr, cairo_rectangle_t *ev) 
 
 		/* true-peak val */
 		ui->prev_lvl[4] = ui->tp;
-		sprintf(buf, "%+5.1f", coef_to_db(ui->tp));
+		sprintf(buf, "%+5.1f", ui->tp);
 		write_text(cr, buf, FONT(FONT_M09), COORD_TP_X+65, COORD_ML_Y+5, 0, 7, c_wht);
 		write_text(cr, "dBTP", FONT(FONT_M09), COORD_TP_X+65, COORD_ML_Y+19, 0, 7, c_wht);
 	}
@@ -953,7 +945,7 @@ static void invalidate_changed(EBUrUI* ui, int what) {
 
 	if (what == -1) {
 		queue_draw(ui->m0);
-		ui->fasttracked[0] = ui->fasttracked[1] = ui->fasttracked[2] = ui->fasttracked[3] = true;
+		ui->fasttracked[0] = ui->fasttracked[1] = ui->fasttracked[2] = ui->fasttracked[3] = ui->fasttracked[4] = true;
 		ui->fasthist = true;
 		return;
 	}
@@ -968,14 +960,12 @@ static void invalidate_changed(EBUrUI* ui, int what) {
 		}
 	}
 
-	if (what == 0 && !ui->fasttracked[4]) {
+	if (what == 0 && !ui->fasttracked[4] && robtk_cbtn_get_active(ui->cbx_truepeak)) {
 		// true peak display
 		if (rintf(ui->tp * 10.0f) != rintf(ui->prev_lvl[4] * 10.0f)) {
 			ui->fasttracked[4] = true;
-			if (robtk_cbtn_get_active(ui->cbx_truepeak)) {
-				queue_tiny_area(ui->m0, COORD_TP_X, COORD_ML_Y, 75, 38);    // top left side
-				//queue_tiny_area(ui->m0, COORD_TP_X+10, COORD_ML_Y+25, 40, 30); // top left side tab
-			}
+			queue_tiny_area(ui->m0, COORD_TP_X, COORD_ML_Y, 75, 38);    // top left side
+			//queue_tiny_area(ui->m0, COORD_TP_X+10, COORD_ML_Y+25, 40, 30); // top left side tab
 		}
 	}
 
