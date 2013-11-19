@@ -165,7 +165,8 @@ DSPDEPS=$(DSPSRC) jmeters/jmeterdsp.h jmeters/vumeterdsp.h \
   jmeters/truepeakdsp.h jmeters/kmeterdsp.h \
   zita-resampler/resampler.h zita-resampler/resampler-table.h
 
-goniometer_UISRC=zita-resampler/resampler.cc zita-resampler/resampler-table.cc
+goniometer_UIDEP=zita-resampler/resampler.cc zita-resampler/resampler-table.cc
+goniometer_UISRC=zita-resampler/resampler.cc zita-resampler/resampler-table.cc -DTHREADSYNC
 
 ###############################################################################
 # build target definitions
@@ -233,12 +234,12 @@ $(BUILDDIR)$(LV2NAME)$(LIB_EXT): src/meters.cc $(DSPDEPS) src/ebulv2.cc src/uris
 $(BUILDDIR)$(LV2GTK1)$(LIB_EXT): $(UIIMGS) src/uris.h gui/needle.c gui/meterimage.c
 $(BUILDDIR)$(LV2GTK2)$(LIB_EXT): gui/ebur.c src/uris.h
 $(BUILDDIR)$(LV2GTK3)$(LIB_EXT): gui/goniometer.c src/goniometer.h \
-    $(goniometer_UISRC) zita-resampler/resampler.h zita-resampler/resampler-table.h
+    $(goniometer_UIDEP) zita-resampler/resampler.h zita-resampler/resampler-table.h
 $(BUILDDIR)$(LV2GTK4)$(LIB_EXT): gui/dpm.c
 $(BUILDDIR)$(LV2GTK5)$(LIB_EXT): gui/kmeter.c
 $(BUILDDIR)$(LV2GUI2)$(LIB_EXT): gui/ebur.c src/uris.h
 $(BUILDDIR)$(LV2GUI3)$(LIB_EXT): gui/goniometer.c src/goniometer.h \
-    $(goniometer_UISRC) zita-resampler/resampler.h zita-resampler/resampler-table.h
+    $(goniometer_UIDEP) zita-resampler/resampler.h zita-resampler/resampler-table.h
 $(BUILDDIR)$(LV2GUI4)$(LIB_EXT): gui/dpm.c
 $(BUILDDIR)$(LV2GUI5)$(LIB_EXT): gui/kmeter.c
 $(BUILDDIR)$(LV2GUI1)$(LIB_EXT): src/uris.h gui/needle.c gui/meterimage.c

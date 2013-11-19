@@ -991,6 +991,15 @@ static void restore_state(GMUI* ui) {
 	ui->disable_signals = false;
 }
 
+/* instance connection */
+#if (!defined GTK_BACKEND && defined USE_GUI_THREAD && defined THREADSYNC)
+static void expose_goniometer(void* ptr) {
+	GMUI* ui = (GMUI*) ptr;
+	ui->ntfy_b = (ui->ntfy_b + 1 )% 10000;
+	queue_draw_area(ui->m0, PC_BOUNDS, 0, GM_BOUNDS, GM_BOUNDS);
+}
+#endif
+
 /******************************************************************************
  * widget hackery
  */
@@ -1277,6 +1286,14 @@ instantiate(
 	gmrb_read_clear(self->rb);
 	ui->xrundisplay = -100;
 	self->ui_active = true;
+
+#if (!defined GTK_BACKEND && defined USE_GUI_THREAD && defined THREADSYNC)
+	GlMetersLV2UI *glui = (GlMetersLV2UI*) ui_toplevel;
+	self->msg_thread_lock = &glui->msg_thread_lock;
+	self->data_ready = &glui->data_ready;
+	self->queue_display = &expose_goniometer;
+	self->ui = ui;
+#endif
 	return ui;
 }
 
@@ -1351,6 +1368,7 @@ cleanup(LV2UI_Handle handle)
 	free(ui->scratch);
 	free(ui->resampl);
 
+	i->msg_thread_lock = NULL;
 	free(ui);
 }
 
@@ -1359,6 +1377,7 @@ extension_data(const char* uri)
 {
 	return NULL;
 }
+
 static void invalidate_gm(GMUI* ui) {
 	queue_draw_area(ui->m0, PC_BOUNDS, 0, GM_BOUNDS, GM_BOUNDS);
 }

@@ -150,6 +150,13 @@ typedef struct {
 
 	Stcorrdsp *cor;
 
+	/* explicit thread/redraw sync */
+	pthread_mutex_t *msg_thread_lock;
+	pthread_cond_t *data_ready;
+	void (* queue_display) (void *ptr);
+	void *ui;
+
+	/* URI */
 	LV2_URID_Map* map;
 
 	LV2_URID atom_Vector;

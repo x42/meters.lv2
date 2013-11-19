@@ -82,6 +82,11 @@ goniometer_instantiate(
 	self->sample_cnt = 0;
 	self->ntfy = 0;
 
+	self->msg_thread_lock = NULL;
+	self->data_ready = NULL;
+	self->ui = NULL;
+	self->queue_display = NULL;
+
 	self->s_autogain = false;
 	self->s_oversample = false;
 	self->s_line = false;
@@ -148,10 +153,22 @@ goniometer_run(LV2_Handle instance, uint32_t n_samples)
 			self->rb_overrun = true; // reset by UI
 		}
 
-		/* notify UI by creating a port-event */
+		/* notify UI about new data */
 		self->sample_cnt += n_samples;
 		if (self->sample_cnt >= self->apv) {
-			self->ntfy = (self->ntfy + 1) % 10000;
+			/* directly wake up instance */
+			if (self->msg_thread_lock) {
+				self->queue_display(self->ui);
+				if (pthread_mutex_trylock (self->msg_thread_lock) == 0) {
+					pthread_cond_signal (self->data_ready);
+					pthread_mutex_unlock (self->msg_thread_lock);
+				}
+			} else {
+				/* notify UI by creating a port-event
+				 * -- adds host comm-buffer latency
+				 */
+				self->ntfy = (self->ntfy + 1) % 10000;
+			}
 			self->sample_cnt = self->sample_cnt % self->apv;
 		}
 		*self->notify = self->ntfy;
