@@ -119,6 +119,17 @@ ifeq ($(shell pkg-config --atleast-version=1.4.2 lv2 && echo yes), yes)
   LV2UIREQ+=lv2:requiredFeature ui:idleInterface; lv2:extensionData ui:idleInterface;
 endif
 
+ifneq ($(MAKECMDGOALS), submodules)
+  ifeq ($(wildcard $(RW)robtk.mk),)
+    $(warning This plugin needs https://github.com/x42/robtk)
+    $(info set the RW environment variale to the location of the robtk headers)
+    ifeq ($(wildcard .git),.git)
+      $(info or run 'make submodules' to initialize robtk as git submodule)
+    endif
+    $(error robtk not found)
+  endif
+endif
+
 override CFLAGS += -fPIC
 override CFLAGS += `pkg-config --cflags lv2`
 
@@ -156,13 +167,24 @@ DSPDEPS=$(DSPSRC) jmeters/jmeterdsp.h jmeters/vumeterdsp.h \
 
 goniometer_UISRC=zita-resampler/resampler.cc zita-resampler/resampler-table.cc
 
-include $(RW)robtk.mk
-
 ###############################################################################
 # build target definitions
 default: all
 
-all: $(BUILDDIR)manifest.ttl $(BUILDDIR)$(LV2NAME).ttl $(targets)
+submodule_pull:
+	-test -d .git -a .gitmodules -a -f Makefile.git && $(MAKE) -f Makefile.git submodule_pull
+
+submodule_update:
+	-test -d .git -a .gitmodules -a -f Makefile.git && $(MAKE) -f Makefile.git submodule_update
+
+submodule_check:
+	-test -d .git -a .gitmodules -a -f Makefile.git && $(MAKE) -f Makefile.git submodule_check
+
+submodules:
+	-test -d .git -a .gitmodules -a -f Makefile.git && $(MAKE) -f Makefile.git submodules
+
+
+all: submodule_check $(BUILDDIR)manifest.ttl $(BUILDDIR)$(LV2NAME).ttl $(targets)
 
 $(BUILDDIR)manifest.ttl: lv2ttl/manifest.gui.ttl.in lv2ttl/manifest.gtk.ttl.in lv2ttl/manifest.lv2.ttl.in lv2ttl/manifest.ttl.in Makefile
 	@mkdir -p $(BUILDDIR)
@@ -205,6 +227,8 @@ $(BUILDDIR)$(LV2NAME)$(LIB_EXT): src/meters.cc $(DSPDEPS) src/ebulv2.cc src/uris
 	$(CXX) $(CPPFLAGS) $(CFLAGS) $(CXXFLAGS) \
 	  -o $(BUILDDIR)$(LV2NAME)$(LIB_EXT) src/$(LV2NAME).cc $(DSPSRC) \
 	  -shared $(LV2LDFLAGS) $(LDFLAGS) $(LOADLIBES)
+
+-include $(RW)robtk.mk
 
 $(BUILDDIR)$(LV2GTK1)$(LIB_EXT): $(UIIMGS) src/uris.h gui/needle.c gui/meterimage.c
 $(BUILDDIR)$(LV2GTK2)$(LIB_EXT): gui/ebur.c src/uris.h
@@ -257,4 +281,5 @@ clean:
 distclean: clean
 	rm -f cscope.out cscope.files tags
 
-.PHONY: clean all install uninstall distclean
+.PHONY: clean all install uninstall distclean \
+        submodule_check submodules submodule_update submodule_pull

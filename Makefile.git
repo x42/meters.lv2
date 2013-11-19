@@ -1,0 +1,23 @@
+#!/usr/bin/make
+
+submodules:
+	git submodule init
+	git submodule update
+
+submodule_update:
+	git submodule update
+
+submodule_pull:
+	git submodule foreach "git pull"
+
+submodule_check:
+	@-test -d .git -a .gitmodules && \
+	  git submodule status \
+	  | grep -q "^-" \
+	  && $(MAKE) submodules
+	@-test -d .git -a .gitmodules && \
+	  git submodule status \
+	  | grep -q "^+" \
+	  && $(MAKE) submodule_update
+
+.PHONY: submodule_check submodules submodule_update submodule_pull
