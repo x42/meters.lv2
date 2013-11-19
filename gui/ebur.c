@@ -919,7 +919,7 @@ static bool expose_event(RobWidget* handle, cairo_t* cr, cairo_rectangle_t *ev) 
 		write_text(cr, buf, FONT(FONT_M12), COORD_BINTG_W-7, COORD_BI_Y+50, 0,  4, c_wht);
 	}
 
-	if (rect_intersect_a(ev, COORD_BR_X, COORD_BI_Y+bottom_max_offset, 117, 19) && redraw_part != 1) {
+	if (rect_intersect_a(ev, COORD_BR_X+115-trw, COORD_BI_Y-50+bottom_max_offset, trw, 40) && redraw_part != 1) {
 		/* bottom level text display */
 		trw = lufs ? 117 : 105;
 		//printf("BOTTOM LVL @ %d+%d %dx%d\n", COORD_BR_X+115-trw, 305+bottom_max_offset, trw, 40);
@@ -933,9 +933,9 @@ static bool expose_event(RobWidget* handle, cairo_t* cr, cairo_rectangle_t *ev) 
 		ui->prev_lvl[2] = !rings ? ui->ls : ui->lm;
 		ui->prev_lvl[3] = !rings ? ui->ms : ui->mm;
 		write_text(cr, rings ? "Mom":"Short", FONT(FONT_S08), COORD_BR_X+85, COORD_BI_Y-45+bottom_max_offset, 0, 8, c_wht);
-		sprintf(buf, "%+5.1f %s", LUFS(ui->prev_lvl[3]), lufs ? "LUFS" : "LU");
+		sprintf(buf, "%+5.1f %s", LUFS(ui->prev_lvl[2]), lufs ? "LUFS" : "LU");
 		write_text(cr, buf, FONT(FONT_M09), COORD_BR_X+105, COORD_BI_Y-25+bottom_max_offset, 0, 7, c_wht);
-		sprintf(buf, "Max:%+5.1f %s", LUFS(ui->prev_lvl[4]), lufs ? "LUFS" : "LU");
+		sprintf(buf, "Max:%+5.1f %s", LUFS(ui->prev_lvl[3]), lufs ? "LUFS" : "LU");
 		write_text(cr, buf, FONT(FONT_M09), COORD_BR_X+105, COORD_BI_Y-10+bottom_max_offset, 0, 7, c_wht);
 	}
 
