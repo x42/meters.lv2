@@ -14,10 +14,10 @@ submodule_check:
 	@-test -d .git -a .gitmodules && \
 	  git submodule status \
 	  | grep -q "^-" \
-	  && $(MAKE) submodules
+	  && $(MAKE) submodules || true
 	@-test -d .git -a .gitmodules && \
 	  git submodule status \
 	  | grep -q "^+" \
-	  && $(MAKE) submodule_update
+	  && $(MAKE) submodule_update || true
 
 .PHONY: submodule_check submodules submodule_update submodule_pull
