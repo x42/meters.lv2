@@ -22,8 +22,20 @@
 #include <stdint.h>
 #include <string.h>
 #include <math.h>
-#include <complex.h>
 #include <stdbool.h>
+
+#if __cplusplus >= 201103L || defined __APPLE__
+# include <complex>
+# define csqrt(XX) std::sqrt(XX)
+# define creal(XX) std::real(XX)
+# define cimag(XX) std::imag(XX)
+# define _I ((complex_t)(1i))
+  typedef std::complex<double> complex_t;
+#else
+# include <complex.h>
+# define _I I
+  typedef _Complex double complex_t;
+#endif
 
 enum filterCoeff {a0 = 0, a1, a2, b0, b1, b2};
 enum filterState {z1 = 0, z2};
@@ -91,11 +103,11 @@ bandpass_setup(struct FilterBank *fb,
 	/* bilinear transform coefficients into z-domain */
 	for (uint32_t i = 0; i < fb->filter_stages / 2; ++i) {
 		const double omega =  M_PI_2 + (2 * i + 1) * M_PI / (2. * (double)fb->filter_stages);
-		_Complex double p = cos (omega) +  I * sin (omega);
+		complex_t p = cos (omega) +  _I * sin (omega);
 
-		const _Complex double c = (1. + p) / (1. - p);
-		const _Complex double d = 2 * (c_b - 1) * c + 2 * (1 + c_b);
-		_Complex double v;
+		const complex_t c = (1. + p) / (1. - p);
+		const complex_t d = 2 * (c_b - 1) * c + 2 * (1 + c_b);
+		complex_t v;
 
 		v = (4 * (c_b2 * (c_a2 - 1) + 1)) * c;
 		v += 8 * (c_b2 * (c_a2 - 1) - 1);
@@ -103,12 +115,12 @@ bandpass_setup(struct FilterBank *fb,
 		v += 4 * (c_b2 * (c_a2 - 1) + 1);
 		v = csqrt (v);
 
-		const _Complex double u0 = ab_2 + creal(-v) + ab_2 * creal(c) + I * (cimag(-v) + ab_2 * cimag(c));
-		const _Complex double u1 = ab_2 + creal( v) + ab_2 * creal(c) + I * (cimag( v) + ab_2 * cimag(c));
+		const complex_t u0 = ab_2 + creal(-v) + ab_2 * creal(c) + _I * (cimag(-v) + ab_2 * cimag(c));
+		const complex_t u1 = ab_2 + creal( v) + ab_2 * creal(c) + _I * (cimag( v) + ab_2 * cimag(c));
 
 #define ASSIGN_BP(FLT, PC, odd) \
 	{ \
-		const _Complex double P = PC; \
+		const complex_t P = PC; \
 		(FLT).W[a0] = 1.; \
 		(FLT).W[a1] = -2 * creal(P); \
 		(FLT).W[a2] = creal(P) * creal(P) + cimag(P) * cimag(P); \
@@ -126,16 +138,16 @@ bandpass_setup(struct FilterBank *fb,
 	const double sin_w = sin (-w);
 	const double cos_w2 = cos (-2. * w);
 	const double sin_w2 = sin (-2. * w);
-	_Complex double ch = 1;
-	_Complex double cb = 1;
+	complex_t ch = 1;
+	complex_t cb = 1;
 	for (uint32_t i = 0; i < fb->filter_stages; ++i) {
 		ch *= ((1 + fb->f[i].W[b1] * cos_w) + cos_w2)
-			  + I * ((fb->f[i].W[b1] * sin_w) + sin_w2);
+			  + _I * ((fb->f[i].W[b1] * sin_w) + sin_w2);
 		cb *= ((1 + fb->f[i].W[a1] * cos_w) + fb->f[i].W[a2] * cos_w2)
-			  + I * ((fb->f[i].W[a1] * sin_w) + fb->f[i].W[a2] * sin_w2);
+			  + _I * ((fb->f[i].W[a1] * sin_w) + fb->f[i].W[a2] * sin_w2);
 	}
 
-	const _Complex double scale = cb / ch;
+	const complex_t scale = cb / ch;
 	fb->f[0].W[b0] *= creal(scale);
 	fb->f[0].W[b1] *= creal(scale);
 	fb->f[0].W[b2] *= creal(scale);
