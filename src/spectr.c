@@ -140,7 +140,7 @@ bandpass_setup(struct FilterBank *fb,
 	fb->f[0].W[b1] *= creal(scale);
 	fb->f[0].W[b2] *= creal(scale);
 
-#if 1
+#ifdef DEBUG_SPECTR
 	printf("SCALE (%g,  %g)\n", creal(scale), cimag(scale));
 	for (uint32_t i = 0; i < fb->filter_stages; ++i) {
 		struct Filter *flt = &fb->f[i];

@@ -26,6 +26,7 @@
  * bandpass filter
  */
 
+//#ifdef DEBUG_SPECTR
 #include "spectr.c"
 
 /******************************************************************************
@@ -35,30 +36,34 @@
 #define FILTER_COUNT (30)
 
 typedef enum {
-	SA_INPUT0   = 0,
-	SA_OUTPUT0  = 1,
-	SA_INPUT1   = 2,
-	SA_OUTPUT1  = 3,
-	SA_GAIN     = 4,
-	SA_ATTACK   = 35,
-	SA_DECAY    = 36,
+	SA_INPUT0   = 63,
+	SA_OUTPUT0  = 64,
+	SA_INPUT1   = 65,
+	SA_OUTPUT1  = 66,
+	SA_SPEED    = 60,
+	SA_RESET    = 61,
+	SA_AMP      = 62,
 } SAPortIndex;
 
 typedef struct {
 	float* input[2];
 	float* output[2];
 
-	float* gain;
-	float gain_h;
 	float* spec[FILTER_COUNT];
-	float* attack_p;
-	float* decay_p;
+	float* maxf[FILTER_COUNT];
+	float* rst_p;
+	float* spd_p;
+	float* amp_p;
 
+	float  rst_h;
+	float  spd_h;
+
+	uint32_t nchannels;
 	double rate;
-	float attack, attack_h;
-	float decay, decay_h;
 
-	float  spec_f[FILTER_COUNT];
+	float  omega;
+	float  val_f[FILTER_COUNT];
+	float  max_f[FILTER_COUNT];
 	struct FilterBank flt[FILTER_COUNT];
 
 } LV2spec;
@@ -74,21 +79,28 @@ spectrum_instantiate(
 		const char*               bundle_path,
 		const LV2_Feature* const* features)
 {
-	if (strcmp(descriptor->URI, MTR_URI "spectr30") && strcmp(descriptor->URI, MTR_URI "spectr30_gtk")) {
-		return NULL;
+	uint32_t nchannels;
+	if (!strcmp(descriptor->URI, MTR_URI "spectr30stereo")
+			|| !strcmp(descriptor->URI, MTR_URI "spectr30stereo_gtk"))
+	{
+		nchannels = 2;
 	}
+	else if (!strcmp(descriptor->URI, MTR_URI "spectr30mono")
+			|| !strcmp(descriptor->URI, MTR_URI "spectr30mono_gtk"))
+	{
+		nchannels = 1;
+	}
+	else { return NULL; }
 
 	LV2spec* self = (LV2spec*)calloc(1, sizeof(LV2spec));
 	if (!self) return NULL;
 
-	self->attack_h = 15.0;
-	self->decay_h = .5;
-	self->gain_h = 1.0;
+	self->nchannels = nchannels;
 	self->rate = rate;
 
+	self->spd_h = 1.0;
 	// 1.0 - e^(-2.0 * π * v / 48000)
-	self->attack = 1.0f - expf(-2.0 * M_PI * self->attack_h / rate);
-	self->decay  = 1.0f - expf(-2.0 * M_PI * self->decay_h / rate);
+	self->omega = 1.0f - expf(-2.0 * M_PI * self->spd_h / rate);
 
 	/* filter-frequencies */
 	const double f_r = 1000;
@@ -102,8 +114,11 @@ spectrum_instantiate(
 		const double f_1 = f_m * f1f;
 		const double f_2 = f_m * f2f;
 		const double bw  = f_2 - f_1;
+#ifdef DEBUG_SPECTR
 		printf("--F %2d (%3d): f:%9.2fHz b:%9.2fHz (%9.2fHz -> %9.2fHz)\n",i, x, f_m, bw, f_1, f_2);
-		self->spec_f[i] = 0;
+#endif
+		self->val_f[i] = 0;
+		self->max_f[i] = 0;
 		bandpass_setup(&self->flt[i], self->rate, f_m, bw);
 	}
 
@@ -127,18 +142,20 @@ spectrum_connect_port(LV2_Handle instance, uint32_t port, void* data)
 	case SA_OUTPUT1:
 		self->output[1] = (float*) data;
 		break;
-	case SA_GAIN:
-		self->gain = (float*) data;
+	case SA_RESET:
+		self->rst_p = (float*) data;
 		break;
-	case SA_ATTACK:
-		self->attack_p = (float*) data;
+	case SA_SPEED:
+		self->spd_p = (float*) data;
 		break;
-	case SA_DECAY:
-		self->decay_p = (float*) data;
+	case SA_AMP:
 		break;
 	default:
-		if (port > 4 && port < 36) {
-			self->spec[port-5] = (float*) data;
+		if (port >= 0 && port < 30) {
+			self->spec[port] = (float*) data;
+		}
+		if (port >= 30 && port < 60) {
+			self->maxf[port-30] = (float*) data;
 		}
 		break;
 	}
@@ -151,72 +168,76 @@ spectrum_run(LV2_Handle instance, uint32_t n_samples)
 	float* inL = self->input[0];
 	float* inR = self->input[1];
 
-	/* calculate time-constants when they're changed,
-	 * no-need to smoothen then for the visual display
+	/* calculate time-constant when it is changed,
+	 * (no-need to smoothen transition for the visual display)
 	 */
-	if (self->attack_h != *self->attack_p) {
-		self->attack_h = *self->attack_p;
-		float v = self->attack_h;
-		if (v < 1.0) v = 1.0;
-		if (v > 1000.0) v = 1000.0;
-		self->attack = 1.0f - expf(-2.0 * M_PI * v / self->rate);
-	}
-	if (self->decay_h != *self->decay_p) {
-		self->decay_h = *self->decay_p;
-		float v = self->decay_h;
+	if (self->spd_h != *self->spd_p) {
+		self->spd_h = *self->spd_p;
+		float v = self->spd_h;
 		if (v < 0.01) v = 0.01;
 		if (v > 15.0) v = 15.0;
-		self->decay  = 1.0f - expf(-2.0 * M_PI * v / self->rate);
+		self->omega = 1.0f - expf(-2.0 * M_PI * v / self->rate);
+		self->rst_h = -1; // reset peak-hold on change
+		//printf("LPF %f (%f) \n", self->omega, v);
 	}
 
 	/* localize variables */
-	float spec_f[FILTER_COUNT];
-	const float attack = self->attack > self->decay ? self->attack : self->decay;
-	const float decay  = self->decay;
-	const float gain   = *self->gain;
+	float val_f[FILTER_COUNT];
+	float max_f[FILTER_COUNT];
+	const float omega  = self->omega;
 	struct FilterBank *flt[FILTER_COUNT];
 
-	float mx [FILTER_COUNT];
 	for(int i=0; i < FILTER_COUNT; ++i) {
-		spec_f[i] = self->spec_f[i];
-		flt[i] = &self->flt[i];
-		mx[i] = 0;
+		val_f[i] = self->val_f[i];
+		max_f[i] = self->max_f[i];
+		flt[i]   = &self->flt[i];
 	}
 
-	if (self->gain_h != gain) {
-		self->gain_h = gain;
+	if (self->rst_h != *self->rst_p) {
+		self->rst_h = *self->rst_p;
 		for(int i = 0; i < FILTER_COUNT; ++i) {
-			spec_f[i] = 0;
+			max_f[i] = 0;
 		}
 	}
 
+	const bool stereo = self->nchannels == 2;
+
 	/* .. and go */
 	for (uint32_t j = 0 ; j < n_samples; ++j) {
-		const float L = *(inL++);
-		const float R = *(inR++);
-		const float in  = gain * (L + R) / 2.0f;
+		float in;
+		// TODO separate loop implementation for mono+stereo for efficiency
+		if (stereo) {
+			const float L = *(inL++);
+			const float R = *(inR++);
+			in = (L + R) / 2.0f;
+		} else {
+			in = *(inL++);
+		}
 				
 		for(int i = 0; i < FILTER_COUNT; ++i) {
-			// TODO use RMS and low-pass filter
-			const float v = fabsf(bandpass_process(flt[i], in));
-			spec_f[i] += v > spec_f[i] ? attack * (v - spec_f[i]) : decay * (v - spec_f[i]);
-			if (spec_f[i] > mx[i]) mx[i] = spec_f[i];
+			const float v = bandpass_process(flt[i], in);
+			const float s = v * v;
+			val_f[i] += omega * (s - val_f[i]);
+			if (val_f[i] > max_f[i]) max_f[i] = val_f[i];
 		}
 	}
 
 	/* copy back variables and assign value */
 	for(int i=0; i < FILTER_COUNT; ++i) {
-		if (!finite(spec_f[i])) spec_f[i] = 0;
-		else if (spec_f[i] > 100) spec_f[i] = 100;
-		else if (spec_f[i] < 0) spec_f[i] = 0;
-
+		if (!finite(val_f[i])) val_f[i] = 0;
+		if (!finite(max_f[i])) max_f[i] = 0;
 		for (uint32_t j=0; j < flt[i]->filter_stages; ++j) {
 			if (!finite(flt[i]->f[j].z[0])) flt[i]->f[j].z[0] = 0;
 			if (!finite(flt[i]->f[j].z[1])) flt[i]->f[j].z[1] = 0;
 		}
+		self->val_f[i] = val_f[i] + 1e-20f;
+		self->max_f[i] = max_f[i];
 
-		self->spec_f[i] = spec_f[i] + 10e-12 ;
-		*(self->spec[i]) = mx[i] > .000316f ? 20.0 * log10f(mx[i]) : -70.0;
+		const float vs = sqrtf(2. * val_f[i]);
+		const float mx = sqrtf(2. * max_f[i]);
+		// TODO - hold value peak in-between GUI update cycles.
+		*(self->spec[i]) = vs > .00001f ? 20.0 * log10f(vs) : -100.0;
+		*(self->maxf[i]) = mx > .00001f ? 20.0 * log10f(mx) : -100.0;
 	}
 
 	if (self->input[0] != self->output[0]) {
@@ -233,24 +254,19 @@ spectrum_cleanup(LV2_Handle instance)
 	free(instance);
 }
 
-static const LV2_Descriptor descriptorSpectrum = {
-	MTR_URI "spectr30",
-	spectrum_instantiate,
-	spectrum_connect_port,
-	NULL,
-	spectrum_run,
-	NULL,
-	spectrum_cleanup,
-	extension_data
+#define SPECTRDESC(ID, NAME) \
+static const LV2_Descriptor descriptor ## ID = { \
+	MTR_URI NAME, \
+	spectrum_instantiate, \
+	spectrum_connect_port, \
+	NULL, \
+	spectrum_run, \
+	NULL, \
+	spectrum_cleanup, \
+	extension_data \
 };
 
-static const LV2_Descriptor descriptorSpectrumGtk = {
-	MTR_URI "spectr30_gtk",
-	spectrum_instantiate,
-	spectrum_connect_port,
-	NULL,
-	spectrum_run,
-	NULL,
-	spectrum_cleanup,
-	extension_data
-};
+SPECTRDESC(Spectrum1, "spectr30mono");
+SPECTRDESC(Spectrum2, "spectr30stereo");
+SPECTRDESC(Spectrum1Gtk, "spectr30mono_gtk");
+SPECTRDESC(Spectrum2Gtk, "spectr30stereo_gtk");

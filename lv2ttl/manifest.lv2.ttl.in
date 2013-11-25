@@ -65,7 +65,12 @@ mtr:goniometer@URI_SUFFIX@
 	lv2:binary <@LV2NAME@@LIB_EXT@> ;
 	rdfs:seeAlso <@LV2NAME@.ttl> .
 
-mtr:spectr30@URI_SUFFIX@
+mtr:spectr30mono@URI_SUFFIX@
+	a lv2:Plugin ;
+	lv2:binary <@LV2NAME@@LIB_EXT@> ;
+	rdfs:seeAlso <@LV2NAME@.ttl> .
+
+mtr:spectr30stereo@URI_SUFFIX@
 	a lv2:Plugin ;
 	lv2:binary <@LV2NAME@@LIB_EXT@> ;
 	rdfs:seeAlso <@LV2NAME@.ttl> .

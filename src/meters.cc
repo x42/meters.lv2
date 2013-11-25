@@ -498,7 +498,7 @@ lv2_descriptor(uint32_t index)
 	case 10: return &descriptorCor;
 	case 11: return &descriptorEBUr128;
 	case 12: return &descriptorGoniometer;
-	case 13: return &descriptorSpectrum;
+	case 13: return &descriptorSpectrum1;
 	case 14: return &descriptor14;
 	case 15: return &descriptor15;
 	case 16: return &descriptor16;
@@ -512,7 +512,7 @@ lv2_descriptor(uint32_t index)
 	case 24: return &descriptor24;
 	case 25: return &descriptor25;
 	case 26: return &descriptorGoniometerGtk;
-	case 27: return &descriptorSpectrumGtk;
+	case 27: return &descriptorSpectrum1Gtk;
 	case 28: return &descriptorCorGtk;
 	case 29: return &descriptor29;
 	case 30: return &descriptor30;
@@ -529,6 +529,8 @@ lv2_descriptor(uint32_t index)
 	case 41: return &descriptor41;
 	case 42: return &descriptor42;
 	case 43: return &descriptor43;
+	case 44: return &descriptorSpectrum1;
+	case 45: return &descriptorSpectrum2;
 	default: return NULL;
 	}
 }

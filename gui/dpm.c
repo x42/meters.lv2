@@ -48,9 +48,6 @@
 #define UINT_TO_RGB(u,r,g,b) { (*(r)) = ((u)>>16)&0xff; (*(g)) = ((u)>>8)&0xff; (*(b)) = (u)&0xff; }
 #define UINT_TO_RGBA(u,r,g,b,a) { UINT_TO_RGB(((u)>>8),r,g,b); (*(a)) = (u)&0xff; }
 
-#define GAINSCALE(x) (x > .01 ? ((20.0f * log10f(x) + 20.0f) / 5.20412f) : 0)
-#define INV_GAINSCALE(x) (powf(10, .05f * ((x * 5.20411f) - 20)))
-
 static const char *freq_table [] = {
 	  " 25 Hz", "31.5 Hz",  " 40 Hz",
 	  " 50 Hz",  " 63 Hz",  " 80 Hz",
@@ -73,10 +70,8 @@ typedef struct {
   RobWidget* c_box;
   RobWidget* m0;
 	RobTkScale* fader;
-	RobTkLbl* lbl_attack;
-	RobTkLbl* lbl_decay;
-	RobTkDial* spn_attack;
-	RobTkDial* spn_decay;
+	RobTkLbl* lbl_speed;
+	RobTkDial* spn_speed;
 	RobTkSep* sep_h0;
 
 	cairo_surface_t* sf[MAX_METERS];
@@ -359,7 +354,7 @@ static void alloc_annotations(SAUI* ui) {
 }
 
 static void realloc_metrics(SAUI* ui) {
-	const float dboff = ui->gain > 0.1 ? 20.0 * log10f(ui->gain) : -20;
+	const float dboff = ui->gain;
 	if (rint(ui->cache_ma * 5) == rint(dboff * 5)) {
 		return;
 	}
@@ -413,7 +408,7 @@ static void realloc_metrics(SAUI* ui) {
 }
 
 static void prepare_metersurface(SAUI* ui) {
-	const float dboff = ui->gain > .1 ? 20.0 * log10f(ui->gain) : -20;
+	const float dboff = ui->gain;
 
 	if (rint(ui->cache_sf * 5) == rint(dboff * 5)) {
 		return;
@@ -611,12 +606,15 @@ static bool expose_event(RobWidget* handle, cairo_t* cr, cairo_rectangle_t *ev) 
 	/* highlight */
 	if (ui->highlight >= 0 && ui->highlight < (int) ui->num_meters &&
 			rect_intersect_a(ev, MA_WIDTH + GM_WIDTH * ui->highlight + GM_WIDTH/2 - 32, GM_TXT -4.5, 64, 46)) {
-		const float dboff = ui->gain > .1 ? 20.0 * log10f(ui->gain) : -20;
 		cairo_set_operator (cr, CAIRO_OPERATOR_OVER);
 		const int i = ui->highlight;
 		char buf[32];
-		sprintf(buf, "%s\nc:%+5.1f\np:%+5.1f",
-				freq_table[i], ui->val[i] - dboff, ui->peak_val[i] - dboff);
+		// TODO UTF8 infinity symbol
+		sprintf(buf, "%s\nc:%+5.1f\np:%+5.1f"
+				, freq_table[i]
+				, ui->val[i] > - 100 ? ui->val[i] : -INFINITY
+				, ui->peak_val[i] > -100 ? ui->peak_val[i] : -INFINITY
+				);
 		cairo_save(cr);
 		cairo_set_line_width(cr, 0.75);
 		CairoSetSouerceRGBA(c_wht);
@@ -649,10 +647,15 @@ static RobWidget* cb_reset_peak (RobWidget* handle, RobTkBtnEvent *event) {
 		ui->reset_toggle = !ui->reset_toggle;
 		float temp = ui->reset_toggle ? 1.0 : 0.0;
 		ui->write(ui->controller, 0, sizeof(float), 0, (const void*) &temp);
+	} else {
+		/* reset peak-hold in backend */
+		ui->reset_toggle = !ui->reset_toggle;
+		float temp = ui->reset_toggle ? 1.0 : 0.0;
+		ui->write(ui->controller, 61, sizeof(float), 0, (const void*) &temp);
 	}
 	for (uint32_t i=0; i < ui->num_meters ; ++i) {
-		ui->peak_val[i] = -70;
-		ui->peak_def[i] = deflect(ui, -70);
+		ui->peak_val[i] = -100;
+		ui->peak_def[i] = deflect(ui, -100);
 	}
 	queue_draw(ui->m0);
 	return NULL;
@@ -661,42 +664,34 @@ static RobWidget* cb_reset_peak (RobWidget* handle, RobTkBtnEvent *event) {
 static bool set_gain(RobWidget* w, void* handle) {
 	SAUI* ui = (SAUI*)handle;
 	float oldgain = ui->gain;
-	ui->gain = INV_GAINSCALE(robtk_scale_get_value(ui->fader));
+	ui->gain = robtk_scale_get_value(ui->fader);
 #if 1
-	if (ui->gain < .1) ui->gain = .1;
-	if (ui->gain >= 40.0) ui->gain = 40.0;
+	if (ui->gain < -12) ui->gain = -12;
+	if (ui->gain >= 32.0) ui->gain = 32.0;
 #endif
 	if (oldgain == ui->gain) return TRUE;
 	if (!ui->disable_signals) {
-		ui->write(ui->controller, 4, sizeof(float), 0, (const void*) &ui->gain);
+		ui->write(ui->controller, 62, sizeof(float), 0, (const void*) &ui->gain);
 	}
 	ui->metrics_changed = true;
+#if 1
+	// TODO force signal-change -> recalc deflected signals in invalidate_meter()
+	queue_draw(ui->m0);
+	return NULL;
+#else
 	return cb_reset_peak(ui->m0, NULL);
-}
-
-/* val: 1 .. 1000 1/s  <> 0..100 */
-#define ATTACKSCALE(X) ((X) > 0.1 ? rint(333.333 * (log10f(X)))/10.0 : 0)
-#define INV_ATTACKSCALE(X) powf(10, (X) * .03f)
-
-static bool set_attack(RobWidget* w, void* handle) {
-	SAUI* ui = (SAUI*)handle;
-	if (!ui->disable_signals) {
-		float val = INV_ATTACKSCALE(robtk_dial_get_value(ui->spn_attack));
-		//printf("set_attack %f -> %f\n", robtk_dial_get_value(ui->spn_attack), val);
-		ui->write(ui->controller, 36, sizeof(float), 0, (const void*) &val);
-	}
-	return TRUE;
+#endif
 }
 
 /* val: .5 .. 15 1/s  <> 0..100 */
 #define DECAYSCALE(X) ((X) > 0.01 ? rint(400.0 * (1.3f + log10f(X)) )/ 10.0 : 0)
 #define INV_DECAYSCALE(X) powf(10, (X) * .025f - 1.3f)
-static bool set_decay(RobWidget* w, void* handle) {
+static bool set_speed(RobWidget* w, void* handle) {
 	SAUI* ui = (SAUI*)handle;
 	if (!ui->disable_signals) {
-		float val = INV_DECAYSCALE(robtk_dial_get_value(ui->spn_decay));
-		//printf("set_decay %f -> %f\n", robtk_dial_get_value(ui->spn_decay), val);
-		ui->write(ui->controller, 37, sizeof(float), 0, (const void*) &val);
+		float val = INV_DECAYSCALE(robtk_dial_get_value(ui->spn_speed));
+		//printf("set_speed %f -> %f\n", robtk_dial_get_value(ui->spn_speed), val);
+		ui->write(ui->controller, 60, sizeof(float), 0, (const void*) &val);
 	}
 	return TRUE;
 }
@@ -759,40 +754,28 @@ static RobWidget * toplevel(SAUI* ui, void * const top)
 	/* vbox on the right */
 	ui->c_box = rob_vbox_new(FALSE, 2);
 
-	ui->fader      = robtk_scale_new(1.45, 10.0, .05, FALSE);
-	ui->lbl_attack = robtk_lbl_new("Attack:");
-	ui->lbl_decay  = robtk_lbl_new("Decay:");
+	ui->fader      = robtk_scale_new(-12, 32.0, .05, FALSE);
+	ui->lbl_speed  = robtk_lbl_new("Speed:");
+	ui->spn_speed  = robtk_dial_new(0, 100, .5);
+	robtk_dial_set_default(ui->spn_speed, DECAYSCALE(2.0f));
+	robtk_dial_set_surface(ui->spn_speed, ui->dial);
 
-	ui->spn_attack = robtk_dial_new(0, 100, .5);
-	ui->spn_decay  = robtk_dial_new(0, 100, .5);
-
-	robtk_dial_set_default(ui->spn_attack, ATTACKSCALE(180.0f));
-	robtk_dial_set_default(ui->spn_decay, DECAYSCALE(0.5f));
-
-	/* configure them */
-	//robtk_lbl_set_min_geometry(ui->lbl_attack, 30, 30);
-	//robtk_lbl_set_min_geometry(ui->lbl_decay, 30, 30);
-
-	robtk_dial_set_surface(ui->spn_attack, ui->dial);
-	robtk_dial_set_surface(ui->spn_decay, ui->dial);
-
-	robtk_scale_set_default(ui->fader, GAINSCALE(3.1623));
-	robtk_scale_set_value(ui->fader, GAINSCALE(1.0000));
-	robtk_scale_add_mark(ui->fader,GAINSCALE(0.2511), "-12dB");
-	robtk_scale_add_mark(ui->fader,GAINSCALE(0.3548),  "-9dB");
-	robtk_scale_add_mark(ui->fader,GAINSCALE(0.5012),  "-6dB");
-	robtk_scale_add_mark(ui->fader,GAINSCALE(0.7079),  "-3dB");
-	robtk_scale_add_mark(ui->fader,GAINSCALE(1.0000),   "0dB");
-	robtk_scale_add_mark(ui->fader,GAINSCALE(1.4125),  "+3dB");
-	robtk_scale_add_mark(ui->fader,GAINSCALE(1.9952),  "+6dB");
-	robtk_scale_add_mark(ui->fader,GAINSCALE(2.8183),  "+9dB");
-	robtk_scale_add_mark(ui->fader,GAINSCALE(3.1623),  "");
-	robtk_scale_add_mark(ui->fader,GAINSCALE(3.9810), "+12dB");
-	robtk_scale_add_mark(ui->fader,GAINSCALE(5.6234), "+15dB");
-	robtk_scale_add_mark(ui->fader,GAINSCALE(7.9432), "+18dB");
-	robtk_scale_add_mark(ui->fader,GAINSCALE(10.0  ), "+20dB");
-	robtk_scale_add_mark(ui->fader,GAINSCALE(17.783), "+25dB");
-	robtk_scale_add_mark(ui->fader,GAINSCALE(31.623), "+30dB");
+	robtk_scale_set_default(ui->fader, 0);
+	robtk_scale_set_value(ui->fader, 0);
+	robtk_scale_add_mark(ui->fader,  -9,  "-9dB");
+	robtk_scale_add_mark(ui->fader,  -6,  "-6dB");
+	robtk_scale_add_mark(ui->fader,  -3,  "-3dB");
+	robtk_scale_add_mark(ui->fader,   0,   "0dB");
+	robtk_scale_add_mark(ui->fader,   3,  "+3dB");
+	robtk_scale_add_mark(ui->fader,   6,  "+6dB");
+	robtk_scale_add_mark(ui->fader,   9,  "+9dB");
+	robtk_scale_add_mark(ui->fader,  10,  "");
+	robtk_scale_add_mark(ui->fader,  12, "+12dB");
+	robtk_scale_add_mark(ui->fader,  15, "+15dB");
+	robtk_scale_add_mark(ui->fader,  18, "+18dB");
+	robtk_scale_add_mark(ui->fader,  20, "+20dB");
+	robtk_scale_add_mark(ui->fader,  25, "+25dB");
+	robtk_scale_add_mark(ui->fader,  30, "+30dB");
 
 	/* layout */
 
@@ -802,18 +785,15 @@ static RobWidget * toplevel(SAUI* ui, void * const top)
 		rob_hbox_child_pack(ui->rw, ui->c_box, FALSE);
 
 		rob_hbox_child_pack(ui->c_box, robtk_scale_widget(ui->fader), TRUE);
-
-		rob_hbox_child_pack(ui->c_box, robtk_lbl_widget(ui->lbl_attack), FALSE);
-		rob_hbox_child_pack(ui->c_box, robtk_dial_widget(ui->spn_attack), FALSE);
-
-		rob_hbox_child_pack(ui->c_box, robtk_lbl_widget(ui->lbl_decay), FALSE);
-		rob_hbox_child_pack(ui->c_box, robtk_dial_widget(ui->spn_decay), FALSE);
+#if 0 // display speed, value-LPF config
+		rob_hbox_child_pack(ui->c_box, robtk_lbl_widget(ui->lbl_speed), FALSE);
+		rob_hbox_child_pack(ui->c_box, robtk_dial_widget(ui->spn_speed), FALSE);
+#endif
 	}
 
 	/* callbacks */
 	robtk_scale_set_callback(ui->fader, set_gain, ui);
-	robtk_dial_set_callback(ui->spn_attack, set_attack, ui);
-	robtk_dial_set_callback(ui->spn_decay, set_decay, ui);
+	robtk_dial_set_callback(ui->spn_speed, set_speed, ui);
 
 	return ui->rw;
 }
@@ -839,10 +819,12 @@ instantiate(
 	SAUI* ui = (SAUI*) calloc(1,sizeof(SAUI));
 	*widget = NULL;
 
-	if      (!strcmp(plugin_uri, MTR_URI "spectr30")) { ui->num_meters = 30; ui->display_freq = true; }
+	if      (!strcmp(plugin_uri, MTR_URI "spectr30mono")) { ui->num_meters = 30; ui->display_freq = true; }
+	else if (!strcmp(plugin_uri, MTR_URI "spectr30stereo")) { ui->num_meters = 30; ui->display_freq = true; }
 	else if (!strcmp(plugin_uri, MTR_URI "dBTPmono")) { ui->num_meters = 1; ui->display_freq = false; }
 	else if (!strcmp(plugin_uri, MTR_URI "dBTPstereo")) { ui->num_meters = 2; ui->display_freq = false; }
-	else if (!strcmp(plugin_uri, MTR_URI "spectr30_gtk")) { ui->num_meters = 30; ui->display_freq = true; }
+	else if (!strcmp(plugin_uri, MTR_URI "spectr30mono_gtk")) { ui->num_meters = 30; ui->display_freq = true; }
+	else if (!strcmp(plugin_uri, MTR_URI "spectr30stereo_gtk")) { ui->num_meters = 30; ui->display_freq = true; }
 	else if (!strcmp(plugin_uri, MTR_URI "dBTPmono_gtk")) { ui->num_meters = 1; ui->display_freq = false; }
 	else if (!strcmp(plugin_uri, MTR_URI "dBTPstereo_gtk")) { ui->num_meters = 2; ui->display_freq = false; }
 	else {
@@ -858,7 +840,7 @@ instantiate(
 	ui->c_bgr[2] = 93/255.0;
 	ui->c_bgr[3] = 1.0;
 
-	ui->gain = 1.0;
+	ui->gain = 0;
 	ui->cache_sf = -100;
 	ui->cache_ma = -100;
 	ui->highlight = -1;
@@ -869,10 +851,10 @@ instantiate(
 	create_meter_pattern(ui);
 
 	for (uint32_t i=0; i < ui->num_meters ; ++i) {
-		ui->val[i] = -70.0;
-		ui->val_def[i] = deflect(ui, -70);
-		ui->peak_val[i] = -70.0;
-		ui->peak_def[i] = deflect(ui, -70);
+		ui->val[i] = -100.0;
+		ui->val_def[i] = deflect(ui, -100);
+		ui->peak_val[i] = -100.0;
+		ui->peak_def[i] = deflect(ui, -100);
 	}
 	ui->disable_signals = false;
 
@@ -917,10 +899,8 @@ cleanup(LV2UI_Handle handle)
 	cairo_surface_destroy(ui->dial);
 
 	robtk_scale_destroy(ui->fader);
-	robtk_lbl_destroy(ui->lbl_attack);
-	robtk_lbl_destroy(ui->lbl_decay);
-	robtk_dial_destroy(ui->spn_attack);
-	robtk_dial_destroy(ui->spn_decay);
+	robtk_lbl_destroy(ui->lbl_speed);
+	robtk_dial_destroy(ui->spn_speed);
 	robtk_sep_destroy(ui->sep_h0);
 	rob_box_destroy(ui->c_box);
 
@@ -941,9 +921,10 @@ extension_data(const char* uri)
  */
 static void invalidate_meter(SAUI* ui, int mtr, float val, float peak) {
 	const int v_old = ui->val_def[mtr];
-	const int v_new = deflect(ui, val);
+	const int v_new = deflect(ui, val + ui->gain);
+
 	const int m_old = ui->peak_def[mtr];
-	const int m_new = ceilf(deflect(ui, peak) / 2.0) * 2.0;
+	const int m_new = ceilf(deflect(ui, peak + ui->gain) / 2.0) * 2.0;
 	int t, h;
 
 #define INVALIDATE_RECT(XX,YY,WW,HH) { \
@@ -1005,33 +986,33 @@ static void invalidate_meter(SAUI* ui, int mtr, float val, float peak) {
  */
 
 static void handle_spectrum_connections(SAUI* ui, uint32_t port_index, float v) {
-	if (port_index == 4) {
-		if (v >= 0.25 && v <= 10.0) {
+
+	if (port_index == 62) {
+		if (v >= -12 && v <= 32.0) {
 			ui->disable_signals = true;
-			robtk_scale_set_value(ui->fader, GAINSCALE(v));
+			robtk_scale_set_value(ui->fader, v);
 			ui->disable_signals = false;
 		}
 	} else
-	if (port_index == 35) {
+	if (port_index == 60) {
 		ui->disable_signals = true;
-		robtk_dial_set_value(ui->spn_attack, ATTACKSCALE(v));
+		robtk_dial_set_value(ui->spn_speed, DECAYSCALE(v));
 		ui->disable_signals = false;
 	} else
-	if (port_index == 36) {
-		ui->disable_signals = true;
-		robtk_dial_set_value(ui->spn_decay, DECAYSCALE(v));
-		ui->disable_signals = false;
-	} else
-	if (port_index > 4 && port_index < 5 + ui->num_meters) {
-		int pidx = port_index -5;
+	if (port_index >= 0 && port_index < 30) {
+		int pidx = port_index;
 		float np = ui->peak_val[pidx];
-		if (v > np) { np = v; }
 		invalidate_meter(ui, pidx, v, np);
+	}
+	if (port_index >= 30  && port_index < 60) {
+		int pidx = port_index - 30;
+		float nv = ui->val[pidx];
+		invalidate_meter(ui, pidx, nv, v);
 	}
 }
 
 static void handle_meter_connections(SAUI* ui, uint32_t port_index, float v) {
-	v = v > .000316f ? 20.0 * log10f(v) : -70.0;
+	v = v > .00001f ? 20.0 * log10f(v) : -100.0;
 	if (port_index == 3) {
 		invalidate_meter(ui, 0, v, ui->peak_val[0]);
 	}
