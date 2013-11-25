@@ -26,88 +26,13 @@
  * bandpass filter
  */
 
-struct FilterParam {
-	float x [3];
-	float y0[3];
-	float y1[3];
-	float y2[3];
-	float c [5];
-};
-
-static void bandpass_init (struct FilterParam *f, double rate, double freq, double bw) {
-	for(int i=0; i < 3; ++i) {
-		f->x[i]  = f->y0[i] = 0.0;
-		f->y1[i] = f->y2[i] = 0.0;
-	}
-
-	if(freq >= rate/2.0) {
-		f->c[0] = f->c[1] = f->c[2] = f->c[3] = f->c[4] = 0.0;
-		return;
-	}
-
-	/* adjust bandwidth to below nyquist */
-	if( (1.0 + bw) * freq > rate/2.0) {
-		bw = ( bw + ((rate / (2.0 * freq)) - 1.0)  ) / 2.0;
-		//printf("Adjusted bandwidth for band %f -> %f\n", freq, bw);
-	}
-
-	const double w0 = 2.0 * M_PI * freq / rate;
-	const double alpha = sin(w0) * sinh((log(2)/2) * bw * (w0/sin(w0)));
-
-	const double b0 =  alpha;
-	const double b1 =  0;
-	const double b2 = -alpha;
-
-	const double a0 =  1.0 + alpha;
-	const double a1 = -2.0 * cos(w0);
-	const double a2 =  1.0 - alpha;
-
-	f->c[0] = b0 / a0;
-	f->c[1] = b1 / a0;
-	f->c[2] = b2 / a0;
-	f->c[3] = a1 / a0;
-	f->c[4] = a2 / a0;
-
-	return;
-}
-
-static float bandpass_proc (struct FilterParam *f, const float in) {
-#if 1
-	for(int i=0; i < 2; ++i) {
-		f->x[i]  = f->x[i+1];
-		f->y0[i] = f->y0[i+1];
-		f->y1[i] = f->y1[i+1];
-		f->y2[i] = f->y2[i+1];
-	}
-#else
-		f->x [0] = f->x [1];
-		f->y0[0] = f->y0[1];
-		f->y1[0] = f->y1[1];
-		f->y2[0] = f->y2[1];
-
-		f->x [1] = f->x [2];
-		f->y0[1] = f->y0[2];
-		f->y1[1] = f->y1[2];
-		f->y2[1] = f->y2[2];
-#endif
-
-#define CONVOLV(INP,OUT) \
-	f->OUT[2] = f->c[0]*f->INP[2] + f->c[1]*f->INP[1] + f->c[2]*f->INP[0] \
-	                              - f->c[3]*f->OUT[1] - f->c[4]*f->OUT[0] \
-	                                                  + 1e-12;
-	f->x[2] = in;
-	CONVOLV(x,y0)
-	f->y1[2] = f->y0[2];
-	CONVOLV(y1,y2)
-	return f->y2[2];
-}
+#include "spectr.c"
 
 /******************************************************************************
  * LV2 spec
  */
 
-#define FILTER_COUNT (31)
-#define BP_Q (.333)
+#define FILTER_COUNT (30)
 
 typedef enum {
 	SA_INPUT0   = 0,
@@ -115,8 +40,8 @@ typedef enum {
 	SA_INPUT1   = 2,
 	SA_OUTPUT1  = 3,
 	SA_GAIN     = 4,
-	SA_ATTACK   = 36,
-	SA_DECAY    = 37,
+	SA_ATTACK   = 35,
+	SA_DECAY    = 36,
 } SAPortIndex;
 
 typedef struct {
@@ -134,23 +59,9 @@ typedef struct {
 	float decay, decay_h;
 
 	float  spec_f[FILTER_COUNT];
-	struct FilterParam flt[FILTER_COUNT];
+	struct FilterBank flt[FILTER_COUNT];
 
 } LV2spec;
-
-static const float freq_table [FILTER_COUNT] = {
-	   20.0,    25.0,    31.5,
-	   40.0,    50.0,    63.0, 80.0,
-	  100.0,   125.0,   160.0,
-	  200.0,   250.0,   315.0,
-	  400.0,   500.0,   630.0, 800.0,
-	 1000.0,  1250.0,  1600.0,
-	 2000.0,  2500.0,  3150.0,
-	 4000.0,  5000.0,  6300.0, 8000.0,
-	10000.0, 12500.0, 16000.0,
-	20000.0
-};
-
 
 /******************************************************************************
  * LV2 callbacks
@@ -163,7 +74,7 @@ spectrum_instantiate(
 		const char*               bundle_path,
 		const LV2_Feature* const* features)
 {
-	if (strcmp(descriptor->URI, MTR_URI "spectrum") && strcmp(descriptor->URI, MTR_URI "spectrum_gtk")) {
+	if (strcmp(descriptor->URI, MTR_URI "spectr30") && strcmp(descriptor->URI, MTR_URI "spectr30_gtk")) {
 		return NULL;
 	}
 
@@ -179,9 +90,21 @@ spectrum_instantiate(
 	self->attack = 1.0f - expf(-2.0 * M_PI * self->attack_h / rate);
 	self->decay  = 1.0f - expf(-2.0 * M_PI * self->decay_h / rate);
 
-	for (int i = 0; i < FILTER_COUNT; ++i) {
+	/* filter-frequencies */
+	const double f_r = 1000;
+	const double b = 3;
+	const double f1f = pow(2, -1. / (2. * b));
+	const double f2f = pow(2,  1. / (2. * b));
+
+	for (uint32_t i=0; i < FILTER_COUNT; ++i) {
+		const int x = i - 16;
+		const double f_m = pow(2, x / b) * f_r;
+		const double f_1 = f_m * f1f;
+		const double f_2 = f_m * f2f;
+		const double bw  = f_2 - f_1;
+		printf("--F %2d (%3d): f:%9.2fHz b:%9.2fHz (%9.2fHz -> %9.2fHz)\n",i, x, f_m, bw, f_1, f_2);
 		self->spec_f[i] = 0;
-		bandpass_init(&self->flt[i],  self->rate,  freq_table[i], BP_Q);
+		bandpass_setup(&self->flt[i], self->rate, f_m, bw);
 	}
 
 	return (LV2_Handle)self;
@@ -251,7 +174,7 @@ spectrum_run(LV2_Handle instance, uint32_t n_samples)
 	const float attack = self->attack > self->decay ? self->attack : self->decay;
 	const float decay  = self->decay;
 	const float gain   = *self->gain;
-	struct FilterParam *flt[FILTER_COUNT];
+	struct FilterBank *flt[FILTER_COUNT];
 
 	float mx [FILTER_COUNT];
 	for(int i=0; i < FILTER_COUNT; ++i) {
@@ -274,7 +197,8 @@ spectrum_run(LV2_Handle instance, uint32_t n_samples)
 		const float in  = gain * (L + R) / 2.0f;
 				
 		for(int i = 0; i < FILTER_COUNT; ++i) {
-			const float v = fabsf(bandpass_proc(flt[i], in));
+			// TODO use RMS and low-pass filter
+			const float v = fabsf(bandpass_process(flt[i], in));
 			spec_f[i] += v > spec_f[i] ? attack * (v - spec_f[i]) : decay * (v - spec_f[i]);
 			if (spec_f[i] > mx[i]) mx[i] = spec_f[i];
 		}
@@ -285,10 +209,12 @@ spectrum_run(LV2_Handle instance, uint32_t n_samples)
 		if (!finite(spec_f[i])) spec_f[i] = 0;
 		else if (spec_f[i] > 100) spec_f[i] = 100;
 		else if (spec_f[i] < 0) spec_f[i] = 0;
-		if (!finite(flt[i]->y0[2])) flt[i]->y0[2] = 0;
-		if (!finite(flt[i]->y0[1])) flt[i]->y0[1] = 0;
-		if (!finite(flt[i]->y2[2])) flt[i]->y2[2] = 0;
-		if (!finite(flt[i]->y2[1])) flt[i]->y2[1] = 0;
+
+		for (uint32_t j=0; j < flt[i]->filter_stages; ++j) {
+			if (!finite(flt[i]->f[j].z[0])) flt[i]->f[j].z[0] = 0;
+			if (!finite(flt[i]->f[j].z[1])) flt[i]->f[j].z[1] = 0;
+		}
+
 		self->spec_f[i] = spec_f[i] + 10e-12 ;
 		*(self->spec[i]) = mx[i] > .000316f ? 20.0 * log10f(mx[i]) : -70.0;
 	}
@@ -308,7 +234,7 @@ spectrum_cleanup(LV2_Handle instance)
 }
 
 static const LV2_Descriptor descriptorSpectrum = {
-	MTR_URI "spectrum",
+	MTR_URI "spectr30",
 	spectrum_instantiate,
 	spectrum_connect_port,
 	NULL,
@@ -319,7 +245,7 @@ static const LV2_Descriptor descriptorSpectrum = {
 };
 
 static const LV2_Descriptor descriptorSpectrumGtk = {
-	MTR_URI "spectrum_gtk",
+	MTR_URI "spectr30_gtk",
 	spectrum_instantiate,
 	spectrum_connect_port,
 	NULL,

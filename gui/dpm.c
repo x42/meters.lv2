@@ -52,16 +52,16 @@
 #define INV_GAINSCALE(x) (powf(10, .05f * ((x * 5.20411f) - 20)))
 
 static const char *freq_table [] = {
-	" 20 Hz",   " 25 Hz",  "31.5 Hz",
-	" 40 Hz",   " 50 Hz",   " 63 Hz", " 80 Hz",
-	"100 Hz",   "125 Hz",   "160 Hz",
-	"200 Hz",   "250 Hz",   "315 Hz",
-	"400 Hz",   "500 Hz",   "630 Hz", "800 Hz",
-	" 1 kHz",  "1250 Hz",  "1.6 kHz",
-	" 2 kHz",  "2.5 kHz",  "3150 Hz",
-	" 4 kHz",   " 5 kHz",  "6.3 kHz", " 8 kHz",
-	"10 kHz", "12.5 kHz",  "16 kHz",
-	"20 kHz"
+	  " 25 Hz", "31.5 Hz",  " 40 Hz",
+	  " 50 Hz",  " 63 Hz",  " 80 Hz",
+	  "100 Hz",  "125 Hz",  "160 Hz",
+	  "200 Hz",  "250 Hz",  "315 Hz",
+	  "400 Hz",  "500 Hz",  "630 Hz",
+	  "800 Hz",  " 1 kHz", "1250 Hz",
+	 "1.6 kHz",  " 2 kHz", "2.5 kHz",
+	 "3150 Hz",  " 4 kHz",  " 5 kHz",
+	 "6.3 kHz",  " 8 kHz",  "10 kHz",
+	"12.5 kHz",  "16 kHz",  "20 kHz"
 };
 
 typedef struct {
@@ -839,10 +839,10 @@ instantiate(
 	SAUI* ui = (SAUI*) calloc(1,sizeof(SAUI));
 	*widget = NULL;
 
-	if      (!strcmp(plugin_uri, MTR_URI "spectrum")) { ui->num_meters = 31; ui->display_freq = true; }
+	if      (!strcmp(plugin_uri, MTR_URI "spectr30")) { ui->num_meters = 30; ui->display_freq = true; }
 	else if (!strcmp(plugin_uri, MTR_URI "dBTPmono")) { ui->num_meters = 1; ui->display_freq = false; }
 	else if (!strcmp(plugin_uri, MTR_URI "dBTPstereo")) { ui->num_meters = 2; ui->display_freq = false; }
-	else if (!strcmp(plugin_uri, MTR_URI "spectrum_gtk")) { ui->num_meters = 31; ui->display_freq = true; }
+	else if (!strcmp(plugin_uri, MTR_URI "spectr30_gtk")) { ui->num_meters = 30; ui->display_freq = true; }
 	else if (!strcmp(plugin_uri, MTR_URI "dBTPmono_gtk")) { ui->num_meters = 1; ui->display_freq = false; }
 	else if (!strcmp(plugin_uri, MTR_URI "dBTPstereo_gtk")) { ui->num_meters = 2; ui->display_freq = false; }
 	else {
@@ -1012,12 +1012,12 @@ static void handle_spectrum_connections(SAUI* ui, uint32_t port_index, float v) 
 			ui->disable_signals = false;
 		}
 	} else
-	if (port_index == 36) {
+	if (port_index == 35) {
 		ui->disable_signals = true;
 		robtk_dial_set_value(ui->spn_attack, ATTACKSCALE(v));
 		ui->disable_signals = false;
 	} else
-	if (port_index == 37) {
+	if (port_index == 36) {
 		ui->disable_signals = true;
 		robtk_dial_set_value(ui->spn_decay, DECAYSCALE(v));
 		ui->disable_signals = false;
@@ -1025,7 +1025,6 @@ static void handle_spectrum_connections(SAUI* ui, uint32_t port_index, float v) 
 	if (port_index > 4 && port_index < 5 + ui->num_meters) {
 		int pidx = port_index -5;
 		float np = ui->peak_val[pidx];
-		v+=.07;
 		if (v > np) { np = v; }
 		invalidate_meter(ui, pidx, v, np);
 	}
