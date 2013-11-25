@@ -529,8 +529,8 @@ lv2_descriptor(uint32_t index)
 	case 41: return &descriptor41;
 	case 42: return &descriptor42;
 	case 43: return &descriptor43;
-	case 44: return &descriptorSpectrum1;
-	case 45: return &descriptorSpectrum2;
+	case 44: return &descriptorSpectrum2;
+	case 45: return &descriptorSpectrum2Gtk;
 	default: return NULL;
 	}
 }
