@@ -23,6 +23,7 @@
 #include <string.h>
 #include <math.h>
 #include <stdbool.h>
+#include <assert.h>
 
 #if __cplusplus >= 201103L || defined __APPLE__
 # include <complex>
@@ -81,24 +82,52 @@ bandpass_setup(struct FilterBank *fb,
 		double band
 		) {
 
-	fb->filter_stages = 6; // must be an even number
+	/* must be an even number for the algorithm below */
+	fb->filter_stages = 6;
+
+	assert (band > 0);
 
 	for (uint32_t i = 0; i < fb->filter_stages; ++i) {
 		fb->f[i].z[z1] = fb->f[i].z[z2] = 0;
 	}
 
-	const double fc = M_PI * freq / rate;
-	const double fw = M_PI * band / rate;
+	const double _wc = 2. * M_PI * freq / rate;
+	const double _ww = 2. * M_PI * band / rate;
 
-	// TODO check||limit to nyquist
+	double wl = _wc - (_ww / 2.);
+	double wu = _wc + (_ww / 2.);
 
-	/* num/den coefficients */
-	const double c_a  = cos (2. * fc) / cos (fw);
-	const double c_b  = 1. / tan (fw);
+	if (wu > M_PI - 1e-9) {
+		/* limit band to below nyquist */
+		wu = M_PI - 1e-9;
+		fprintf(stderr, "spectr.lv2: band f:%9.2fHz (%.2fHz -> %.2fHz) exceeds nysquist (%.0f/2)\n",
+				freq, freq-band/2, freq+band/2, rate);
+		fprintf(stderr, "spectr.lv2: shifted to f:%.2fHz (%.2fHz -> %.2fHz)\n",
+				rate * (wu + wl) *.25 / M_PI,
+				rate * wl * .5 / M_PI,
+				rate * wu * .5 / M_PI);
+	}
+	if (wl < 1e-9) {
+		/* this is just for completeness, it cannot happen with spectr.lv2 */
+		wl = 1e-9;
+		fprintf(stderr, "spectr.lv2: band f:%9.2fHz (%.2fHz -> %.2fHz) contains sub-bass frequencies\n",
+				freq, freq-band/2, freq+band/2);
+		fprintf(stderr, "spectr.lv2: shifted to f:%.2fHz (%.2fHz -> %.2fHz)\n",
+				rate * (wu + wl) *.25 / M_PI,
+				rate * wl * .5 / M_PI,
+				rate * wu * .5 / M_PI);
+	}
+
+	wu *= .5; wl *= .5;
+	assert (wu > wl);
+
+	const double c_a =      cos (wu + wl) / cos (wu - wl);
+	const double c_b = 1. / tan (wu - wl);
+	const double w   = 2. * atan (sqrt (tan (wu) * tan(wl)));
+
 	const double c_a2 = c_a * c_a;
 	const double c_b2 = c_b * c_b;
 	const double ab_2 = 2. * c_a * c_b;
-	const double w    = 2. * atan (sqrt (tan (fc + fw * .5) * tan(fc - fw * .5)));
 
 	/* bilinear transform coefficients into z-domain */
 	for (uint32_t i = 0; i < fb->filter_stages / 2; ++i) {
