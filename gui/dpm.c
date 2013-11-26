@@ -71,6 +71,7 @@ typedef struct {
   RobWidget* m0;
 	RobTkScale* fader;
 	RobTkLbl* lbl_speed;
+	RobTkCBtn* btn_peaks;
 	RobTkDial* spn_speed;
 	RobTkSep* sep_h0;
 
@@ -96,6 +97,8 @@ typedef struct {
 	bool reset_toggle;
 	bool initialized;
 	bool metrics_changed;
+	bool show_peaks;
+	bool show_peaks_changed;
 
 	float cache_sf;
 	float cache_ma;
@@ -479,12 +482,14 @@ static void render_meter(SAUI* ui, int i, int v_old, int v_new, int m_old, int m
 	cairo_rectangle (cr, GM_LEFT, GM_TOP + GM_SCALE - v_new - 1, GM_GIRTH, v_new + 1);
 	cairo_fill(cr);
 
-	/* peak hold */
-	cairo_set_operator (cr, CAIRO_OPERATOR_OVER);
-	cairo_rectangle (cr, GM_LEFT, GM_TOP + GM_SCALE - m_new - 0.5, GM_GIRTH, 3);
-	cairo_fill_preserve (cr);
-	CairoSetSouerceRGBA(c_hlt);
-	cairo_fill(cr);
+	if (ui->show_peaks) {
+		/* peak hold */
+		cairo_set_operator (cr, CAIRO_OPERATOR_OVER);
+		cairo_rectangle (cr, GM_LEFT, GM_TOP + GM_SCALE - m_new - 0.5, GM_GIRTH, 3);
+		cairo_fill_preserve (cr);
+		CairoSetSouerceRGBA(c_hlt);
+		cairo_fill(cr);
+	}
 
 	/* border */
 	cairo_reset_clip(cr);
@@ -541,13 +546,17 @@ static bool expose_event(RobWidget* handle, cairo_t* cr, cairo_rectangle_t *ev) 
 		const int m_old = ui->peak_vis[i];
 		const int m_new = ui->peak_def[i];
 
-		if (v_old != v_new || m_old != m_new) {
+		if (v_old != v_new || m_old != m_new || ui->show_peaks_changed) {
 			ui->val_vis[i] = v_new;
 			ui->peak_vis[i] = m_new;
 			render_meter(ui, i, v_old, v_new, m_old, m_new);
 		}
 		cairo_set_source_surface(cr, ui->sf[i], MA_WIDTH + GM_WIDTH * i, 0);
 		cairo_paint (cr);
+	}
+
+	if (ev->width >= ui->width && ev->width >= ui->height) {
+		ui->show_peaks_changed = false;
 	}
 
 	/* numerical peak and value */
@@ -696,6 +705,15 @@ static bool set_speed(RobWidget* w, void* handle) {
 	return TRUE;
 }
 
+static bool set_peakdisplay(RobWidget* w, void* handle) {
+	SAUI* ui = (SAUI*)handle;
+	bool show_peaks = robtk_cbtn_get_active(ui->btn_peaks);
+	ui->show_peaks = show_peaks;
+	ui->show_peaks_changed = true;
+	queue_draw(ui->m0);
+	return TRUE;
+}
+
 static RobWidget* mousemove(RobWidget* handle, RobTkBtnEvent *event) {
 	SAUI* ui = (SAUI*)GET_HANDLE(handle);
 	if (event->y < GM_TOP || event->y > (GM_TOP + GM_SCALE)) {
@@ -754,10 +772,12 @@ static RobWidget * toplevel(SAUI* ui, void * const top)
 	/* vbox on the right */
 	ui->c_box = rob_vbox_new(FALSE, 2);
 
-	ui->fader      = robtk_scale_new(-12, 32.0, .05, FALSE);
-	ui->lbl_speed  = robtk_lbl_new("Speed:");
-	ui->spn_speed  = robtk_dial_new(0, 100, .5);
-	robtk_dial_set_default(ui->spn_speed, DECAYSCALE(2.0f));
+	ui->fader     = robtk_scale_new(-12, 32.0, .05, FALSE);
+	ui->lbl_speed = robtk_lbl_new("Speed:");
+	ui->spn_speed = robtk_dial_new(DECAYSCALE(.01), DECAYSCALE(2), .1);
+	ui->btn_peaks = robtk_cbtn_new("Peak\nHold", GBT_LED_LEFT, true);
+	robtk_cbtn_set_active(ui->btn_peaks, true);
+	robtk_dial_set_default(ui->spn_speed, DECAYSCALE(1.0f));
 	robtk_dial_set_surface(ui->spn_speed, ui->dial);
 
 	robtk_scale_set_default(ui->fader, 0);
@@ -789,11 +809,13 @@ static RobWidget * toplevel(SAUI* ui, void * const top)
 		rob_hbox_child_pack(ui->c_box, robtk_lbl_widget(ui->lbl_speed), FALSE);
 		rob_hbox_child_pack(ui->c_box, robtk_dial_widget(ui->spn_speed), FALSE);
 #endif
+		rob_hbox_child_pack(ui->c_box, robtk_cbtn_widget(ui->btn_peaks), FALSE);
 	}
 
 	/* callbacks */
 	robtk_scale_set_callback(ui->fader, set_gain, ui);
 	robtk_dial_set_callback(ui->spn_speed, set_speed, ui);
+	robtk_cbtn_set_callback(ui->btn_peaks, set_peakdisplay, ui);
 
 	return ui->rw;
 }
@@ -901,6 +923,7 @@ cleanup(LV2UI_Handle handle)
 	robtk_scale_destroy(ui->fader);
 	robtk_lbl_destroy(ui->lbl_speed);
 	robtk_dial_destroy(ui->spn_speed);
+	robtk_cbtn_destroy(ui->btn_peaks);
 	robtk_sep_destroy(ui->sep_h0);
 	rob_box_destroy(ui->c_box);
 
@@ -965,7 +988,7 @@ static void invalidate_meter(SAUI* ui, int mtr, float val, float peak) {
 				GM_GIRTH + 2, h+3);
 	}
 
-	if (m_old != m_new) {
+	if (m_old != m_new && ui->show_peaks) {
 		if (m_old > m_new) {
 			t = m_old;
 			h = m_old - m_new;
