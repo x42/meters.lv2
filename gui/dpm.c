@@ -99,6 +99,7 @@ typedef struct {
 	bool metrics_changed;
 	bool show_peaks;
 	bool show_peaks_changed;
+	uint32_t misc_state;
 
 	float cache_sf;
 	float cache_ma;
@@ -708,8 +709,14 @@ static bool set_speed(RobWidget* w, void* handle) {
 static bool set_peakdisplay(RobWidget* w, void* handle) {
 	SAUI* ui = (SAUI*)handle;
 	bool show_peaks = robtk_cbtn_get_active(ui->btn_peaks);
+	ui->misc_state &=~1;
+	if (show_peaks) ui->misc_state |=~1;
 	ui->show_peaks = show_peaks;
 	ui->show_peaks_changed = true;
+	if (!ui->disable_signals) {
+		float misc_state = ui->misc_state;
+		ui->write(ui->controller, 63, sizeof(float), 0, (const void*) &misc_state);
+	}
 	queue_draw(ui->m0);
 	return TRUE;
 }
@@ -1014,6 +1021,13 @@ static void handle_spectrum_connections(SAUI* ui, uint32_t port_index, float v) 
 		if (v >= -12 && v <= 32.0) {
 			ui->disable_signals = true;
 			robtk_scale_set_value(ui->fader, v);
+			ui->disable_signals = false;
+		}
+	} else
+	if (port_index == 63) {
+		if (v >= 0 && v <= 256.0) {
+			ui->disable_signals = true;
+			robtk_cbtn_set_active(ui->btn_peaks, (((int)v)&1) == 1);
 			ui->disable_signals = false;
 		}
 	} else

@@ -36,13 +36,14 @@
 #define FILTER_COUNT (30)
 
 typedef enum {
-	SA_INPUT0   = 63,
-	SA_OUTPUT0  = 64,
-	SA_INPUT1   = 65,
-	SA_OUTPUT1  = 66,
 	SA_SPEED    = 60,
 	SA_RESET    = 61,
 	SA_AMP      = 62,
+	SA_STATE    = 63,
+	SA_INPUT0   = 64,
+	SA_OUTPUT0  = 65,
+	SA_INPUT1   = 66,
+	SA_OUTPUT1  = 67,
 } SAPortIndex;
 
 typedef struct {
