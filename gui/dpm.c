@@ -875,6 +875,10 @@ instantiate(
 	ui->highlight = -1;
 	ui->metrics_changed = true;
 
+	ui->show_peaks_changed = false;
+	ui->show_peaks = true;
+	ui->misc_state = 1;
+
 	initialize_font_cache(ui);
 	alloc_annotations(ui);
 	create_meter_pattern(ui);
