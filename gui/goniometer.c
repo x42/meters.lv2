@@ -1197,44 +1197,44 @@ instantiate(
 
 	/* layout */
 	int row = 0;
-	rob_table_attach((ui->c_tbl), robtk_sep_widget(ui->sep_h0), 0, 5, row, row+1, 0, 4);
+	rob_table_attach((ui->c_tbl), robtk_sep_widget(ui->sep_h0), 0, 5, row, row+1, 0, 4, RTK_EXANDF, RTK_SHRINK);
 
 	row++;
 	rob_table_attach_defaults((ui->c_tbl), robtk_scale_widget(ui->fader), 0, 5, row, row+1);
 
 	row++;
-	rob_table_attach((ui->c_tbl), GLB_W(ui->lbl_gattack)          , 0, 1, row, row+1, 4, 0);
+	rob_table_attach((ui->c_tbl), GLB_W(ui->lbl_gattack)          , 0, 1, row, row+1, 4, 0, RTK_SHRINK, RTK_SHRINK);
 	rob_table_attach_defaults((ui->c_tbl), GED_W(ui->spn_gattack) , 1, 2, row, row+1);
-	rob_table_attach((ui->c_tbl), GLB_W(ui->lbl_gdecay)           , 3, 4, row, row+1, 4, 0);
+	rob_table_attach((ui->c_tbl), GLB_W(ui->lbl_gdecay)           , 3, 4, row, row+1, 4, 0, RTK_SHRINK, RTK_SHRINK);
 	rob_table_attach_defaults((ui->c_tbl), GED_W(ui->spn_gdecay)  , 4, 5, row, row+1);
 
 	row++;
-	rob_table_attach((ui->c_tbl), GLB_W(ui->lbl_gtarget)          , 0, 1, row, row+1, 4, 0);
+	rob_table_attach((ui->c_tbl), GLB_W(ui->lbl_gtarget)          , 0, 1, row, row+1, 4, 0, RTK_SHRINK, RTK_SHRINK);
 	rob_table_attach_defaults((ui->c_tbl), GED_W(ui->spn_gtarget) , 1, 2, row, row+1);
-	rob_table_attach((ui->c_tbl), GLB_W(ui->lbl_grms)             , 3, 4, row, row+1, 4, 0);
+	rob_table_attach((ui->c_tbl), GLB_W(ui->lbl_grms)             , 3, 4, row, row+1, 4, 0, RTK_SHRINK, RTK_SHRINK);
 	rob_table_attach_defaults((ui->c_tbl), GED_W(ui->spn_grms)    , 4, 5, row, row+1);
 
 	row++;
-	rob_table_attach((ui->c_tbl), robtk_sep_widget(ui->sep_h1), 0, 5, row, row+1, 0, 4);
+	rob_table_attach((ui->c_tbl), robtk_sep_widget(ui->sep_h1), 0, 5, row, row+1, 0, 4, RTK_EXANDF, RTK_SHRINK);
 
 	row++;
-	rob_table_attach((ui->c_tbl), robtk_sep_widget(ui->sep_v0), 2, 3, row, row+3, 6, 0);
+	rob_table_attach((ui->c_tbl), robtk_sep_widget(ui->sep_v0), 2, 3, row, row+3, 6, 0, RTK_SHRINK, RTK_FILL);
 
-	rob_table_attach((ui->c_tbl), GLB_W(ui->lbl_src_fact)         , 0, 1, row, row+1, 4, 0);
+	rob_table_attach((ui->c_tbl), GLB_W(ui->lbl_src_fact)         , 0, 1, row, row+1, 4, 0, RTK_SHRINK, RTK_SHRINK);
 	rob_table_attach_defaults((ui->c_tbl), GSP_W(ui->spn_src_fact), 1, 2, row, row+1);
 
-	rob_table_attach((ui->c_tbl), GBT_W(ui->cbn_xfade)            , 3, 4, row, row+1, 4, 0);
+	rob_table_attach((ui->c_tbl), GBT_W(ui->cbn_xfade)            , 3, 4, row, row+1, 4, 0, RTK_SHRINK, RTK_SHRINK);
 	rob_table_attach_defaults((ui->c_tbl), GED_W(ui->spn_alpha)   , 4, 5, row, row+1);
 
 	row++;
-	rob_table_attach((ui->c_tbl), GLB_W(ui->lbl_psize)            , 0, 1, row, row+1, 4, 0);
+	rob_table_attach((ui->c_tbl), GLB_W(ui->lbl_psize)            , 0, 1, row, row+1, 4, 0, RTK_SHRINK, RTK_SHRINK);
 	rob_table_attach_defaults((ui->c_tbl), GSP_W(ui->spn_psize)   , 1, 2, row, row+1);
 
 	row++;
-	rob_table_attach((ui->c_tbl), GLB_W(ui->lbl_vfreq)            , 0, 1, row, row+1, 4, 0);
+	rob_table_attach((ui->c_tbl), GLB_W(ui->lbl_vfreq)            , 0, 1, row, row+1, 4, 0, RTK_SHRINK, RTK_SHRINK);
 	rob_table_attach_defaults((ui->c_tbl), GSP_W(ui->spn_vfreq)   , 1, 2, row, row+1);
 
-	rob_table_attach((ui->c_tbl), GLB_W(ui->lbl_compress)         , 3, 4, row, row+1, 4, 0);
+	rob_table_attach((ui->c_tbl), GLB_W(ui->lbl_compress)         , 3, 4, row, row+1, 4, 0, RTK_SHRINK, RTK_SHRINK);
 	rob_table_attach_defaults((ui->c_tbl), GED_W(ui->spn_compress), 4, 5, row, row+1);
 
 	/* button box packing */
