@@ -120,7 +120,7 @@ spectrum_instantiate(
 #endif
 		self->val_f[i] = 0;
 		self->max_f[i] = 0;
-		bandpass_setup(&self->flt[i], self->rate, f_m, bw);
+		bandpass_setup(&self->flt[i], self->rate, f_m, bw, 6);
 	}
 
 	return (LV2_Handle)self;

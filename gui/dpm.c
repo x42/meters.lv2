@@ -693,7 +693,7 @@ static bool set_gain(RobWidget* w, void* handle) {
 #endif
 }
 
-/* val: .5 .. 15 1/s  <> 0..100 */
+/* val: .05 .. 15 1/s  <> 0..100 */
 #define DECAYSCALE(X) ((X) > 0.01 ? rint(400.0 * (1.3f + log10f(X)) )/ 10.0 : 0)
 #define INV_DECAYSCALE(X) powf(10, (X) * .025f - 1.3f)
 static bool set_speed(RobWidget* w, void* handle) {

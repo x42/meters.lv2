@@ -79,12 +79,14 @@ static void
 bandpass_setup(struct FilterBank *fb,
 		double rate,
 		double freq,
-		double band
+		double band,
+		int    order
 		) {
 
 	/* must be an even number for the algorithm below */
-	fb->filter_stages = 6;
+	fb->filter_stages = order;
 
+	assert (order > 0 && (order%2) == 0);
 	assert (band > 0);
 
 	for (uint32_t i = 0; i < fb->filter_stages; ++i) {
