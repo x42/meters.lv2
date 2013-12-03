@@ -48,6 +48,10 @@
 #define UINT_TO_RGB(u,r,g,b) { (*(r)) = ((u)>>16)&0xff; (*(g)) = ((u)>>8)&0xff; (*(b)) = (u)&0xff; }
 #define UINT_TO_RGBA(u,r,g,b,a) { UINT_TO_RGB(((u)>>8),r,g,b); (*(a)) = (u)&0xff; }
 
+/* val: .05 .. 15 1/s  <> 0..100 */
+#define RESPSCALE(X) ((X) > 0.05 ? rint(400.0 * (1.3f + log10f(X)) )/ 10.0 : 0)
+#define INV_RESPSCALE(X) powf(10, (X) * .025f - 1.3f)
+
 static const char *freq_table [] = {
 	  " 25 Hz", "31.5 Hz",  " 40 Hz",
 	  " 50 Hz",  " 63 Hz",  " 80 Hz",
@@ -345,15 +349,38 @@ static void alloc_annotations(SAUI* ui) {
 		}
 	}
 
-	ui->dial = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, GED_WIDTH, GED_HEIGHT);
+	ui->dial = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, GED_WIDTH, GED_HEIGHT+10);
 	cr = cairo_create (ui->dial);
 	CairoSetSouerceRGBA(c_trs);
 	cairo_set_operator (cr, CAIRO_OPERATOR_SOURCE);
-	cairo_rectangle (cr, 0, 0, GED_WIDTH, GED_HEIGHT);
+	cairo_rectangle (cr, 0, 0, GED_WIDTH, GED_HEIGHT+10);
 	cairo_fill (cr);
 	cairo_set_operator (cr, CAIRO_OPERATOR_OVER);
-	write_text(cr, "slow", FONT_MTR, 2, GED_HEIGHT - 1, 0, -6, ui->c_txt);
-	write_text(cr, "fast", FONT_MTR, GED_WIDTH-1, GED_HEIGHT - 1, 0, -4, ui->c_txt);
+
+	float xlp, ylp;
+#define RESPLABLEL(V) \
+	{ \
+		float ang = (-.75 * M_PI) + (1.5 * M_PI) * (RESPSCALE(V) - RESPSCALE(.05)) / (RESPSCALE(8.) - RESPSCALE(.05)); \
+		xlp = GED_CX + .5 + sinf (ang) * (GED_RADIUS + 3.0); \
+		ylp = GED_CY + 10.5 - cosf (ang) * (GED_RADIUS + 3.0); \
+		cairo_set_line_cap(cr, CAIRO_LINE_CAP_ROUND); \
+		CairoSetSouerceRGBA(ui->c_txt); \
+		cairo_set_line_width(cr, 1.5); \
+		cairo_move_to(cr, rint(xlp)-.5, rint(ylp)-.5); \
+		cairo_close_path(cr); \
+		cairo_stroke(cr); \
+		xlp = GED_CX + .5 + sinf (ang) * (GED_RADIUS + 9.5); \
+		ylp = GED_CY + 10.5 - cosf (ang) * (GED_RADIUS + 9.5); \
+	}
+
+	RESPLABLEL(8.0); write_text(cr, "1/8", FONT_MTR, xlp, ylp, 0, -2, ui->c_txt);
+	RESPLABLEL(4.0); write_text(cr, " 1/4", FONT_MTR, xlp, ylp, 0, -2, ui->c_txt);
+	RESPLABLEL(2.0); write_text(cr, " 1/2", FONT_MTR, xlp, ylp, 0, -2, ui->c_txt);
+	RESPLABLEL(1.0); write_text(cr, "1", FONT_MTR, xlp, ylp, 0, -2, ui->c_txt);
+	RESPLABLEL(1/2.f); write_text(cr, "2", FONT_MTR, xlp, ylp, 0, -2, ui->c_txt);
+	RESPLABLEL(1/4.f); write_text(cr, "4", FONT_MTR, xlp, ylp, 0, -2, ui->c_txt);
+	RESPLABLEL(1/10.f); write_text(cr, "10 ", FONT_MTR, xlp, ylp, 0, -2, ui->c_txt);
+	RESPLABLEL(1/20.f); write_text(cr, "20", FONT_MTR, xlp, ylp, 0, -2, ui->c_txt);
 	cairo_destroy (cr);
 }
 
@@ -693,13 +720,10 @@ static bool set_gain(RobWidget* w, void* handle) {
 #endif
 }
 
-/* val: .05 .. 15 1/s  <> 0..100 */
-#define DECAYSCALE(X) ((X) > 0.01 ? rint(400.0 * (1.3f + log10f(X)) )/ 10.0 : 0)
-#define INV_DECAYSCALE(X) powf(10, (X) * .025f - 1.3f)
 static bool set_speed(RobWidget* w, void* handle) {
 	SAUI* ui = (SAUI*)handle;
 	if (!ui->disable_signals) {
-		float val = INV_DECAYSCALE(robtk_dial_get_value(ui->spn_speed));
+		float val = INV_RESPSCALE(robtk_dial_get_value(ui->spn_speed));
 		//printf("set_speed %f -> %f\n", robtk_dial_get_value(ui->spn_speed), val);
 		ui->write(ui->controller, 60, sizeof(float), 0, (const void*) &val);
 	}
@@ -780,11 +804,11 @@ static RobWidget * toplevel(SAUI* ui, void * const top)
 	ui->c_box = rob_vbox_new(FALSE, 2);
 
 	ui->fader     = robtk_scale_new(-12, 32.0, .05, FALSE);
-	ui->lbl_speed = robtk_lbl_new("Speed:");
-	ui->spn_speed = robtk_dial_new(DECAYSCALE(.01), DECAYSCALE(2), .1);
-	ui->btn_peaks = robtk_cbtn_new("Peak\nHold", GBT_LED_LEFT, true);
+	ui->lbl_speed = robtk_lbl_new("Response [s]");
+	ui->spn_speed = robtk_dial_new_with_size(RESPSCALE(.05), RESPSCALE(8), .1, GED_WIDTH, GED_HEIGHT+10, GED_CX, GED_CY+10, GED_RADIUS);
+	ui->btn_peaks = robtk_cbtn_new("Peak Hold", GBT_LED_LEFT, true);
 	robtk_cbtn_set_active(ui->btn_peaks, true);
-	robtk_dial_set_default(ui->spn_speed, DECAYSCALE(1.0f));
+	robtk_dial_set_default(ui->spn_speed, RESPSCALE(1.0f));
 	robtk_dial_set_surface(ui->spn_speed, ui->dial);
 
 	robtk_scale_set_default(ui->fader, 0);
@@ -812,7 +836,7 @@ static RobWidget * toplevel(SAUI* ui, void * const top)
 		rob_hbox_child_pack(ui->rw, ui->c_box, FALSE);
 
 		rob_hbox_child_pack(ui->c_box, robtk_scale_widget(ui->fader), TRUE);
-#if 0 // display speed, value-LPF config
+#if 1 // display speed, value-LPF config
 		rob_hbox_child_pack(ui->c_box, robtk_lbl_widget(ui->lbl_speed), FALSE);
 		rob_hbox_child_pack(ui->c_box, robtk_dial_widget(ui->spn_speed), FALSE);
 #endif
@@ -1037,7 +1061,9 @@ static void handle_spectrum_connections(SAUI* ui, uint32_t port_index, float v) 
 	} else
 	if (port_index == 60) {
 		ui->disable_signals = true;
-		robtk_dial_set_value(ui->spn_speed, DECAYSCALE(v));
+		if (v > 0 && v < 15) {
+			robtk_dial_set_value(ui->spn_speed, RESPSCALE(v));
+		}
 		ui->disable_signals = false;
 	} else
 	if (port_index >= 0 && port_index < 30) {
