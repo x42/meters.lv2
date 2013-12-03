@@ -716,7 +716,7 @@ mtr:goniometer@URI_SUFFIX@
 mtr:spectr30mono@URI_SUFFIX@
 	a lv2:Plugin, lv2:AnalyserPlugin, doap:Project ;
 	doap:license <http://usefulinc.com/doap/licenses/gpl> ;
-	doap:name "Spectrum Analyzer Mono@NAME_SUFFIX@";
+	doap:name "1/3 Octave Spectrum Display Mono@NAME_SUFFIX@";
 	lv2:project <http://gareus.org/oss/lv2/meters> ;
 	lv2:optionalFeature lv2:hardRTCapable ;
 	ui:ui @DPMGUI@ ;
@@ -1313,13 +1313,13 @@ mtr:spectr30mono@URI_SUFFIX@
 		lv2:symbol "out" ;
 		lv2:name "Out";
 	] ;
-	rdfs:comment "30-band (1/3 octave) spectrum analyzer. Currently not conform to ITU standard."
+	rdfs:comment "a 30-band (1/3 octave) spectrum analyzer, Implemented using 6th order butterworth biquad filters complying with performance requirements of class-0 IEC 61260. The frequency range is in powers-of-two centered around 1000Hz (see iec-61260 annex a). Reference level is 0dBFS, the time-conatant defaults to 1 second."
 	.
 
 mtr:spectr30stereo@URI_SUFFIX@
 	a lv2:Plugin, lv2:AnalyserPlugin, doap:Project ;
 	doap:license <http://usefulinc.com/doap/licenses/gpl> ;
-	doap:name "Spectrum Analyzer Stereo@NAME_SUFFIX@";
+	doap:name "1/3 Octave Spectrum Display Stereo@NAME_SUFFIX@";
 	lv2:project <http://gareus.org/oss/lv2/meters> ;
 	lv2:optionalFeature lv2:hardRTCapable ;
 	ui:ui @DPMGUI@ ;
@@ -1932,7 +1932,7 @@ mtr:spectr30stereo@URI_SUFFIX@
 		lv2:name "OutR" ;
 		lv2:designation pg:right ;
 	] ;
-	rdfs:comment "30-band (1/3 octave) spectrum analyzer. Currently not conform to ITU standard."
+	rdfs:comment "a 30-band (1/3 octave) spectrum analyzer, Implemented using 6th order butterworth biquad filters complying with performance requirements of class-0 IEC 61260. The frequency range is in powers-of-two centered around 1000Hz (see iec-61260 annex a). Reference level is 0dBFS, the time-conatant defaults to 1 second."
 	.
 
 mtr:dBTPmono@URI_SUFFIX@
@@ -2074,7 +2074,7 @@ mtr:dBTPstereo@URI_SUFFIX@
 mtr:K12mono@URI_SUFFIX@
 	a lv2:Plugin, lv2:AnalyserPlugin, doap:Project ;
 	doap:license <http://usefulinc.com/doap/licenses/gpl> ;
-	doap:name "K12 Meter (Mono)@NAME_SUFFIX@";
+	doap:name "K12/RMS Meter (Mono)@NAME_SUFFIX@";
 	lv2:project <http://gareus.org/oss/lv2/meters> ;
 	lv2:optionalFeature lv2:hardRTCapable ;
 	ui:ui @KMRGUI@ ;
@@ -2136,7 +2136,7 @@ mtr:K12mono@URI_SUFFIX@
 mtr:K12stereo@URI_SUFFIX@
 	a lv2:Plugin, lv2:AnalyserPlugin, doap:Project ;
 	doap:license <http://usefulinc.com/doap/licenses/gpl> ;
-	doap:name "K12 Meter (Stereo)@NAME_SUFFIX@";
+	doap:name "K12/RMS Meter (Stereo)@NAME_SUFFIX@";
 	lv2:project <http://gareus.org/oss/lv2/meters> ;
 	lv2:optionalFeature lv2:hardRTCapable ;
 	ui:ui @KMRGUI@ ;
@@ -2230,7 +2230,7 @@ mtr:K12stereo@URI_SUFFIX@
 mtr:K14mono@URI_SUFFIX@
 	a lv2:Plugin, lv2:AnalyserPlugin, doap:Project ;
 	doap:license <http://usefulinc.com/doap/licenses/gpl> ;
-	doap:name "K14 Meter (Mono)@NAME_SUFFIX@";
+	doap:name "K14/RMS Meter (Mono)@NAME_SUFFIX@";
 	lv2:project <http://gareus.org/oss/lv2/meters> ;
 	lv2:optionalFeature lv2:hardRTCapable ;
 	ui:ui @KMRGUI@ ;
@@ -2292,7 +2292,7 @@ mtr:K14mono@URI_SUFFIX@
 mtr:K14stereo@URI_SUFFIX@
 	a lv2:Plugin, lv2:AnalyserPlugin, doap:Project ;
 	doap:license <http://usefulinc.com/doap/licenses/gpl> ;
-	doap:name "K14 Meter (Stereo)@NAME_SUFFIX@";
+	doap:name "K14/RMS Meter (Stereo)@NAME_SUFFIX@";
 	lv2:project <http://gareus.org/oss/lv2/meters> ;
 	lv2:optionalFeature lv2:hardRTCapable ;
 	ui:ui @KMRGUI@ ;
@@ -2386,7 +2386,7 @@ mtr:K14stereo@URI_SUFFIX@
 mtr:K20mono@URI_SUFFIX@
 	a lv2:Plugin, lv2:AnalyserPlugin, doap:Project ;
 	doap:license <http://usefulinc.com/doap/licenses/gpl> ;
-	doap:name "K20 Meter (Mono)@NAME_SUFFIX@";
+	doap:name "K20/RMS Meter (Mono)@NAME_SUFFIX@";
 	lv2:project <http://gareus.org/oss/lv2/meters> ;
 	lv2:optionalFeature lv2:hardRTCapable ;
 	ui:ui @KMRGUI@ ;
@@ -2448,7 +2448,7 @@ mtr:K20mono@URI_SUFFIX@
 mtr:K20stereo@URI_SUFFIX@
 	a lv2:Plugin, lv2:AnalyserPlugin, doap:Project ;
 	doap:license <http://usefulinc.com/doap/licenses/gpl> ;
-	doap:name "K20 Meter (Stereo)@NAME_SUFFIX@";
+	doap:name "K20/RMS Meter (Stereo)@NAME_SUFFIX@";
 	lv2:project <http://gareus.org/oss/lv2/meters> ;
 	lv2:optionalFeature lv2:hardRTCapable ;
 	ui:ui @KMRGUI@ ;
