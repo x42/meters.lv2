@@ -10,14 +10,15 @@ It includes needle style meters (mono and stereo variants)
 *   IEC 60268-10 Type IIa / BBC
 *   IEC 60268-10 Type IIb / EBU
 *   IEC 60268-17 / VU
+*   30 Band 1/3 octave spectrum analyzer IEC 61260
+*   Digital True-Peak Meter (4x Oversampling), Type II rise-time, 13.3dB/s falloff.
 
 and the following stereo plugins
 
-*   Stereo Phase Correlation Meter (Needle Display)
 *   EBU R128 Meter with Histogram and History
+*   Stereo Phase Correlation Meter (Needle Display)
 *   Digital True-Peak Meter (4x Oversampling)
 *   Goniometer (Stereo Phase Scope)
-*   31 Band Spectrum-Analyzer
 
 Currently the plugins come in both Gtk and openGL variants (both
 versions are installed in parallel).
@@ -31,6 +32,7 @@ Should be pretty much self-explanatory. A few notes:
 * click + drag on the calibration-screw allows to modify the reference
 	level of the needle meters
 * shift + click on the calibration-screw resets to default
+* ctrl + click on meters with scalable GUI resets the window-size to 100%
 * clicking anywhere on the bar-graph meters resets the peak-hold
 
 Install
