@@ -528,7 +528,7 @@ static RobWidget * toplevel(KMUI* ui, void * const top)
 	robwidget_set_size_request(ui->m0, size_request);
 	robwidget_set_mousedown(ui->m0, cb_reset_peak);
 
-	rob_hbox_child_pack(ui->rw, ui->m0, TRUE);
+	rob_hbox_child_pack(ui->rw, ui->m0, TRUE, TRUE);
 	return ui->rw;
 }
 

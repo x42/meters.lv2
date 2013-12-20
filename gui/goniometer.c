@@ -1108,6 +1108,11 @@ instantiate(
 	robtk_cbtn_set_color_on(ui->cbn_lines, .1, .3, .8);
 	robtk_cbtn_set_color_off(ui->cbn_lines, .1, .1, .3);
 
+	robtk_cbtn_set_alignment(ui->cbn_preferences, .5, .5);
+	robtk_cbtn_set_alignment(ui->cbn_autogain, .5, .5);
+	robtk_cbtn_set_alignment(ui->cbn_src, .5, .5);
+	robtk_cbtn_set_alignment(ui->cbn_lines, .5, .5);
+
 	/* see also src/goniometerlv2.c -TOD  coax the defaults out of there */
 	robtk_dial_set_default(ui->spn_compress, 0.0);
 	robtk_dial_set_default(ui->spn_gattack, 54.0);
@@ -1238,15 +1243,15 @@ instantiate(
 	rob_table_attach_defaults((ui->c_tbl), GED_W(ui->spn_compress), 4, 5, row, row+1);
 
 	/* button box packing */
-	rob_hbox_child_pack(ui->b_box, GBT_W(ui->cbn_preferences), FALSE);
-	rob_hbox_child_pack(ui->b_box, GBT_W(ui->cbn_autogain), FALSE);
-	rob_hbox_child_pack(ui->b_box, GBT_W(ui->cbn_src), FALSE);
-	rob_hbox_child_pack(ui->b_box, GBT_W(ui->cbn_lines), FALSE);
+	rob_hbox_child_pack(ui->b_box, GBT_W(ui->cbn_preferences), FALSE, FALSE);
+	rob_hbox_child_pack(ui->b_box, GBT_W(ui->cbn_autogain), FALSE, FALSE);
+	rob_hbox_child_pack(ui->b_box, GBT_W(ui->cbn_src), FALSE, FALSE);
+	rob_hbox_child_pack(ui->b_box, GBT_W(ui->cbn_lines), FALSE, FALSE);
 
 	/* global packing */
-	rob_vbox_child_pack(ui->box, ui->m0, TRUE);
-	rob_vbox_child_pack(ui->box, ui->b_box, TRUE);
-	rob_vbox_child_pack(ui->box, ui->c_tbl, FALSE);
+	rob_vbox_child_pack(ui->box, ui->m0, FALSE, FALSE);
+	rob_vbox_child_pack(ui->box, ui->b_box, FALSE, FALSE);
+	rob_vbox_child_pack(ui->box, ui->c_tbl, FALSE, FALSE);
 
 	robtk_cbtn_set_active(ui->cbn_preferences, FALSE);
 	restore_state(ui);

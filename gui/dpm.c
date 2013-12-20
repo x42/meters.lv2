@@ -830,17 +830,17 @@ static RobWidget * toplevel(SAUI* ui, void * const top)
 
 	/* layout */
 
-	rob_hbox_child_pack(ui->rw, ui->m0, TRUE);
+	rob_hbox_child_pack(ui->rw, ui->m0, TRUE, FALSE);
 	if (ui->display_freq) {
-		rob_hbox_child_pack(ui->rw, robtk_sep_widget(ui->sep_h0), FALSE);
-		rob_hbox_child_pack(ui->rw, ui->c_box, FALSE);
+		rob_hbox_child_pack(ui->rw, robtk_sep_widget(ui->sep_h0), FALSE, FALSE);
+		rob_hbox_child_pack(ui->rw, ui->c_box, FALSE, FALSE);
 
-		rob_hbox_child_pack(ui->c_box, robtk_scale_widget(ui->fader), TRUE);
+		rob_vbox_child_pack(ui->c_box, robtk_scale_widget(ui->fader), TRUE, TRUE);
 #if 1 // display speed, value-LPF config
-		rob_hbox_child_pack(ui->c_box, robtk_lbl_widget(ui->lbl_speed), FALSE);
-		rob_hbox_child_pack(ui->c_box, robtk_dial_widget(ui->spn_speed), FALSE);
+		rob_vbox_child_pack(ui->c_box, robtk_lbl_widget(ui->lbl_speed), FALSE, FALSE);
+		rob_vbox_child_pack(ui->c_box, robtk_dial_widget(ui->spn_speed), FALSE, FALSE);
 #endif
-		rob_hbox_child_pack(ui->c_box, robtk_cbtn_widget(ui->btn_peaks), FALSE);
+		rob_vbox_child_pack(ui->c_box, robtk_cbtn_widget(ui->btn_peaks), FALSE, FALSE);
 	}
 
 	/* callbacks */
