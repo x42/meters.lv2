@@ -472,7 +472,7 @@ static void draw_rb(GMUI* ui, gmringbuf *rb) {
 		max *= .707;
 
 		if (rms_c > 0 && g_rms > 0 && isfinite(g_rms)) {
-			const float rms = 5.436 /* 2e */ * (rms_0 > rms_1 ? sqrt(rms_0 / rms_c) : sqrt(rms_1 / rms_c));
+			const float rms = 5.436 /* 2e */ * (rms_0 > rms_1 ? sqrtf(rms_0 / rms_c) : sqrtf(rms_1 / rms_c));
 			//printf("max: %f <> rms %f (tgt:%f)\n", max, rms, g_target);
 			max = max * (1.0 - g_rms) + rms * g_rms;
 		}
@@ -489,7 +489,7 @@ static void draw_rb(GMUI* ui, gmringbuf *rb) {
 			gain = 2.0 / max;
 		}
 
-		float attack = gain < ui->gain ? attack_pow * (.31 + .1 * log10f(elapsed)) : decay_pow * (.03 + .007 * logf(elapsed));
+		const float attack = gain < ui->gain ? attack_pow * (.31 + .1 * log10f(elapsed)) : decay_pow * (.03 + .007 * logf(elapsed));
 		//printf(" %.3f  %.3f [max: %f %f] %f\n", ui->gain, gain, xdif, ydif, max);
 		gain = ui->gain + attack * (gain - ui->gain);
 		if (gain < .001) gain = .001;
