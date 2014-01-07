@@ -18,8 +18,6 @@
  * Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#define MAX_CAIRO_PATH 32
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
@@ -646,7 +644,6 @@ static bool expose_event(RobWidget* handle, cairo_t* cr, cairo_rectangle_t *ev) 
 			} else {
 				cairo_set_source (cr, ui->hpattern18);
 			}
-			int cnt = 0;
 			for (int ang = amin; ang < amax; ++ang) {
 				if (rdr[ang] <= 0) continue;
 				const float rad = (float) RADIUS * (1.0 + fast_log10(rdr[ang] / (float) len));
@@ -655,15 +652,7 @@ static bool expose_event(RobWidget* handle, cairo_t* cr, cairo_rectangle_t *ev) 
 				cairo_move_to(cr, CX, CY);
 				cairo_arc (cr, CX, CY, rad,
 						(double) ang * astep + aoff, (ang+1.0) * astep + aoff);
-				cairo_line_to(cr, CX, CY);
-
-				if (++cnt > MAX_CAIRO_PATH) {
-					cnt = 0;
-					cairo_stroke_preserve(cr);
-					cairo_fill(cr);
-				}
-			}
-			if (cnt > 0) {
+				cairo_close_path(cr);
 				cairo_stroke_preserve(cr);
 				cairo_fill(cr);
 			}
@@ -725,7 +714,6 @@ static bool expose_event(RobWidget* handle, cairo_t* cr, cairo_rectangle_t *ev) 
 
 		cairo_set_line_width(cr, 1.0);
 		cairo_set_source (cr, ui->cpattern);
-		int cnt = 0;
 		if (ui->radar_pos_max > 0) {
 			float *rdr = hists ? ui->radarS : ui->radarM;
 			const double astep = 2.0 * M_PI / (double) ui->radar_pos_max;
@@ -734,13 +722,8 @@ static bool expose_event(RobWidget* handle, cairo_t* cr, cairo_rectangle_t *ev) 
 				cairo_move_to(cr, CX, CY);
 				cairo_arc (cr, CX, CY, radar_deflect(rdr[ang], RADIUS),
 						(double) ang * astep, (ang+1.0) * astep);
-				cairo_line_to(cr, CX, CY);
-				if (++cnt > MAX_CAIRO_PATH) {
-					cnt = 0;
-					cairo_fill(cr);
-				}
-			}
-			if (cnt > 0) {
+				cairo_close_path(cr);
+				cairo_stroke_preserve(cr);
 				cairo_fill(cr);
 			}
 
