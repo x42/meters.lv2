@@ -546,6 +546,34 @@ static void render_meter(SAUI* ui, int i, int v_old, int v_new, int m_old, int m
  * main drawing
  */
 
+static void format_db(char *buf, const float val) {
+	if (val > 99) {
+		sprintf(buf, "++++");
+	}
+	else if (val > -10) {
+		sprintf(buf, "%+.1f", val);
+	}
+	else if (val > -99.9) {
+		sprintf(buf, "%.0f ", val);
+	}
+	else {
+		sprintf(buf, " -\u221E ");
+	}
+}
+
+static void format_val(char *buf, const float val) {
+	if (val > 99) {
+		sprintf(buf, "+++++");
+	}
+	else if (val > -99.9) {
+		sprintf(buf, "%+5.1f", val);
+	}
+	else {
+		sprintf(buf, " -\u221E  ");
+	}
+}
+
+
 static bool expose_event(RobWidget* handle, cairo_t* cr, cairo_rectangle_t *ev) {
 	SAUI* ui = (SAUI*)GET_HANDLE(handle);
 
@@ -591,7 +619,7 @@ static bool expose_event(RobWidget* handle, cairo_t* cr, cairo_rectangle_t *ev) 
 	if (!ui->display_freq) {
 		cairo_set_operator (cr, CAIRO_OPERATOR_OVER);
 		for (uint32_t i = 0; i < ui->num_meters ; ++i) {
-			char buf[24];
+			char buf[8];
 			if (rect_intersect_a(ev, MA_WIDTH + GM_WIDTH * i + 2, GM_TOP/2 - 6, GM_WIDTH-4, 16)) {
 				cairo_save(cr);
 				rounded_rectangle (cr, MA_WIDTH + GM_WIDTH * i + 2, GM_TOP/2 - 6, GM_WIDTH-4, 16, 4);
@@ -605,12 +633,8 @@ static bool expose_event(RobWidget* handle, cairo_t* cr, cairo_rectangle_t *ev) 
 				CairoSetSouerceRGBA(c_g60);
 				cairo_stroke_preserve (cr);
 				cairo_clip (cr);
+				format_db(buf, ui->peak_val[i]);
 
-				if ( ui->peak_val[i] <= -10.0) {
-					sprintf(buf, "%.0f ", ui->peak_val[i]);
-				} else {
-					sprintf(buf, "%+.1f", ui->peak_val[i]);
-				}
 				write_text(cr, buf, FONT_VAL, MA_WIDTH + GM_WIDTH * i + GM_WIDTH - 5, GM_TOP / 2 + 2, 0, 1, c_g90);
 				cairo_restore(cr);
 			}
@@ -623,7 +647,7 @@ static bool expose_event(RobWidget* handle, cairo_t* cr, cairo_rectangle_t *ev) 
 				CairoSetSouerceRGBA(c_g60);
 				cairo_stroke_preserve (cr);
 				cairo_clip (cr);
-				sprintf(buf, "%+.1f", ui->val[i]);
+				format_db(buf, ui->val[i]);
 				write_text(cr, buf, FONT_VAL, MA_WIDTH + GM_WIDTH * i + GM_WIDTH - 5, GM_TXT - 6, 0, 1, c_g90);
 				cairo_restore(cr);
 			}
@@ -645,13 +669,11 @@ static bool expose_event(RobWidget* handle, cairo_t* cr, cairo_rectangle_t *ev) 
 			rect_intersect_a(ev, MA_WIDTH + GM_WIDTH * ui->highlight + GM_WIDTH/2 - 32, GM_TXT -4.5, 64, 46)) {
 		cairo_set_operator (cr, CAIRO_OPERATOR_OVER);
 		const int i = ui->highlight;
-		char buf[32];
-		// TODO UTF8 infinity symbol
-		sprintf(buf, "%s\nc:%+5.1f\np:%+5.1f"
-				, freq_table[i]
-				, ui->val[i] > - 100 ? ui->val[i] : -INFINITY
-				, ui->peak_val[i] > -100 ? ui->peak_val[i] : -INFINITY
-				);
+		char buf[32], bufv[8], bufp[8];
+		format_val(bufv, ui->val[i]);
+		format_val(bufp, ui->peak_val[i]);
+		sprintf(buf, "%s\nc:%s\np:%s"
+				, freq_table[i], bufv, bufp);
 		cairo_save(cr);
 		cairo_set_line_width(cr, 0.75);
 		CairoSetSouerceRGBA(c_wht);
