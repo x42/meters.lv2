@@ -400,9 +400,13 @@ extension_data(const char* uri)
 	return NULL;
 }
 
+//#ifdef DEBUG_SPECTR
+#include "spectr.c"
+
 #include "ebulv2.cc"
 #include "goniometerlv2.c"
 #include "spectrumlv2.c"
+#include "multiphaselv2.c"
 
 #define mkdesc(ID, NAME, RUN) \
 static const LV2_Descriptor descriptor ## ID = { \
@@ -531,6 +535,8 @@ lv2_descriptor(uint32_t index)
 	case 43: return &descriptor43;
 	case 44: return &descriptorSpectrum2;
 	case 45: return &descriptorSpectrum2Gtk;
+	case 46: return &descriptorMultiPhase;
+	case 47: return &descriptorMultiPhaseGtk;
 	default: return NULL;
 	}
 }
