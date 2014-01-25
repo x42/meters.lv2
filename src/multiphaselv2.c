@@ -206,8 +206,8 @@ multiphase_run(LV2_Handle instance, uint32_t n_samples)
 			const float fr = bandpass_process(flt_r[i], R);
 			stc_proc_one(&self->cor[i], fl, fr, _w1, _w2);
 
-			const float v = fl + fr;
-			const float s = v * v;
+			const float v = fl * fl + fr * fr;
+			const float s = v / 2;
 			max_f[i] += omega * (s - max_f[i]);
 		}
 	}
