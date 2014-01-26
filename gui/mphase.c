@@ -305,10 +305,10 @@ static void plot_data(MFUI* ui) {
 	cairo_clip_preserve (cr);
 
 	cairo_set_operator (cr, CAIRO_OPERATOR_OVER);
-	cairo_set_source_rgba(cr, 0, 0, 0, .11);
+	cairo_set_source_rgba(cr, 0, 0, 0, .2);
 	cairo_fill(cr);
 
-	cairo_set_line_width (cr, 5.0);
+	cairo_set_line_width (cr, R_BAND);
 	cairo_set_line_cap(cr, CAIRO_LINE_CAP_ROUND);
 	for (uint32_t i=0; i < NUM_BANDS ; ++i) {
 		float dist = i * 5 + 2.5;
@@ -328,7 +328,7 @@ static void plot_data(MFUI* ui) {
 	}
 
 #if 1
-	cairo_set_line_width (cr, 7.5);
+	cairo_set_line_width (cr, R_BAND * 1.5);
 	cairo_move_to(cr, ccc, ccc);
 	float px = ccc;
 	float py = ccc;

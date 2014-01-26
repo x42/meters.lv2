@@ -156,7 +156,7 @@ multiphase_instantiate(
 	self->stcor->init(rate, 2e3f, 0.3f);
 
 	// 1.0 - e^(-2.0 * π * v / 48000)
-	self->omega = 1.0f - expf(-2.0 * M_PI * 5 / rate);
+	self->omega = 1.0f - expf(-2.0 * M_PI * 10 / rate);
 
 	/* filter-frequencies */
 	const double f_r = 1000;
