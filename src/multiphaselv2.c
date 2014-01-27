@@ -17,12 +17,10 @@
  * Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/******************************************************************************
- * 360deg Stereo Phase Calculation
- */
+#define NUM_BANDS (56)
 
 typedef enum {
-	MF_PHASE = 100,
+	MF_PHASE = 112,
 	MF_GAIN,
 	MF_CUTOFF,
 	MF_INPUT0,
@@ -30,6 +28,10 @@ typedef enum {
 	MF_INPUT1,
 	MF_OUTPUT1
 } MFPortIndex;
+
+/******************************************************************************
+ * 360deg Stereo Phase Calculation
+ */
 
 struct stcorr {
 	float zlr, ylr;
@@ -99,8 +101,6 @@ float stc_read (struct stcorr const * const s) {
  * LV2 spec
  */
 
-#define NUM_BANDS (50)
-
 
 typedef struct {
 	float* input[2];
@@ -165,10 +165,7 @@ multiphase_instantiate(
 	const double f2f = pow(2,  1. / (2. * b));
 
 	for (uint32_t i=0; i < NUM_BANDS; ++i) {
-
-		// TODO: THINK:  instead of bandpass filtering,
-		// use differences of low-pass filtered phases
-		const int x = i - 16 - 8;
+		const int x = i - 30;
 		const double f_m = pow(2, x / b) * f_r;
 		const double f_1 = f_m * f1f;
 		const double f_2 = f_m * f2f;
