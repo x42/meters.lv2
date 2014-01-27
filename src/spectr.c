@@ -42,14 +42,15 @@ enum filterCoeff {a0 = 0, a1, a2, b0, b1, b2};
 enum filterState {z1 = 0, z2};
 
 #define NODENORMAL (1e-12)
+#define MAXORDER (6)
 
 struct Filter {
-	double W[6];
+	double W[MAXORDER];
 	double z[2];
 };
 
 struct FilterBank {
-	struct Filter f[6];
+	struct Filter f[MAXORDER];
 	uint32_t filter_stages;
 	bool ac;
 };
@@ -86,7 +87,7 @@ bandpass_setup(struct FilterBank *fb,
 	/* must be an even number for the algorithm below */
 	fb->filter_stages = order;
 
-	assert (order > 0 && (order%2) == 0);
+	assert (order > 0 && (order%2) == 0 && order <= MAXORDER);
 	assert (band > 0);
 
 	for (uint32_t i = 0; i < fb->filter_stages; ++i) {

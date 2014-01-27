@@ -22,13 +22,13 @@
  */
 
 typedef enum {
-	MF_PHASE    = 60,
-	MF_GAIN     = 61,
-	MF_CUTOFF   = 62,
-	MF_INPUT0   = 63,
-	MF_OUTPUT0  = 64,
-	MF_INPUT1   = 65,
-	MF_OUTPUT1  = 66,
+	MF_PHASE = 100,
+	MF_GAIN,
+	MF_CUTOFF,
+	MF_INPUT0,
+	MF_OUTPUT0,
+	MF_INPUT1,
+	MF_OUTPUT1
 } MFPortIndex;
 
 struct stcorr {
@@ -82,7 +82,7 @@ float stc_read (struct stcorr const * const s) {
 	// TODO simplify quadrant calc, use 1/4 shift diff
 	if (p0 >= 0 && p1 >= 0) {
 		rv =   0 + ( p0 - p1);
-	} else 
+	} else
 	if (p0 <  0 && p1 >= 0) {
 		rv = -.5 + ( p0 + p1);
 	} else
@@ -99,7 +99,7 @@ float stc_read (struct stcorr const * const s) {
  * LV2 spec
  */
 
-#define FILTER_COUNT (30)
+#define NUM_BANDS (50)
 
 
 typedef struct {
@@ -108,13 +108,13 @@ typedef struct {
 	float* p_gain;
 	float* p_phase;
 
-	float* spec[FILTER_COUNT];
-	float* maxf[FILTER_COUNT];
+	float* spec[NUM_BANDS];
+	float* maxf[NUM_BANDS];
 
-	float  max_f[FILTER_COUNT];
-	struct FilterBank flt_l[FILTER_COUNT];
-	struct FilterBank flt_r[FILTER_COUNT];
-	struct stcorr cor[FILTER_COUNT];
+	float  max_f[NUM_BANDS];
+	struct FilterBank flt_l[NUM_BANDS];
+	struct FilterBank flt_r[NUM_BANDS];
+	struct stcorr cor[NUM_BANDS];
 
 	Stcorrdsp *stcor;
 
@@ -160,30 +160,34 @@ multiphase_instantiate(
 
 	/* filter-frequencies */
 	const double f_r = 1000;
-	const double b = 3;
+	const double b = 6;
 	const double f1f = pow(2, -1. / (2. * b));
 	const double f2f = pow(2,  1. / (2. * b));
 
-	for (uint32_t i=0; i < FILTER_COUNT; ++i) {
+	for (uint32_t i=0; i < NUM_BANDS; ++i) {
 
 		// TODO: THINK:  instead of bandpass filtering,
 		// use differences of low-pass filtered phases
-		const int x = i - 16;
+		const int x = i - 16 - 8;
 		const double f_m = pow(2, x / b) * f_r;
 		const double f_1 = f_m * f1f;
 		const double f_2 = f_m * f2f;
 		const double bw  = f_2 - f_1;
 #ifdef DEBUG_SPECTR
-		printf("--F %2d (%3d): f:%9.2fHz b:%9.2fHz (%9.2fHz -> %9.2fHz)\n",i, x, f_m, bw, f_1, f_2);
+		printf("--F %2d (%3d): f:%9.2fHz b:%9.2fHz (%9.2fHz -> %9.2fHz) 1/4spl:%.2f\n",i, x, f_m, bw, f_1, f_2, self->rate / f_m / 4.0);
 #endif
 		self->max_f[i] = 0;
-		bandpass_setup(&self->flt_l[i], self->rate, f_m, bw, 4);
-		bandpass_setup(&self->flt_r[i], self->rate, f_m, bw, 4);
+		bandpass_setup(&self->flt_l[i], self->rate, f_m, bw, 6);
+		bandpass_setup(&self->flt_r[i], self->rate, f_m, bw, 6);
 		memset(&self->cor[i], 0, sizeof(struct stcorr));
 
 		self->cor[i]._w = 1.0f - expf(-0.01 * M_PI * f_m / self->rate);
 		self->cor[i].ym = ceil(self->rate / f_m / 4.0);
-		self->cor[i].ps = self->cor[i].ym / (self->rate / f_m);
+
+		const float quarterphase = self->rate / f_m / 4.0;
+		const float qpc = ceil(quarterphase);
+		self->cor[i].ym = qpc;
+		self->cor[i].ps = .25 + (qpc - quarterphase) * .5f / qpc;
 		self->cor[i]._yl = (float*) calloc(self->cor[i].ym, sizeof(float));
 	}
 
@@ -214,11 +218,11 @@ multiphase_connect_port(LV2_Handle instance, uint32_t port, void* data)
 		self->p_phase = (float*) data;
 		break;
 	default:
-		if (port >= 0 && port < 30) {
+		if (port >= 0 && port < NUM_BANDS) {
 			self->spec[port] = (float*) data;
 		}
-		if (port >= 30 && port < 60) {
-			self->maxf[port-30] = (float*) data;
+		if (port >= NUM_BANDS && port < NUM_BANDS*2) {
+			self->maxf[port-NUM_BANDS] = (float*) data;
 		}
 		break;
 	}
@@ -237,13 +241,13 @@ multiphase_run(LV2_Handle instance, uint32_t n_samples)
 	}
 
 	/* localize variables */
-	float max_f[FILTER_COUNT];
+	float max_f[NUM_BANDS];
 	const float omega  = self->omega;
 	const float gain   = self->gain_coeff;
-	struct FilterBank *flt_l[FILTER_COUNT];
-	struct FilterBank *flt_r[FILTER_COUNT];
+	struct FilterBank *flt_l[NUM_BANDS];
+	struct FilterBank *flt_r[NUM_BANDS];
 
-	for(int i=0; i < FILTER_COUNT; ++i) {
+	for(int i=0; i < NUM_BANDS; ++i) {
 		max_f[i] = self->max_f[i];
 		flt_l[i] = &self->flt_l[i];
 		flt_r[i] = &self->flt_r[i];
@@ -258,7 +262,7 @@ multiphase_run(LV2_Handle instance, uint32_t n_samples)
 		const float L = *(inL++) * gain;
 		const float R = *(inR++) * gain;
 
-		for(int i = 0; i < FILTER_COUNT; ++i) {
+		for(int i = 0; i < NUM_BANDS; ++i) {
 			const float fl = bandpass_process(flt_l[i], L);
 			const float fr = bandpass_process(flt_r[i], R);
 
@@ -270,7 +274,7 @@ multiphase_run(LV2_Handle instance, uint32_t n_samples)
 	}
 
 	/* copy back variables and assign value */
-	for(int i=0; i < FILTER_COUNT; ++i) {
+	for(int i=0; i < NUM_BANDS; ++i) {
 		stc_proc_end(&self->cor[i]);
 
 		for (uint32_t j=0; j < flt_l[i]->filter_stages; ++j) {
@@ -302,7 +306,7 @@ static void
 multiphase_cleanup(LV2_Handle instance)
 {
 	LV2mphase* self = (LV2mphase*)instance;
-	for (uint32_t i=0; i < FILTER_COUNT; ++i) {
+	for (uint32_t i=0; i < NUM_BANDS; ++i) {
 		free(self->cor[i]._yl);
 	}
 	delete self->stcor;

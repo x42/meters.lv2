@@ -26,9 +26,18 @@
 #define MTR_URI "http://gareus.org/oss/lv2/meters#"
 #define MTR_GUI "mphaseui"
 
-#define NUM_BANDS 30
+/* port indices */
+#define NUM_BANDS 50
 
-#define R_BAND 5
+enum {
+	MF_PHASE    = 100,
+	MF_GAIN,
+	MF_CUTOFF
+};
+
+/* various GUI pixel sizes */
+
+#define R_BAND 3.0
 
 #define XOFF 5
 #define YOFF 5
@@ -120,7 +129,7 @@ static void create_surfaces(MFUI* ui) {
 	cairo_set_source_rgba(cr, .5, .5, .5, 1.0);
 
 #define CIRC_ANN(RF, TXT) { \
-	const float dr = R_BAND * RF; \
+	const float dr = R_BAND * RF + R_BAND / 2.0; \
 	cairo_arc (cr, ccc, ccc, dr, 0, 2.0 * M_PI); \
 	cairo_stroke(cr); \
 	const float px = ccc + dr * sinf(M_PI * -.75); \
@@ -128,15 +137,14 @@ static void create_surfaces(MFUI* ui) {
 	write_text_full(cr, TXT, ui->font[0], px, py, M_PI * -.75, -2, c_g60); \
 	}
 
-	//CIRC_ANN(3.5, "50 Hz")
-	CIRC_ANN(4.5, "63 Hz")
-	CIRC_ANN(10.5, "250 Hz")
-	CIRC_ANN(16.5, "1 KHz")
-	//CIRC_ANN(20.5, "2.5 KHz")
-	CIRC_ANN(22.5, "4 KHz")
-	//CIRC_ANN(23.5, "5 KHz")
-	//CIRC_ANN(26.5, "10 KHz")
-	CIRC_ANN(28.5, "16 KHz")
+	CIRC_ANN( 6, "125 Hz")
+	CIRC_ANN(12, "250 Hz")
+	CIRC_ANN(18, "500 Hz")
+	CIRC_ANN(24, "1 KHz")
+	CIRC_ANN(30, "2 KHz")
+	CIRC_ANN(36, "4 KHz")
+	CIRC_ANN(42, "8 KHz")
+	CIRC_ANN(48, "16 KHz")
 
 	const double dash2[] = {1.0, 2.0};
 	cairo_set_line_width(cr, 3.5);
@@ -178,19 +186,19 @@ static void create_surfaces(MFUI* ui) {
 	cairo_fill (cr);
 	cairo_destroy (cr);
 
-	ui->sf_pc[0] = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, PC_WIDTH, 20);
+	ui->sf_pc[0] = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, PC_WIDTH, 16);
 	cr = cairo_create (ui->sf_pc[0]);
 	cairo_set_operator (cr, CAIRO_OPERATOR_SOURCE);
-	cairo_set_source_rgba(cr, 0, .5, 0, .3);
+	cairo_set_source_rgba(cr, 0, .0, 0, .0);
 	cairo_rectangle (cr, 0, 0, PC_WIDTH, 20);
 	cairo_fill (cr);
 	write_text_full(cr, "+1", ui->font[1], PC_WIDTH / 2, 10, 0, 2, c_g60);
 	cairo_destroy (cr);
 
-	ui->sf_pc[1] = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, PC_WIDTH, 20);
+	ui->sf_pc[1] = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, PC_WIDTH, 16);
 	cr = cairo_create (ui->sf_pc[1]);
 	cairo_set_operator (cr, CAIRO_OPERATOR_SOURCE);
-	cairo_set_source_rgba(cr, .5, 0, 0, .3);
+	cairo_set_source_rgba(cr, .0, 0, 0, .0);
 	cairo_rectangle (cr, 0, 0, PC_WIDTH, 20);
 	cairo_fill (cr);
 	write_text_full(cr, "-1", ui->font[1], PC_WIDTH / 2, 10, 0, 2, c_g60);
@@ -216,13 +224,15 @@ static void create_surfaces(MFUI* ui) {
 	ui->sf_dial = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, 60, 40);
 	cr = cairo_create (ui->sf_dial);
 	float xlp, ylp;
-	AMPLABEL(-30, 30., 60., 30.5); write_text_full(cr, "-30", ui->font[0], xlp, ylp, 0, 2, c_wht);
-	AMPLABEL(-20, 30., 60., 30.5);
-	AMPLABEL(-10, 30., 60., 30.5);
-	AMPLABEL(  0, 30., 60., 30.5);
-	AMPLABEL( 10, 30., 60., 30.5);
-	AMPLABEL( 20, 30., 60., 30.5);
-	AMPLABEL( 30, 30., 60., 30.5); write_text_full(cr, "+30", ui->font[0], xlp, ylp, 0, 2, c_wht); \
+	AMPLABEL(-40, 40., 80., 30.5); write_text_full(cr, "-40", ui->font[0], xlp, ylp, 0, 2, c_wht);
+	AMPLABEL(-30, 40., 80., 30.5);
+	AMPLABEL(-20, 40., 80., 30.5);
+	AMPLABEL(-10, 40., 80., 30.5);
+	AMPLABEL(  0, 40., 80., 30.5);
+	AMPLABEL( 10, 40., 80., 30.5);
+	AMPLABEL( 20, 40., 80., 30.5);
+	AMPLABEL( 30, 40., 80., 30.5);
+	AMPLABEL( 40, 40., 80., 30.5); write_text_full(cr, "+40", ui->font[0], xlp, ylp, 0, 2, c_wht); \
 	cairo_destroy (cr);
 }
 
@@ -305,13 +315,12 @@ static void plot_data(MFUI* ui) {
 	cairo_clip_preserve (cr);
 
 	cairo_set_operator (cr, CAIRO_OPERATOR_OVER);
-	cairo_set_source_rgba(cr, 0, 0, 0, .2);
+	cairo_set_source_rgba(cr, 0, 0, 0, .22); // screen persistence
 	cairo_fill(cr);
 
-	cairo_set_line_width (cr, R_BAND);
 	cairo_set_line_cap(cr, CAIRO_LINE_CAP_ROUND);
 	for (uint32_t i=0; i < NUM_BANDS ; ++i) {
-		float dist = i * 5 + 2.5;
+		float dist = i * R_BAND + R_BAND / 2.0;
 		float dx = ccc + dist * sinf(M_PI * ui->phase[i]);
 		float dy = ccc - dist * cosf(M_PI * ui->phase[i]);
 		if (ui->peak[i] < ui->db_cutoff) continue;
@@ -320,56 +329,22 @@ static void plot_data(MFUI* ui) {
 		float clr[3];
 		hsl2rgb(clr, .75 - .8 * pk, .9, .2 + pk * .4);
 
+		cairo_set_line_width (cr, R_BAND);
 		cairo_set_source_rgba(cr, clr[0], clr[1], clr[2], 1.0);
 		cairo_new_path (cr);
 		cairo_move_to(cr, dx, dy);
 		cairo_close_path(cr);
 		cairo_stroke(cr);
-	}
 
-#if 1
-	cairo_set_line_width (cr, R_BAND * 1.5);
-	cairo_move_to(cr, ccc, ccc);
-	float px = ccc;
-	float py = ccc;
-	float pp = -60;
-	//float pa = 0;
-	for (uint32_t i=0; i < NUM_BANDS ; ++i) {
-		float dist = i * 5 + 2.5;
-		float dx = ccc + dist * sinf(M_PI * ui->phase[i]);
-		float dy = ccc - dist * cosf(M_PI * ui->phase[i]);
-
-		if (ui->peak[i] < ui->db_cutoff || pp < ui->db_cutoff
-			|| i == 0
-			|| (px - dx) * (px - dx) + (py - dy) * (py - dy) > i * 50)
-		{
-			px = dx; py = dy; pp = ui->peak[i]; // pa = ui->phase[i];
-			continue;
-		}
-		float pk = (120 + (ui->peak[i] + pp)) / 120.0;
-
-		float clr[3];
-		hsl2rgb(clr, .75 - .8 * pk, .9, .2 + pk * .4);
-
+		// TODO calc per band max deviation
+		const float dev = .03 * M_PI;
+		cairo_set_line_width(cr, R_BAND * 2.0);
 		cairo_set_source_rgba(cr, clr[0], clr[1], clr[2], 0.1);
-		cairo_move_to(cr, px, py);
-#if 1
-		cairo_line_to(cr, dx, dy);
-#else
-		// spline control points
-		float cp = (fmod(pa - ui->phase[i], 2.0)) / 3.0; // TODO wrap
-		const float bzdt = dist - 2.5;
-		const float c0x = ccc + bzdt * sinf(M_PI * (ui->phase[i] + cp * 2));
-		const float c0y = ccc - bzdt * cosf(M_PI * (ui->phase[i] + cp * 2));
-		const float c1x = ccc + bzdt * sinf(M_PI * (ui->phase[i] + cp));
-		const float c1y = ccc - bzdt * cosf(M_PI * (ui->phase[i] + cp));
-		cairo_curve_to(cr, c0x, c0y, c1x, c1y, dx, dy);
-#endif
+		float pp = (ui->phase[i] - .5) * M_PI;
+		cairo_arc (cr, ccc, ccc, dist, (pp-dev), (pp+dev));
 		cairo_stroke(cr);
-		px = dx; py = dy; pp = ui->peak[i]; // pa = ui->phase[i];
-	}
-#endif
 
+	}
 	cairo_destroy (cr);
 }
 
@@ -436,14 +411,14 @@ static bool pc_expose_event(RobWidget* handle, cairo_t* cr, cairo_rectangle_t *e
 	cairo_fill(cr);
 
 	/* labels w/ background */
-	cairo_set_source_surface(cr, ui->sf_pc[0], PC_LEFT, PC_TOP);
+	cairo_set_source_surface(cr, ui->sf_pc[0], PC_LEFT, PC_TOP + 5);
 	cairo_paint (cr);
-	cairo_set_source_surface(cr, ui->sf_pc[1], PC_LEFT, PC_TOP + PC_HEIGHT - 20);
+	cairo_set_source_surface(cr, ui->sf_pc[1], PC_LEFT, PC_TOP + PC_HEIGHT - 25);
 	cairo_paint (cr);
 
 	cairo_restore(cr);
 
-	rounded_rectangle (cr, PC_LEFT - .5, PC_TOP + .5, PC_WIDTH + 1, PC_HEIGHT - 1, 6);
+	rounded_rectangle (cr, PC_LEFT - .5, PC_TOP + .5, PC_WIDTH + 1, PC_HEIGHT - 1, 3);
 	CairoSetSouerceRGBA(c_g90);
 	cairo_stroke(cr);
 
@@ -484,7 +459,7 @@ static bool cb_set_gain (RobWidget* handle, void *data) {
 	queue_draw(ui->m2);
 	if (ui->disable_signals) return TRUE;
 	float val = robtk_dial_get_value(ui->gain);
-	ui->write(ui->controller, 61, sizeof(float), 0, (const void*) &val);
+	ui->write(ui->controller, MF_GAIN, sizeof(float), 0, (const void*) &val);
 	return TRUE;
 }
 
@@ -557,7 +532,7 @@ static RobWidget* m2_mousemove(RobWidget* handle, RobTkBtnEvent *event) {
 		ui->db_cutoff = cutoff;
 		ui->update_annotations = true;
 		queue_draw(ui->m2);
-		ui->write(ui->controller, 62, sizeof(float), 0, (const void*) &cutoff);
+		ui->write(ui->controller, MF_CUTOFF, sizeof(float), 0, (const void*) &cutoff);
 	}
 	return handle;
 }
@@ -651,7 +626,7 @@ static RobWidget * toplevel(MFUI* ui, void * const top)
 	robwidget_set_leave_notify(ui->m2, m2_leave);
 
 	/* gain dial */
-	ui->gain = robtk_dial_new_with_size(-30.0, 30.0, .01,
+	ui->gain = robtk_dial_new_with_size(-40.0, 40.0, .01,
 			60, 40, 30.5, 16.5, 10);
 	robtk_dial_set_alignment(ui->gain, .5, 1.0);
 	robtk_dial_set_value(ui->gain, 0);
@@ -777,25 +752,25 @@ port_event(LV2UI_Handle handle,
 	MFUI* ui = (MFUI*)handle;
 	if (format != 0) return;
 
-	if (port_index >= 0 && port_index < 30) {
+	if (port_index >= 0 && port_index < NUM_BANDS) {
 		const int pidx = port_index;
 		ui->phase[pidx] = *(float *)buffer;
 		queue_draw(ui->m0);
 	}
-	else if (port_index >= 30 && port_index < 60) {
-		const int pidx = port_index - 30;
+	else if (port_index >= NUM_BANDS && port_index < NUM_BANDS*2) {
+		const int pidx = port_index - NUM_BANDS;
 		ui->peak[pidx] = *(float *)buffer;
 		queue_draw(ui->m0);
 	}
-	else if (port_index == 60) {
+	else if (port_index == MF_PHASE) {
 		invalidate_pc(ui, 0.5f * (1.0f - *(float *)buffer));
 	}
-	else if (port_index == 61) {
+	else if (port_index == MF_GAIN) {
 		ui->disable_signals = true;
 		robtk_dial_set_value(ui->gain, *(float *)buffer);
 		ui->disable_signals = false;
 	}
-	else if (port_index == 62) {
+	else if (port_index == MF_CUTOFF) {
 		float val = *(float *)buffer;
 		if (ui->drag_cutoff_x < 0 && val >= -59 && val <= -20) {
 			ui->db_cutoff = val;
