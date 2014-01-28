@@ -254,7 +254,7 @@ $(BUILDDIR)$(LV2GTK3)$(LIB_EXT): gui/goniometer.c src/goniometer.h \
 $(BUILDDIR)$(LV2GTK4)$(LIB_EXT): gui/dpm.c
 $(BUILDDIR)$(LV2GTK5)$(LIB_EXT): gui/kmeter.c
 $(BUILDDIR)$(LV2GTK6)$(LIB_EXT): gui/mphase.c
-$(BUILDDIR)$(LV2GTK7)$(LIB_EXT): gui/mphase2.c src/uri2.h
+$(BUILDDIR)$(LV2GTK7)$(LIB_EXT): gui/mphase2.c src/uri2.h gui/fft.c
 
 $(BUILDDIR)$(LV2GUI1)$(LIB_EXT): $(UIIMGS) src/uris.h gui/needle.c gui/meterimage.c
 $(BUILDDIR)$(LV2GUI2)$(LIB_EXT): gui/ebur.c src/uris.h
@@ -263,7 +263,7 @@ $(BUILDDIR)$(LV2GUI3)$(LIB_EXT): gui/goniometer.c src/goniometer.h \
 $(BUILDDIR)$(LV2GUI4)$(LIB_EXT): gui/dpm.c
 $(BUILDDIR)$(LV2GUI5)$(LIB_EXT): gui/kmeter.c
 $(BUILDDIR)$(LV2GUI6)$(LIB_EXT): gui/mphase.c
-$(BUILDDIR)$(LV2GUI7)$(LIB_EXT): gui/mphase2.c src/uri2.h
+$(BUILDDIR)$(LV2GUI7)$(LIB_EXT): gui/mphase2.c src/uri2.h gui/fft.c
 
 ###############################################################################
 # install/uninstall/clean target definitions

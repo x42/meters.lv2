@@ -20,6 +20,10 @@
 #include <sys/types.h>
 #include <fftw3.h>
 
+#ifndef MIN
+#define MIN(A,B) ( (A) < (B) ? (A) : (B) )
+#endif
+
 /******************************************************************************
  * internal FFT abstraction
  */
@@ -144,8 +148,8 @@ void fftx_free(struct FFTAnalysis *ft) {
 	free(ft);
 }
 
-FFTX_FN_PREFIX
-int fftx_run(struct FFTAnalysis *ft,
+static
+int _fftx_run(struct FFTAnalysis *ft,
 		const uint32_t n_samples, float const * const data)
 {
 	assert(n_samples <= ft->window_size);
@@ -193,6 +197,25 @@ int fftx_run(struct FFTAnalysis *ft,
 	ft->phasediff_bin = ft->phasediff_step * (double)ft->step;
 	return 0;
 }
+
+FFTX_FN_PREFIX
+int fftx_run(struct FFTAnalysis *ft,
+		const uint32_t n_samples, float const * const data)
+{
+	if (n_samples <= ft->window_size) {
+		return _fftx_run(ft, n_samples, data);
+	}
+
+	int rv = -1;
+	uint32_t n = 0;
+	while (n < n_samples) {
+		uint32_t step = MIN(ft->window_size, n_samples - n);
+		if (!_fftx_run(ft, step, &data[n])) rv = 0;
+		n += step;
+	}
+	return rv;
+}
+
 
 /*****************************************************************************
  * convenient access functions
