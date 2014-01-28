@@ -64,8 +64,9 @@ enum {
 #define PC_HEIGHT (PC_BOUNDH - 2 * PC_TOP)
 #define PC_BLOCKSIZE (PC_HEIGHT - PC_BLOCK)
 
-static const float c_ann[4] = {0.4, 0.4, 0.4, 1.0}; // text annotation color
-static const float c_grd[4] = {0.3, 0.3, 0.3, 1.0}; // grid color
+static const float c_ann[4] = {0.5, 0.5, 0.5, 1.0}; // text annotation color
+static const float c_ahz[4] = {0.6, 0.6, 0.6, 0.5}; // frequency annotation
+static const float c_grd[4] = {0.4, 0.4, 0.4, 1.0}; // grid color
 
 
 typedef struct {
@@ -282,7 +283,7 @@ static void update_grid(MF2UI* ui) {
 	cairo_stroke(cr); \
 	const float px = ccc + dr * sinf(M_PI * -.75); \
 	const float py = ccc - dr * cosf(M_PI * -.75); \
-	write_text_full(cr, TXT, ui->font[0], px, py, M_PI * -.75, -2, c_ann); \
+	write_text_full(cr, TXT, ui->font[0], px, py, M_PI * -.75, -2, c_ahz); \
 	}
 
 	float freq = 62.5;
