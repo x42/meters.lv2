@@ -107,14 +107,18 @@ static inline void stc_proc_end (struct stcorr *s) {
 
 float stc_read (struct stcorr const * const s) {
 	const float p0 = .25 * s->zlr / sqrtf(s->zll * s->zrr + 1e-10f);
-	const float p1 = .25 * s->ylr / sqrtf(s->yll * s->zrr + 1e-10f);
-	const float p2 = .25 * s->yrl / sqrtf(s->yrr * s->zrr + 1e-10f);
-	const float p3 = .25 * s->xlr / sqrtf(s->xll * s->xrr + 1e-10f);
-	const float p4 = .25 * s->xrl / sqrtf(s->xrr * s->xrr + 1e-10f);
-	const float pl = (p1 - p2 - p3 + p4) / 2.0;
+	const float p1 = s->ylr / sqrtf(s->yll * s->zrr + 1e-10f);
+	const float p2 = s->yrl / sqrtf(s->yrr * s->zrr + 1e-10f);
+	const float p3 = s->xlr / sqrtf(s->xll * s->xrr + 1e-10f);
+	const float p4 = s->xrl / sqrtf(s->xrr * s->xrr + 1e-10f);
+	const float pl = (p1 - p2 - p3 + p4) * .125;
 	float rv;
 
 	// TODO simplify quadrant calc
+	if (fabsf(p0) < 0.01 && fabsf(pl) < 0.01) {
+		/* no correlation */
+		return  -100;
+	} else
 	if (p0 >= 0 && pl >= 0) {
 		rv =   0 + ( p0 - pl);
 	} else
@@ -211,7 +215,8 @@ multiphase_instantiate(
 		bandpass_setup(&self->flt_r[i], self->rate, f_m, bw, 6);
 		memset(&self->cor[i], 0, sizeof(struct stcorr));
 
-		self->cor[i]._w = 1.0f - expf(-0.01 * M_PI * f_m / self->rate);
+		//self->cor[i]._w = 1.0f - expf(-0.01 * M_PI * f_m / self->rate);
+		self->cor[i]._w = 1.0f - expf(-2 * M_PI * 7.5 / self->rate);
 		const float quarterphase = self->rate / f_m / 4.0;
 
 		self->cor[i].yp  = ceil(3.f * quarterphase) - ceil(quarterphase);
@@ -315,12 +320,20 @@ multiphase_run(LV2_Handle instance, uint32_t n_samples)
 		}
 
 		if (!finite(max_f[i])) max_f[i] = 0;
-		const float mx = sqrtf(2.f * max_f[i]);
+		const float pc = stc_read(&self->cor[i]);
+
+		if (pc != -100) {
+			const float mx = sqrtf(2.f * max_f[i]);
+			*(self->maxf[i]) = mx > .001f ? (mx > 1.0 ? 0 : 20.0 * log10f(mx)) : -60.0;
+			*(self->spec[i]) = pc;
+		} else {
+			*(self->maxf[i]) = -60;
+			*(self->spec[i]) = 0;
+		}
+
+		/* copy back locally cached data */
 		self->max_f[i] = max_f[i];
 		max_f[i] += 1e-10;
-
-		*(self->maxf[i]) = mx > .001f ? (mx > 1.0 ? 0 : 20.0 * log10f(mx)) : -60.0;
-		*(self->spec[i]) = stc_read(&self->cor[i]);
 	}
 
 	/* forward data to outputs -- IFF not in-place */
