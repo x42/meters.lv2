@@ -1,0 +1,997 @@
+/* simple spectrum analyzer
+ *
+ * Copyright (C) 2013 Robin Gareus <robin@gareus.org>
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2, or (at your option)
+ * any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
+ */
+
+#define MTR_URI "http://gareus.org/oss/lv2/meters#"
+#define MTR_GUI "mphase2ui"
+
+#define FFT_BINS 512 // half of the FFT data-size
+
+enum {
+	MF_PHASE = 6,
+	MF_GAIN,
+	MF_CUTOFF
+};
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <math.h>
+#include <string.h>
+#include <assert.h>
+
+#include "../src/uri2.h"
+#include "fft.c"
+
+#ifndef MIN
+#define MIN(A,B) ( (A) < (B) ? (A) : (B) )
+#endif
+#ifndef MAX
+#define MAX(A,B) ( (A) > (B) ? (A) : (B) )
+#endif
+
+
+/* various GUI pixel sizes */
+
+#define PH_RAD 160
+
+#define XOFF 5
+#define YOFF 5
+
+#define ANN_H 32
+#define ANN_B 25
+
+#define PC_BOUNDW ( 60.0f)
+#define PC_BOUNDH (ui->height)
+
+#define PC_TOP    (  5.0f)
+#define PC_BLOCK  ( 10.0f)
+#define PC_LEFT   ( 19.0f)
+#define PC_WIDTH  ( 22.0f)
+#define PC_HEIGHT (PC_BOUNDH - 2 * PC_TOP)
+#define PC_BLOCKSIZE (PC_HEIGHT - PC_BLOCK)
+
+static const float c_ann[4] = {0.4, 0.4, 0.4, 1.0}; // text annotation color
+static const float c_grd[4] = {0.3, 0.3, 0.3, 1.0}; // grid color
+
+
+typedef struct {
+	LV2_Atom_Forge forge;
+	LV2_URID_Map*  map;
+	XferLV2URIs uris;
+
+	LV2UI_Write_Function write;
+	LV2UI_Controller controller;
+
+  float rate;
+  float ann_rate;
+
+  struct FFTAnalysis *fa;
+  struct FFTAnalysis *fb;
+
+	RobWidget* rw;
+	RobWidget* m0;
+	RobWidget* m1;
+	RobWidget* m2;
+
+	RobWidget* hbox1;
+	RobWidget* hbox2;
+	RobTkDial* gain;
+
+	cairo_surface_t* sf_dat;
+	cairo_surface_t* sf_ann;
+
+	PangoFontDescription *font[2];
+	cairo_surface_t* sf_dial;
+	cairo_surface_t* sf_gain;
+	cairo_surface_t* sf_pc[2];
+
+	float db_cutoff;
+	float db_thresh;
+	float cor, cor_u;
+
+	float phase[FFT_BINS];
+	float level[FFT_BINS];
+
+	bool disable_signals;
+	bool update_annotations;
+	bool update_grid;
+	uint32_t width;
+	uint32_t height;
+
+	uint64_t cnt_a, cnt_b;
+	float log_rate;
+	float log_base;
+
+	int32_t drag_cutoff_x;
+	float   drag_cutoff_db;
+	bool prelight_cutoff;
+} MF2UI;
+
+
+static void reinitialize_fft(MF2UI* ui) {
+  fftx_free(ui->fa);
+  fftx_free(ui->fb);
+  ui->fa = (struct FFTAnalysis*) malloc(sizeof(struct FFTAnalysis));
+  ui->fb = (struct FFTAnalysis*) malloc(sizeof(struct FFTAnalysis));
+  fftx_init(ui->fa, FFT_BINS * 2, ui->rate, 25);
+  fftx_init(ui->fb, FFT_BINS * 2, ui->rate, 25);
+  ui->log_rate  = (1.0f - 10000.0f / ui->rate) / ((2000.0f / ui->rate) * (2000.0f / ui->rate));
+  ui->log_base = log10f(1.0f + ui->log_rate);
+	ui->update_grid = true;
+}
+
+/******************************************************************************
+ * Communication with DSP backend -- send/receive settings
+ */
+
+
+/** notfiy backend that UI is closed */
+static void ui_disable(LV2UI_Handle handle)
+{
+  MF2UI* ui = (MF2UI*)handle;
+
+  uint8_t obj_buf[64];
+  lv2_atom_forge_set_buffer(&ui->forge, obj_buf, 64);
+  LV2_Atom_Forge_Frame frame;
+  lv2_atom_forge_frame_time(&ui->forge, 0);
+  LV2_Atom* msg = (LV2_Atom*)lv2_atom_forge_blank(&ui->forge, &frame, 1, ui->uris.ui_off);
+  lv2_atom_forge_pop(&ui->forge, &frame);
+  ui->write(ui->controller, 0, lv2_atom_total_size(msg), ui->uris.atom_eventTransfer, msg);
+}
+
+/** notify backend that UI is active:
+ * request state and enable data-transmission */
+static void ui_enable(LV2UI_Handle handle)
+{
+  MF2UI* ui = (MF2UI*)handle;
+  uint8_t obj_buf[64];
+  lv2_atom_forge_set_buffer(&ui->forge, obj_buf, 64);
+  LV2_Atom_Forge_Frame frame;
+  lv2_atom_forge_frame_time(&ui->forge, 0);
+  LV2_Atom* msg = (LV2_Atom*)lv2_atom_forge_blank(&ui->forge, &frame, 1, ui->uris.ui_on);
+  lv2_atom_forge_pop(&ui->forge, &frame);
+  ui->write(ui->controller, 0, lv2_atom_total_size(msg), ui->uris.atom_eventTransfer, msg);
+}
+
+
+/******************************************************************************
+ * Drawing
+ */
+
+static void hsl2rgb(float c[3], const float hue, const float sat, const float lum) {
+	const float cq = lum < 0.5 ? lum * (1 + sat) : lum + sat - lum * sat;
+	const float cp = 2.f * lum - cq;
+	c[0] = rtk_hue2rgb(cp, cq, hue + 1.f/3.f);
+	c[1] = rtk_hue2rgb(cp, cq, hue);
+	c[2] = rtk_hue2rgb(cp, cq, hue - 1.f/3.f);
+}
+
+static void create_surfaces(MF2UI* ui) {
+	cairo_t* cr;
+	const double ccc = ui->width / 2.0 + .5;
+	const double rad = (ui->width - XOFF) * .5;
+
+	ui->sf_ann = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, ui->width, ui->height);
+	cr = cairo_create (ui->sf_ann);
+	cairo_rectangle (cr, 0, 0, ui->width, ui->height);
+	cairo_set_source_rgba(cr, .33, .33, .36, 1.0); // BG
+	cairo_fill (cr);
+	cairo_destroy (cr);
+
+	ui->sf_dat = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, ui->width, ui->height);
+	cr = cairo_create (ui->sf_dat);
+	cairo_set_operator (cr, CAIRO_OPERATOR_SOURCE);
+	cairo_set_source_rgba(cr, 0, 0, 0, 0.0);
+	cairo_rectangle (cr, 0, 0, ui->width, ui->height);
+	cairo_fill (cr);
+	cairo_set_operator (cr, CAIRO_OPERATOR_OVER);
+	cairo_set_source_rgba(cr, 0, 0, 0, 1.0);
+	cairo_arc (cr, ccc, ccc, rad, 0, 2.0 * M_PI);
+	cairo_fill (cr);
+	cairo_destroy (cr);
+
+	ui->sf_pc[0] = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, PC_WIDTH, 16);
+	cr = cairo_create (ui->sf_pc[0]);
+	cairo_set_operator (cr, CAIRO_OPERATOR_SOURCE);
+	cairo_set_source_rgba(cr, 0, .0, 0, .0);
+	cairo_rectangle (cr, 0, 0, PC_WIDTH, 20);
+	cairo_fill (cr);
+	write_text_full(cr, "+1", ui->font[1], PC_WIDTH / 2, 10, 0, 2, c_ann);
+	cairo_destroy (cr);
+
+	ui->sf_pc[1] = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, PC_WIDTH, 16);
+	cr = cairo_create (ui->sf_pc[1]);
+	cairo_set_operator (cr, CAIRO_OPERATOR_SOURCE);
+	cairo_set_source_rgba(cr, .0, 0, 0, .0);
+	cairo_rectangle (cr, 0, 0, PC_WIDTH, 20);
+	cairo_fill (cr);
+	write_text_full(cr, "-1", ui->font[1], PC_WIDTH / 2, 10, 0, 2, c_ann);
+	cairo_destroy (cr);
+
+	ui->sf_gain = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, ui->width, 40);
+
+#define AMPLABEL(V, O, T, X) \
+	{ \
+		const float ang = (-.75 * M_PI) + (1.5 * M_PI) * ((V) + (O)) / (T); \
+		xlp = X + .5 + sinf (ang) * (10 + 3.0); \
+		ylp = 16.5 + .5 - cosf (ang) * (10 + 3.0); \
+		cairo_set_line_cap(cr, CAIRO_LINE_CAP_ROUND); \
+		CairoSetSouerceRGBA(c_wht); \
+		cairo_set_line_width(cr, 1.5); \
+		cairo_move_to(cr, rint(xlp)-.5, rint(ylp)-.5); \
+		cairo_close_path(cr); \
+		cairo_stroke(cr); \
+		xlp = X + .5 + sinf (ang) * (10 + 9.5); \
+		ylp = 16.5 + .5 - cosf (ang) * (10 + 9.5); \
+	}
+
+	ui->sf_dial = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, 60, 40);
+	cr = cairo_create (ui->sf_dial);
+	float xlp, ylp;
+	AMPLABEL(-40, 40., 80., 30.5); write_text_full(cr, "-40", ui->font[0], xlp, ylp, 0, 2, c_wht);
+	AMPLABEL(-30, 40., 80., 30.5);
+	AMPLABEL(-20, 40., 80., 30.5);
+	AMPLABEL(-10, 40., 80., 30.5);
+	AMPLABEL(  0, 40., 80., 30.5);
+	AMPLABEL( 10, 40., 80., 30.5);
+	AMPLABEL( 20, 40., 80., 30.5);
+	AMPLABEL( 30, 40., 80., 30.5);
+	AMPLABEL( 40, 40., 80., 30.5); write_text_full(cr, "+40", ui->font[0], xlp, ylp, 0, 2, c_wht); \
+	cairo_destroy (cr);
+}
+
+static void update_grid(MF2UI* ui) {
+	const double ccc = ui->width / 2.0 + .5;
+	const double rad = (ui->width - XOFF) * .5;
+	cairo_t *cr = cairo_create (ui->sf_ann);
+
+	cairo_rectangle (cr, 0, 0, ui->width, ui->height);
+	cairo_set_source_rgba(cr, .33, .33, .36, 1.0); // BG
+	cairo_fill (cr);
+
+	cairo_set_line_width (cr, 1.0);
+
+	cairo_arc (cr, ccc, ccc, rad, 0, 2.0 * M_PI);
+	cairo_set_source_rgba(cr, 0, 0, 0, 1.0);
+	cairo_fill_preserve(cr);
+	CairoSetSouerceRGBA(c_g90);
+	cairo_stroke(cr);
+
+	const double dash1[] = {1.0, 2.0};
+	cairo_set_dash(cr, dash1, 2, 0);
+
+	CairoSetSouerceRGBA(c_grd);
+
+#define CIRC_ANN(FRQ, TXT) { \
+	const float dr = PH_RAD * fast_log10(1.0 + 2 * FRQ * ui->log_rate / ui->rate) / ui->log_base; \
+	cairo_arc (cr, ccc, ccc, dr, 0, 2.0 * M_PI); \
+	cairo_stroke(cr); \
+	const float px = ccc + dr * sinf(M_PI * -.75); \
+	const float py = ccc - dr * cosf(M_PI * -.75); \
+	write_text_full(cr, TXT, ui->font[0], px, py, M_PI * -.75, -2, c_ann); \
+	}
+
+	float freq = 62.5;
+	while (freq < ui->rate / 2) {
+		char txt[16];
+		if (freq < 1000) {
+			snprintf(txt, 16, "%d Hz", (int)ceil(freq));
+		} else {
+			snprintf(txt, 16, "%d KHz", (int)ceil(freq/1000.f));
+		}
+		CIRC_ANN(freq, txt);
+		freq *= 2.0;
+	}
+
+	const double dash2[] = {1.0, 3.0};
+	cairo_set_line_width(cr, 3.5);
+	cairo_set_dash(cr, dash2, 2, 2);
+
+	cairo_set_line_width(cr, 1.5);
+	cairo_move_to(cr, ccc - rad, ccc);
+	cairo_line_to(cr, ccc + rad, ccc);
+	cairo_stroke(cr);
+
+	cairo_set_line_width(cr, 3.5);
+	cairo_move_to(cr, ccc, ccc - rad);
+	cairo_line_to(cr, ccc, ccc + rad);
+	cairo_stroke(cr);
+	cairo_set_dash(cr, NULL, 0, 0);
+
+	write_text_full(cr, "+L",  ui->font[0], ccc, ccc - rad * .92, 0, -2, c_ann);
+	write_text_full(cr, "-L",  ui->font[0], ccc, ccc + rad * .92, 0, -2, c_ann);
+	write_text_full(cr, "0\u00B0",  ui->font[0], ccc, ccc - rad * .80, 0, -2, c_ann);
+	write_text_full(cr, "180\u00B0",  ui->font[0], ccc, ccc + rad * .80, 0, -2, c_ann);
+
+	write_text_full(cr, "-R",  ui->font[0], ccc - rad * .92, ccc, 0, -2, c_ann);
+	write_text_full(cr, "+R",  ui->font[0], ccc + rad * .92, ccc, 0, -2, c_ann);
+	write_text_full(cr, "-90\u00B0",  ui->font[0], ccc - rad * .80, ccc, 0, -2, c_ann);
+	write_text_full(cr, "+90\u00B0",  ui->font[0], ccc + rad * .80, ccc, 0, -2, c_ann);
+	cairo_destroy (cr);
+}
+
+static void update_annotations(MF2UI* ui) {
+	cairo_t* cr = cairo_create (ui->sf_gain);
+
+	cairo_rectangle (cr, 0, 0, ui->width, 40);
+	cairo_set_source_rgba(cr, .33, .33, .36, 1.0); // BG
+	cairo_fill (cr);
+
+	rounded_rectangle (cr, 3, 3 , ui->width - 6, ANN_H - 6, 6);
+	if (ui->drag_cutoff_x >= 0 || ui->prelight_cutoff) {
+		cairo_set_source_rgba(cr, .15, .15, .15, 1.0);
+	} else {
+		cairo_set_source_rgba(cr, .0, .0, .0, 1.0);
+	}
+	cairo_fill (cr);
+
+	cairo_set_line_width (cr, 1.0);
+	const uint32_t mxw = ui->width - XOFF * 2 - 36;
+	const uint32_t mxo = XOFF + 18;
+	for (uint32_t i=0; i < mxw; ++i) {
+
+		float pk = i / (float)mxw;
+
+		float clr[3];
+		hsl2rgb(clr, .75 - .8 * pk, .9, .2 + pk * .4);
+		cairo_set_source_rgba(cr, clr[0], clr[1], clr[2], 1.0);
+
+		cairo_move_to(cr, mxo + i + .5, ANN_B - 5);
+		cairo_line_to(cr, mxo + i + .5, ANN_B);
+		cairo_stroke(cr);
+	}
+
+	cairo_set_source_rgba(cr, .8, .8, .8, .8);
+
+#define DBTXT(DB, TXT) \
+	write_text_full(cr, TXT, ui->font[0], mxo + rint(mxw * (60.0 + DB) / 60.0), ANN_B - 14 , 0, 2, c_wht); \
+	cairo_move_to(cr, mxo + rint(mxw * (60.0 + DB) / 60.0) + .5, ANN_B - 7); \
+	cairo_line_to(cr, mxo + rint(mxw * (60.0 + DB) / 60.0) + .5, ANN_B); \
+	cairo_stroke(cr);
+
+	const float gain = robtk_dial_get_value(ui->gain);
+	for (int32_t db = -60; db <=0 ; db+= 10) {
+		char dbt[16];
+		if (db == 0) {
+			snprintf(dbt, 16, "\u2265%+.0fdB", (db - gain));
+		} else {
+			snprintf(dbt, 16, "%+.0fdB", (db - gain));
+		}
+		DBTXT(db, dbt)
+	}
+
+	if (ui->db_cutoff > -59) {
+		const float cox = rint(mxw * (ui->db_cutoff + 60.0)/ 60.0);
+		if (ui->drag_cutoff_x >= 0 || ui->prelight_cutoff) {
+			cairo_rectangle(cr, mxo, 6, cox, ANN_B - 6);
+		} else {
+			cairo_rectangle(cr, mxo, ANN_B - 6, cox, 7);
+		}
+		cairo_set_source_rgba(cr, .0, .0, .0, .7);
+		cairo_fill(cr);
+
+		cairo_set_line_width (cr, 1.0);
+		cairo_set_source_rgba(cr, .9, .5, .5, .6);
+		cairo_move_to(cr, mxo + cox + .5, ANN_B - 6);
+		cairo_line_to(cr, mxo + cox + .5, ANN_B + 1);
+		cairo_stroke(cr);
+	}
+
+	cairo_destroy (cr);
+}
+
+static void plot_data(MF2UI* ui) {
+	cairo_t* cr;
+	const double ccc = ui->width / 2.0 + .5;
+	const double rad = (ui->width - XOFF) * .5;
+	cr = cairo_create (ui->sf_dat);
+	cairo_arc (cr, ccc, ccc, rad, 0, 2.0 * M_PI);
+	cairo_clip_preserve (cr);
+
+	cairo_set_operator (cr, CAIRO_OPERATOR_OVER);
+	cairo_set_source_rgba(cr, 0, 0, 0, .22); // screen persistence
+	cairo_fill(cr);
+	cairo_set_line_cap(cr, CAIRO_LINE_CAP_ROUND);
+	const float dnum = PH_RAD / ui->log_base;
+	const float denom = ui->log_rate / (float)FFT_BINS;
+	for (uint32_t i=1; i < FFT_BINS ; ++i) {
+		if (ui->level[i] < ui->db_cutoff) continue;
+
+		const float dist = dnum * fast_log10(1.0 + i * denom);
+		const float dx = ccc + dist * sinf(ui->phase[i]);
+		const float dy = ccc - dist * cosf(ui->phase[i]);
+		const float pk = ui->level[i] > 1.0 ? 1.0 : (60 + ui->level[i]) / 60.0;
+
+		float clr[3];
+		hsl2rgb(clr, .75 - .8 * pk, .9, .2 + pk * .4);
+
+		cairo_set_line_width (cr, 3.0);
+		cairo_set_source_rgba(cr, clr[0], clr[1], clr[2], 0.5 + pk * .5);
+		cairo_new_path (cr);
+		cairo_move_to(cr, dx, dy);
+		cairo_close_path(cr);
+		cairo_stroke(cr);
+
+#if 1
+		const float dev = .01 * M_PI;
+		cairo_set_line_width(cr, 1.5);
+		cairo_set_source_rgba(cr, clr[0], clr[1], clr[2], 0.1);
+		float pp = ui->phase[i] - .5 * M_PI;
+		cairo_arc (cr, ccc, ccc, dist, (pp-dev), (pp+dev));
+		cairo_stroke(cr);
+#endif
+	}
+	cairo_destroy (cr);
+}
+
+static bool expose_event(RobWidget* handle, cairo_t* cr, cairo_rectangle_t *ev) {
+	MF2UI* ui = (MF2UI*)GET_HANDLE(handle);
+
+	if (ui->update_grid) {
+		update_grid(ui);
+		ui->update_grid = false;
+	}
+
+	plot_data(ui);
+
+	cairo_rectangle (cr, ev->x, ev->y, ev->width, ev->height);
+	cairo_clip (cr);
+
+	cairo_set_source_surface(cr, ui->sf_ann, 0, 0);
+	cairo_paint (cr);
+
+	cairo_set_operator (cr, CAIRO_OPERATOR_ADD);
+	cairo_set_source_surface(cr, ui->sf_dat, 0, 0);
+	cairo_paint (cr);
+
+	return TRUE;
+}
+
+static bool ga_expose_event(RobWidget* handle, cairo_t* cr, cairo_rectangle_t *ev) {
+	MF2UI* ui = (MF2UI*)GET_HANDLE(handle);
+
+	if (ui->update_annotations) {
+		update_annotations(ui);
+		ui->update_annotations = false;
+	}
+
+	cairo_rectangle (cr, ev->x, ev->y, ev->width, ev->height);
+	cairo_clip (cr);
+
+	cairo_set_source_surface(cr, ui->sf_gain, 0, 0);
+	cairo_paint (cr);
+
+	return TRUE;
+}
+
+static bool pc_expose_event(RobWidget* handle, cairo_t* cr, cairo_rectangle_t *ev) {
+	MF2UI* ui = (MF2UI*)GET_HANDLE(handle);
+
+	cairo_rectangle (cr, ev->x, ev->y, ev->width, ev->height);
+	cairo_clip (cr);
+
+	/* display phase-correlation */
+	cairo_set_operator (cr, CAIRO_OPERATOR_OVER);
+
+	/* PC meter backgroud */
+	cairo_set_source_rgba(cr, .33, .33, .36, 1.0); // BG
+	cairo_rectangle (cr, 0, 0, PC_BOUNDW, PC_BOUNDH);
+	cairo_fill(cr);
+
+	CairoSetSouerceRGBA(c_blk);
+	cairo_set_line_width(cr, 1.0);
+	rounded_rectangle (cr, PC_LEFT, PC_TOP + 1.0, PC_WIDTH, PC_HEIGHT - 2.0, 6);
+	cairo_fill_preserve(cr);
+	cairo_save(cr);
+	cairo_clip(cr);
+
+	/* value */
+	CairoSetSouerceRGBA(c_glb);
+	const float c = rintf(PC_TOP + PC_BLOCKSIZE * ui->cor);
+	rounded_rectangle (cr, PC_LEFT, c, PC_WIDTH, PC_BLOCK, 4);
+	cairo_fill(cr);
+
+	/* labels w/ background */
+	cairo_set_source_surface(cr, ui->sf_pc[0], PC_LEFT, PC_TOP + 5);
+	cairo_paint (cr);
+	cairo_set_source_surface(cr, ui->sf_pc[1], PC_LEFT, PC_TOP + PC_HEIGHT - 25);
+	cairo_paint (cr);
+
+	cairo_restore(cr);
+
+	rounded_rectangle (cr, PC_LEFT - .5, PC_TOP + .5, PC_WIDTH + 1, PC_HEIGHT - 1, 3);
+	CairoSetSouerceRGBA(c_g90);
+	cairo_stroke(cr);
+
+	/* annotations */
+	cairo_set_operator (cr, CAIRO_OPERATOR_SCREEN);
+	//CairoSetSouerceRGBA(c_grb);
+	CairoSetSouerceRGBA(c_grd);
+	cairo_set_line_width(cr, 1.0);
+
+#define PC_ANNOTATION(YPOS, OFF) \
+	cairo_move_to(cr, PC_LEFT + OFF, rintf(PC_TOP + YPOS) + 0.5); \
+	cairo_line_to(cr, PC_LEFT + PC_WIDTH - OFF, rintf(PC_TOP + YPOS) + 0.5);\
+	cairo_stroke(cr);
+
+	PC_ANNOTATION(PC_HEIGHT * 0.1, 4.0);
+	PC_ANNOTATION(PC_HEIGHT * 0.2, 4.0);
+	PC_ANNOTATION(PC_HEIGHT * 0.3, 4.0);
+	PC_ANNOTATION(PC_HEIGHT * 0.4, 4.0);
+	PC_ANNOTATION(PC_HEIGHT * 0.6, 4.0);
+	PC_ANNOTATION(PC_HEIGHT * 0.7, 4.0);
+	PC_ANNOTATION(PC_HEIGHT * 0.8, 4.0);
+	PC_ANNOTATION(PC_HEIGHT * 0.9, 4.0);
+
+	CairoSetSouerceRGBA(c_glr);
+	cairo_set_line_width(cr, 1.5);
+	PC_ANNOTATION(PC_HEIGHT * 0.5, 1.5);
+
+	return TRUE;
+}
+
+
+/******************************************************************************
+ * UI callbacks  - Dial
+ */
+
+static bool cb_set_gain (RobWidget* handle, void *data) {
+	MF2UI* ui = (MF2UI*) (data);
+	ui->update_annotations = true;
+	queue_draw(ui->m2);
+	const float val = robtk_dial_get_value(ui->gain);
+	const float thresh = pow10f(.05 * (-60-val));
+	ui->db_thresh = thresh * thresh;
+	if (ui->disable_signals) return TRUE;
+	ui->write(ui->controller, MF_GAIN, sizeof(float), 0, (const void*) &val);
+	return TRUE;
+}
+
+static void annotation_txt(MF2UI *ui, RobTkDial * d, cairo_t *cr, const char *txt) {
+	int tw, th;
+	cairo_save(cr);
+	PangoLayout * pl = pango_cairo_create_layout(cr);
+	pango_layout_set_font_description(pl, ui->font[1]);
+	pango_layout_set_text(pl, txt, -1);
+	pango_layout_get_pixel_size(pl, &tw, &th);
+	cairo_translate (cr, d->w_cx, d->w_height);
+	cairo_translate (cr, -tw/2.0 - 0.5, -th);
+	cairo_set_source_rgba (cr, .0, .0, .0, .7);
+	rounded_rectangle(cr, -1, -1, tw+3, th+1, 3);
+	cairo_fill(cr);
+	CairoSetSouerceRGBA(c_wht);
+	pango_cairo_layout_path(cr, pl);
+	pango_cairo_show_layout(cr, pl);
+	g_object_unref(pl);
+	cairo_restore(cr);
+	cairo_new_path(cr);
+}
+
+static void dial_annotation_db(RobTkDial * d, cairo_t *cr, void *data) {
+	MF2UI* ui = (MF2UI*) (data);
+	char tmp[16];
+	snprintf(tmp, 16, "%+4.1fdB", d->cur);
+	annotation_txt(ui, d, cr, tmp);
+}
+
+/******************************************************************************
+ * UI callbacks  - Range
+ */
+
+static RobWidget* m2_mousedown(RobWidget* handle, RobTkBtnEvent *event) {
+	MF2UI* ui = (MF2UI*)GET_HANDLE(handle);
+	if (event->state & ROBTK_MOD_SHIFT) {
+		ui->db_cutoff = -59;
+		ui->update_annotations = true;
+		queue_draw(ui->m2);
+		return NULL;
+	}
+
+	ui->drag_cutoff_db = ui->db_cutoff;
+	ui->drag_cutoff_x = event->x;
+
+	ui->update_annotations = true;
+	queue_draw(ui->m2);
+
+	return handle;
+}
+
+static RobWidget* m2_mouseup(RobWidget* handle, RobTkBtnEvent *event) {
+	MF2UI* ui = (MF2UI*)GET_HANDLE(handle);
+	ui->drag_cutoff_x = -1;
+	ui->update_annotations = true;
+	queue_draw(ui->m2);
+	return NULL;
+}
+
+static RobWidget* m2_mousemove(RobWidget* handle, RobTkBtnEvent *event) {
+	MF2UI* ui = (MF2UI*)GET_HANDLE(handle);
+	if (ui->drag_cutoff_x < 0) return NULL;
+	const float mxw = 60. / (float) (ui->width - XOFF * 2 - 36);
+	const float diff = (event->x - ui->drag_cutoff_x) * mxw;
+	float cutoff = ui->drag_cutoff_db + diff;
+	if (cutoff < -59) cutoff = -59;
+	if (cutoff > -20) cutoff = -20;
+	if (ui->db_cutoff != cutoff) {
+		ui->db_cutoff = cutoff;
+		ui->update_annotations = true;
+		queue_draw(ui->m2);
+		ui->write(ui->controller, MF_CUTOFF, sizeof(float), 0, (const void*) &cutoff);
+	}
+	return handle;
+}
+
+static void m2_enter(RobWidget *handle) {
+	MF2UI* ui = (MF2UI*)GET_HANDLE(handle);
+	if (!ui->prelight_cutoff) {
+		ui->prelight_cutoff = true;
+		ui->update_annotations = true;
+		queue_draw(ui->m2);
+	}
+}
+
+static void m2_leave(RobWidget *handle) {
+	MF2UI* ui = (MF2UI*)GET_HANDLE(handle);
+	if (ui->prelight_cutoff) {
+		ui->prelight_cutoff = false;
+		ui->update_annotations = true;
+		queue_draw(ui->m2);
+	}
+}
+
+
+/******************************************************************************
+ * widget hackery
+ */
+
+static void
+size_request(RobWidget* handle, int *w, int *h) {
+	MF2UI* ui = (MF2UI*)GET_HANDLE(handle);
+	*w = ui->width;
+	*h = ui->height;
+}
+
+static void
+pc_size_request(RobWidget* handle, int *w, int *h) {
+	MF2UI* ui = (MF2UI*)GET_HANDLE(handle);
+	*w = PC_BOUNDW;
+	*h = PC_BOUNDH;
+}
+
+static void
+ga_size_request(RobWidget* handle, int *w, int *h) {
+	MF2UI* ui = (MF2UI*)GET_HANDLE(handle);
+	*w = ui->width;
+	*h = ANN_H;
+}
+
+static RobWidget * toplevel(MF2UI* ui, void * const top)
+{
+	/* main widget: layout */
+	ui->rw = rob_vbox_new(FALSE, 0);
+	robwidget_make_toplevel(ui->rw, top);
+
+	ui->hbox1 = rob_hbox_new(FALSE, 0);
+	ui->hbox2 = rob_hbox_new(FALSE, 0);
+
+	rob_vbox_child_pack(ui->rw, ui->hbox1, TRUE, FALSE);
+	rob_vbox_child_pack(ui->rw, ui->hbox2, TRUE, FALSE);
+
+
+	ui->font[0] = pango_font_description_from_string("Mono 7");
+	ui->font[1] = pango_font_description_from_string("Mono 8");
+	create_surfaces(ui);
+
+	/* main drawing area */
+	ui->m0 = robwidget_new(ui);
+	ROBWIDGET_SETNAME(ui->m0, "mphase (m0)");
+	robwidget_set_expose_event(ui->m0, expose_event);
+	robwidget_set_size_request(ui->m0, size_request);
+	rob_hbox_child_pack(ui->hbox1, ui->m0, TRUE, FALSE);
+
+	/* phase correlation */
+	ui->m1 = robwidget_new(ui);
+	ROBWIDGET_SETNAME(ui->m1, "phase (m1)");
+	robwidget_set_expose_event(ui->m1, pc_expose_event);
+	robwidget_set_size_request(ui->m1, pc_size_request);
+	rob_hbox_child_pack(ui->hbox1, ui->m1, TRUE, FALSE);
+
+	/* gain annotation */
+	ui->m2 = robwidget_new(ui);
+	ROBWIDGET_SETNAME(ui->m1, "gain (m2)");
+	robwidget_set_expose_event(ui->m2, ga_expose_event);
+	robwidget_set_size_request(ui->m2, ga_size_request);
+	rob_hbox_child_pack(ui->hbox2, ui->m2, TRUE, FALSE);
+
+	robwidget_set_mousedown(ui->m2, m2_mousedown);
+	robwidget_set_mouseup(ui->m2, m2_mouseup);
+	robwidget_set_mousemove(ui->m2, m2_mousemove);
+	robwidget_set_enter_notify(ui->m2, m2_enter);
+	robwidget_set_leave_notify(ui->m2, m2_leave);
+
+	/* gain dial */
+	ui->gain = robtk_dial_new_with_size(-40.0, 40.0, .01,
+			60, 40, 30.5, 16.5, 10);
+	robtk_dial_set_alignment(ui->gain, .5, 1.0);
+	robtk_dial_set_value(ui->gain, 0);
+	robtk_dial_set_default(ui->gain, 0);
+	robtk_dial_set_callback(ui->gain, cb_set_gain, ui);
+	robtk_dial_set_surface(ui->gain,ui->sf_dial);
+	robtk_dial_annotation_callback(ui->gain, dial_annotation_db, ui);
+	rob_hbox_child_pack(ui->hbox2, robtk_dial_widget(ui->gain), FALSE, FALSE);
+
+	update_annotations(ui);
+	return ui->rw;
+}
+
+/******************************************************************************
+ * LV2 callbacks
+ */
+
+static LV2UI_Handle
+instantiate(
+		void* const               ui_toplevel,
+		const LV2UI_Descriptor*   descriptor,
+		const char*               plugin_uri,
+		const char*               bundle_path,
+		LV2UI_Write_Function      write_function,
+		LV2UI_Controller          controller,
+		RobWidget**               widget,
+		const LV2_Feature* const* features)
+{
+	MF2UI* ui = (MF2UI*) calloc(1,sizeof(MF2UI));
+	*widget = NULL;
+  ui->map = NULL;
+
+	if      (!strcmp(plugin_uri, MTR_URI "multiphase2")) { ; }
+	else if (!strcmp(plugin_uri, MTR_URI "multiphase2_gtk")) { ; }
+	else {
+		free(ui);
+		return NULL;
+	}
+
+  for (int i = 0; features[i]; ++i) {
+    if (!strcmp(features[i]->URI, LV2_URID_URI "#map")) {
+      ui->map = (LV2_URID_Map*)features[i]->data;
+    }
+  }
+
+  if (!ui->map) {
+    fprintf(stderr, "meters.lv2 UI: Host does not support urid:map\n");
+    free(ui);
+    return NULL;
+  }
+
+  map_xfer_uris(ui->map, &ui->uris);
+  lv2_atom_forge_init(&ui->forge, ui->map);
+
+	ui->write      = write_function;
+	ui->controller = controller;
+
+	for (uint32_t i = 0; i < FFT_BINS; i++) {
+		ui->phase[i] = 0;
+		ui->level[i] = -100;
+	}
+
+	ui->cnt_a = ui->cnt_b = 0;
+  ui->rate = 48000;
+	ui->db_cutoff = -59;
+	ui->db_thresh = 0.000001; // (-60dB)^2
+	ui->drag_cutoff_x = -1;
+	ui->prelight_cutoff = false;
+	ui->cor = ui->cor_u = 0.5;
+	ui->disable_signals = false;
+	ui->update_annotations = false;
+	ui->update_grid = false;
+
+	ui->width  = 2 * (PH_RAD + XOFF);
+	ui->height = 2 * (PH_RAD + YOFF);
+
+	*widget = toplevel(ui, ui_toplevel);
+  reinitialize_fft(ui);
+  ui_enable(ui);
+	return ui;
+}
+
+static enum LVGLResize
+plugin_scale_mode(LV2UI_Handle handle)
+{
+	return LVGL_LAYOUT_TO_FIT;
+}
+
+static void
+cleanup(LV2UI_Handle handle)
+{
+	MF2UI* ui = (MF2UI*)handle;
+
+  ui_disable(ui);
+
+	pango_font_description_free(ui->font[0]);
+	pango_font_description_free(ui->font[1]);
+
+	cairo_surface_destroy(ui->sf_ann);
+	cairo_surface_destroy(ui->sf_dat);
+	cairo_surface_destroy(ui->sf_gain);
+	cairo_surface_destroy(ui->sf_dial);
+	cairo_surface_destroy(ui->sf_pc[0]);
+	cairo_surface_destroy(ui->sf_pc[1]);
+
+	robwidget_destroy(ui->m0);
+	robwidget_destroy(ui->m1);
+	robwidget_destroy(ui->m2);
+	rob_box_destroy(ui->hbox1);
+	rob_box_destroy(ui->hbox2);
+	rob_box_destroy(ui->rw);
+
+  fftx_free(ui->fa);
+  fftx_free(ui->fb);
+
+	free(ui);
+}
+
+static const void*
+extension_data(const char* uri)
+{
+	return NULL;
+}
+
+/******************************************************************************
+ * backend communication
+ */
+
+static void invalidate_pc(MF2UI* ui, const float val) {
+	float c;
+	if (rint(PC_BLOCKSIZE * ui->cor_u * 2) == rint (PC_BLOCKSIZE * val * 2)) return;
+	c = rintf(PC_TOP + PC_BLOCKSIZE * ui->cor_u);
+	queue_tiny_area(ui->m1, PC_LEFT, c - 1 , PC_WIDTH, PC_BLOCK + 2);
+	ui->cor_u = ui->cor = val;
+	c = rintf(PC_TOP + PC_BLOCKSIZE * ui->cor_u);
+	queue_tiny_area(ui->m1, PC_LEFT, c - 1 , PC_WIDTH, PC_BLOCK + 2);
+}
+
+/******************************************************************************/
+
+static void process_audio(MF2UI* ui, const uint32_t channel, const size_t n_elem, float const * data) {
+	if (channel > 2) { return; }
+
+	bool display = false;
+	if (channel == 0) {
+		ui->cnt_a++;
+		fftx_run(ui->fa, n_elem, data);
+	} else {
+		ui->cnt_b++;
+		display = !fftx_run(ui->fb, n_elem, data);
+	}
+
+	if (display) {
+		if (ui->cnt_a != ui->cnt_b) {
+			fprintf(stderr, "meters.lv2: Lost events, reinit\n");
+			reinitialize_fft(ui);
+			ui->cnt_a = ui->cnt_b = 0;
+			return;
+		}
+	}
+
+	if (display) {
+		const uint32_t b = fftx_bins(ui->fa);
+		const float gain = robtk_dial_get_value(ui->gain);
+		const float db_thresh = ui->db_thresh;
+		assert (b == FFT_BINS);
+		for (uint32_t i = 1; i < b-1; i++) {
+      if (ui->fa->power[i] < db_thresh || ui->fb->power[i] < db_thresh) {
+				ui->phase[i] = 0;
+				ui->level[i] = -100;
+				continue;
+			}
+			const float phase0 = ui->fa->phase[i];
+			const float phase1 = ui->fb->phase[i];
+			float phase = phase1 - phase0;
+#if 0 // not needed, sin(), cos() takes care of this
+			/* clamp to -M_PI .. M_PI */
+			int over = phase / M_PI;
+			over += (over >= 0) ? (over&1) : -(over&1);
+			phase -= M_PI*(float)over;
+#endif
+			ui->phase[i] = phase;
+			ui->level[i] = gain + fftx_power_to_dB(ui->fa->power[i]);
+		}
+		queue_draw(ui->m0);
+	}
+}
+
+static void
+port_event(LV2UI_Handle handle,
+           uint32_t     port_index,
+           uint32_t     buffer_size,
+           uint32_t     format,
+           const void*  buffer)
+{
+	MF2UI* ui = (MF2UI*)handle;
+  LV2_Atom* atom = (LV2_Atom*)buffer;
+  if (format == ui->uris.atom_eventTransfer
+			&& atom->type == ui->uris.atom_Blank)
+	{
+		/* cast the buffer to Atom Object */
+		LV2_Atom_Object* obj = (LV2_Atom_Object*)atom;
+		LV2_Atom *a0 = NULL;
+		LV2_Atom *a1 = NULL;
+		if (
+				/* handle raw-audio data objects */
+				obj->body.otype == ui->uris.rawaudio
+				/* retrieve properties from object and
+				 * check that there the [here] two required properties are set.. */
+				&& 2 == lv2_atom_object_get(obj, ui->uris.channelid, &a0, ui->uris.audiodata, &a1, NULL)
+				/* ..and non-null.. */
+				&& a0
+				&& a1
+				/* ..and match the expected type */
+				&& a0->type == ui->uris.atom_Int
+				&& a1->type == ui->uris.atom_Vector
+			 )
+		{
+			/* single integer value can be directly dereferenced */
+			const int32_t chn = ((LV2_Atom_Int*)a0)->body;
+
+			/* dereference and typecast vector pointer */
+			LV2_Atom_Vector* vof = (LV2_Atom_Vector*)LV2_ATOM_BODY(a1);
+			/* check if atom is indeed a vector of the expected type*/
+			if (vof->atom.type == ui->uris.atom_Float) {
+				/* get number of elements in vector
+				 * = (raw 8bit data-length - header-length) / sizeof(expected data type:float) */
+				const size_t n_elem = (a1->size - sizeof(LV2_Atom_Vector_Body)) / vof->atom.size;
+				/* typecast, dereference pointer to vector */
+				const float *data = (float*) LV2_ATOM_BODY(&vof->atom);
+				/* call function that handles the actual data */
+				process_audio(ui, chn, n_elem, data);
+			}
+		}
+		else if (
+				/* handle 'state/settings' data object */
+				obj->body.otype == ui->uris.ui_state
+				/* retrieve properties from object and
+				 * check that there the [here] three required properties are set.. */
+				&& 1 == lv2_atom_object_get(obj,
+					ui->uris.samplerate, &a0, NULL)
+				/* ..and non-null.. */
+				&& a0
+				/* ..and match the expected type */
+				&& a0->type == ui->uris.atom_Float
+				)
+		{
+			ui->rate = ((LV2_Atom_Float*)a0)->body;
+			reinitialize_fft(ui);
+		}
+	}
+	else if (format != 0) return;
+
+	if (port_index == MF_PHASE) {
+		invalidate_pc(ui, 0.5f * (1.0f - *(float *)buffer));
+	}
+	else if (port_index == MF_GAIN) {
+		ui->disable_signals = true;
+		robtk_dial_set_value(ui->gain, *(float *)buffer);
+		ui->disable_signals = false;
+	}
+	else if (port_index == MF_CUTOFF) {
+		float val = *(float *)buffer;
+		if (ui->drag_cutoff_x < 0 && val >= -59 && val <= -20) {
+			ui->db_cutoff = val;
+			ui->update_annotations = true;
+			queue_draw(ui->m2);
+		}
+	}
+}

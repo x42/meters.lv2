@@ -33,6 +33,7 @@
 #include "../ebumeter/ebu_r128_proc.h"
 
 #include "uris.h"
+#include "uri2.h"
 
 using namespace LV2M;
 
@@ -407,6 +408,7 @@ extension_data(const char* uri)
 #include "goniometerlv2.c"
 #include "spectrumlv2.c"
 #include "multiphaselv2.c"
+#include "xfer.c"
 
 #define mkdesc(ID, NAME, RUN) \
 static const LV2_Descriptor descriptor ## ID = { \
@@ -536,7 +538,9 @@ lv2_descriptor(uint32_t index)
 	case 44: return &descriptorSpectrum2;
 	case 45: return &descriptorSpectrum2Gtk;
 	case 46: return &descriptorMultiPhase;
-	case 47: return &descriptorMultiPhaseGtk;
+	case 47: return &descriptorMultiPhase2Gtk;
+	case 48: return &descriptorMultiPhase2;
+	case 49: return &descriptorMultiPhaseGtk;
 	default: return NULL;
 	}
 }
