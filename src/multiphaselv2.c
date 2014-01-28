@@ -34,43 +34,72 @@ typedef enum {
  */
 
 struct stcorr {
-	float zlr, ylr;
-	float zll, yll;
-	float zrr;
+	float zlr, zll, zrr;
+	float ylr, yrl, yll, yrr; // 1/4 phase shift
+	float xlr, xrl, xll, xrr; // 3/4 phase shift
 
 	float _w;
 
-	float *_yl;
-	uint32_t yp;
-	uint32_t ym;
-	float    ps;
+	float *dll, *dlr; // delay-line data
+	uint32_t dls;     // delay-line length
+	uint32_t yp, xp;  // read-pointers
 };
 
 static inline void stc_proc_one (struct stcorr *s, const float pl, const float pr) {
 	const float _w = s->_w;
-	const float _y = s->_yl[ s->yp ];
+	const float yl = s->dll[ s->yp ];
+	const float yr = s->dlr[ s->yp ];
+	const float xl = s->dll[ s->xp ];
+	const float xr = s->dlr[ s->xp ];
 
-	s->ylr += _w * (_y * pr - s->ylr);
-	s->yll += _w * (_y * _y - s->yll);
+	s->ylr += _w * (yl * pr - s->ylr);
+	s->yll += _w * (yl * yl - s->yll);
+
+	s->yrl += _w * (yr * pl - s->yrl);
+	s->yrr += _w * (yr * yr - s->yrr);
+
+	s->xlr += _w * (xl * pr - s->xlr);
+	s->xll += _w * (xl * xl - s->xll);
+
+	s->xrl += _w * (xr * pl - s->xrl);
+	s->xrr += _w * (xr * xr - s->xrr);
 
 	s->zlr += _w * (pl * pr - s->zlr);
 	s->zll += _w * (pl * pl - s->zll);
 	s->zrr += _w * (pr * pr - s->zrr);
 
-	s->_yl[ s->yp ] = pl;
-	s->yp = (s->yp + 1) % s->ym;
+	s->dll[ s->xp ] = pl;
+	s->dlr[ s->xp ] = pr;
+	s->yp = (s->yp + 1) % s->dls;
+	s->xp = (s->xp + 1) % s->dls;
 }
 
 static inline void stc_proc_end (struct stcorr *s) {
+	/* protect against denormals */
 	if (!finite(s->ylr)) s->ylr = 0;
+	if (!finite(s->yrl)) s->ylr = 0;
 	if (!finite(s->yll)) s->yll = 0;
+	if (!finite(s->yrr)) s->yll = 0;
+
+	if (!finite(s->xlr)) s->xlr = 0;
+	if (!finite(s->xrl)) s->xlr = 0;
+	if (!finite(s->xll)) s->xll = 0;
+	if (!finite(s->xrr)) s->xll = 0;
 
 	if (!finite(s->zlr)) s->zlr = 0;
 	if (!finite(s->zll)) s->zll = 0;
 	if (!finite(s->zrr)) s->zrr = 0;
 
 	s->ylr += 1e-10f;
+	s->yrl += 1e-10f;
 	s->yll += 1e-10f;
+	s->yrr += 1e-10f;
+
+	s->xlr += 1e-10f;
+	s->xrl += 1e-10f;
+	s->xll += 1e-10f;
+	s->xrr += 1e-10f;
+
 	s->zlr += 1e-10f;
 	s->zll += 1e-10f;
 	s->zrr += 1e-10f;
@@ -79,22 +108,26 @@ static inline void stc_proc_end (struct stcorr *s) {
 float stc_read (struct stcorr const * const s) {
 	const float p0 = .25 * s->zlr / sqrtf(s->zll * s->zrr + 1e-10f);
 	const float p1 = .25 * s->ylr / sqrtf(s->yll * s->zrr + 1e-10f);
+	const float p2 = .25 * s->yrl / sqrtf(s->yrr * s->zrr + 1e-10f);
+	const float p3 = .25 * s->xlr / sqrtf(s->xll * s->xrr + 1e-10f);
+	const float p4 = .25 * s->xrl / sqrtf(s->xrr * s->xrr + 1e-10f);
+	const float pl = (p1 - p2 - p3 + p4) / 2.0;
 	float rv;
 
-	// TODO simplify quadrant calc, use 1/4 shift diff
-	if (p0 >= 0 && p1 >= 0) {
-		rv =   0 + ( p0 - p1);
+	// TODO simplify quadrant calc
+	if (p0 >= 0 && pl >= 0) {
+		rv =   0 + ( p0 - pl);
 	} else
-	if (p0 <  0 && p1 >= 0) {
-		rv = -.5 + ( p0 + p1);
+	if (p0 <  0 && pl >= 0) {
+		rv = -.5 + ( p0 + pl);
 	} else
-	if (p0 >= 0 && p1 <  0) {
-		rv =  .5 + (-p0 - p1);
+	if (p0 >= 0 && pl <  0) {
+		rv =  .5 + (-p0 - pl);
 	} else {
-	//  p0 <  0 && p1 <  0
-		rv =  -1 + (-p0 + p1);
+	//  p0 <  0 && pl <  0
+		rv =  -1 + (-p0 + pl);
 	}
-	return  rv - s->ps;
+	return  rv - .25;
 }
 
 /******************************************************************************
@@ -179,13 +212,13 @@ multiphase_instantiate(
 		memset(&self->cor[i], 0, sizeof(struct stcorr));
 
 		self->cor[i]._w = 1.0f - expf(-0.01 * M_PI * f_m / self->rate);
-		self->cor[i].ym = ceil(self->rate / f_m / 4.0);
-
 		const float quarterphase = self->rate / f_m / 4.0;
-		const float qpc = ceil(quarterphase);
-		self->cor[i].ym = qpc;
-		self->cor[i].ps = .25 + (qpc - quarterphase) * .5f / qpc;
-		self->cor[i]._yl = (float*) calloc(self->cor[i].ym, sizeof(float));
+
+		self->cor[i].yp  = ceil(3.f * quarterphase) - ceil(quarterphase);
+		self->cor[i].dls = ceil(3.f * quarterphase);
+
+		self->cor[i].dll = (float*) calloc(self->cor[i].dls, sizeof(float));
+		self->cor[i].dlr = (float*) calloc(self->cor[i].dls, sizeof(float));
 	}
 
 	return (LV2_Handle)self;
@@ -304,7 +337,8 @@ multiphase_cleanup(LV2_Handle instance)
 {
 	LV2mphase* self = (LV2mphase*)instance;
 	for (uint32_t i=0; i < NUM_BANDS; ++i) {
-		free(self->cor[i]._yl);
+		free(self->cor[i].dll);
+		free(self->cor[i].dlr);
 	}
 	delete self->stcor;
 	free(instance);
