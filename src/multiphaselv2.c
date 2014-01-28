@@ -35,34 +35,24 @@ typedef enum {
 
 struct stcorr {
 	float zlr, zll, zrr;
-	float ylr, yrl, yll, yrr; // 1/4 phase shift
-	float xlr, xrl, xll, xrr; // 3/4 phase shift
-
-	float _w;
+	float ylr, yrl; // 1/4 phase shift
+	float xlr, xrl; // 3/4 phase shift
 
 	float *dll, *dlr; // delay-line data
 	uint32_t dls;     // delay-line length
 	uint32_t yp, xp;  // read-pointers
 };
 
-static inline void stc_proc_one (struct stcorr *s, const float pl, const float pr) {
-	const float _w = s->_w;
+static inline void stc_proc_one (struct stcorr *s, const float _w, const float pl, const float pr) {
 	const float yl = s->dll[ s->yp ];
 	const float yr = s->dlr[ s->yp ];
 	const float xl = s->dll[ s->xp ];
 	const float xr = s->dlr[ s->xp ];
 
 	s->ylr += _w * (yl * pr - s->ylr);
-	s->yll += _w * (yl * yl - s->yll);
-
 	s->yrl += _w * (yr * pl - s->yrl);
-	s->yrr += _w * (yr * yr - s->yrr);
-
 	s->xlr += _w * (xl * pr - s->xlr);
-	s->xll += _w * (xl * xl - s->xll);
-
 	s->xrl += _w * (xr * pl - s->xrl);
-	s->xrr += _w * (xr * xr - s->xrr);
 
 	s->zlr += _w * (pl * pr - s->zlr);
 	s->zll += _w * (pl * pl - s->zll);
@@ -78,13 +68,8 @@ static inline void stc_proc_end (struct stcorr *s) {
 	/* protect against denormals */
 	if (!finite(s->ylr)) s->ylr = 0;
 	if (!finite(s->yrl)) s->ylr = 0;
-	if (!finite(s->yll)) s->yll = 0;
-	if (!finite(s->yrr)) s->yll = 0;
-
 	if (!finite(s->xlr)) s->xlr = 0;
 	if (!finite(s->xrl)) s->xlr = 0;
-	if (!finite(s->xll)) s->xll = 0;
-	if (!finite(s->xrr)) s->xll = 0;
 
 	if (!finite(s->zlr)) s->zlr = 0;
 	if (!finite(s->zll)) s->zll = 0;
@@ -92,13 +77,8 @@ static inline void stc_proc_end (struct stcorr *s) {
 
 	s->ylr += 1e-10f;
 	s->yrl += 1e-10f;
-	s->yll += 1e-10f;
-	s->yrr += 1e-10f;
-
 	s->xlr += 1e-10f;
 	s->xrl += 1e-10f;
-	s->xll += 1e-10f;
-	s->xrr += 1e-10f;
 
 	s->zlr += 1e-10f;
 	s->zll += 1e-10f;
@@ -106,32 +86,29 @@ static inline void stc_proc_end (struct stcorr *s) {
 }
 
 float stc_read (struct stcorr const * const s) {
-	const float p0 = .25 * s->zlr / sqrtf(s->zll * s->zrr + 1e-10f);
-	const float p1 = s->ylr / sqrtf(s->yll * s->zrr + 1e-10f);
-	const float p2 = s->yrl / sqrtf(s->yrr * s->zrr + 1e-10f);
-	const float p3 = s->xlr / sqrtf(s->xll * s->xrr + 1e-10f);
-	const float p4 = s->xrl / sqrtf(s->xrr * s->xrr + 1e-10f);
-	const float pl = (p1 - p2 - p3 + p4) * .125;
+	const float nrm = 1.0 / sqrtf(s->zll * s->zrr + 1e-10f);
+	const float p0 = s->zlr * nrm;
+	const float pl = (s->ylr - s->yrl - s->xlr + s->xrl) * .5 * nrm;
 	float rv;
 
-	// TODO simplify quadrant calc
-	if (fabsf(p0) < 0.01 && fabsf(pl) < 0.01) {
+	/* quadrant */
+	if (fabsf(p0) < .005 && fabsf(pl) < .005) {
 		/* no correlation */
-		return  -100;
+		return -100;
 	} else
 	if (p0 >= 0 && pl >= 0) {
-		rv =   0 + ( p0 - pl);
+		rv =  -1 + ( p0 - pl);
 	} else
 	if (p0 <  0 && pl >= 0) {
-		rv = -.5 + ( p0 + pl);
+		rv =  -3 + ( p0 + pl);
 	} else
 	if (p0 >= 0 && pl <  0) {
-		rv =  .5 + (-p0 - pl);
+		rv =   1 + (-p0 - pl);
 	} else {
 	//  p0 <  0 && pl <  0
-		rv =  -1 + (-p0 + pl);
+		rv =   3 + (-p0 + pl);
 	}
-	return  rv - .25;
+	return  rv * .25;
 }
 
 /******************************************************************************
@@ -193,13 +170,15 @@ multiphase_instantiate(
 	self->stcor->init(rate, 2e3f, 0.3f);
 
 	// 1.0 - e^(-2.0 * π * v / 48000)
-	self->omega = 1.0f - expf(-2.0 * M_PI * 10 / rate);
+	self->omega = 1.0f - expf(-2.f * M_PI * 7.5 / rate);
 
 	/* filter-frequencies */
 	const double f_r = 1000;
 	const double b = 4;
 	const double f1f = pow(2, -1. / (2. * b));
 	const double f2f = pow(2,  1. / (2. * b));
+
+	// TODO: prototype FFT based approach instead of discrete band filters
 
 	for (uint32_t i=0; i < NUM_BANDS; ++i) {
 		const int x = i - 22;
@@ -215,8 +194,6 @@ multiphase_instantiate(
 		bandpass_setup(&self->flt_r[i], self->rate, f_m, bw, 6);
 		memset(&self->cor[i], 0, sizeof(struct stcorr));
 
-		//self->cor[i]._w = 1.0f - expf(-0.01 * M_PI * f_m / self->rate);
-		self->cor[i]._w = 1.0f - expf(-2 * M_PI * 7.5 / self->rate);
 		const float quarterphase = self->rate / f_m / 4.0;
 
 		self->cor[i].yp  = ceil(3.f * quarterphase) - ceil(quarterphase);
@@ -277,15 +254,17 @@ multiphase_run(LV2_Handle instance, uint32_t n_samples)
 
 	/* localize variables */
 	float max_f[NUM_BANDS];
-	const float omega  = self->omega;
-	const float gain   = self->gain_coeff;
+	const float omega = self->omega;
+	const float gain  = self->gain_coeff;
 	struct FilterBank *flt_l[NUM_BANDS];
 	struct FilterBank *flt_r[NUM_BANDS];
+	struct stcorr     *p_cor[NUM_BANDS];
 
 	for(int i=0; i < NUM_BANDS; ++i) {
 		max_f[i] = self->max_f[i];
 		flt_l[i] = &self->flt_l[i];
 		flt_r[i] = &self->flt_r[i];
+		p_cor[i] = &self->cor[i];
 	}
 
 	/* calculate total phase */
@@ -301,7 +280,7 @@ multiphase_run(LV2_Handle instance, uint32_t n_samples)
 			const float fl = bandpass_process(flt_l[i], L);
 			const float fr = bandpass_process(flt_r[i], R);
 
-			stc_proc_one(&self->cor[i], fl, fr);
+			stc_proc_one(p_cor[i], omega, fl, fr);
 
 			const float v = (fl * fl + fr * fr) / 2.f;
 			max_f[i] += omega * (v - max_f[i]);
