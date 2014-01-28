@@ -147,11 +147,10 @@ static void create_surfaces(MFUI* ui) {
 	CIRC_ANN(34, "8 KHz")
 	CIRC_ANN(38, "16 KHz")
 
-	const double dash2[] = {1.0, 2.0};
+	const double dash2[] = {1.0, 3.0};
 	cairo_set_line_width(cr, 3.5);
-	cairo_set_dash(cr, dash2, 2, 1);
+	cairo_set_dash(cr, dash2, 2, 2);
 	CairoSetSouerceRGBA(c_grb);
-
 
 	cairo_set_line_width(cr, 1.5);
 	cairo_move_to(cr, ccc - rad, ccc);
@@ -164,16 +163,15 @@ static void create_surfaces(MFUI* ui) {
 	cairo_stroke(cr);
 	cairo_set_dash(cr, NULL, 0, 0);
 
-	write_text_full(cr, "+L",  ui->font[0], ccc, ccc - rad * .85, 0, -2, c_g60);
-	write_text_full(cr, "-L",  ui->font[0], ccc, ccc + rad * .85, 0, -2, c_g60);
-	write_text_full(cr, "0\u00B0",  ui->font[0], ccc, ccc - rad * .65, 0, -2, c_g60);
-	write_text_full(cr, "180\u00B0",  ui->font[0], ccc, ccc + rad * .65, 0, -2, c_g60);
+	write_text_full(cr, "+L",  ui->font[0], ccc, ccc - rad * .90, 0, -2, c_g60);
+	write_text_full(cr, "-L",  ui->font[0], ccc, ccc + rad * .90, 0, -2, c_g60);
+	write_text_full(cr, "0\u00B0",  ui->font[0], ccc, ccc - rad * .70, 0, -2, c_g60);
+	write_text_full(cr, "180\u00B0",  ui->font[0], ccc, ccc + rad * .70, 0, -2, c_g60);
 
-	write_text_full(cr, "-R",  ui->font[0], ccc - rad * .85, ccc, 0, -2, c_g60);
-	write_text_full(cr, "+R",  ui->font[0], ccc + rad * .85, ccc, 0, -2, c_g60);
-	write_text_full(cr, "-90\u00B0",  ui->font[0], ccc - rad * .65, ccc, 0, -2, c_g60);
-	write_text_full(cr, "+90\u00B0",  ui->font[0], ccc + rad * .65, ccc, 0, -2, c_g60);
-
+	write_text_full(cr, "-R",  ui->font[0], ccc - rad * .90, ccc, 0, -2, c_g60);
+	write_text_full(cr, "+R",  ui->font[0], ccc + rad * .90, ccc, 0, -2, c_g60);
+	write_text_full(cr, "-90\u00B0",  ui->font[0], ccc - rad * .70, ccc, 0, -2, c_g60);
+	write_text_full(cr, "+90\u00B0",  ui->font[0], ccc + rad * .70, ccc, 0, -2, c_g60);
 
 	ui->sf_dat = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, ui->width, ui->height);
 	cr = cairo_create (ui->sf_dat);
@@ -338,7 +336,7 @@ static void plot_data(MFUI* ui) {
 		cairo_stroke(cr);
 
 		// TODO calc per band max deviation
-		const float dev = .03 * M_PI;
+		const float dev = .01 * M_PI;
 		cairo_set_line_width(cr, R_BAND * 2.0);
 		cairo_set_source_rgba(cr, clr[0], clr[1], clr[2], 0.1);
 		float pp = (ui->phase[i] - .5) * M_PI;
