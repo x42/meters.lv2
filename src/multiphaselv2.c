@@ -17,10 +17,10 @@
  * Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#define NUM_BANDS (56)
+#define NUM_BANDS (40)
 
 typedef enum {
-	MF_PHASE = 112,
+	MF_PHASE = (NUM_BANDS + NUM_BANDS),
 	MF_GAIN,
 	MF_CUTOFF,
 	MF_INPUT0,
@@ -193,12 +193,12 @@ multiphase_instantiate(
 
 	/* filter-frequencies */
 	const double f_r = 1000;
-	const double b = 6;
+	const double b = 4;
 	const double f1f = pow(2, -1. / (2. * b));
 	const double f2f = pow(2,  1. / (2. * b));
 
 	for (uint32_t i=0; i < NUM_BANDS; ++i) {
-		const int x = i - 30;
+		const int x = i - 22;
 		const double f_m = pow(2, x / b) * f_r;
 		const double f_1 = f_m * f1f;
 		const double f_2 = f_m * f2f;

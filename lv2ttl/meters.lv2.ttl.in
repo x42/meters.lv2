@@ -2830,118 +2830,6 @@ mtr:multiphase@URI_SUFFIX@
 	] , [
 		a lv2:OutputPort, lv2:ControlPort ;
 		lv2:index 40 ;
-		lv2:symbol "phase40" ;
-		lv2:name "Phase at Band40" ;
-		lv2:minimum  -1.0;
-		lv2:maximum  1.0;
-	] , [
-		a lv2:OutputPort, lv2:ControlPort ;
-		lv2:index 41 ;
-		lv2:symbol "phase41" ;
-		lv2:name "Phase at Band41" ;
-		lv2:minimum  -1.0;
-		lv2:maximum  1.0;
-	] , [
-		a lv2:OutputPort, lv2:ControlPort ;
-		lv2:index 42 ;
-		lv2:symbol "phase42" ;
-		lv2:name "Phase at Band42" ;
-		lv2:minimum  -1.0;
-		lv2:maximum  1.0;
-	] , [
-		a lv2:OutputPort, lv2:ControlPort ;
-		lv2:index 43 ;
-		lv2:symbol "phase43" ;
-		lv2:name "Phase at Band43" ;
-		lv2:minimum  -1.0;
-		lv2:maximum  1.0;
-	] , [
-		a lv2:OutputPort, lv2:ControlPort ;
-		lv2:index 44 ;
-		lv2:symbol "phase44" ;
-		lv2:name "Phase at Band44" ;
-		lv2:minimum  -1.0;
-		lv2:maximum  1.0;
-	] , [
-		a lv2:OutputPort, lv2:ControlPort ;
-		lv2:index 45 ;
-		lv2:symbol "phase45" ;
-		lv2:name "Phase at Band45" ;
-		lv2:minimum  -1.0;
-		lv2:maximum  1.0;
-	] , [
-		a lv2:OutputPort, lv2:ControlPort ;
-		lv2:index 46 ;
-		lv2:symbol "phase46" ;
-		lv2:name "Phase at Band46" ;
-		lv2:minimum  -1.0;
-		lv2:maximum  1.0;
-	] , [
-		a lv2:OutputPort, lv2:ControlPort ;
-		lv2:index 47 ;
-		lv2:symbol "phase47" ;
-		lv2:name "Phase at Band47" ;
-		lv2:minimum  -1.0;
-		lv2:maximum  1.0;
-	] , [
-		a lv2:OutputPort, lv2:ControlPort ;
-		lv2:index 48 ;
-		lv2:symbol "phase48" ;
-		lv2:name "Phase at Band48" ;
-		lv2:minimum  -1.0;
-		lv2:maximum  1.0;
-	] , [
-		a lv2:OutputPort, lv2:ControlPort ;
-		lv2:index 49 ;
-		lv2:symbol "phase49" ;
-		lv2:name "Phase at Band49" ;
-		lv2:minimum  -1.0;
-		lv2:maximum  1.0;
-	] , [
-		a lv2:OutputPort, lv2:ControlPort ;
-		lv2:index 50 ;
-		lv2:symbol "phase50" ;
-		lv2:name "Phase at Band50" ;
-		lv2:minimum  -1.0;
-		lv2:maximum  1.0;
-	] , [
-		a lv2:OutputPort, lv2:ControlPort ;
-		lv2:index 51 ;
-		lv2:symbol "phase51" ;
-		lv2:name "Phase at Band51" ;
-		lv2:minimum  -1.0;
-		lv2:maximum  1.0;
-	] , [
-		a lv2:OutputPort, lv2:ControlPort ;
-		lv2:index 52 ;
-		lv2:symbol "phase52" ;
-		lv2:name "Phase at Band52" ;
-		lv2:minimum  -1.0;
-		lv2:maximum  1.0;
-	] , [
-		a lv2:OutputPort, lv2:ControlPort ;
-		lv2:index 53 ;
-		lv2:symbol "phase53" ;
-		lv2:name "Phase at Band53" ;
-		lv2:minimum  -1.0;
-		lv2:maximum  1.0;
-	] , [
-		a lv2:OutputPort, lv2:ControlPort ;
-		lv2:index 54 ;
-		lv2:symbol "phase54" ;
-		lv2:name "Phase at Band54" ;
-		lv2:minimum  -1.0;
-		lv2:maximum  1.0;
-	] , [
-		a lv2:OutputPort, lv2:ControlPort ;
-		lv2:index 55 ;
-		lv2:symbol "phase55" ;
-		lv2:name "Phase at Band55" ;
-		lv2:minimum  -1.0;
-		lv2:maximum  1.0;
-	] , [
-		a lv2:OutputPort, lv2:ControlPort ;
-		lv2:index 56 ;
 		lv2:symbol "level0" ;
 		lv2:name "Level at Band0" ;
 		lv2:minimum -60.0;
@@ -2949,7 +2837,7 @@ mtr:multiphase@URI_SUFFIX@
 		units:unit units:db ;
 	] , [
 		a lv2:OutputPort, lv2:ControlPort ;
-		lv2:index 57 ;
+		lv2:index 41 ;
 		lv2:symbol "level1" ;
 		lv2:name "Level at Band1" ;
 		lv2:minimum -60.0;
@@ -2957,7 +2845,7 @@ mtr:multiphase@URI_SUFFIX@
 		units:unit units:db ;
 	] , [
 		a lv2:OutputPort, lv2:ControlPort ;
-		lv2:index 58 ;
+		lv2:index 42 ;
 		lv2:symbol "level2" ;
 		lv2:name "Level at Band2" ;
 		lv2:minimum -60.0;
@@ -2965,7 +2853,7 @@ mtr:multiphase@URI_SUFFIX@
 		units:unit units:db ;
 	] , [
 		a lv2:OutputPort, lv2:ControlPort ;
-		lv2:index 59 ;
+		lv2:index 43 ;
 		lv2:symbol "level3" ;
 		lv2:name "Level at Band3" ;
 		lv2:minimum -60.0;
@@ -2973,7 +2861,7 @@ mtr:multiphase@URI_SUFFIX@
 		units:unit units:db ;
 	] , [
 		a lv2:OutputPort, lv2:ControlPort ;
-		lv2:index 60 ;
+		lv2:index 44 ;
 		lv2:symbol "level4" ;
 		lv2:name "Level at Band4" ;
 		lv2:minimum -60.0;
@@ -2981,7 +2869,7 @@ mtr:multiphase@URI_SUFFIX@
 		units:unit units:db ;
 	] , [
 		a lv2:OutputPort, lv2:ControlPort ;
-		lv2:index 61 ;
+		lv2:index 45 ;
 		lv2:symbol "level5" ;
 		lv2:name "Level at Band5" ;
 		lv2:minimum -60.0;
@@ -2989,7 +2877,7 @@ mtr:multiphase@URI_SUFFIX@
 		units:unit units:db ;
 	] , [
 		a lv2:OutputPort, lv2:ControlPort ;
-		lv2:index 62 ;
+		lv2:index 46 ;
 		lv2:symbol "level6" ;
 		lv2:name "Level at Band6" ;
 		lv2:minimum -60.0;
@@ -2997,7 +2885,7 @@ mtr:multiphase@URI_SUFFIX@
 		units:unit units:db ;
 	] , [
 		a lv2:OutputPort, lv2:ControlPort ;
-		lv2:index 63 ;
+		lv2:index 47 ;
 		lv2:symbol "level7" ;
 		lv2:name "Level at Band7" ;
 		lv2:minimum -60.0;
@@ -3005,7 +2893,7 @@ mtr:multiphase@URI_SUFFIX@
 		units:unit units:db ;
 	] , [
 		a lv2:OutputPort, lv2:ControlPort ;
-		lv2:index 64 ;
+		lv2:index 48 ;
 		lv2:symbol "level8" ;
 		lv2:name "Level at Band8" ;
 		lv2:minimum -60.0;
@@ -3013,7 +2901,7 @@ mtr:multiphase@URI_SUFFIX@
 		units:unit units:db ;
 	] , [
 		a lv2:OutputPort, lv2:ControlPort ;
-		lv2:index 65 ;
+		lv2:index 49 ;
 		lv2:symbol "level9" ;
 		lv2:name "Level at Band9" ;
 		lv2:minimum -60.0;
@@ -3021,7 +2909,7 @@ mtr:multiphase@URI_SUFFIX@
 		units:unit units:db ;
 	] , [
 		a lv2:OutputPort, lv2:ControlPort ;
-		lv2:index 66 ;
+		lv2:index 50 ;
 		lv2:symbol "level10" ;
 		lv2:name "Level at Band10" ;
 		lv2:minimum -60.0;
@@ -3029,7 +2917,7 @@ mtr:multiphase@URI_SUFFIX@
 		units:unit units:db ;
 	] , [
 		a lv2:OutputPort, lv2:ControlPort ;
-		lv2:index 67 ;
+		lv2:index 51 ;
 		lv2:symbol "level11" ;
 		lv2:name "Level at Band11" ;
 		lv2:minimum -60.0;
@@ -3037,7 +2925,7 @@ mtr:multiphase@URI_SUFFIX@
 		units:unit units:db ;
 	] , [
 		a lv2:OutputPort, lv2:ControlPort ;
-		lv2:index 68 ;
+		lv2:index 52 ;
 		lv2:symbol "level12" ;
 		lv2:name "Level at Band12" ;
 		lv2:minimum -60.0;
@@ -3045,7 +2933,7 @@ mtr:multiphase@URI_SUFFIX@
 		units:unit units:db ;
 	] , [
 		a lv2:OutputPort, lv2:ControlPort ;
-		lv2:index 69 ;
+		lv2:index 53 ;
 		lv2:symbol "level13" ;
 		lv2:name "Level at Band13" ;
 		lv2:minimum -60.0;
@@ -3053,7 +2941,7 @@ mtr:multiphase@URI_SUFFIX@
 		units:unit units:db ;
 	] , [
 		a lv2:OutputPort, lv2:ControlPort ;
-		lv2:index 70 ;
+		lv2:index 54 ;
 		lv2:symbol "level14" ;
 		lv2:name "Level at Band14" ;
 		lv2:minimum -60.0;
@@ -3061,7 +2949,7 @@ mtr:multiphase@URI_SUFFIX@
 		units:unit units:db ;
 	] , [
 		a lv2:OutputPort, lv2:ControlPort ;
-		lv2:index 71 ;
+		lv2:index 55 ;
 		lv2:symbol "level15" ;
 		lv2:name "Level at Band15" ;
 		lv2:minimum -60.0;
@@ -3069,7 +2957,7 @@ mtr:multiphase@URI_SUFFIX@
 		units:unit units:db ;
 	] , [
 		a lv2:OutputPort, lv2:ControlPort ;
-		lv2:index 72 ;
+		lv2:index 56 ;
 		lv2:symbol "level16" ;
 		lv2:name "Level at Band16" ;
 		lv2:minimum -60.0;
@@ -3077,7 +2965,7 @@ mtr:multiphase@URI_SUFFIX@
 		units:unit units:db ;
 	] , [
 		a lv2:OutputPort, lv2:ControlPort ;
-		lv2:index 73 ;
+		lv2:index 57 ;
 		lv2:symbol "level17" ;
 		lv2:name "Level at Band17" ;
 		lv2:minimum -60.0;
@@ -3085,7 +2973,7 @@ mtr:multiphase@URI_SUFFIX@
 		units:unit units:db ;
 	] , [
 		a lv2:OutputPort, lv2:ControlPort ;
-		lv2:index 74 ;
+		lv2:index 58 ;
 		lv2:symbol "level18" ;
 		lv2:name "Level at Band18" ;
 		lv2:minimum -60.0;
@@ -3093,7 +2981,7 @@ mtr:multiphase@URI_SUFFIX@
 		units:unit units:db ;
 	] , [
 		a lv2:OutputPort, lv2:ControlPort ;
-		lv2:index 75 ;
+		lv2:index 59 ;
 		lv2:symbol "level19" ;
 		lv2:name "Level at Band19" ;
 		lv2:minimum -60.0;
@@ -3101,7 +2989,7 @@ mtr:multiphase@URI_SUFFIX@
 		units:unit units:db ;
 	] , [
 		a lv2:OutputPort, lv2:ControlPort ;
-		lv2:index 76 ;
+		lv2:index 60 ;
 		lv2:symbol "level20" ;
 		lv2:name "Level at Band20" ;
 		lv2:minimum -60.0;
@@ -3109,7 +2997,7 @@ mtr:multiphase@URI_SUFFIX@
 		units:unit units:db ;
 	] , [
 		a lv2:OutputPort, lv2:ControlPort ;
-		lv2:index 77 ;
+		lv2:index 61 ;
 		lv2:symbol "level21" ;
 		lv2:name "Level at Band21" ;
 		lv2:minimum -60.0;
@@ -3117,7 +3005,7 @@ mtr:multiphase@URI_SUFFIX@
 		units:unit units:db ;
 	] , [
 		a lv2:OutputPort, lv2:ControlPort ;
-		lv2:index 78 ;
+		lv2:index 62 ;
 		lv2:symbol "level22" ;
 		lv2:name "Level at Band22" ;
 		lv2:minimum -60.0;
@@ -3125,7 +3013,7 @@ mtr:multiphase@URI_SUFFIX@
 		units:unit units:db ;
 	] , [
 		a lv2:OutputPort, lv2:ControlPort ;
-		lv2:index 79 ;
+		lv2:index 63 ;
 		lv2:symbol "level23" ;
 		lv2:name "Level at Band23" ;
 		lv2:minimum -60.0;
@@ -3133,7 +3021,7 @@ mtr:multiphase@URI_SUFFIX@
 		units:unit units:db ;
 	] , [
 		a lv2:OutputPort, lv2:ControlPort ;
-		lv2:index 80 ;
+		lv2:index 64 ;
 		lv2:symbol "level24" ;
 		lv2:name "Level at Band24" ;
 		lv2:minimum -60.0;
@@ -3141,7 +3029,7 @@ mtr:multiphase@URI_SUFFIX@
 		units:unit units:db ;
 	] , [
 		a lv2:OutputPort, lv2:ControlPort ;
-		lv2:index 81 ;
+		lv2:index 65 ;
 		lv2:symbol "level25" ;
 		lv2:name "Level at Band25" ;
 		lv2:minimum -60.0;
@@ -3149,7 +3037,7 @@ mtr:multiphase@URI_SUFFIX@
 		units:unit units:db ;
 	] , [
 		a lv2:OutputPort, lv2:ControlPort ;
-		lv2:index 82 ;
+		lv2:index 66 ;
 		lv2:symbol "level26" ;
 		lv2:name "Level at Band26" ;
 		lv2:minimum -60.0;
@@ -3157,7 +3045,7 @@ mtr:multiphase@URI_SUFFIX@
 		units:unit units:db ;
 	] , [
 		a lv2:OutputPort, lv2:ControlPort ;
-		lv2:index 83 ;
+		lv2:index 67 ;
 		lv2:symbol "level27" ;
 		lv2:name "Level at Band27" ;
 		lv2:minimum -60.0;
@@ -3165,7 +3053,7 @@ mtr:multiphase@URI_SUFFIX@
 		units:unit units:db ;
 	] , [
 		a lv2:OutputPort, lv2:ControlPort ;
-		lv2:index 84 ;
+		lv2:index 68 ;
 		lv2:symbol "level28" ;
 		lv2:name "Level at Band28" ;
 		lv2:minimum -60.0;
@@ -3173,7 +3061,7 @@ mtr:multiphase@URI_SUFFIX@
 		units:unit units:db ;
 	] , [
 		a lv2:OutputPort, lv2:ControlPort ;
-		lv2:index 85 ;
+		lv2:index 69 ;
 		lv2:symbol "level29" ;
 		lv2:name "Level at Band29" ;
 		lv2:minimum -60.0;
@@ -3181,7 +3069,7 @@ mtr:multiphase@URI_SUFFIX@
 		units:unit units:db ;
 	] , [
 		a lv2:OutputPort, lv2:ControlPort ;
-		lv2:index 86 ;
+		lv2:index 70 ;
 		lv2:symbol "level30" ;
 		lv2:name "Level at Band30" ;
 		lv2:minimum -60.0;
@@ -3189,7 +3077,7 @@ mtr:multiphase@URI_SUFFIX@
 		units:unit units:db ;
 	] , [
 		a lv2:OutputPort, lv2:ControlPort ;
-		lv2:index 87 ;
+		lv2:index 71 ;
 		lv2:symbol "level31" ;
 		lv2:name "Level at Band31" ;
 		lv2:minimum -60.0;
@@ -3197,7 +3085,7 @@ mtr:multiphase@URI_SUFFIX@
 		units:unit units:db ;
 	] , [
 		a lv2:OutputPort, lv2:ControlPort ;
-		lv2:index 88 ;
+		lv2:index 72 ;
 		lv2:symbol "level32" ;
 		lv2:name "Level at Band32" ;
 		lv2:minimum -60.0;
@@ -3205,7 +3093,7 @@ mtr:multiphase@URI_SUFFIX@
 		units:unit units:db ;
 	] , [
 		a lv2:OutputPort, lv2:ControlPort ;
-		lv2:index 89 ;
+		lv2:index 73 ;
 		lv2:symbol "level33" ;
 		lv2:name "Level at Band33" ;
 		lv2:minimum -60.0;
@@ -3213,7 +3101,7 @@ mtr:multiphase@URI_SUFFIX@
 		units:unit units:db ;
 	] , [
 		a lv2:OutputPort, lv2:ControlPort ;
-		lv2:index 90 ;
+		lv2:index 74 ;
 		lv2:symbol "level34" ;
 		lv2:name "Level at Band34" ;
 		lv2:minimum -60.0;
@@ -3221,7 +3109,7 @@ mtr:multiphase@URI_SUFFIX@
 		units:unit units:db ;
 	] , [
 		a lv2:OutputPort, lv2:ControlPort ;
-		lv2:index 91 ;
+		lv2:index 75 ;
 		lv2:symbol "level35" ;
 		lv2:name "Level at Band35" ;
 		lv2:minimum -60.0;
@@ -3229,7 +3117,7 @@ mtr:multiphase@URI_SUFFIX@
 		units:unit units:db ;
 	] , [
 		a lv2:OutputPort, lv2:ControlPort ;
-		lv2:index 92 ;
+		lv2:index 76 ;
 		lv2:symbol "level36" ;
 		lv2:name "Level at Band36" ;
 		lv2:minimum -60.0;
@@ -3237,7 +3125,7 @@ mtr:multiphase@URI_SUFFIX@
 		units:unit units:db ;
 	] , [
 		a lv2:OutputPort, lv2:ControlPort ;
-		lv2:index 93 ;
+		lv2:index 77 ;
 		lv2:symbol "level37" ;
 		lv2:name "Level at Band37" ;
 		lv2:minimum -60.0;
@@ -3245,7 +3133,7 @@ mtr:multiphase@URI_SUFFIX@
 		units:unit units:db ;
 	] , [
 		a lv2:OutputPort, lv2:ControlPort ;
-		lv2:index 94 ;
+		lv2:index 78 ;
 		lv2:symbol "level38" ;
 		lv2:name "Level at Band38" ;
 		lv2:minimum -60.0;
@@ -3253,144 +3141,16 @@ mtr:multiphase@URI_SUFFIX@
 		units:unit units:db ;
 	] , [
 		a lv2:OutputPort, lv2:ControlPort ;
-		lv2:index 95 ;
+		lv2:index 79 ;
 		lv2:symbol "level39" ;
 		lv2:name "Level at Band39" ;
 		lv2:minimum -60.0;
 		lv2:maximum   6.0;
 		units:unit units:db ;
 	] , [
-		a lv2:OutputPort, lv2:ControlPort ;
-		lv2:index 96 ;
-		lv2:symbol "level40" ;
-		lv2:name "Level at Band40" ;
-		lv2:minimum -60.0;
-		lv2:maximum   6.0;
-		units:unit units:db ;
-	] , [
-		a lv2:OutputPort, lv2:ControlPort ;
-		lv2:index 97 ;
-		lv2:symbol "level41" ;
-		lv2:name "Level at Band41" ;
-		lv2:minimum -60.0;
-		lv2:maximum   6.0;
-		units:unit units:db ;
-	] , [
-		a lv2:OutputPort, lv2:ControlPort ;
-		lv2:index 98 ;
-		lv2:symbol "level42" ;
-		lv2:name "Level at Band42" ;
-		lv2:minimum -60.0;
-		lv2:maximum   6.0;
-		units:unit units:db ;
-	] , [
-		a lv2:OutputPort, lv2:ControlPort ;
-		lv2:index 99 ;
-		lv2:symbol "level43" ;
-		lv2:name "Level at Band43" ;
-		lv2:minimum -60.0;
-		lv2:maximum   6.0;
-		units:unit units:db ;
-	] , [
-		a lv2:OutputPort, lv2:ControlPort ;
-		lv2:index 100 ;
-		lv2:symbol "level44" ;
-		lv2:name "Level at Band44" ;
-		lv2:minimum -60.0;
-		lv2:maximum   6.0;
-		units:unit units:db ;
-	] , [
-		a lv2:OutputPort, lv2:ControlPort ;
-		lv2:index 101 ;
-		lv2:symbol "level45" ;
-		lv2:name "Level at Band45" ;
-		lv2:minimum -60.0;
-		lv2:maximum   6.0;
-		units:unit units:db ;
-	] , [
-		a lv2:OutputPort, lv2:ControlPort ;
-		lv2:index 102 ;
-		lv2:symbol "level46" ;
-		lv2:name "Level at Band46" ;
-		lv2:minimum -60.0;
-		lv2:maximum   6.0;
-		units:unit units:db ;
-	] , [
-		a lv2:OutputPort, lv2:ControlPort ;
-		lv2:index 103 ;
-		lv2:symbol "level47" ;
-		lv2:name "Level at Band47" ;
-		lv2:minimum -60.0;
-		lv2:maximum   6.0;
-		units:unit units:db ;
-	] , [
-		a lv2:OutputPort, lv2:ControlPort ;
-		lv2:index 104 ;
-		lv2:symbol "level48" ;
-		lv2:name "Level at Band48" ;
-		lv2:minimum -60.0;
-		lv2:maximum   6.0;
-		units:unit units:db ;
-	] , [
-		a lv2:OutputPort, lv2:ControlPort ;
-		lv2:index 105 ;
-		lv2:symbol "level49" ;
-		lv2:name "Level at Band49" ;
-		lv2:minimum -60.0;
-		lv2:maximum   6.0;
-		units:unit units:db ;
-	] , [
-		a lv2:OutputPort, lv2:ControlPort ;
-		lv2:index 106 ;
-		lv2:symbol "level50" ;
-		lv2:name "Level at Band50" ;
-		lv2:minimum -60.0;
-		lv2:maximum   6.0;
-		units:unit units:db ;
-	] , [
-		a lv2:OutputPort, lv2:ControlPort ;
-		lv2:index 107 ;
-		lv2:symbol "level51" ;
-		lv2:name "Level at Band51" ;
-		lv2:minimum -60.0;
-		lv2:maximum   6.0;
-		units:unit units:db ;
-	] , [
-		a lv2:OutputPort, lv2:ControlPort ;
-		lv2:index 108 ;
-		lv2:symbol "level52" ;
-		lv2:name "Level at Band52" ;
-		lv2:minimum -60.0;
-		lv2:maximum   6.0;
-		units:unit units:db ;
-	] , [
-		a lv2:OutputPort, lv2:ControlPort ;
-		lv2:index 109 ;
-		lv2:symbol "level53" ;
-		lv2:name "Level at Band53" ;
-		lv2:minimum -60.0;
-		lv2:maximum   6.0;
-		units:unit units:db ;
-	] , [
-		a lv2:OutputPort, lv2:ControlPort ;
-		lv2:index 110 ;
-		lv2:symbol "level54" ;
-		lv2:name "Level at Band54" ;
-		lv2:minimum -60.0;
-		lv2:maximum   6.0;
-		units:unit units:db ;
-	] , [
-		a lv2:OutputPort, lv2:ControlPort ;
-		lv2:index 111 ;
-		lv2:symbol "level55" ;
-		lv2:name "Level at Band55" ;
-		lv2:minimum -60.0;
-		lv2:maximum   6.0;
-		units:unit units:db ;
-	] , [
 ########
 		a lv2:OutputPort, lv2:ControlPort ;
-		lv2:index 112 ;
+		lv2:index 80 ;
 		lv2:symbol "phase" ;
 		lv2:name "phase" ;
 		lv2:minimum -1.0;
@@ -3398,7 +3158,7 @@ mtr:multiphase@URI_SUFFIX@
 	] , [
 		a lv2:ControlPort ,
 			lv2:InputPort ;
-		lv2:index 113 ;
+		lv2:index 81 ;
 		lv2:symbol "gain" ;
 		lv2:name "Gain" ;
 		lv2:default 20.0 ;
@@ -3408,7 +3168,7 @@ mtr:multiphase@URI_SUFFIX@
 	] , [
 		a lv2:ControlPort ,
 			lv2:InputPort ;
-		lv2:index 114 ;
+		lv2:index 82 ;
 		lv2:symbol "cutoff" ;
 		lv2:name "Cutoff" ;
 		lv2:default -50.0 ;
@@ -3418,28 +3178,28 @@ mtr:multiphase@URI_SUFFIX@
 	] , [
 		a lv2:AudioPort ,
 			lv2:InputPort ;
-		lv2:index 115 ;
+		lv2:index 83 ;
 		lv2:symbol "inL" ;
 		lv2:name "InL" ;
 		lv2:designation pg:left ;
 	] , [
 		a lv2:AudioPort ,
 			lv2:OutputPort ;
-		lv2:index 116 ;
+		lv2:index 84 ;
 		lv2:symbol "outL" ;
 		lv2:name "OutL";
 		lv2:designation pg:left ;
 	] , [
 		a lv2:AudioPort ,
 			lv2:InputPort ;
-		lv2:index 117 ;
+		lv2:index 85 ;
 		lv2:symbol "inR" ;
 		lv2:name "InR" ;
 		lv2:designation pg:right ;
 	] , [
 		a lv2:AudioPort ,
 			lv2:OutputPort ;
-		lv2:index 118 ;
+		lv2:index 86 ;
 		lv2:symbol "outR" ;
 		lv2:name "OutR" ;
 		lv2:designation pg:right ;

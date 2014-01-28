@@ -27,17 +27,17 @@
 #define MTR_GUI "mphaseui"
 
 /* port indices */
-#define NUM_BANDS 56
+#define NUM_BANDS 40
 
 enum {
-	MF_PHASE    = 112,
+	MF_PHASE = (NUM_BANDS + NUM_BANDS),
 	MF_GAIN,
 	MF_CUTOFF
 };
 
 /* various GUI pixel sizes */
 
-#define R_BAND 3.0
+#define R_BAND 4.0
 
 #define XOFF 5
 #define YOFF 5
@@ -138,14 +138,14 @@ static void create_surfaces(MFUI* ui) {
 	}
 
 	CIRC_ANN(6,  "63 Hz")
-	CIRC_ANN(12, "125 Hz")
-	CIRC_ANN(18, "250 Hz")
-	CIRC_ANN(24, "500 Hz")
-	CIRC_ANN(30, "1 KHz")
-	CIRC_ANN(36, "2 KHz")
-	CIRC_ANN(42, "4 KHz")
-	CIRC_ANN(48, "8 KHz")
-	CIRC_ANN(54, "16 KHz")
+	CIRC_ANN(10, "125 Hz")
+	CIRC_ANN(14, "250 Hz")
+	CIRC_ANN(18, "500 Hz")
+	CIRC_ANN(22, "1 KHz")
+	CIRC_ANN(26, "2 KHz")
+	CIRC_ANN(30, "4 KHz")
+	CIRC_ANN(34, "8 KHz")
+	CIRC_ANN(38, "16 KHz")
 
 	const double dash2[] = {1.0, 2.0};
 	cairo_set_line_width(cr, 3.5);
