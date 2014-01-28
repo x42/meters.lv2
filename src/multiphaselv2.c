@@ -190,14 +190,17 @@ multiphase_instantiate(
 		printf("--F %2d (%3d): f:%9.2fHz b:%9.2fHz (%9.2fHz -> %9.2fHz) 1/4spl:%.2f\n",i, x, f_m, bw, f_1, f_2, self->rate / f_m / 4.0);
 #endif
 		self->max_f[i] = 0;
-		bandpass_setup(&self->flt_l[i], self->rate, f_m, bw, 6);
-		bandpass_setup(&self->flt_r[i], self->rate, f_m, bw, 6);
+		bandpass_setup(&self->flt_l[i], self->rate, f_m, bw, 4);
+		bandpass_setup(&self->flt_r[i], self->rate, f_m, bw, 4);
 		memset(&self->cor[i], 0, sizeof(struct stcorr));
 
 		const float quarterphase = self->rate / f_m / 4.0;
 
-		self->cor[i].yp  = ceil(3.f * quarterphase) - ceil(quarterphase);
-		self->cor[i].dls = ceil(3.f * quarterphase);
+		self->cor[i].yp  = rintf(2.f * quarterphase);
+		self->cor[i].dls = rintf(3.f * quarterphase);
+		if (self->cor[i].yp < 1) self->cor[i].yp = 1;
+		if (self->cor[i].dls < 1) self->cor[i].dls = 1;
+		assert(self->cor[i].yp <= self->cor[i].dls);
 
 		self->cor[i].dll = (float*) calloc(self->cor[i].dls, sizeof(float));
 		self->cor[i].dlr = (float*) calloc(self->cor[i].dls, sizeof(float));
