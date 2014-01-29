@@ -19,7 +19,7 @@
 #define MTR_URI "http://gareus.org/oss/lv2/meters#"
 #define MTR_GUI "mphase2ui"
 
-#define FFT_BINS 512 // half of the FFT data-size
+#define FFT_BINS 1024 // half of the FFT data-size
 
 enum {
 	MF_PHASE = 6,
