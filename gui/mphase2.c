@@ -113,7 +113,6 @@ typedef struct {
 	uint32_t width;
 	uint32_t height;
 
-	uint64_t cnt_a, cnt_b;
 	float log_rate;
 	float log_base;
 
@@ -788,7 +787,6 @@ instantiate(
 		ui->level[i] = -100;
 	}
 
-	ui->cnt_a = ui->cnt_b = 0;
   ui->rate = 48000;
 	ui->db_cutoff = -59;
 	ui->db_thresh = 0.000001; // (-60dB)^2
@@ -866,26 +864,10 @@ static void invalidate_pc(MF2UI* ui, const float val) {
 
 /******************************************************************************/
 
-static void process_audio(MF2UI* ui, const uint32_t channel, const size_t n_elem, float const * data) {
-	if (channel > 2) { return; }
+static void process_audio(MF2UI* ui, const size_t n_elem, float const * const left, float const * const right) {
 
-	bool display = false;
-	if (channel == 0) {
-		ui->cnt_a++;
-		fftx_run(ui->fa, n_elem, data);
-	} else {
-		ui->cnt_b++;
-		display = !fftx_run(ui->fb, n_elem, data);
-	}
-
-	if (display) {
-		if (ui->cnt_a != ui->cnt_b) {
-			fprintf(stderr, "meters.lv2: Lost events, reinit\n");
-			reinitialize_fft(ui);
-			ui->cnt_a = ui->cnt_b = 0;
-			return;
-		}
-	}
+	fftx_run(ui->fa, n_elem, left);
+	bool display = !fftx_run(ui->fb, n_elem, right);
 
 	if (display) {
 		const uint32_t b = fftx_bins(ui->fa);
@@ -930,34 +912,20 @@ port_event(LV2UI_Handle handle,
 		LV2_Atom_Object* obj = (LV2_Atom_Object*)atom;
 		LV2_Atom *a0 = NULL;
 		LV2_Atom *a1 = NULL;
-		if (
-				/* handle raw-audio data objects */
-				obj->body.otype == ui->uris.rawaudio
-				/* retrieve properties from object and
-				 * check that there the [here] two required properties are set.. */
-				&& 2 == lv2_atom_object_get(obj, ui->uris.channelid, &a0, ui->uris.audiodata, &a1, NULL)
-				/* ..and non-null.. */
-				&& a0
-				&& a1
-				/* ..and match the expected type */
-				&& a0->type == ui->uris.atom_Int
+		if (obj->body.otype == ui->uris.rawstereo
+				&& 2 == lv2_atom_object_get(obj, ui->uris.audioleft, &a0, ui->uris.audioright, &a1, NULL)
+				&& a0 && a1
+				&& a0->type == ui->uris.atom_Vector
 				&& a1->type == ui->uris.atom_Vector
 			 )
 		{
-			/* single integer value can be directly dereferenced */
-			const int32_t chn = ((LV2_Atom_Int*)a0)->body;
-
-			/* dereference and typecast vector pointer */
-			LV2_Atom_Vector* vof = (LV2_Atom_Vector*)LV2_ATOM_BODY(a1);
-			/* check if atom is indeed a vector of the expected type*/
-			if (vof->atom.type == ui->uris.atom_Float) {
-				/* get number of elements in vector
-				 * = (raw 8bit data-length - header-length) / sizeof(expected data type:float) */
-				const size_t n_elem = (a1->size - sizeof(LV2_Atom_Vector_Body)) / vof->atom.size;
-				/* typecast, dereference pointer to vector */
-				const float *data = (float*) LV2_ATOM_BODY(&vof->atom);
-				/* call function that handles the actual data */
-				process_audio(ui, chn, n_elem, data);
+			LV2_Atom_Vector* left = (LV2_Atom_Vector*)LV2_ATOM_BODY(a0);
+			LV2_Atom_Vector* right = (LV2_Atom_Vector*)LV2_ATOM_BODY(a1);
+			if (left->atom.type == ui->uris.atom_Float && right->atom.type == ui->uris.atom_Float) {
+				const size_t n_elem = (a0->size - sizeof(LV2_Atom_Vector_Body)) / left->atom.size;
+				const float *l = (float*) LV2_ATOM_BODY(&left->atom);
+				const float *r = (float*) LV2_ATOM_BODY(&right->atom);
+				process_audio(ui, n_elem, l, r);
 			}
 		}
 		else if (

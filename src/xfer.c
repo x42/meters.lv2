@@ -159,6 +159,25 @@ static void tx_rawaudio(LV2_Atom_Forge *forge, XferLV2URIs *uris,
 	lv2_atom_forge_pop(forge, &frame);
 }
 
+/** forge atom-vector of raw data */
+static void tx_rawstereo(LV2_Atom_Forge *forge, XferLV2URIs *uris,
+    const size_t n_samples, void *left, void *right)
+{
+	LV2_Atom_Forge_Frame frame;
+	/* forge container object of type 'rawaudio' */
+	lv2_atom_forge_frame_time(forge, 0);
+	lv2_atom_forge_blank(forge, &frame, 1, uris->rawstereo);
+
+	lv2_atom_forge_property_head(forge, uris->audioleft, 0);
+	lv2_atom_forge_vector(forge, sizeof(float), uris->atom_Float, n_samples, left);
+
+	lv2_atom_forge_property_head(forge, uris->audioright, 0);
+	lv2_atom_forge_vector(forge, sizeof(float), uris->atom_Float, n_samples, right);
+
+	/* close off atom-object */
+	lv2_atom_forge_pop(forge, &frame);
+}
+
 static void
 xfer_run(LV2_Handle handle, uint32_t n_samples)
 {
@@ -225,20 +244,28 @@ xfer_run(LV2_Handle handle, uint32_t n_samples)
 		*self->p_phase = self->stcor->read();
 	}
 
-	/* process audio data */
-	for (uint32_t c = 0; c < self->n_channels; ++c) {
-		if (self->ui_active && capacity_ok) {
-			/* if UI is active, send raw audio data to UI */
-			tx_rawaudio(&self->forge, &self->uris, c, n_samples, self->input[c]);
-		}
-		/* if not processing in-place, forward audio */
-		if (self->input[c] != self->output[c]) {
-			memcpy(self->output[c], self->input[c], sizeof(float) * n_samples);
+	/* if UI is active, send raw audio data to GUI */
+	if (self->ui_active && capacity_ok) {
+		if (self->n_channels == 2) {
+			tx_rawstereo(&self->forge, &self->uris, n_samples,
+					self->input[0], self->input[1]);
+		} else {
+			for (uint32_t c = 0; c < self->n_channels; ++c) {
+				tx_rawaudio(&self->forge, &self->uris, c, n_samples, self->input[c]);
+			}
 		}
 	}
 
 	/* close off atom-sequence */
 	lv2_atom_forge_pop(&self->forge, &self->frame);
+
+	/* if not processing in-place, forward audio */
+	for (uint32_t c = 0; c < self->n_channels; ++c) {
+		if (self->input[c] != self->output[c]) {
+			memcpy(self->output[c], self->input[c], sizeof(float) * n_samples);
+		}
+	}
+
 }
 
 static void

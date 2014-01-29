@@ -35,6 +35,9 @@ typedef struct {
 	LV2_URID rawaudio;
 	LV2_URID channelid;
 	LV2_URID audiodata;
+	LV2_URID rawstereo;
+	LV2_URID audioleft;
+	LV2_URID audioright;
 
 	LV2_URID samplerate;
 	LV2_URID ui_on;
@@ -53,6 +56,10 @@ map_xfer_uris(LV2_URID_Map* map, XferLV2URIs* uris) {
 	uris->audiodata          = map->map(map->handle, MTR_URI "audiodata");
 	uris->channelid          = map->map(map->handle, MTR_URI "channelid");
 	uris->samplerate         = map->map(map->handle, MTR_URI "samplerate");
+	uris->rawstereo          = map->map(map->handle, MTR_URI "rawstereo");
+	uris->audioleft          = map->map(map->handle, MTR_URI "audioleft");
+	uris->audioright         = map->map(map->handle, MTR_URI "audioright");
+
 	uris->ui_on              = map->map(map->handle, MTR_URI "ui_on");
 	uris->ui_off             = map->map(map->handle, MTR_URI "ui_off");
 	uris->ui_state           = map->map(map->handle, MTR_URI "ui_state");
