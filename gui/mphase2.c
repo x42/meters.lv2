@@ -890,7 +890,7 @@ static void process_audio(MF2UI* ui, const size_t n_elem, float const * const le
 			phase -= M_PI*(float)over;
 #endif
 			ui->phase[i] = phase;
-			ui->level[i] = gain + fftx_power_to_dB(ui->fa->power[i]);
+			ui->level[i] = gain + fftx_power_to_dB(MAX(ui->fa->power[i], ui->fb->power[i]));
 		}
 		queue_draw(ui->m0);
 	}

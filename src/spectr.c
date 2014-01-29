@@ -66,7 +66,7 @@ proc_one(struct Filter * const f, const double in)
 }
 
 static inline float
-bandpass_process(struct FilterBank * const fb, float in)
+bandpass_process(struct FilterBank * const fb, const float in)
 {
 	fb->ac = !fb->ac;
 	double out = in + ((fb->ac) ? NODENORMAL : -NODENORMAL);
