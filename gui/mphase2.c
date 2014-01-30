@@ -19,7 +19,7 @@
 #define MTR_URI "http://gareus.org/oss/lv2/meters#"
 #define MTR_GUI "mphase2ui"
 
-#define FFT_BINS 1024 // half of the FFT data-size
+#define FFT_BINS 512 // half of the FFT data-size
 
 enum {
 	MF_PHASE = 6,
@@ -408,13 +408,13 @@ static void plot_data(MF2UI* ui) {
 	cairo_set_line_cap(cr, CAIRO_LINE_CAP_ROUND);
 	const float dnum = PH_RAD / ui->log_base;
 	const float denom = ui->log_rate / (float)FFT_BINS;
-	for (uint32_t i=1; i < FFT_BINS ; ++i) {
+	for (uint32_t i = 1; i < FFT_BINS-1 ; ++i) {
 		if (ui->level[i] < ui->db_cutoff) continue;
 
 		const float dist = dnum * fast_log10(1.0 + i * denom);
 		const float dx = ccc + dist * sinf(ui->phase[i]);
 		const float dy = ccc - dist * cosf(ui->phase[i]);
-		const float pk = ui->level[i] > 1.0 ? 1.0 : (60 + ui->level[i]) / 60.0;
+		const float pk = ui->level[i] > 0.0 ? 1.0 : (60 + ui->level[i]) / 60.0;
 
 		float clr[3];
 		hsl2rgb(clr, .75 - .8 * pk, .9, .2 + pk * .4);
@@ -870,11 +870,11 @@ static void process_audio(MF2UI* ui, const size_t n_elem, float const * const le
 	bool display = !fftx_run(ui->fb, n_elem, right);
 
 	if (display) {
-		const uint32_t b = fftx_bins(ui->fa);
+		assert (fftx_bins(ui->fa) == FFT_BINS);
 		const float gain = robtk_dial_get_value(ui->gain);
 		const float db_thresh = ui->db_thresh;
-		assert (b == FFT_BINS);
-		for (uint32_t i = 1; i < b-1; i++) {
+		const float lnorm = 0.151 / log(FFT_BINS); // log(2)/2.0; magnitude^2 ~ -data_size
+		for (uint32_t i = 1; i < FFT_BINS-1; i++) {
       if (ui->fa->power[i] < db_thresh || ui->fb->power[i] < db_thresh) {
 				ui->phase[i] = 0;
 				ui->level[i] = -100;
@@ -890,7 +890,11 @@ static void process_audio(MF2UI* ui, const size_t n_elem, float const * const le
 			phase -= M_PI*(float)over;
 #endif
 			ui->phase[i] = phase;
+#if 0
 			ui->level[i] = gain + fftx_power_to_dB(MAX(ui->fa->power[i], ui->fb->power[i]));
+#else
+			ui->level[i] = gain + fftx_power_to_dB(MAX(ui->fa->power[i], ui->fb->power[i]) * i * lnorm);
+#endif
 		}
 		queue_draw(ui->m0);
 	}
