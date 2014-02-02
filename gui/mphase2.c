@@ -25,7 +25,9 @@ enum {
 	MF_PHASE = 6,
 	MF_GAIN,
 	MF_CUTOFF,
-	MF_FFT
+	MF_FFT,
+	MF_BAND,
+	MF_NORM
 };
 
 #include <stdio.h>
@@ -748,7 +750,7 @@ static void dial_annotation_db(RobTkDial * d, cairo_t *cr, void *data) {
 static RobWidget* m2_mousedown(RobWidget* handle, RobTkBtnEvent *event) {
 	MF2UI* ui = (MF2UI*)GET_HANDLE(handle);
 	if (event->state & ROBTK_MOD_SHIFT) {
-		ui->db_cutoff = -59;
+		ui->db_cutoff = -45;
 		ui->update_annotations = true;
 		queue_draw(ui->m2);
 		return NULL;
@@ -820,9 +822,21 @@ static bool cb_set_fft (RobWidget* handle, void *data) {
 	return TRUE;
 }
 
+static bool cb_set_oct (RobWidget* handle, void *data) {
+	MF2UI* ui = (MF2UI*) (data);
+	if (ui->disable_signals) return TRUE;
+	float val = robtk_cbtn_get_active(ui->btn_oct) ? 1.0 : 0.0;
+	ui->write(ui->controller, MF_BAND, sizeof(float), 0, (const void*) &val);
+	return TRUE;
+}
+
 static bool cb_set_norm (RobWidget* handle, void *data) {
 	MF2UI* ui = (MF2UI*) (data);
-	robtk_dial_set_sensitive(ui->gain, !robtk_cbtn_get_active(ui->btn_norm));
+	float val = robtk_cbtn_get_active(ui->btn_norm) ? 1.0 : 0.0;
+	robtk_dial_set_sensitive(ui->gain, val == 0.0);
+	if (ui->disable_signals) return TRUE;
+	ui->write(ui->controller, MF_NORM, sizeof(float), 0, (const void*) &val);
+	return TRUE;
 }
 
 /******************************************************************************
@@ -901,7 +915,7 @@ static RobWidget * toplevel(MF2UI* ui, void * const top)
 			60, 40, 30.5, 16.5, 10);
 	robtk_dial_set_alignment(ui->gain, .5, 1.0);
 	robtk_dial_set_value(ui->gain, 0);
-	robtk_dial_set_default(ui->gain, 0);
+	robtk_dial_set_default(ui->gain, 20.0);
 	robtk_dial_set_callback(ui->gain, cb_set_gain, ui);
 	robtk_dial_set_surface(ui->gain,ui->sf_dial);
 	robtk_dial_annotation_callback(ui->gain, dial_annotation_db, ui);
@@ -926,6 +940,7 @@ static RobWidget * toplevel(MF2UI* ui, void * const top)
 	/* N/octave */
 	ui->btn_oct = robtk_cbtn_new("N/Octave", GBT_LED_LEFT, false);
 	robtk_cbtn_set_active(ui->btn_oct, false);
+	robtk_cbtn_set_callback(ui->btn_oct, cb_set_oct, ui);
 
 	/* N/octave */
 	ui->btn_norm = robtk_cbtn_new("Normalize", GBT_LED_LEFT, false);
@@ -1192,5 +1207,17 @@ port_event(LV2UI_Handle handle,
 			reinitialize_fft(ui, fft_bins);
 			robtk_select_set_value(ui->sel_fft, ui->fft_bins);
 		}
+	}
+	else if (port_index == MF_BAND) {
+		float val = *(float *)buffer;
+		ui->disable_signals = true;
+		robtk_cbtn_set_active(ui->btn_oct, val != 0);
+		ui->disable_signals = false;
+	}
+	else if (port_index == MF_NORM) {
+		float val = *(float *)buffer;
+		ui->disable_signals = true;
+		robtk_cbtn_set_active(ui->btn_norm, val != 0);
+		ui->disable_signals = false;
 	}
 }
