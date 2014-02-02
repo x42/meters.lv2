@@ -78,11 +78,11 @@ typedef struct {
 	LV2UI_Write_Function write;
 	LV2UI_Controller controller;
 
-  float rate;
-  float ann_rate;
+	float rate;
+	float ann_rate;
 
-  struct FFTAnalysis *fa;
-  struct FFTAnalysis *fb;
+	struct FFTAnalysis *fa;
+	struct FFTAnalysis *fb;
 
 	RobWidget* rw;
 	RobWidget* m0;
@@ -133,8 +133,8 @@ typedef struct {
 
 static void reinitialize_fft(MF2UI* ui, uint32_t fft_size) {
 	pthread_mutex_lock (&ui->fft_lock);
-  fftx_free(ui->fa);
-  fftx_free(ui->fb);
+	fftx_free(ui->fa);
+	fftx_free(ui->fb);
 
 	fft_size = MAX(64, fft_size);
 	fft_size--;
@@ -147,12 +147,12 @@ static void reinitialize_fft(MF2UI* ui, uint32_t fft_size) {
 	fft_size = MIN(FFT_BINS_MAX, fft_size);
 	ui->fft_bins = fft_size;
 
-  ui->fa = (struct FFTAnalysis*) malloc(sizeof(struct FFTAnalysis));
-  ui->fb = (struct FFTAnalysis*) malloc(sizeof(struct FFTAnalysis));
-  fftx_init(ui->fa, ui->fft_bins * 2, ui->rate, 25);
-  fftx_init(ui->fb, ui->fft_bins * 2, ui->rate, 25);
-  ui->log_rate  = (1.0f - 10000.0f / ui->rate) / ((2000.0f / ui->rate) * (2000.0f / ui->rate));
-  ui->log_base = log10f(1.0f + ui->log_rate);
+	ui->fa = (struct FFTAnalysis*) malloc(sizeof(struct FFTAnalysis));
+	ui->fb = (struct FFTAnalysis*) malloc(sizeof(struct FFTAnalysis));
+	fftx_init(ui->fa, ui->fft_bins * 2, ui->rate, 25);
+	fftx_init(ui->fb, ui->fft_bins * 2, ui->rate, 25);
+	ui->log_rate  = (1.0f - 10000.0f / ui->rate) / ((2000.0f / ui->rate) * (2000.0f / ui->rate));
+	ui->log_base = log10f(1.0f + ui->log_rate);
 	ui->update_grid = true;
 
 	for (uint32_t i = 0; i < ui->fft_bins; i++) {
@@ -167,33 +167,32 @@ static void reinitialize_fft(MF2UI* ui, uint32_t fft_size) {
  * Communication with DSP backend -- send/receive settings
  */
 
-
 /** notfiy backend that UI is closed */
 static void ui_disable(LV2UI_Handle handle)
 {
-  MF2UI* ui = (MF2UI*)handle;
+	MF2UI* ui = (MF2UI*)handle;
 
-  uint8_t obj_buf[64];
-  lv2_atom_forge_set_buffer(&ui->forge, obj_buf, 64);
-  LV2_Atom_Forge_Frame frame;
-  lv2_atom_forge_frame_time(&ui->forge, 0);
-  LV2_Atom* msg = (LV2_Atom*)lv2_atom_forge_blank(&ui->forge, &frame, 1, ui->uris.ui_off);
-  lv2_atom_forge_pop(&ui->forge, &frame);
-  ui->write(ui->controller, 0, lv2_atom_total_size(msg), ui->uris.atom_eventTransfer, msg);
+	uint8_t obj_buf[64];
+	lv2_atom_forge_set_buffer(&ui->forge, obj_buf, 64);
+	LV2_Atom_Forge_Frame frame;
+	lv2_atom_forge_frame_time(&ui->forge, 0);
+	LV2_Atom* msg = (LV2_Atom*)lv2_atom_forge_blank(&ui->forge, &frame, 1, ui->uris.ui_off);
+	lv2_atom_forge_pop(&ui->forge, &frame);
+	ui->write(ui->controller, 0, lv2_atom_total_size(msg), ui->uris.atom_eventTransfer, msg);
 }
 
 /** notify backend that UI is active:
  * request state and enable data-transmission */
 static void ui_enable(LV2UI_Handle handle)
 {
-  MF2UI* ui = (MF2UI*)handle;
-  uint8_t obj_buf[64];
-  lv2_atom_forge_set_buffer(&ui->forge, obj_buf, 64);
-  LV2_Atom_Forge_Frame frame;
-  lv2_atom_forge_frame_time(&ui->forge, 0);
-  LV2_Atom* msg = (LV2_Atom*)lv2_atom_forge_blank(&ui->forge, &frame, 1, ui->uris.ui_on);
-  lv2_atom_forge_pop(&ui->forge, &frame);
-  ui->write(ui->controller, 0, lv2_atom_total_size(msg), ui->uris.atom_eventTransfer, msg);
+	MF2UI* ui = (MF2UI*)handle;
+	uint8_t obj_buf[64];
+	lv2_atom_forge_set_buffer(&ui->forge, obj_buf, 64);
+	LV2_Atom_Forge_Frame frame;
+	lv2_atom_forge_frame_time(&ui->forge, 0);
+	LV2_Atom* msg = (LV2_Atom*)lv2_atom_forge_blank(&ui->forge, &frame, 1, ui->uris.ui_on);
+	lv2_atom_forge_pop(&ui->forge, &frame);
+	ui->write(ui->controller, 0, lv2_atom_total_size(msg), ui->uris.atom_eventTransfer, msg);
 }
 
 
@@ -820,7 +819,7 @@ instantiate(
 {
 	MF2UI* ui = (MF2UI*) calloc(1,sizeof(MF2UI));
 	*widget = NULL;
-  ui->map = NULL;
+	ui->map = NULL;
 
 	if      (!strcmp(plugin_uri, MTR_URI "multiphase2")) { ; }
 	else if (!strcmp(plugin_uri, MTR_URI "multiphase2_gtk")) { ; }
@@ -829,25 +828,25 @@ instantiate(
 		return NULL;
 	}
 
-  for (int i = 0; features[i]; ++i) {
-    if (!strcmp(features[i]->URI, LV2_URID_URI "#map")) {
-      ui->map = (LV2_URID_Map*)features[i]->data;
-    }
-  }
+	for (int i = 0; features[i]; ++i) {
+		if (!strcmp(features[i]->URI, LV2_URID_URI "#map")) {
+			ui->map = (LV2_URID_Map*)features[i]->data;
+		}
+	}
 
-  if (!ui->map) {
-    fprintf(stderr, "meters.lv2 UI: Host does not support urid:map\n");
-    free(ui);
-    return NULL;
-  }
+	if (!ui->map) {
+		fprintf(stderr, "meters.lv2 UI: Host does not support urid:map\n");
+		free(ui);
+		return NULL;
+	}
 
-  map_xfer_uris(ui->map, &ui->uris);
-  lv2_atom_forge_init(&ui->forge, ui->map);
+	map_xfer_uris(ui->map, &ui->uris);
+	lv2_atom_forge_init(&ui->forge, ui->map);
 
 	ui->write      = write_function;
 	ui->controller = controller;
 
-  ui->rate = 48000;
+	ui->rate = 48000;
 	ui->db_cutoff = -59;
 	ui->db_thresh = 0.000001; // (-60dB)^2
 	ui->drag_cutoff_x = -1;
@@ -879,7 +878,7 @@ cleanup(LV2UI_Handle handle)
 {
 	MF2UI* ui = (MF2UI*)handle;
 
-  ui_disable(ui);
+	ui_disable(ui);
 
 	pango_font_description_free(ui->font[0]);
 	pango_font_description_free(ui->font[1]);
@@ -903,8 +902,8 @@ cleanup(LV2UI_Handle handle)
 	rob_box_destroy(ui->hbox3);
 	rob_box_destroy(ui->rw);
 
-  fftx_free(ui->fa);
-  fftx_free(ui->fb);
+	fftx_free(ui->fa);
+	fftx_free(ui->fb);
 
 	pthread_mutex_destroy(&ui->fft_lock);
 
@@ -945,7 +944,7 @@ static void process_audio(MF2UI* ui, const size_t n_elem, float const * const le
 		const float db_thresh = ui->db_thresh;
 		const float lnorm = 0.151 / log(ui->fft_bins); // log(2)/2.0; magnitude^2 ~ -data_size
 		for (uint32_t i = 1; i < ui->fft_bins-1; i++) {
-      if (ui->fa->power[i] < db_thresh || ui->fb->power[i] < db_thresh) {
+			if (ui->fa->power[i] < db_thresh || ui->fb->power[i] < db_thresh) {
 				ui->phase[i] = 0;
 				ui->level[i] = -100;
 				continue;
@@ -979,8 +978,8 @@ port_event(LV2UI_Handle handle,
            const void*  buffer)
 {
 	MF2UI* ui = (MF2UI*)handle;
-  LV2_Atom* atom = (LV2_Atom*)buffer;
-  if (format == ui->uris.atom_eventTransfer
+	LV2_Atom* atom = (LV2_Atom*)buffer;
+	if (format == ui->uris.atom_eventTransfer
 			&& atom->type == ui->uris.atom_Blank)
 	{
 		/* cast the buffer to Atom Object */
