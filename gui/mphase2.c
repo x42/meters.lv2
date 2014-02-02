@@ -94,9 +94,10 @@ typedef struct {
 	RobWidget* hbox3;
 
 	RobTkDial* gain;
-	RobTkSelect *sel_fft;
-	RobTkLbl *lbl_fft;
-	RobTkSep *sep_fft;
+	RobTkCBtn* btn_oct;
+	RobTkSelect* sel_fft;
+	RobTkLbl* lbl_fft;
+	RobTkSep* sep_fft;
 
 	cairo_surface_t* sf_dat;
 	cairo_surface_t* sf_ann;
@@ -115,6 +116,9 @@ typedef struct {
 
 	pthread_mutex_t fft_lock;
 	uint32_t fft_bins;
+
+	uint32_t* freq_band;
+	uint32_t  freq_bins;
 
 	bool disable_signals;
 	bool update_annotations;
@@ -159,6 +163,36 @@ static void reinitialize_fft(MF2UI* ui, uint32_t fft_size) {
 		ui->phase[i] = 0;
 		ui->level[i] = -100;
 	}
+
+	int band = 0;
+	uint32_t bin = 0;
+	const double f_r = 1000;
+	const double b = ui->fft_bins < 128 ? 6 : 12;
+	const double f2f = pow(2,  1. / (2. * b));
+
+	assert(ui->fa->freq_per_bin < f_r);
+	const int b_l = floorf(b * logf(ui->fa->freq_per_bin / f_r) / logf(2));
+	const int b_u = ceilf(b * logf(.5 * ui->rate / f_r) / logf(2));
+	ui->freq_bins = b_u - b_l - 1;
+
+	free(ui->freq_band);
+	ui->freq_band = (uint32_t*) malloc(ui->freq_bins * sizeof(uint32_t));
+
+	for (uint32_t i = 0; i < ui->fft_bins; i++) {
+		double f_m = pow(2, (band + b_l) / b) * f_r;
+		double f_2 = f_m * f2f;
+		if (f_2 > i * ui->fa->freq_per_bin) {
+			continue;
+		}
+		while (f_2 < i * ui->fa->freq_per_bin) {
+			band++;
+			f_m = pow(2, (band + b_l) / b) * f_r;
+			f_2 = f_m * f2f;
+		}
+		ui->freq_band[bin++] = i;
+	}
+	ui->freq_band[bin++] = ui->fft_bins;
+	ui->freq_bins = bin;
 
 	pthread_mutex_unlock (&ui->fft_lock);
 }
@@ -422,11 +456,42 @@ static void update_annotations(MF2UI* ui) {
 	cairo_destroy (cr);
 }
 
-static void plot_data(MF2UI* ui) {
+static inline void draw_point(cairo_t *cr,
+		const float pk,
+		const float dx, const float dy,
+		const float ccc, const float dist, float phase)
+{
+		float clr[3];
+		hsl2rgb(clr, .75 - .8 * pk, .9, .2 + pk * .4);
+
+		cairo_set_line_width (cr, 3.0);
+		cairo_set_source_rgba(cr, clr[0], clr[1], clr[2], 0.5 + pk * .5);
+		cairo_new_path (cr);
+		cairo_move_to(cr, dx, dy);
+		cairo_close_path(cr);
+		if (ccc == 0) {
+			cairo_stroke_preserve(cr);
+			cairo_set_source_rgba(cr, clr[0], clr[1], clr[2], .2);
+			cairo_set_line_width (cr, 5.0);
+		}
+		cairo_stroke(cr);
+
+		if (ccc > 0) {
+			const float dev = .01 * M_PI;
+			cairo_set_line_width(cr, 1.5);
+			cairo_set_source_rgba(cr, clr[0], clr[1], clr[2], 0.1);
+			float pp = phase - .5 * M_PI;
+			cairo_arc (cr, ccc, ccc, dist, (pp-dev), (pp+dev));
+			cairo_stroke(cr);
+		}
+}
+
+static void plot_data_fft(MF2UI* ui) {
 	cairo_t* cr;
-	if (pthread_mutex_trylock (&ui->fft_lock)) { return; }
 	const double ccc = ui->width / 2.0 + .5;
 	const double rad = (ui->width - XOFF) * .5;
+	const float gain = robtk_dial_get_value(ui->gain);
+
 	cr = cairo_create (ui->sf_dat);
 	cairo_arc (cr, ccc, ccc, rad, 0, 2.0 * M_PI);
 	cairo_clip_preserve (cr);
@@ -438,34 +503,77 @@ static void plot_data(MF2UI* ui) {
 	const float dnum = PH_RAD / ui->log_base;
 	const float denom = ui->log_rate / (float)ui->fft_bins;
 	for (uint32_t i = 1; i < ui->fft_bins-1 ; ++i) {
-		if (ui->level[i] < ui->db_cutoff) continue;
+		if (ui->level[i] < 0) continue;
+		const float level = gain + fftx_power_to_dB(ui->level[i]);
+		if (level < ui->db_cutoff) continue;
 
 		const float dist = dnum * fast_log10(1.0 + i * denom);
 		const float dx = ccc + dist * sinf(ui->phase[i]);
 		const float dy = ccc - dist * cosf(ui->phase[i]);
-		const float pk = ui->level[i] > 0.0 ? 1.0 : (60 + ui->level[i]) / 60.0;
+		const float pk = level > 0.0 ? 1.0 : (60 + level) / 60.0;
 
-		float clr[3];
-		hsl2rgb(clr, .75 - .8 * pk, .9, .2 + pk * .4);
-
-		cairo_set_line_width (cr, 3.0);
-		cairo_set_source_rgba(cr, clr[0], clr[1], clr[2], 0.5 + pk * .5);
-		cairo_new_path (cr);
-		cairo_move_to(cr, dx, dy);
-		cairo_close_path(cr);
-		cairo_stroke(cr);
-
-#if 1
-		const float dev = .01 * M_PI;
-		cairo_set_line_width(cr, 1.5);
-		cairo_set_source_rgba(cr, clr[0], clr[1], clr[2], 0.1);
-		float pp = ui->phase[i] - .5 * M_PI;
-		cairo_arc (cr, ccc, ccc, dist, (pp-dev), (pp+dev));
-		cairo_stroke(cr);
-#endif
+		draw_point(cr, pk, dx, dy, ccc, dist, ui->phase[i]);
 	}
 	cairo_destroy (cr);
-	pthread_mutex_unlock (&ui->fft_lock);
+}
+
+static void plot_data_oct(MF2UI* ui) {
+	cairo_t* cr;
+	const double ccc = ui->width / 2.0 + .5;
+	const double rad = (ui->width - XOFF) * .5;
+	const float gain = robtk_dial_get_value(ui->gain);
+
+	cr = cairo_create (ui->sf_dat);
+	cairo_arc (cr, ccc, ccc, rad, 0, 2.0 * M_PI);
+	cairo_clip_preserve (cr);
+
+	cairo_set_operator (cr, CAIRO_OPERATOR_OVER);
+	cairo_set_source_rgba(cr, 0, 0, 0, .22); // screen persistence
+	cairo_fill(cr);
+	cairo_set_line_cap(cr, CAIRO_LINE_CAP_ROUND);
+
+	const float dnum = PH_RAD / ui->log_base;
+	const float denom = 2.0 * ui->log_rate / ui->rate;
+
+	uint32_t fi = 1;
+	for (uint32_t i = 0; i < ui->freq_bins; ++i) {
+		float ang_x = 0;
+		float ang_y = 0;
+		float a_level = 0;
+		float a_freq = 0;
+		uint32_t a_cnt = 0;
+
+		while(fi < ui->freq_band[i]) {
+			if (ui->level[fi] < 0) { fi++; continue; }
+			a_freq += fi * ui->fa->freq_per_bin;
+			a_level += ui->level[fi];
+			ang_x += sinf(ui->phase[fi]);
+			ang_y += cosf(ui->phase[fi]);
+			a_cnt++;
+			fi++;
+		}
+		if (a_cnt == 0) continue;
+		a_level = gain + fftx_power_to_dB (a_level / (float)a_cnt);
+		if (a_level < ui->db_cutoff) continue;
+
+		a_freq /= (float)a_cnt;
+		const float dist = dnum * fast_log10(1.0 + a_freq * denom);
+		const float pk = a_level > 0.0 ? 1.0 : (60 + a_level) / 60.0;
+
+		float dx, dy;
+		if (a_cnt == 1) {
+			dx = ccc + dist * ang_x;
+			dy = ccc - dist * ang_y;
+		} else {
+			const float phase = atan2f(ang_x, ang_y);
+			dx = ccc + dist * sinf(phase);
+			dy = ccc - dist * cosf(phase);
+		}
+
+		draw_point(cr, pk, dx, dy, 0, 0, 0);
+	}
+
+	cairo_destroy (cr);
 }
 
 static bool expose_event(RobWidget* handle, cairo_t* cr, cairo_rectangle_t *ev) {
@@ -476,7 +584,14 @@ static bool expose_event(RobWidget* handle, cairo_t* cr, cairo_rectangle_t *ev) 
 		ui->update_grid = false;
 	}
 
-	plot_data(ui);
+	if (pthread_mutex_trylock (&ui->fft_lock) == 0 ) {
+		if (robtk_cbtn_get_active(ui->btn_oct)) {
+			plot_data_oct(ui);
+		} else {
+			plot_data_fft(ui);
+		}
+		pthread_mutex_unlock (&ui->fft_lock);
+	}
 
 	cairo_rectangle (cr, ev->x, ev->y, ev->width, ev->height);
 	cairo_clip (cr);
@@ -794,6 +909,13 @@ static RobWidget * toplevel(MF2UI* ui, void * const top)
 	robtk_select_set_default_item(ui->sel_fft, 3);
 	robtk_select_set_value(ui->sel_fft, 512);
 	robtk_select_set_callback(ui->sel_fft, cb_set_fft, ui);
+
+	/* N/octave */
+	ui->btn_oct = robtk_cbtn_new("N/Octave", GBT_LED_LEFT, false);
+	//robtk_cbtn_set_alignment(ui->btn_oct, 0.5, 0.5);
+	robtk_cbtn_set_active(ui->btn_oct, false);
+
+	rob_hbox_child_pack(ui->hbox3, robtk_cbtn_widget(ui->btn_oct), FALSE, FALSE);
 	rob_hbox_child_pack(ui->hbox3, robtk_sep_widget(ui->sep_fft), TRUE, FALSE);
 	rob_hbox_child_pack(ui->hbox3, robtk_lbl_widget(ui->lbl_fft), FALSE, FALSE);
 	rob_hbox_child_pack(ui->hbox3, robtk_select_widget(ui->sel_fft), FALSE, FALSE);
@@ -856,6 +978,8 @@ instantiate(
 	ui->update_annotations = false;
 	ui->update_grid = false;
 	ui->fft_bins = 512;
+	ui->freq_band = NULL;
+	ui->freq_bins = 0;
 
 	ui->width  = 2 * (PH_RAD + XOFF);
 	ui->height = 2 * (PH_RAD + YOFF);
@@ -904,6 +1028,7 @@ cleanup(LV2UI_Handle handle)
 
 	fftx_free(ui->fa);
 	fftx_free(ui->fb);
+	free(ui->freq_band);
 
 	pthread_mutex_destroy(&ui->fft_lock);
 
@@ -933,14 +1058,14 @@ static void invalidate_pc(MF2UI* ui, const float val) {
 /******************************************************************************/
 
 static void process_audio(MF2UI* ui, const size_t n_elem, float const * const left, float const * const right) {
-	if (pthread_mutex_trylock (&ui->fft_lock)) { return; }
+	//if (pthread_mutex_trylock (&ui->fft_lock)) { return; }
+	pthread_mutex_lock(&ui->fft_lock);
 
 	fftx_run(ui->fa, n_elem, left);
 	bool display = !fftx_run(ui->fb, n_elem, right);
 
 	if (display) {
 		assert (fftx_bins(ui->fa) == ui->fft_bins);
-		const float gain = robtk_dial_get_value(ui->gain);
 		const float db_thresh = ui->db_thresh;
 		const float lnorm = 0.151 / log(ui->fft_bins); // log(2)/2.0; magnitude^2 ~ -data_size
 		for (uint32_t i = 1; i < ui->fft_bins-1; i++) {
@@ -960,9 +1085,9 @@ static void process_audio(MF2UI* ui, const size_t n_elem, float const * const le
 #endif
 			ui->phase[i] = phase;
 #if 0
-			ui->level[i] = gain + fftx_power_to_dB(MAX(ui->fa->power[i], ui->fb->power[i]));
+			ui->level[i] = MAX(ui->fa->power[i], ui->fb->power[i]));
 #else
-			ui->level[i] = gain + fftx_power_to_dB(MAX(ui->fa->power[i], ui->fb->power[i]) * i * lnorm);
+			ui->level[i] = MAX(ui->fa->power[i], ui->fb->power[i]) * i * lnorm;
 #endif
 		}
 		queue_draw(ui->m0);
