@@ -373,14 +373,14 @@ static void alloc_annotations(SAUI* ui) {
 		ylp = GED_CY + 10.5 - cosf (ang) * (GED_RADIUS + 9.5); \
 	}
 
-	RESPLABLEL(8.0); write_text(cr, "1/8", FONT_MTR, xlp, ylp, 0, -2, ui->c_txt);
-	RESPLABLEL(4.0); write_text(cr, " 1/4", FONT_MTR, xlp, ylp, 0, -2, ui->c_txt);
-	RESPLABLEL(2.0); write_text(cr, " 1/2", FONT_MTR, xlp, ylp, 0, -2, ui->c_txt);
-	RESPLABLEL(1.0); write_text(cr, "1", FONT_MTR, xlp, ylp, 0, -2, ui->c_txt);
-	RESPLABLEL(1/2.f); write_text(cr, "2", FONT_MTR, xlp, ylp, 0, -2, ui->c_txt);
-	RESPLABLEL(1/4.f); write_text(cr, "4", FONT_MTR, xlp, ylp, 0, -2, ui->c_txt);
-	RESPLABLEL(1/10.f); write_text(cr, "10 ", FONT_MTR, xlp, ylp, 0, -2, ui->c_txt);
-	RESPLABLEL(1/20.f); write_text(cr, "20", FONT_MTR, xlp, ylp, 0, -2, ui->c_txt);
+	RESPLABLEL(8.0); write_text(cr, "1/8", FONT_MTR, xlp, ylp, 0, 2, ui->c_txt);
+	RESPLABLEL(4.0); write_text(cr, " 1/4", FONT_MTR, xlp, ylp, 0, 2, ui->c_txt);
+	RESPLABLEL(2.0); write_text(cr, " 1/2", FONT_MTR, xlp, ylp, 0, 2, ui->c_txt);
+	RESPLABLEL(1.0); write_text(cr, "1", FONT_MTR, xlp, ylp, 0, 2, ui->c_txt);
+	RESPLABLEL(1/2.f); write_text(cr, "2", FONT_MTR, xlp, ylp, 0, 2, ui->c_txt);
+	RESPLABLEL(1/4.f); write_text(cr, "4", FONT_MTR, xlp, ylp, 0, 2, ui->c_txt);
+	RESPLABLEL(1/10.f); write_text(cr, "10 ", FONT_MTR, xlp, ylp, 0, 2, ui->c_txt);
+	RESPLABLEL(1/20.f); write_text(cr, "20", FONT_MTR, xlp, ylp, 0, 2, ui->c_txt);
 	cairo_destroy (cr);
 }
 

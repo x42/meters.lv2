@@ -251,8 +251,8 @@ static void alloc_annotations(GMUI* ui) {
 	cairo_rectangle (cr, 0, 0, GED_WIDTH, GED_HEIGHT); \
 	cairo_fill (cr); \
 	cairo_set_operator (cr, CAIRO_OPERATOR_OVER); \
-	write_text(cr, TXTL, FONT_LB, 2, GED_HEIGHT - 1, -6, ui->c_txt); \
-	write_text(cr, TXTR, FONT_LB, GED_WIDTH-1, GED_HEIGHT - 1, -4, ui->c_txt); \
+	write_text(cr, TXTL, FONT_LB, 2, GED_HEIGHT - 1, 6, ui->c_txt); \
+	write_text(cr, TXTR, FONT_LB, GED_WIDTH-1, GED_HEIGHT - 1, 4, ui->c_txt); \
 	cairo_destroy (cr);
 
 	INIT_DIAL_SF(ui->dial[0], "slow", "fast")
