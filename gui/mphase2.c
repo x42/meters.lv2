@@ -100,7 +100,8 @@ typedef struct {
 	RobTkCBtn* btn_norm;
 	RobTkSelect* sel_fft;
 	RobTkLbl* lbl_fft;
-	RobTkSep* sep_fft;
+	RobTkSep* sep0;
+	RobTkSep* sep1;
 
 	cairo_surface_t* sf_dat;
 	cairo_surface_t* sf_ann;
@@ -922,8 +923,6 @@ static RobWidget * toplevel(MF2UI* ui, void * const top)
 	rob_hbox_child_pack(ui->hbox2, robtk_dial_widget(ui->gain), FALSE, FALSE);
 
 	/* fft bins */
-	ui->sep_fft = robtk_sep_new(true);
-	robtk_sep_set_linewidth(ui->sep_fft, 0);
 	ui->lbl_fft = robtk_lbl_new("FFT Size:");
 	ui->sel_fft = robtk_select_new();
 	robtk_select_add_item(ui->sel_fft,   64, "128");
@@ -938,19 +937,32 @@ static RobWidget * toplevel(MF2UI* ui, void * const top)
 	robtk_select_set_callback(ui->sel_fft, cb_set_fft, ui);
 
 	/* N/octave */
-	ui->btn_oct = robtk_cbtn_new("N/Octave", GBT_LED_LEFT, false);
+	ui->btn_oct = robtk_cbtn_new("N/Octave Bands", GBT_LED_LEFT, false);
 	robtk_cbtn_set_active(ui->btn_oct, false);
 	robtk_cbtn_set_callback(ui->btn_oct, cb_set_oct, ui);
+
+	robtk_cbtn_set_color_on(ui->btn_oct,  .2, .8, .1);
+	robtk_cbtn_set_color_off(ui->btn_oct, .1, .3, .1);
 
 	/* N/octave */
 	ui->btn_norm = robtk_cbtn_new("Normalize", GBT_LED_LEFT, false);
 	robtk_cbtn_set_active(ui->btn_norm, false);
 	robtk_cbtn_set_callback(ui->btn_norm, cb_set_norm, ui);
 
+	robtk_cbtn_set_color_on(ui->btn_norm,  .2, .8, .1);
+	robtk_cbtn_set_color_off(ui->btn_norm, .1, .3, .1);
+
+	/* explicit alignment */
+	ui->sep0 = robtk_sep_new(true);
+	robtk_sep_set_linewidth(ui->sep0, 0);
+	ui->sep1 = robtk_sep_new(true);
+	robtk_sep_set_linewidth(ui->sep1, 0);
+
 	rob_hbox_child_pack(ui->hbox3, robtk_lbl_widget(ui->lbl_fft), FALSE, FALSE);
 	rob_hbox_child_pack(ui->hbox3, robtk_select_widget(ui->sel_fft), FALSE, FALSE);
+	rob_hbox_child_pack(ui->hbox3, robtk_sep_widget(ui->sep0), TRUE, FALSE);
 	rob_hbox_child_pack(ui->hbox3, robtk_cbtn_widget(ui->btn_oct), FALSE, FALSE);
-	rob_hbox_child_pack(ui->hbox3, robtk_sep_widget(ui->sep_fft), TRUE, FALSE);
+	rob_hbox_child_pack(ui->hbox3, robtk_sep_widget(ui->sep1), TRUE, FALSE);
 	rob_hbox_child_pack(ui->hbox3, robtk_cbtn_widget(ui->btn_norm), FALSE, FALSE);
 
 	update_annotations(ui);
@@ -1051,7 +1063,7 @@ cleanup(LV2UI_Handle handle)
 
 	robtk_select_destroy(ui->sel_fft);
 	robtk_lbl_destroy(ui->lbl_fft);
-	robtk_sep_destroy(ui->sep_fft);
+	robtk_sep_destroy(ui->sep0);
 	robtk_dial_destroy(ui->gain);
 	robtk_cbtn_destroy(ui->btn_oct);
 	robtk_cbtn_destroy(ui->btn_norm);
