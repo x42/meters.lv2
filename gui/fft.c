@@ -259,7 +259,7 @@ inline float fast_log10 (const float val) {
 FFTX_FN_PREFIX
 inline float fftx_power_to_dB(float a) {
 	/* 10 instead of 20 because of squared signal -- no sqrt(powerp[]) */
-	return a > 0 ? 10.0 * fast_log10(a) : -INFINITY;
+	return a > 1e-12 ? 10.0 * fast_log10(a) : -INFINITY;
 }
 
 FFTX_FN_PREFIX

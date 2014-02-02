@@ -95,6 +95,7 @@ typedef struct {
 
 	RobTkDial* gain;
 	RobTkCBtn* btn_oct;
+	RobTkCBtn* btn_norm;
 	RobTkSelect* sel_fft;
 	RobTkLbl* lbl_fft;
 	RobTkSep* sep_fft;
@@ -113,10 +114,12 @@ typedef struct {
 
 	float phase[FFT_BINS_MAX];
 	float level[FFT_BINS_MAX];
+	float peak;
+	float pgain;
 
 	pthread_mutex_t fft_lock;
-	uint32_t fft_bins;
 
+	uint32_t fft_bins;
 	uint32_t* freq_band;
 	uint32_t  freq_bins;
 
@@ -696,12 +699,17 @@ static bool pc_expose_event(RobWidget* handle, cairo_t* cr, cairo_rectangle_t *e
 
 static bool cb_set_gain (RobWidget* handle, void *data) {
 	MF2UI* ui = (MF2UI*) (data);
-	ui->update_annotations = true;
-	queue_draw(ui->m2);
+
 	const float val = robtk_dial_get_value(ui->gain);
+	if (rintf(ui->pgain) != rintf(val)) {
+		ui->pgain = val;
+		ui->update_annotations = true;
+		queue_draw(ui->m2);
+	}
 	const float thresh = pow10f(.05 * (-60-val));
 	ui->db_thresh = thresh * thresh;
 	if (ui->disable_signals) return TRUE;
+	if (robtk_cbtn_get_active(ui->btn_norm)) return TRUE;
 	ui->write(ui->controller, MF_GAIN, sizeof(float), 0, (const void*) &val);
 	return TRUE;
 }
@@ -812,6 +820,11 @@ static bool cb_set_fft (RobWidget* handle, void *data) {
 	return TRUE;
 }
 
+static bool cb_set_norm (RobWidget* handle, void *data) {
+	MF2UI* ui = (MF2UI*) (data);
+	robtk_dial_set_sensitive(ui->gain, !robtk_cbtn_get_active(ui->btn_norm));
+}
+
 /******************************************************************************
  * widget hackery
  */
@@ -912,13 +925,18 @@ static RobWidget * toplevel(MF2UI* ui, void * const top)
 
 	/* N/octave */
 	ui->btn_oct = robtk_cbtn_new("N/Octave", GBT_LED_LEFT, false);
-	//robtk_cbtn_set_alignment(ui->btn_oct, 0.5, 0.5);
 	robtk_cbtn_set_active(ui->btn_oct, false);
 
-	rob_hbox_child_pack(ui->hbox3, robtk_cbtn_widget(ui->btn_oct), FALSE, FALSE);
-	rob_hbox_child_pack(ui->hbox3, robtk_sep_widget(ui->sep_fft), TRUE, FALSE);
+	/* N/octave */
+	ui->btn_norm = robtk_cbtn_new("Normalize", GBT_LED_LEFT, false);
+	robtk_cbtn_set_active(ui->btn_norm, false);
+	robtk_cbtn_set_callback(ui->btn_norm, cb_set_norm, ui);
+
 	rob_hbox_child_pack(ui->hbox3, robtk_lbl_widget(ui->lbl_fft), FALSE, FALSE);
 	rob_hbox_child_pack(ui->hbox3, robtk_select_widget(ui->sel_fft), FALSE, FALSE);
+	rob_hbox_child_pack(ui->hbox3, robtk_cbtn_widget(ui->btn_oct), FALSE, FALSE);
+	rob_hbox_child_pack(ui->hbox3, robtk_sep_widget(ui->sep_fft), TRUE, FALSE);
+	rob_hbox_child_pack(ui->hbox3, robtk_cbtn_widget(ui->btn_norm), FALSE, FALSE);
 
 	update_annotations(ui);
 	return ui->rw;
@@ -980,6 +998,8 @@ instantiate(
 	ui->fft_bins = 512;
 	ui->freq_band = NULL;
 	ui->freq_bins = 0;
+	ui->pgain = -100;
+	ui->peak = 0;
 
 	ui->width  = 2 * (PH_RAD + XOFF);
 	ui->height = 2 * (PH_RAD + YOFF);
@@ -1018,9 +1038,13 @@ cleanup(LV2UI_Handle handle)
 	robtk_lbl_destroy(ui->lbl_fft);
 	robtk_sep_destroy(ui->sep_fft);
 	robtk_dial_destroy(ui->gain);
+	robtk_cbtn_destroy(ui->btn_oct);
+	robtk_cbtn_destroy(ui->btn_norm);
+
 	robwidget_destroy(ui->m0);
 	robwidget_destroy(ui->m1);
 	robwidget_destroy(ui->m2);
+
 	rob_box_destroy(ui->hbox1);
 	rob_box_destroy(ui->hbox2);
 	rob_box_destroy(ui->hbox3);
@@ -1066,6 +1090,7 @@ static void process_audio(MF2UI* ui, const size_t n_elem, float const * const le
 
 	if (display) {
 		assert (fftx_bins(ui->fa) == ui->fft_bins);
+		float peak = 0;
 		const float db_thresh = ui->db_thresh;
 		const float lnorm = 0.151 / log(ui->fft_bins); // log(2)/2.0; magnitude^2 ~ -data_size
 		for (uint32_t i = 1; i < ui->fft_bins-1; i++) {
@@ -1079,6 +1104,15 @@ static void process_audio(MF2UI* ui, const size_t n_elem, float const * const le
 			float phase = phase1 - phase0;
 			ui->phase[i] = phase;
 			ui->level[i] = MAX(ui->fa->power[i], ui->fb->power[i]) * i * lnorm;
+			if (ui->level[i] > peak) {
+				peak = ui->level[i];
+			}
+		}
+
+		const float omega = 4.f * fast_log(1.f + n_elem / ui->rate);
+		ui->peak += omega * (peak - ui->peak) + 1e-15;
+		if (robtk_cbtn_get_active(ui->btn_norm)) {
+			robtk_dial_set_value(ui->gain, - fftx_power_to_dB(ui->peak));
 		}
 		queue_draw(ui->m0);
 	}
