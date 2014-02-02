@@ -1077,18 +1077,8 @@ static void process_audio(MF2UI* ui, const size_t n_elem, float const * const le
 			const float phase0 = ui->fa->phase[i];
 			const float phase1 = ui->fb->phase[i];
 			float phase = phase1 - phase0;
-#if 0 // not needed, sin(), cos() takes care of this
-			/* clamp to -M_PI .. M_PI */
-			int over = phase / M_PI;
-			over += (over >= 0) ? (over&1) : -(over&1);
-			phase -= M_PI*(float)over;
-#endif
 			ui->phase[i] = phase;
-#if 0
-			ui->level[i] = MAX(ui->fa->power[i], ui->fb->power[i]));
-#else
 			ui->level[i] = MAX(ui->fa->power[i], ui->fb->power[i]) * i * lnorm;
-#endif
 		}
 		queue_draw(ui->m0);
 	}
