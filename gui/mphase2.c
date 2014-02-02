@@ -556,7 +556,7 @@ static void plot_data_oct(MF2UI* ui) {
 			fi++;
 		}
 		if (a_cnt == 0) continue;
-		a_level = gain + fftx_power_to_dB (a_level / (float)a_cnt);
+		a_level = gain + fftx_power_to_dB (a_level);
 		if (a_level < ui->db_cutoff) continue;
 
 		a_freq /= (float)a_cnt;
@@ -1092,7 +1092,6 @@ static void process_audio(MF2UI* ui, const size_t n_elem, float const * const le
 		assert (fftx_bins(ui->fa) == ui->fft_bins);
 		float peak = 0;
 		const float db_thresh = ui->db_thresh;
-		const float lnorm = 0.151 / log(ui->fft_bins); // log(2)/2.0; magnitude^2 ~ -data_size
 		for (uint32_t i = 1; i < ui->fft_bins-1; i++) {
 			if (ui->fa->power[i] < db_thresh || ui->fb->power[i] < db_thresh) {
 				ui->phase[i] = 0;
@@ -1103,7 +1102,7 @@ static void process_audio(MF2UI* ui, const size_t n_elem, float const * const le
 			const float phase1 = ui->fb->phase[i];
 			float phase = phase1 - phase0;
 			ui->phase[i] = phase;
-			ui->level[i] = MAX(ui->fa->power[i], ui->fb->power[i]) * i * lnorm;
+			ui->level[i] = MAX(ui->fa->power[i], ui->fb->power[i]);
 			if (ui->level[i] > peak) {
 				peak = ui->level[i];
 			}
