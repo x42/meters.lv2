@@ -471,14 +471,14 @@ static inline void draw_point(cairo_t *cr,
 		hsl2rgb(clr, .75 - .8 * pk, .9, .2 + pk * .4);
 
 		cairo_set_line_width (cr, 3.0);
-		cairo_set_source_rgba(cr, clr[0], clr[1], clr[2], 0.5 + pk * .5);
+		cairo_set_source_rgba(cr, clr[0], clr[1], clr[2], 0.6 + pk * .4);
 		cairo_new_path (cr);
 		cairo_move_to(cr, dx, dy);
 		cairo_close_path(cr);
 		if (ccc == 0) {
 			cairo_stroke_preserve(cr);
-			cairo_set_source_rgba(cr, clr[0], clr[1], clr[2], .2);
-			cairo_set_line_width (cr, 5.0);
+			cairo_set_source_rgba(cr, clr[0], clr[1], clr[2], .15);
+			cairo_set_line_width (cr, 6.0);
 		}
 		cairo_stroke(cr);
 
