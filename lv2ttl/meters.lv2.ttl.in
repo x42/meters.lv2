@@ -3288,6 +3288,23 @@ mtr:multiphase2@URI_SUFFIX@
 		lv2:minimum -60.0 ;
 		lv2:maximum -20.0 ;
 		units:unit units:db;
+	] , [
+		a lv2:ControlPort, lv2:InputPort ;
+		lv2:index 9 ;
+		lv2:portProperty lv2:integer;
+		lv2:portProperty lv2:enumeration;
+		lv2:symbol "fftsize" ;
+		lv2:name "FFT Size" ;
+		lv2:default 1024 ;
+		lv2:minimum 128 ;
+		lv2:maximum 8192 ;
+		lv2:scalePoint [ rdfs:label  "128";  rdf:value  128.0 ; ] ;
+		lv2:scalePoint [ rdfs:label  "256";  rdf:value  256.0 ; ] ;
+		lv2:scalePoint [ rdfs:label  "512";  rdf:value  512.0 ; ] ;
+		lv2:scalePoint [ rdfs:label "1024";  rdf:value  1024.0 ; ] ;
+		lv2:scalePoint [ rdfs:label "2048";  rdf:value  2048.0 ; ] ;
+		lv2:scalePoint [ rdfs:label "4096";  rdf:value  4096.0 ; ] ;
+		lv2:scalePoint [ rdfs:label "8192";  rdf:value  8192.0 ; ] ;
 	] ;
 	rdfs:comment ""
 	.

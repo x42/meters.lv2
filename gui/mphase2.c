@@ -19,12 +19,13 @@
 #define MTR_URI "http://gareus.org/oss/lv2/meters#"
 #define MTR_GUI "mphase2ui"
 
-#define FFT_BINS 512 // half of the FFT data-size
+#define FFT_BINS_MAX 4096 // half of the FFT data-size
 
 enum {
 	MF_PHASE = 6,
 	MF_GAIN,
-	MF_CUTOFF
+	MF_CUTOFF,
+	MF_FFT
 };
 
 #include <stdio.h>
@@ -90,7 +91,12 @@ typedef struct {
 
 	RobWidget* hbox1;
 	RobWidget* hbox2;
+	RobWidget* hbox3;
+
 	RobTkDial* gain;
+	RobTkSelect *sel_fft;
+	RobTkLbl *lbl_fft;
+	RobTkSep *sep_fft;
 
 	cairo_surface_t* sf_dat;
 	cairo_surface_t* sf_ann;
@@ -104,8 +110,11 @@ typedef struct {
 	float db_thresh;
 	float cor, cor_u;
 
-	float phase[FFT_BINS];
-	float level[FFT_BINS];
+	float phase[FFT_BINS_MAX];
+	float level[FFT_BINS_MAX];
+
+	pthread_mutex_t fft_lock;
+	uint32_t fft_bins;
 
 	bool disable_signals;
 	bool update_annotations;
@@ -122,16 +131,36 @@ typedef struct {
 } MF2UI;
 
 
-static void reinitialize_fft(MF2UI* ui) {
+static void reinitialize_fft(MF2UI* ui, uint32_t fft_size) {
+	pthread_mutex_lock (&ui->fft_lock);
   fftx_free(ui->fa);
   fftx_free(ui->fb);
+
+	fft_size = MAX(64, fft_size);
+	fft_size--;
+	fft_size |= fft_size >> 1;
+	fft_size |= fft_size >> 2;
+	fft_size |= fft_size >> 4;
+	fft_size |= fft_size >> 8;
+	fft_size |= fft_size >> 16;
+	fft_size++;
+	fft_size = MIN(FFT_BINS_MAX, fft_size);
+	ui->fft_bins = fft_size;
+
   ui->fa = (struct FFTAnalysis*) malloc(sizeof(struct FFTAnalysis));
   ui->fb = (struct FFTAnalysis*) malloc(sizeof(struct FFTAnalysis));
-  fftx_init(ui->fa, FFT_BINS * 2, ui->rate, 25);
-  fftx_init(ui->fb, FFT_BINS * 2, ui->rate, 25);
+  fftx_init(ui->fa, ui->fft_bins * 2, ui->rate, 25);
+  fftx_init(ui->fb, ui->fft_bins * 2, ui->rate, 25);
   ui->log_rate  = (1.0f - 10000.0f / ui->rate) / ((2000.0f / ui->rate) * (2000.0f / ui->rate));
   ui->log_base = log10f(1.0f + ui->log_rate);
 	ui->update_grid = true;
+
+	for (uint32_t i = 0; i < ui->fft_bins; i++) {
+		ui->phase[i] = 0;
+		ui->level[i] = -100;
+	}
+
+	pthread_mutex_unlock (&ui->fft_lock);
 }
 
 /******************************************************************************
@@ -396,6 +425,7 @@ static void update_annotations(MF2UI* ui) {
 
 static void plot_data(MF2UI* ui) {
 	cairo_t* cr;
+	if (pthread_mutex_trylock (&ui->fft_lock)) { return; }
 	const double ccc = ui->width / 2.0 + .5;
 	const double rad = (ui->width - XOFF) * .5;
 	cr = cairo_create (ui->sf_dat);
@@ -407,8 +437,8 @@ static void plot_data(MF2UI* ui) {
 	cairo_fill(cr);
 	cairo_set_line_cap(cr, CAIRO_LINE_CAP_ROUND);
 	const float dnum = PH_RAD / ui->log_base;
-	const float denom = ui->log_rate / (float)FFT_BINS;
-	for (uint32_t i = 1; i < FFT_BINS-1 ; ++i) {
+	const float denom = ui->log_rate / (float)ui->fft_bins;
+	for (uint32_t i = 1; i < ui->fft_bins-1 ; ++i) {
 		if (ui->level[i] < ui->db_cutoff) continue;
 
 		const float dist = dnum * fast_log10(1.0 + i * denom);
@@ -436,6 +466,7 @@ static void plot_data(MF2UI* ui) {
 #endif
 	}
 	cairo_destroy (cr);
+	pthread_mutex_unlock (&ui->fft_lock);
 }
 
 static bool expose_event(RobWidget* handle, cairo_t* cr, cairo_rectangle_t *ev) {
@@ -653,6 +684,19 @@ static void m2_leave(RobWidget *handle) {
 	}
 }
 
+/******************************************************************************
+ * UI callbacks  - FFT Bins
+ */
+
+static bool cb_set_fft (RobWidget* handle, void *data) {
+	MF2UI* ui = (MF2UI*) (data);
+	const float fft_size = 2 * robtk_select_get_value(ui->sel_fft);
+	uint32_t fft_bins = floorf(fft_size / 2.0);
+	if (ui->fft_bins == fft_bins) return TRUE;
+	reinitialize_fft(ui, fft_bins);
+	ui->write(ui->controller, MF_FFT, sizeof(float), 0, (const void*) &fft_size);
+	return TRUE;
+}
 
 /******************************************************************************
  * widget hackery
@@ -687,9 +731,11 @@ static RobWidget * toplevel(MF2UI* ui, void * const top)
 
 	ui->hbox1 = rob_hbox_new(FALSE, 0);
 	ui->hbox2 = rob_hbox_new(FALSE, 0);
+	ui->hbox3 = rob_hbox_new(FALSE, 0);
 
 	rob_vbox_child_pack(ui->rw, ui->hbox1, TRUE, FALSE);
 	rob_vbox_child_pack(ui->rw, ui->hbox2, TRUE, FALSE);
+	rob_vbox_child_pack(ui->rw, ui->hbox3, TRUE, FALSE);
 
 
 	ui->font[0] = pango_font_description_from_string("Mono 7");
@@ -733,6 +779,25 @@ static RobWidget * toplevel(MF2UI* ui, void * const top)
 	robtk_dial_set_surface(ui->gain,ui->sf_dial);
 	robtk_dial_annotation_callback(ui->gain, dial_annotation_db, ui);
 	rob_hbox_child_pack(ui->hbox2, robtk_dial_widget(ui->gain), FALSE, FALSE);
+
+	/* fft bins */
+	ui->sep_fft = robtk_sep_new(true);
+	robtk_sep_set_linewidth(ui->sep_fft, 0);
+	ui->lbl_fft = robtk_lbl_new("FFT Size:");
+	ui->sel_fft = robtk_select_new();
+	robtk_select_add_item(ui->sel_fft,   64, "128");
+	robtk_select_add_item(ui->sel_fft,  128, "256");
+	robtk_select_add_item(ui->sel_fft,  256, "512");
+	robtk_select_add_item(ui->sel_fft,  512, "1024");
+	robtk_select_add_item(ui->sel_fft, 1024, "2048");
+	robtk_select_add_item(ui->sel_fft, 2048, "4096");
+	robtk_select_add_item(ui->sel_fft, 4096, "8192");
+	robtk_select_set_default_item(ui->sel_fft, 3);
+	robtk_select_set_value(ui->sel_fft, 512);
+	robtk_select_set_callback(ui->sel_fft, cb_set_fft, ui);
+	rob_hbox_child_pack(ui->hbox3, robtk_sep_widget(ui->sep_fft), TRUE, FALSE);
+	rob_hbox_child_pack(ui->hbox3, robtk_lbl_widget(ui->lbl_fft), FALSE, FALSE);
+	rob_hbox_child_pack(ui->hbox3, robtk_select_widget(ui->sel_fft), FALSE, FALSE);
 
 	update_annotations(ui);
 	return ui->rw;
@@ -782,11 +847,6 @@ instantiate(
 	ui->write      = write_function;
 	ui->controller = controller;
 
-	for (uint32_t i = 0; i < FFT_BINS; i++) {
-		ui->phase[i] = 0;
-		ui->level[i] = -100;
-	}
-
   ui->rate = 48000;
 	ui->db_cutoff = -59;
 	ui->db_thresh = 0.000001; // (-60dB)^2
@@ -796,13 +856,15 @@ instantiate(
 	ui->disable_signals = false;
 	ui->update_annotations = false;
 	ui->update_grid = false;
+	ui->fft_bins = 512;
 
 	ui->width  = 2 * (PH_RAD + XOFF);
 	ui->height = 2 * (PH_RAD + YOFF);
 
+	pthread_mutex_init(&ui->fft_lock, NULL);
 	*widget = toplevel(ui, ui_toplevel);
-  reinitialize_fft(ui);
-  ui_enable(ui);
+	reinitialize_fft(ui, ui->fft_bins);
+	ui_enable(ui);
 	return ui;
 }
 
@@ -829,15 +891,22 @@ cleanup(LV2UI_Handle handle)
 	cairo_surface_destroy(ui->sf_pc[0]);
 	cairo_surface_destroy(ui->sf_pc[1]);
 
+	robtk_select_destroy(ui->sel_fft);
+	robtk_lbl_destroy(ui->lbl_fft);
+	robtk_sep_destroy(ui->sep_fft);
+	robtk_dial_destroy(ui->gain);
 	robwidget_destroy(ui->m0);
 	robwidget_destroy(ui->m1);
 	robwidget_destroy(ui->m2);
 	rob_box_destroy(ui->hbox1);
 	rob_box_destroy(ui->hbox2);
+	rob_box_destroy(ui->hbox3);
 	rob_box_destroy(ui->rw);
 
   fftx_free(ui->fa);
   fftx_free(ui->fb);
+
+	pthread_mutex_destroy(&ui->fft_lock);
 
 	free(ui);
 }
@@ -865,16 +934,17 @@ static void invalidate_pc(MF2UI* ui, const float val) {
 /******************************************************************************/
 
 static void process_audio(MF2UI* ui, const size_t n_elem, float const * const left, float const * const right) {
+	if (pthread_mutex_trylock (&ui->fft_lock)) { return; }
 
 	fftx_run(ui->fa, n_elem, left);
 	bool display = !fftx_run(ui->fb, n_elem, right);
 
 	if (display) {
-		assert (fftx_bins(ui->fa) == FFT_BINS);
+		assert (fftx_bins(ui->fa) == ui->fft_bins);
 		const float gain = robtk_dial_get_value(ui->gain);
 		const float db_thresh = ui->db_thresh;
-		const float lnorm = 0.151 / log(FFT_BINS); // log(2)/2.0; magnitude^2 ~ -data_size
-		for (uint32_t i = 1; i < FFT_BINS-1; i++) {
+		const float lnorm = 0.151 / log(ui->fft_bins); // log(2)/2.0; magnitude^2 ~ -data_size
+		for (uint32_t i = 1; i < ui->fft_bins-1; i++) {
       if (ui->fa->power[i] < db_thresh || ui->fb->power[i] < db_thresh) {
 				ui->phase[i] = 0;
 				ui->level[i] = -100;
@@ -898,6 +968,7 @@ static void process_audio(MF2UI* ui, const size_t n_elem, float const * const le
 		}
 		queue_draw(ui->m0);
 	}
+	pthread_mutex_unlock(&ui->fft_lock);
 }
 
 static void
@@ -946,7 +1017,7 @@ port_event(LV2UI_Handle handle,
 				)
 		{
 			ui->rate = ((LV2_Atom_Float*)a0)->body;
-			reinitialize_fft(ui);
+			reinitialize_fft(ui, ui->fft_bins);
 		}
 	}
 	else if (format != 0) return;
@@ -965,6 +1036,14 @@ port_event(LV2UI_Handle handle,
 			ui->db_cutoff = val;
 			ui->update_annotations = true;
 			queue_draw(ui->m2);
+		}
+	}
+	else if (port_index == MF_FFT) {
+		float val = *(float *)buffer;
+		uint32_t fft_bins = floorf(val / 2.0);
+		if (ui->fft_bins != fft_bins) {
+			reinitialize_fft(ui, fft_bins);
+			robtk_select_set_value(ui->sel_fft, ui->fft_bins);
 		}
 	}
 }
