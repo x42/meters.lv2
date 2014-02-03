@@ -19,7 +19,7 @@
 #define MTR_URI "http://gareus.org/oss/lv2/meters#"
 #define MTR_GUI "mphase2ui"
 
-#define FFT_BINS_MAX 4096 // half of the FFT data-size
+#define FFT_BINS_MAX 8192 // half of the FFT data-size
 
 enum {
 	MF_PHASE = 6,
@@ -148,7 +148,7 @@ static void reinitialize_fft(MF2UI* ui, uint32_t fft_size) {
 
 	fft_size = MAX(64, fft_size);
 	fft_size--;
-	fft_size |= fft_size >> 1;
+	fft_size |= 0x3f;
 	fft_size |= fft_size >> 2;
 	fft_size |= fft_size >> 4;
 	fft_size |= fft_size >> 8;
@@ -923,7 +923,7 @@ static RobWidget * toplevel(MF2UI* ui, void * const top)
 	rob_hbox_child_pack(ui->hbox2, robtk_dial_widget(ui->gain), FALSE, FALSE);
 
 	/* fft bins */
-	ui->lbl_fft = robtk_lbl_new("FFT Size:");
+	ui->lbl_fft = robtk_lbl_new("FFT Samples:");
 	ui->sel_fft = robtk_select_new();
 	robtk_select_add_item(ui->sel_fft,   64, "128");
 	robtk_select_add_item(ui->sel_fft,  128, "256");
@@ -932,6 +932,8 @@ static RobWidget * toplevel(MF2UI* ui, void * const top)
 	robtk_select_add_item(ui->sel_fft, 1024, "2048");
 	robtk_select_add_item(ui->sel_fft, 2048, "4096");
 	robtk_select_add_item(ui->sel_fft, 4096, "8192");
+	robtk_select_add_item(ui->sel_fft, 6144, "12288");
+	robtk_select_add_item(ui->sel_fft, 8192, "16384");
 	robtk_select_set_default_item(ui->sel_fft, 3);
 	robtk_select_set_value(ui->sel_fft, 512);
 	robtk_select_set_callback(ui->sel_fft, cb_set_fft, ui);
