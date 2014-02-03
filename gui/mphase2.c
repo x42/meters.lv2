@@ -102,6 +102,7 @@ typedef struct {
 	RobTkLbl* lbl_fft;
 	RobTkSep* sep0;
 	RobTkSep* sep1;
+	RobTkSep* sep2;
 
 	cairo_surface_t* sf_dat;
 	cairo_surface_t* sf_ann;
@@ -874,9 +875,11 @@ static RobWidget * toplevel(MF2UI* ui, void * const top)
 	ui->hbox1 = rob_hbox_new(FALSE, 0);
 	ui->hbox2 = rob_hbox_new(FALSE, 0);
 	ui->hbox3 = rob_hbox_new(FALSE, 0);
+	ui->sep2 = robtk_sep_new(true);
 
 	rob_vbox_child_pack(ui->rw, ui->hbox1, TRUE, FALSE);
 	rob_vbox_child_pack(ui->rw, ui->hbox2, TRUE, FALSE);
+	rob_vbox_child_pack(ui->rw, robtk_sep_widget(ui->sep2), FALSE, FALSE);
 	rob_vbox_child_pack(ui->rw, ui->hbox3, TRUE, FALSE);
 
 
