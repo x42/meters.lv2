@@ -478,15 +478,15 @@ static inline void draw_point(cairo_t *cr,
 		cairo_close_path(cr);
 		if (ccc == 0) {
 			cairo_stroke_preserve(cr);
-			cairo_set_source_rgba(cr, clr[0], clr[1], clr[2], .15);
-			cairo_set_line_width (cr, 6.0);
+			cairo_set_source_rgba(cr, clr[0], clr[1], clr[2], .1);
+			cairo_set_line_width (cr, 7.0);
 		}
 		cairo_stroke(cr);
 
 		if (ccc > 0) {
 			const float dev = .01 * M_PI;
 			cairo_set_line_width(cr, 1.5);
-			cairo_set_source_rgba(cr, clr[0], clr[1], clr[2], 0.1);
+			cairo_set_source_rgba(cr, clr[0], clr[1], clr[2], .1);
 			float pp = phase - .5 * M_PI;
 			cairo_arc (cr, ccc, ccc, dist, (pp-dev), (pp+dev));
 			cairo_stroke(cr);
@@ -504,7 +504,7 @@ static void plot_data_fft(MF2UI* ui) {
 	cairo_clip_preserve (cr);
 
 	cairo_set_operator (cr, CAIRO_OPERATOR_OVER);
-	cairo_set_source_rgba(cr, 0, 0, 0, .22); // screen persistence
+	cairo_set_source_rgba(cr, 0, 0, 0, .20); // screen persistence
 	cairo_fill(cr);
 	cairo_set_line_cap(cr, CAIRO_LINE_CAP_ROUND);
 	const float dnum = PH_RAD / ui->log_base;
