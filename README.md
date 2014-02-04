@@ -19,6 +19,7 @@ and the following stereo plugins
 *   Stereo Phase Correlation Meter (Needle Display)
 *   Digital True-Peak Meter (4x Oversampling)
 *   Goniometer (Stereo Phase Scope)
+*   Phase/Frequency Wheel
 
 Currently the plugins come in both Gtk and openGL variants (both
 versions are installed in parallel).
@@ -83,4 +84,5 @@ Screenshots
 ![screenshot](https://raw.github.com/x42/meters.lv2/master/doc/LV2ebur128.png "EBU R128 Meter GUI")
 ![screenshot](https://raw.github.com/x42/meters.lv2/master/doc/LV2meters.png "Various Needle Meters in Ardour")
 ![screenshot](https://raw.github.com/x42/meters.lv2/master/doc/spectr_and_goni.png "Spectum Analyzer and Stereo Phase Scope")
+![screenshot](https://raw.github.com/x42/meters.lv2/master/doc/phasewheel.png "Phase/Frequency Wheel")
 
