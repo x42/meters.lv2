@@ -877,10 +877,10 @@ static RobWidget * toplevel(MF2UI* ui, void * const top)
 	ui->hbox3 = rob_hbox_new(FALSE, 0);
 	ui->sep2 = robtk_sep_new(true);
 
-	rob_vbox_child_pack(ui->rw, ui->hbox1, TRUE, FALSE);
-	rob_vbox_child_pack(ui->rw, ui->hbox2, TRUE, FALSE);
+	rob_vbox_child_pack(ui->rw, ui->hbox1, FALSE, FALSE);
+	rob_vbox_child_pack(ui->rw, ui->hbox2, FALSE, FALSE);
 	rob_vbox_child_pack(ui->rw, robtk_sep_widget(ui->sep2), FALSE, FALSE);
-	rob_vbox_child_pack(ui->rw, ui->hbox3, TRUE, FALSE);
+	rob_vbox_child_pack(ui->rw, ui->hbox3, FALSE, FALSE);
 
 
 	ui->font[0] = pango_font_description_from_string("Mono 7");
@@ -892,21 +892,21 @@ static RobWidget * toplevel(MF2UI* ui, void * const top)
 	ROBWIDGET_SETNAME(ui->m0, "mphase (m0)");
 	robwidget_set_expose_event(ui->m0, expose_event);
 	robwidget_set_size_request(ui->m0, size_request);
-	rob_hbox_child_pack(ui->hbox1, ui->m0, TRUE, FALSE);
+	rob_hbox_child_pack(ui->hbox1, ui->m0, FALSE, FALSE);
 
 	/* phase correlation */
 	ui->m1 = robwidget_new(ui);
 	ROBWIDGET_SETNAME(ui->m1, "phase (m1)");
 	robwidget_set_expose_event(ui->m1, pc_expose_event);
 	robwidget_set_size_request(ui->m1, pc_size_request);
-	rob_hbox_child_pack(ui->hbox1, ui->m1, TRUE, FALSE);
+	rob_hbox_child_pack(ui->hbox1, ui->m1, FALSE, FALSE);
 
 	/* gain annotation */
 	ui->m2 = robwidget_new(ui);
 	ROBWIDGET_SETNAME(ui->m1, "gain (m2)");
 	robwidget_set_expose_event(ui->m2, ga_expose_event);
 	robwidget_set_size_request(ui->m2, ga_size_request);
-	rob_hbox_child_pack(ui->hbox2, ui->m2, TRUE, FALSE);
+	rob_hbox_child_pack(ui->hbox2, ui->m2, FALSE, FALSE);
 
 	robwidget_set_mousedown(ui->m2, m2_mousedown);
 	robwidget_set_mouseup(ui->m2, m2_mouseup);
