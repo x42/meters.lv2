@@ -407,7 +407,6 @@ extension_data(const char* uri)
 #include "ebulv2.cc"
 #include "goniometerlv2.c"
 #include "spectrumlv2.c"
-#include "multiphaselv2.c"
 #include "xfer.c"
 
 #define mkdesc(ID, NAME, RUN) \
@@ -537,10 +536,8 @@ lv2_descriptor(uint32_t index)
 	case 43: return &descriptor43;
 	case 44: return &descriptorSpectrum2;
 	case 45: return &descriptorSpectrum2Gtk;
-	case 46: return &descriptorMultiPhase;
+	case 46: return &descriptorMultiPhase2;
 	case 47: return &descriptorMultiPhase2Gtk;
-	case 48: return &descriptorMultiPhase2;
-	case 49: return &descriptorMultiPhaseGtk;
 	default: return NULL;
 	}
 }

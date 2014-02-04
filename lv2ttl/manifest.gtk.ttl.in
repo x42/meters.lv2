@@ -25,12 +25,7 @@ mtr:kmeterui_gtk
 	ui:binary <@LV2GTK5@@LIB_EXT@> ;
 	rdfs:seeAlso <@LV2NAME@.ttl> .
 
-mtr:mphaseui_gtk
-	a ui:GtkUI ;
-	ui:binary <@LV2GTK6@@LIB_EXT@> ;
-	rdfs:seeAlso <@LV2NAME@.ttl> .
-
 mtr:mphase2ui_gtk
 	a ui:GtkUI ;
-	ui:binary <@LV2GTK7@@LIB_EXT@> ;
+	ui:binary <@LV2GTK6@@LIB_EXT@> ;
 	rdfs:seeAlso <@LV2NAME@.ttl> .

@@ -25,12 +25,7 @@ mtr:kmeterui_gl
 	ui:binary <@LV2GUI5@@LIB_EXT@> ;
 	rdfs:seeAlso <@LV2NAME@.ttl> .
 
-mtr:mphaseui_gl
-	a @UI_TYPE@;
-	ui:binary <@LV2GUI6@@LIB_EXT@> ;
-	rdfs:seeAlso <@LV2NAME@.ttl> .
-
 mtr:mphase2ui_gl
 	a @UI_TYPE@;
-	ui:binary <@LV2GUI7@@LIB_EXT@> ;
+	ui:binary <@LV2GUI6@@LIB_EXT@> ;
 	rdfs:seeAlso <@LV2NAME@.ttl> .

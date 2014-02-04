@@ -31,11 +31,6 @@ mtr:kmeterui@UI_URI_SUFFIX@
 	@UI_REQ@
 	.
 
-mtr:mphaseui@UI_URI_SUFFIX@
-	a @UI_TYPE@;
-	@UI_REQ@
-	.
-
 mtr:mphase2ui@UI_URI_SUFFIX@
 	a @UI_TYPE@;
 	@UI_REQ@
