@@ -29,22 +29,21 @@ LV2GTK2=eburUI_gtk
 LV2GTK3=goniometerUI_gtk
 LV2GTK4=dpmUI_gtk
 LV2GTK5=kmeterUI_gtk
-LV2GTK6=mphase2UI_gtk
+LV2GTK6=phasewheelUI_gtk
 
 LV2GUI1=needleUI_gl
 LV2GUI2=eburUI_gl
 LV2GUI3=goniometerUI_gl
 LV2GUI4=dpmUI_gl
 LV2GUI5=kmeterUI_gl
-LV2GUI6=mphase2UI_gl
+LV2GUI6=phasewheelUI_gl
 
 MTRGUI=mtr:needle
 EBUGUI=mtr:eburui
 GONGUI=mtr:goniometerui
 DPMGUI=mtr:dpmui
 KMRGUI=mtr:kmeterui
-MPWGUI=mtr:mphaseui
-MP2GUI=mtr:mphase2ui
+MPWGUI=mtr:phasewheelui
 
 ###############################################################################
 
@@ -178,7 +177,7 @@ DSPDEPS=$(DSPSRC) jmeters/jmeterdsp.h jmeters/vumeterdsp.h \
 goniometer_UIDEP=zita-resampler/resampler.cc zita-resampler/resampler-table.cc
 goniometer_UISRC=zita-resampler/resampler.cc zita-resampler/resampler-table.cc -DTHREADSYNC
 
-mphase2_UISRC=`pkg-config --cflags --libs fftw3f`
+phasewheel_UISRC=`pkg-config --cflags --libs fftw3f`
 
 ###############################################################################
 # build target definitions
@@ -227,11 +226,11 @@ endif
 ifneq ($(BUILDOPENGL), no)
 	sed "s/@UI_URI_SUFFIX@/_gl/;s/@UI_TYPE@/$(UI_TYPE)/;s/@UI_REQ@/$(LV2UIREQ)/" \
 	    lv2ttl/$(LV2NAME).gui.ttl.in >> $(BUILDDIR)$(LV2NAME).ttl
-	sed "s/@URI_SUFFIX@//g;s/@NAME_SUFFIX@//g;s/@DPMGUI@/$(DPMGUI)_gl/g;s/@EBUGUI@/$(EBUGUI)_gl/g;s/@GONGUI@/$(GONGUI)_gl/g;s/@MTRGUI@/$(MTRGUI)_gl/g;s/@KMRGUI@/$(KMRGUI)_gl/g;s/@MPWGUI@/$(MPWGUI)_gl/g;s/@MP2GUI@/$(MP2GUI)_gl/g" \
+	sed "s/@URI_SUFFIX@//g;s/@NAME_SUFFIX@//g;s/@DPMGUI@/$(DPMGUI)_gl/g;s/@EBUGUI@/$(EBUGUI)_gl/g;s/@GONGUI@/$(GONGUI)_gl/g;s/@MTRGUI@/$(MTRGUI)_gl/g;s/@KMRGUI@/$(KMRGUI)_gl/g;s/@MPWGUI@/$(MPWGUI)_gl/g" \
 	  lv2ttl/$(LV2NAME).lv2.ttl.in >> $(BUILDDIR)$(LV2NAME).ttl
 endif
 ifneq ($(BUILDGTK), no)
-	sed "s/@URI_SUFFIX@/_gtk/g;s/@NAME_SUFFIX@/ GTK/g;s/@DPMGUI@/$(DPMGUI)_gtk/g;s/@EBUGUI@/$(EBUGUI)_gtk/g;s/@GONGUI@/$(GONGUI)_gtk/g;s/@MTRGUI@/$(MTRGUI)_gtk/g;s/@KMRGUI@/$(KMRGUI)_gtk/g;s/@MPWGUI@/$(MPWGUI)_gtk/g;;s/@MP2GUI@/$(MP2GUI)_gtk/g;" \
+	sed "s/@URI_SUFFIX@/_gtk/g;s/@NAME_SUFFIX@/ GTK/g;s/@DPMGUI@/$(DPMGUI)_gtk/g;s/@EBUGUI@/$(EBUGUI)_gtk/g;s/@GONGUI@/$(GONGUI)_gtk/g;s/@MTRGUI@/$(MTRGUI)_gtk/g;s/@KMRGUI@/$(KMRGUI)_gtk/g;s/@MPWGUI@/$(MPWGUI)_gtk/g;" \
 	  lv2ttl/$(LV2NAME).lv2.ttl.in >> $(BUILDDIR)$(LV2NAME).ttl
 endif
 
@@ -249,7 +248,7 @@ $(BUILDDIR)$(LV2GTK3)$(LIB_EXT): gui/goniometer.c src/goniometer.h \
     $(goniometer_UIDEP) zita-resampler/resampler.h zita-resampler/resampler-table.h
 $(BUILDDIR)$(LV2GTK4)$(LIB_EXT): gui/dpm.c
 $(BUILDDIR)$(LV2GTK5)$(LIB_EXT): gui/kmeter.c
-$(BUILDDIR)$(LV2GTK6)$(LIB_EXT): gui/mphase2.c src/uri2.h gui/fft.c
+$(BUILDDIR)$(LV2GTK6)$(LIB_EXT): gui/phasewheel.c src/uri2.h gui/fft.c
 
 $(BUILDDIR)$(LV2GUI1)$(LIB_EXT): $(UIIMGS) src/uris.h gui/needle.c gui/meterimage.c
 $(BUILDDIR)$(LV2GUI2)$(LIB_EXT): gui/ebur.c src/uris.h
@@ -257,7 +256,7 @@ $(BUILDDIR)$(LV2GUI3)$(LIB_EXT): gui/goniometer.c src/goniometer.h \
     $(goniometer_UIDEP) zita-resampler/resampler.h zita-resampler/resampler-table.h
 $(BUILDDIR)$(LV2GUI4)$(LIB_EXT): gui/dpm.c
 $(BUILDDIR)$(LV2GUI5)$(LIB_EXT): gui/kmeter.c
-$(BUILDDIR)$(LV2GUI6)$(LIB_EXT): gui/mphase2.c src/uri2.h gui/fft.c
+$(BUILDDIR)$(LV2GUI6)$(LIB_EXT): gui/phasewheel.c src/uri2.h gui/fft.c
 
 ###############################################################################
 # install/uninstall/clean target definitions

@@ -2538,13 +2538,13 @@ mtr:K20stereo@URI_SUFFIX@
 	rdfs:comment "Stereo audio level meter according to the K-system. K-20/RMS variant (Large Theatre, wide-range-music)"
 	.
 
-mtr:multiphase2@URI_SUFFIX@
+mtr:phasewheel@URI_SUFFIX@
 	a lv2:Plugin, lv2:AnalyserPlugin, doap:Project ;
 	doap:license <http://usefulinc.com/doap/licenses/gpl> ;
-	doap:name "FFT Phase/Frequency Wheel@NAME_SUFFIX@";
+	doap:name "Phase/Frequency Wheel@NAME_SUFFIX@";
 	lv2:project <http://gareus.org/oss/lv2/meters> ;
 	lv2:optionalFeature lv2:hardRTCapable ;
-	ui:ui @MP2GUI@ ;
+	ui:ui @MPWGUI@ ;
 	lv2:port [
 		a atom:AtomPort ,
 			lv2:InputPort ;
@@ -2659,5 +2659,5 @@ mtr:multiphase2@URI_SUFFIX@
 		lv2:minimum 0 ;
 		lv2:maximum 1 ;
 	] ;
-	rdfs:comment ""
+	rdfs:comment "Phase/Frequency Wheel"
 	.

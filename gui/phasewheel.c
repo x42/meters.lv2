@@ -1,4 +1,4 @@
-/* simple spectrum analyzer
+/* FFT Phase-Wheel Display
  *
  * Copyright (C) 2013 Robin Gareus <robin@gareus.org>
  *
@@ -17,7 +17,7 @@
  */
 
 #define MTR_URI "http://gareus.org/oss/lv2/meters#"
-#define MTR_GUI "mphase2ui"
+#define MTR_GUI "phasewheelui"
 
 #define FFT_BINS_MAX 8192 // half of the FFT data-size
 
@@ -993,8 +993,8 @@ instantiate(
 	*widget = NULL;
 	ui->map = NULL;
 
-	if      (!strcmp(plugin_uri, MTR_URI "multiphase2")) { ; }
-	else if (!strcmp(plugin_uri, MTR_URI "multiphase2_gtk")) { ; }
+	if      (!strcmp(plugin_uri, MTR_URI "phasewheel")) { ; }
+	else if (!strcmp(plugin_uri, MTR_URI "phasewheel_gtk")) { ; }
 	else {
 		free(ui);
 		return NULL;

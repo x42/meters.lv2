@@ -31,12 +31,12 @@ mtr:kmeterui@UI_URI_SUFFIX@
 	@UI_REQ@
 	.
 
-mtr:mphase2ui@UI_URI_SUFFIX@
+mtr:phasewheelui@UI_URI_SUFFIX@
 	a @UI_TYPE@;
 	@UI_REQ@
 	lv2:requiredFeature urid:map ;
 	ui:portNotification [
-		ui:plugin mtr:multiphase2 ;
+		ui:plugin mtr:phasewheel ;
 		lv2:symbol "notify";
 		ui:notifyType atom:Blank
 	]

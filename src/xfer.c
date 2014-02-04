@@ -87,8 +87,8 @@ xfer_instantiate(const LV2_Descriptor*    descriptor,
 		return NULL;
 	}
 
-	if (!strcmp(descriptor->URI, MTR_URI "multiphase2")
-			|| !strcmp(descriptor->URI, MTR_URI "multiphase2_gtk"))
+	if (!strcmp(descriptor->URI, MTR_URI "phasewheel")
+			|| !strcmp(descriptor->URI, MTR_URI "phasewheel_gtk"))
 	{
 		self->n_channels = 2;
 		self->stcor = new Stcorrdsp();
@@ -289,5 +289,5 @@ static const LV2_Descriptor descriptor ## ID = { \
   NULL               \
 };
 
-MXFERDESC(MultiPhase2, "multiphase2");
-MXFERDESC(MultiPhase2Gtk, "multiphase2_gtk");
+MXFERDESC(MultiPhase2, "phasewheel");
+MXFERDESC(MultiPhase2Gtk, "phasewheel_gtk");
