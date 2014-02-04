@@ -139,6 +139,9 @@ typedef struct {
 	int32_t drag_cutoff_x;
 	float   drag_cutoff_db;
 	bool prelight_cutoff;
+
+	float c_fg[4];
+	float c_bg[4];
 } MF2UI;
 
 
@@ -257,7 +260,7 @@ static void create_surfaces(MF2UI* ui) {
 	ui->sf_ann = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, ui->width, ui->height);
 	cr = cairo_create (ui->sf_ann);
 	cairo_rectangle (cr, 0, 0, ui->width, ui->height);
-	cairo_set_source_rgba(cr, .33, .33, .36, 1.0); // BG
+	CairoSetSouerceRGBA(ui->c_bg);
 	cairo_fill (cr);
 	cairo_destroy (cr);
 
@@ -299,7 +302,7 @@ static void create_surfaces(MF2UI* ui) {
 		xlp = X + .5 + sinf (ang) * (10 + 3.0); \
 		ylp = 16.5 + .5 - cosf (ang) * (10 + 3.0); \
 		cairo_set_line_cap(cr, CAIRO_LINE_CAP_ROUND); \
-		CairoSetSouerceRGBA(c_wht); \
+		CairoSetSouerceRGBA(ui->c_fg); \
 		cairo_set_line_width(cr, 1.5); \
 		cairo_move_to(cr, rint(xlp)-.5, rint(ylp)-.5); \
 		cairo_close_path(cr); \
@@ -311,7 +314,7 @@ static void create_surfaces(MF2UI* ui) {
 	ui->sf_dial = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, 60, 40);
 	cr = cairo_create (ui->sf_dial);
 	float xlp, ylp;
-	AMPLABEL(-40, 40., 80., 30.5); write_text_full(cr, "-40", ui->font[0], xlp, ylp, 0, 2, c_wht);
+	AMPLABEL(-40, 40., 80., 30.5); write_text_full(cr, "-40", ui->font[0], xlp, ylp, 0, 2, ui->c_fg);
 	AMPLABEL(-30, 40., 80., 30.5);
 	AMPLABEL(-20, 40., 80., 30.5);
 	AMPLABEL(-10, 40., 80., 30.5);
@@ -319,7 +322,7 @@ static void create_surfaces(MF2UI* ui) {
 	AMPLABEL( 10, 40., 80., 30.5);
 	AMPLABEL( 20, 40., 80., 30.5);
 	AMPLABEL( 30, 40., 80., 30.5);
-	AMPLABEL( 40, 40., 80., 30.5); write_text_full(cr, "+40", ui->font[0], xlp, ylp, 0, 2, c_wht); \
+	AMPLABEL( 40, 40., 80., 30.5); write_text_full(cr, "+40", ui->font[0], xlp, ylp, 0, 2, ui->c_fg); \
 	cairo_destroy (cr);
 }
 
@@ -329,7 +332,7 @@ static void update_grid(MF2UI* ui) {
 	cairo_t *cr = cairo_create (ui->sf_ann);
 
 	cairo_rectangle (cr, 0, 0, ui->width, ui->height);
-	cairo_set_source_rgba(cr, .33, .33, .36, 1.0); // BG
+	CairoSetSouerceRGBA(ui->c_bg);
 	cairo_fill (cr);
 
 	cairo_set_line_width (cr, 1.0);
@@ -397,7 +400,7 @@ static void update_annotations(MF2UI* ui) {
 	cairo_t* cr = cairo_create (ui->sf_gain);
 
 	cairo_rectangle (cr, 0, 0, ui->width, 40);
-	cairo_set_source_rgba(cr, .33, .33, .36, 1.0); // BG
+	CairoSetSouerceRGBA(ui->c_bg);
 	cairo_fill (cr);
 
 	rounded_rectangle (cr, 3, 3 , ui->width - 6, ANN_H - 6, 6);
@@ -640,7 +643,7 @@ static bool pc_expose_event(RobWidget* handle, cairo_t* cr, cairo_rectangle_t *e
 	cairo_set_operator (cr, CAIRO_OPERATOR_OVER);
 
 	/* PC meter backgroud */
-	cairo_set_source_rgba(cr, .33, .33, .36, 1.0); // BG
+	CairoSetSouerceRGBA(ui->c_bg);
 	cairo_rectangle (cr, 0, 0, PC_BOUNDW, PC_BOUNDH);
 	cairo_fill(cr);
 
@@ -885,6 +888,8 @@ static RobWidget * toplevel(MF2UI* ui, void * const top)
 
 	ui->font[0] = pango_font_description_from_string("Mono 7");
 	ui->font[1] = pango_font_description_from_string("Mono 8");
+	get_color_from_theme(0, ui->c_fg);
+	get_color_from_theme(1, ui->c_bg);
 	create_surfaces(ui);
 
 	/* main drawing area */
