@@ -2599,8 +2599,9 @@ mtr:phasewheel@URI_SUFFIX@
 		lv2:index 6 ;
 		lv2:symbol "phase" ;
 		lv2:name "phase" ;
-		lv2:minimum -1.0;
-		lv2:maximum  1.0;
+		lv2:minimum -1.0 ;
+		lv2:maximum  1.0 ;
+	  rdfs:comment "Stereo Phase Correlation (all bands)" ;
 	] , [
 		a lv2:ControlPort, lv2:InputPort ;
 		lv2:index 7 ;
@@ -2610,6 +2611,7 @@ mtr:phasewheel@URI_SUFFIX@
 		lv2:minimum -40.0 ;
 		lv2:maximum  40.0 ;
 		units:unit units:db;
+	  rdfs:comment "Display Signal Level Gain." ;
 	] , [
 		a lv2:ControlPort, lv2:InputPort ;
 		lv2:index 8 ;
@@ -2619,6 +2621,7 @@ mtr:phasewheel@URI_SUFFIX@
 		lv2:minimum -60.0 ;
 		lv2:maximum -20.0 ;
 		units:unit units:db;
+	  rdfs:comment "Display Signal Cutoff Level (relative to 0dB). Signals below this level will not be visualized." ;
 	] , [
 		a lv2:ControlPort, lv2:InputPort ;
 		lv2:index 9 ;
@@ -2638,6 +2641,7 @@ mtr:phasewheel@URI_SUFFIX@
 		lv2:scalePoint [ rdfs:label "8192";  rdf:value  8192.0 ; ] ;
 		lv2:scalePoint [ rdfs:label "12288"; rdf:value 12288.0 ; ] ;
 		lv2:scalePoint [ rdfs:label "16384"; rdf:value 16384.0 ; ] ;
+	  rdfs:comment "Number of audio-samples to process. Large values increase accuracy, particular for low frequencies as well as latency.";
 	] , [
 		a lv2:ControlPort, lv2:InputPort ;
 		lv2:portProperty lv2:toggled;
@@ -2648,6 +2652,7 @@ mtr:phasewheel@URI_SUFFIX@
 		lv2:default 1 ;
 		lv2:minimum 0 ;
 		lv2:maximum 1 ;
+	  rdfs:comment "Group data by frequency bands. Depending on FFT-size, 6 or 12 bands per octave are used. This allows for 1/frequency (pink noise) signal level normalization. It also speeds up visualization for large FFT sizes and decreases CPU/GPU usage due to visualization." ;
 	] , [
 		a lv2:ControlPort, lv2:InputPort ;
 		lv2:portProperty lv2:toggled;
@@ -2658,6 +2663,7 @@ mtr:phasewheel@URI_SUFFIX@
 		lv2:default 0 ;
 		lv2:minimum 0 ;
 		lv2:maximum 1 ;
+	  rdfs:comment "Auto-gain. Normalize signal level, set gain to detected (per band) peak signal level.";
 	] ;
-	rdfs:comment "Phase/Frequency Wheel"
+	rdfs:comment "Phase/Frequency Wheel - display stereo-signal phase (angle) relative to frequency (radius)."
 	.
