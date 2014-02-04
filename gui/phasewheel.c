@@ -782,7 +782,7 @@ static RobWidget* m2_mousemove(RobWidget* handle, RobTkBtnEvent *event) {
 	const float diff = (event->x - ui->drag_cutoff_x) * mxw;
 	float cutoff = ui->drag_cutoff_db + diff;
 	if (cutoff < -59) cutoff = -59;
-	if (cutoff > -20) cutoff = -20;
+	if (cutoff > -10) cutoff = -10;
 	if (ui->db_cutoff != cutoff) {
 		ui->db_cutoff = cutoff;
 		ui->update_annotations = true;
@@ -1211,7 +1211,7 @@ port_event(LV2UI_Handle handle,
 	}
 	else if (port_index == MF_CUTOFF) {
 		float val = *(float *)buffer;
-		if (ui->drag_cutoff_x < 0 && val >= -59 && val <= -20) {
+		if (ui->drag_cutoff_x < 0 && val >= -59 && val <= -10) {
 			ui->db_cutoff = val;
 			ui->update_annotations = true;
 			queue_draw(ui->m2);
