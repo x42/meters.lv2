@@ -21,7 +21,7 @@ cat >> $OUTDIR/index.html_1 << EOF
 <img src="vu.png" alt="" style="float:left; width: 140px;"/>
 <div style="margin-left:150px;">
 <p>
-<a href="https://github.com/x42/meters.lv2">meters.lv2</a> - a collection of audio level meters with GUI in <a href="lv2plug.in">LV2 plugin</a> format.
+<a href="https://github.com/x42/meters.lv2">meters.lv2</a> - a collection of audio level meters with GUI in <a href="http://lv2plug.in">LV2 plugin</a> format.
 </p><p>
 The bundle includes needle style meters (mono and stereo variants) as well as related audio measurement tools.
 The needle meters comply with
