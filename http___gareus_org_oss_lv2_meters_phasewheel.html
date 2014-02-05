@@ -2,7 +2,7 @@
   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
   <head>
-  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />  <title>DIN Meter (Mono) [LV2 Plugin Doc]</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />  <title>Phase/Frequency Wheel [LV2 Plugin Doc]</title>
   <link rel="shortcut icon" type="image/x-icon" href="data:image/x-icon;base64,AAABAAEAEBAAAAEACABoBQAAFgAAACgAAAAQAAAAIAAAAAEACAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQEBAAGxsbAB0dHQA5Kx4ANywhAD0wJABAMSIAQDEjAEEyJABDMyUAQDQmAEM0JQAyMjIAQzQmAEY2JgA0NDQASzclAEY3KQBHNyoASDgoAEk4KQBFOCwATDkoAE86JQBKOSsATTonAFA8KQBMPCwASDwwAFE+KwBUPyoAPT09AFJBMABTQTAAVkIuAFZCLwBWQy8AV0Y2AF1ILwBfTDIAXEs6AF9NNABeTDoAY040AGhPMABjTTkAbVE5AGhSPQBrVTsAalU/AGxbSQBzXUAAeWJEAF9fXwB1ZEsAc2RPAHpoTwB8aU8Agm9XAIFuXQB/b14AgXJeAIp1WQCHdl8AinhjAIt4ZgCPeWYAi3lqAI97YgCPfGwAkX1sAJB/aQCYgmYAmYFqAJOCcQCCgoIAmohyAJqHdgCXiXYAmIp3AJeKeACZi3YAn4xxAJmLeACZi3kAmox+AI2NjQCekIIAo5N/AKOUiACnl38AqpeGAK2bhQComo0AqpuJALCciwCsnpIAs6GLALKijgC0opIAsKKUALGklwCyppIAuKWWALCmnQC1p5kAtqiWALWnnACxp54AsKifALSrogC5rJ8AuK2fAL+uoQC+sqYAwrWjAMK1qAC1tbUAx7epAMe4rgDIvLEAy7ywAMi+rgDIvbIAzL2xAMzCsgDMwbYAzsOwAM3DuQDSxLcA08W5AMTExADSyLcA1Mm9ANbNvQDUzcUA2M7DAM3NzQDf1swA39fNANfX1wDi28oA5d3OAOfe1QDd3d0A5t7XAN/f3wDn4NkA4ODgAObk3gDr5t0A5ubmAO7n4ADv6toA8uvcAPLs3ADv6+QA9e7eAPPu3wDw7OcA9O3mAPfv4QD27uYA8O/qAPjw5QD48esA9/byAPT29AD39/cA+Pj4APz59AD5+vcA/vz3APz//gD///8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAr6mSkqivr6iXqa+pkpKpr6+MAQ+DqamDNYOokAIflK+viQBLH5KSH1YfklYMdamvr4kASx+Skh9WH5JWDHWpr6+MAQ+DqamDNYOokAIflK+vqZKSqK+vqJepr6mSkqmvrx0aFxgUEw4LDQkIBwYDrxsmVFFOTz89UDcQGRYSEQQgLZ6bmaFmjZ1/JyQjIh4FJTCgfTY4U5qFpECEho8pCiozpXosMXORRaJpcI5HKxU8NKZ+LkKfiEOKljlYiy8cbXesk2OArXJMeKpeRJw6IW55rphqo6diWmSre5WHPihogoF8dHZxZ2FcX1tSSUgyr2xva2VgXVlXVU1KRkE7r4YhAACAAQAAgAEAAIABAACAAQAAhiEAAIABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAIABAAA=" />
   <style type="text/css">
 body {font-size:12px; background:#aaa; min-width:82em;}
@@ -86,15 +86,15 @@ div.footer {margin:1em auto; font-size:80%; color:#444; text-align:center; width
   </head>
   <body>
 <p class="backlink"><a href="index.html">Back to Index</a></p>
-<h1 class="title"><a name="top"/>LV2 Doc &laquo;DIN Meter (Mono)&raquo;
+<h1 class="title"><a name="top"/>LV2 Doc &laquo;Phase/Frequency Wheel&raquo;
  [Analyser]
 </h1>
 <div id="pluginmeta">
 <p class="desc">Description</p>
-<p class="docs">Mono audio level meter according to IEC 60268-10 Type I with DIN scale.</p>
+<p class="docs">Phase/Frequency Wheel - display stereo-signal phase (angle) relative to frequency (radius).</p>
 <dl>
- <dt>Title</dt><dd>DIN Meter (Mono)</dd>
- <dt>URI</dt><dd><a href="http://gareus.org/oss/lv2/meters#DINmono">http://gareus.org/oss/lv2/meters#DINmono</a></dd>
+ <dt>Title</dt><dd>Phase/Frequency Wheel</dd>
+ <dt>URI</dt><dd><a href="http://gareus.org/oss/lv2/meters#phasewheel">http://gareus.org/oss/lv2/meters#phasewheel</a></dd>
  <dt>Class</dt><dd>Analyser</dd>
  <dt>Author</dt><dd>Robin Gareus</dd>
  <dt>Author's Email</dt><dd>mailto:robin@gareus.org</dd>
@@ -106,43 +106,133 @@ div.footer {margin:1em auto; font-size:80%; color:#444; text-align:center; width
 <li>Hard Realtime Capable</li>
 </ul></dd>
 </dl>
-<div class="screenshot"><img alt="Screenshot" class="screenshot" src="http___gareus_org_oss_lv2_meters_DINmono.png" onclick="showimg();" /></div>
+<div class="screenshot"><img alt="Screenshot" class="screenshot" src="http___gareus_org_oss_lv2_meters_phasewheel.png" onclick="showimg();" /></div>
 </div>
 <div id="lightbox" style="display:none;" onclick="hideimg();">
-<div><img alt="Screenshot" src="http___gareus_org_oss_lv2_meters_DINmono.png"/></div>
+<div><img alt="Screenshot" src="http___gareus_org_oss_lv2_meters_phasewheel.png"/></div>
 </div>
 <div id="portwrapper">
 <script type="text/javascript">
-var num_ports=4;
+var num_ports=12;
 </script>
 <div id="plugintable"><table class="plugintable">
 <tr><td></td><td class="ptbl ptblTL">&nbsp;</td><td class="ptbl ptblTC">&nbsp;</td><td class="ptbl ptblTR">&nbsp;</td><td></td></tr>
-<tr><td class="bgL controlport" onmouseover="showdoc(0);" onmouseout="showdoc(-1);" onclick="jumpto(0);">0) Reference Level 0dBu</td><td class="pbody left ptbl ptblLL" onmouseover="showdoc(0);" onmouseout="showdoc(-1);" onclick="jumpto(0);"><div>(ref)<div class="portinfo" id="port0" style="display:none">
-<h3>0) Reference Level 0dBu</h3>
-<p class="port controlport">(<span>Control</span> <span>Input</span>)</p>
+<tr><td class="bgL atomport" onmouseover="showdoc(0);" onmouseout="showdoc(-1);" onclick="jumpto(0);">0) Control</td><td class="pbody left ptbl ptblLL" onmouseover="showdoc(0);" onmouseout="showdoc(-1);" onclick="jumpto(0);"><div>(control)<div class="portinfo" id="port0" style="display:none">
+<h3>0) Control</h3>
+<p class="port atomport">(<span>Atom</span> <span>Input</span>)</p>
+<p class="docs">GUI to plugin communication</p>
 <p>
 </p>
+<p class="desc">Designation:</p><ul>
+<li>Control-port</li>
+</ul>
 </div>
-</div></td><td class="pbody"><div>&nbsp;</div></td><td class="pbody right ptbl ptblRR" onmouseover="showdoc(2);" onmouseout="showdoc(-1);" onclick="jumpto(2);"><div>(out)<div class="portinfo" id="port2" style="display:none">
-<h3>2) Out</h3>
-<p class="port audioport">(<span>Audio</span> <span>Output</span>)</p>
+</div></td><td class="pbody"><div>&nbsp;</div></td><td class="pbody right ptbl ptblRR" onmouseover="showdoc(1);" onmouseout="showdoc(-1);" onclick="jumpto(1);"><div>(notify)<div class="portinfo" id="port1" style="display:none">
+<h3>1) Notify</h3>
+<p class="port atomport">(<span>Atom</span> <span>Output</span>)</p>
+<p class="docs">Plugin to GUI communication</p>
 <p>
 </p>
+<p class="desc">Designation:</p><ul>
+<li>Control-port</li>
+</ul>
 </div>
-</div></td><td class="bgR audioport" onmouseover="showdoc(2);" onmouseout="showdoc(-1);" onclick="jumpto(2);">2) Out</td></tr>
-<tr><td class="bgL audioport" onmouseover="showdoc(1);" onmouseout="showdoc(-1);" onclick="jumpto(1);">1) In</td><td class="pbody left ptbl ptblLL" onmouseover="showdoc(1);" onmouseout="showdoc(-1);" onclick="jumpto(1);"><div>(in)<div class="portinfo" id="port1" style="display:none">
-<h3>1) In</h3>
+</div></td><td class="bgR atomport" onmouseover="showdoc(1);" onmouseout="showdoc(-1);" onclick="jumpto(1);">1) Notify</td></tr>
+<tr><td class="bgL audioport" onmouseover="showdoc(2);" onmouseout="showdoc(-1);" onclick="jumpto(2);">2) InL</td><td class="pbody left ptbl ptblLL" onmouseover="showdoc(2);" onmouseout="showdoc(-1);" onclick="jumpto(2);"><div>(in1)<div class="portinfo" id="port2" style="display:none">
+<h3>2) InL</h3>
 <p class="port audioport">(<span>Audio</span> <span>Input</span>)</p>
+<p class="docs">Channel 1 input</p>
 <p>
 </p>
 </div>
-</div></td><td class="pbody"><div>&nbsp;</div></td><td class="pbody right ptbl ptblRR" onmouseover="showdoc(3);" onmouseout="showdoc(-1);" onclick="jumpto(3);"><div>(level1)<div class="portinfo" id="port3" style="display:none">
-<h3>3) Level 1</h3>
+</div></td><td class="pbody"><div>&nbsp;</div></td><td class="pbody right ptbl ptblRR" onmouseover="showdoc(3);" onmouseout="showdoc(-1);" onclick="jumpto(3);"><div>(out1)<div class="portinfo" id="port3" style="display:none">
+<h3>3) OutL</h3>
+<p class="port audioport">(<span>Audio</span> <span>Output</span>)</p>
+<p class="docs">signal pass-thru</p>
+<p>
+</p>
+</div>
+</div></td><td class="bgR audioport" onmouseover="showdoc(3);" onmouseout="showdoc(-1);" onclick="jumpto(3);">3) OutL</td></tr>
+<tr><td class="bgL audioport" onmouseover="showdoc(4);" onmouseout="showdoc(-1);" onclick="jumpto(4);">4) InR</td><td class="pbody left ptbl ptblLL" onmouseover="showdoc(4);" onmouseout="showdoc(-1);" onclick="jumpto(4);"><div>(in2)<div class="portinfo" id="port4" style="display:none">
+<h3>4) InR</h3>
+<p class="port audioport">(<span>Audio</span> <span>Input</span>)</p>
+<p class="docs">Channel 2 input</p>
+<p>
+</p>
+</div>
+</div></td><td class="pbody"><div>&nbsp;</div></td><td class="pbody right ptbl ptblRR" onmouseover="showdoc(5);" onmouseout="showdoc(-1);" onclick="jumpto(5);"><div>(out2)<div class="portinfo" id="port5" style="display:none">
+<h3>5) OutR</h3>
+<p class="port audioport">(<span>Audio</span> <span>Output</span>)</p>
+<p class="docs">signal pass-thru</p>
+<p>
+</p>
+</div>
+</div></td><td class="bgR audioport" onmouseover="showdoc(5);" onmouseout="showdoc(-1);" onclick="jumpto(5);">5) OutR</td></tr>
+<tr><td class="bgL controlport" onmouseover="showdoc(7);" onmouseout="showdoc(-1);" onclick="jumpto(7);">7) Gain</td><td class="pbody left ptbl ptblLL" onmouseover="showdoc(7);" onmouseout="showdoc(-1);" onclick="jumpto(7);"><div>(gain)<div class="portinfo" id="port7" style="display:none">
+<h3>7) Gain</h3>
+<p class="port controlport">(<span>Control</span> <span>Input</span>)</p>
+<p class="docs">Display Signal Level Gain.</p>
+<p>
+</p>
+</div>
+</div></td><td class="pbody"><div>&nbsp;</div></td><td class="pbody right ptbl ptblRR" onmouseover="showdoc(6);" onmouseout="showdoc(-1);" onclick="jumpto(6);"><div>(phase)<div class="portinfo" id="port6" style="display:none">
+<h3>6) phase</h3>
 <p class="port controlport">(<span>Control</span> <span>Output</span>)</p>
+<p class="docs">Stereo Phase Correlation (all bands)</p>
 <p>
 </p>
 </div>
-</div></td><td class="bgR controlport" onmouseover="showdoc(3);" onmouseout="showdoc(-1);" onclick="jumpto(3);">3) Level 1</td></tr>
+</div></td><td class="bgR controlport" onmouseover="showdoc(6);" onmouseout="showdoc(-1);" onclick="jumpto(6);">6) phase</td></tr>
+<tr><td class="bgL controlport" onmouseover="showdoc(8);" onmouseout="showdoc(-1);" onclick="jumpto(8);">8) Cutoff</td><td class="pbody left ptbl ptblLL" onmouseover="showdoc(8);" onmouseout="showdoc(-1);" onclick="jumpto(8);"><div>(cutoff)<div class="portinfo" id="port8" style="display:none">
+<h3>8) Cutoff</h3>
+<p class="port controlport">(<span>Control</span> <span>Input</span>)</p>
+<p class="docs">Display Signal Cutoff Level (relative to 0dB). Signals below this level will not be visualized.</p>
+<p>
+</p>
+</div>
+</div></td><td class="pbody"><div>&nbsp;</div></td><td class="pbody ptbl ptblRR"></td><td></td></tr>
+<tr><td class="bgL controlport" onmouseover="showdoc(9);" onmouseout="showdoc(-1);" onclick="jumpto(9);">9) FFT Size</td><td class="pbody left ptbl ptblLL" onmouseover="showdoc(9);" onmouseout="showdoc(-1);" onclick="jumpto(9);"><div>(fftsize)<div class="portinfo" id="port9" style="display:none">
+<h3>9) FFT Size</h3>
+<p class="port controlport">(<span>Control</span> <span>Input</span>)</p>
+<p class="docs">Number of audio-samples to process. Large values increase accuracy, particular for low frequencies as well as latency.</p>
+<p class="desc">Port Properties:</p>
+<ul>
+<li class="portproperty">Enumeration
+</li>
+<li class="portproperty">Integer</li>
+</ul>
+<p>
+</p>
+</div>
+</div></td><td class="pbody"><div>&nbsp;</div></td><td class="pbody ptbl ptblRR"></td><td></td></tr>
+<tr><td class="bgL controlport" onmouseover="showdoc(10);" onmouseout="showdoc(-1);" onclick="jumpto(10);">10) N/Octave Bands</td><td class="pbody left ptbl ptblLL" onmouseover="showdoc(10);" onmouseout="showdoc(-1);" onclick="jumpto(10);"><div>(band)<div class="portinfo" id="port10" style="display:none">
+<h3>10) N/Octave Bands</h3>
+<p class="port controlport">(<span>Control</span> <span>Input</span>)</p>
+<p class="docs">Group data by frequency bands. Depending on FFT-size, 6 or 12 bands per octave are used. This allows for 1/frequency (pink noise) signal level normalization. It also speeds up visualization for large FFT sizes and decreases CPU/GPU usage due to visualization.</p>
+<p class="desc">Port Properties:</p>
+<ul>
+<li class="portproperty">Toggle
+</li>
+<li class="portproperty">Integer</li>
+</ul>
+<p>
+</p>
+</div>
+</div></td><td class="pbody"><div>&nbsp;</div></td><td class="pbody ptbl ptblRR"></td><td></td></tr>
+<tr><td class="bgL controlport" onmouseover="showdoc(11);" onmouseout="showdoc(-1);" onclick="jumpto(11);">11) Normalize</td><td class="pbody left ptbl ptblLL" onmouseover="showdoc(11);" onmouseout="showdoc(-1);" onclick="jumpto(11);"><div>(normalize)<div class="portinfo" id="port11" style="display:none">
+<h3>11) Normalize</h3>
+<p class="port controlport">(<span>Control</span> <span>Input</span>)</p>
+<p class="docs">Auto-gain. Normalize signal level, set gain to detected (per band) peak signal level.</p>
+<p class="desc">Port Properties:</p>
+<ul>
+<li class="portproperty">Toggle
+</li>
+<li class="portproperty">Integer</li>
+</ul>
+<p>
+</p>
+</div>
+</div></td><td class="pbody"><div>&nbsp;</div></td><td class="pbody ptbl ptblRR"></td><td></td></tr>
 <tr><td></td><td class="ptbl ptblBL">&nbsp;</td><td class="ptbl ptblBC">&nbsp;</td><td class="ptbl ptblBR">&nbsp;</td><td></td></tr>
 </table></div>
 <div id="portlist">
@@ -150,42 +240,165 @@ var num_ports=4;
 <div id="inputportlist">
 <div class="port">
 <div class="toplink"><a href="#top">&nbsp;&uarr;&nbsp;</a></div>
-<h3><a name="portdoc0">0</a>) Reference Level 0dBu</h3>
+<h3><a name="portdoc0">0</a>) Control</h3>
+<p class="port atomport">(<span>Atom</span> <span>Input</span>)</p>
+<p class="docs">GUI to plugin communication</p>
+<p>
+</p>
+<p class="desc">Designation:</p><ul>
+<li>Control-port</li>
+</ul>
+</div>
+<div class="port">
+<div class="toplink"><a href="#top">&nbsp;&uarr;&nbsp;</a></div>
+<h3><a name="portdoc2">2</a>) InL</h3>
+<p class="port audioport">(<span>Audio</span> <span>Input</span>)</p>
+<p class="docs">Channel 1 input</p>
+<p>
+</p>
+</div>
+<div class="port">
+<div class="toplink"><a href="#top">&nbsp;&uarr;&nbsp;</a></div>
+<h3><a name="portdoc4">4</a>) InR</h3>
+<p class="port audioport">(<span>Audio</span> <span>Input</span>)</p>
+<p class="docs">Channel 2 input</p>
+<p>
+</p>
+</div>
+<div class="port">
+<div class="toplink"><a href="#top">&nbsp;&uarr;&nbsp;</a></div>
+<h3><a name="portdoc7">7</a>) Gain</h3>
 <p class="port controlport">(<span>Control</span> <span>Input</span>)</p>
+<p class="docs">Display Signal Level Gain.</p>
 <p>
 </p>
 <table class="portrange">
 <tr><th colspan="2">Range</th></tr>
-<tr><th>min</th><td>-30.000000</td></tr>
-<tr><th>max</th><td>0.000000</td></tr>
-<tr><th>default</th><td>-15.000000</td></tr>
+<tr><th>min</th><td>-40.000000</td></tr>
+<tr><th>max</th><td>40.000000</td></tr>
+<tr><th>default</th><td>20.000000</td></tr>
 </table>
 </div>
 <div class="port">
 <div class="toplink"><a href="#top">&nbsp;&uarr;&nbsp;</a></div>
-<h3><a name="portdoc1">1</a>) In</h3>
-<p class="port audioport">(<span>Audio</span> <span>Input</span>)</p>
+<h3><a name="portdoc8">8</a>) Cutoff</h3>
+<p class="port controlport">(<span>Control</span> <span>Input</span>)</p>
+<p class="docs">Display Signal Cutoff Level (relative to 0dB). Signals below this level will not be visualized.</p>
 <p>
 </p>
+<table class="portrange">
+<tr><th colspan="2">Range</th></tr>
+<tr><th>min</th><td>-60.000000</td></tr>
+<tr><th>max</th><td>-10.000000</td></tr>
+<tr><th>default</th><td>-45.000000</td></tr>
+</table>
 </div>
-</div>
-<div id="outputportlist">
 <div class="port">
 <div class="toplink"><a href="#top">&nbsp;&uarr;&nbsp;</a></div>
-<h3><a name="portdoc2">2</a>) Out</h3>
-<p class="port audioport">(<span>Audio</span> <span>Output</span>)</p>
+<h3><a name="portdoc9">9</a>) FFT Size</h3>
+<p class="port controlport">(<span>Control</span> <span>Input</span>)</p>
+<p class="docs">Number of audio-samples to process. Large values increase accuracy, particular for low frequencies as well as latency.</p>
+<p class="desc">Port Properties:</p>
+<ul>
+<li class="portproperty">Enumeration
+</li>
+<li class="portproperty">Integer</li>
+</ul>
 <p>
 </p>
+<p><span class="desc">Default:</span> 2048.000000</p>
+<table class="portrange">
+<tr><th colspan="2">Scale Points</th></tr>
+<tr><th>128.0</th><td>128</td></tr>
+<tr><th>256.0</th><td>256</td></tr>
+<tr><th>512.0</th><td>512</td></tr>
+<tr><th>1024.0</th><td>1024</td></tr>
+<tr><th>2048.0</th><td>2048</td></tr>
+<tr><th>4096.0</th><td>4096</td></tr>
+<tr><th>8192.0</th><td>8192</td></tr>
+<tr><th>12288.0</th><td>12288</td></tr>
+<tr><th>16384.0</th><td>16384</td></tr>
+</table>
 </div>
 <div class="port">
 <div class="toplink"><a href="#top">&nbsp;&uarr;&nbsp;</a></div>
-<h3><a name="portdoc3">3</a>) Level 1</h3>
-<p class="port controlport">(<span>Control</span> <span>Output</span>)</p>
+<h3><a name="portdoc10">10</a>) N/Octave Bands</h3>
+<p class="port controlport">(<span>Control</span> <span>Input</span>)</p>
+<p class="docs">Group data by frequency bands. Depending on FFT-size, 6 or 12 bands per octave are used. This allows for 1/frequency (pink noise) signal level normalization. It also speeds up visualization for large FFT sizes and decreases CPU/GPU usage due to visualization.</p>
+<p class="desc">Port Properties:</p>
+<ul>
+<li class="portproperty">Toggle
+</li>
+<li class="portproperty">Integer</li>
+</ul>
 <p>
 </p>
 <table class="portrange">
 <tr><th colspan="2">Range</th></tr>
 <tr><th>min</th><td>0.000000</td></tr>
+<tr><th>max</th><td>1.000000</td></tr>
+<tr><th>default</th><td>1.000000</td></tr>
+</table>
+</div>
+<div class="port">
+<div class="toplink"><a href="#top">&nbsp;&uarr;&nbsp;</a></div>
+<h3><a name="portdoc11">11</a>) Normalize</h3>
+<p class="port controlport">(<span>Control</span> <span>Input</span>)</p>
+<p class="docs">Auto-gain. Normalize signal level, set gain to detected (per band) peak signal level.</p>
+<p class="desc">Port Properties:</p>
+<ul>
+<li class="portproperty">Integer</li>
+<li class="portproperty">Toggle
+</li>
+</ul>
+<p>
+</p>
+<table class="portrange">
+<tr><th colspan="2">Range</th></tr>
+<tr><th>min</th><td>0.000000</td></tr>
+<tr><th>max</th><td>1.000000</td></tr>
+<tr><th>default</th><td>0.000000</td></tr>
+</table>
+</div>
+</div>
+<div id="outputportlist">
+<div class="port">
+<div class="toplink"><a href="#top">&nbsp;&uarr;&nbsp;</a></div>
+<h3><a name="portdoc1">1</a>) Notify</h3>
+<p class="port atomport">(<span>Atom</span> <span>Output</span>)</p>
+<p class="docs">Plugin to GUI communication</p>
+<p>
+</p>
+<p class="desc">Designation:</p><ul>
+<li>Control-port</li>
+</ul>
+</div>
+<div class="port">
+<div class="toplink"><a href="#top">&nbsp;&uarr;&nbsp;</a></div>
+<h3><a name="portdoc3">3</a>) OutL</h3>
+<p class="port audioport">(<span>Audio</span> <span>Output</span>)</p>
+<p class="docs">signal pass-thru</p>
+<p>
+</p>
+</div>
+<div class="port">
+<div class="toplink"><a href="#top">&nbsp;&uarr;&nbsp;</a></div>
+<h3><a name="portdoc5">5</a>) OutR</h3>
+<p class="port audioport">(<span>Audio</span> <span>Output</span>)</p>
+<p class="docs">signal pass-thru</p>
+<p>
+</p>
+</div>
+<div class="port">
+<div class="toplink"><a href="#top">&nbsp;&uarr;&nbsp;</a></div>
+<h3><a name="portdoc6">6</a>) phase</h3>
+<p class="port controlport">(<span>Control</span> <span>Output</span>)</p>
+<p class="docs">Stereo Phase Correlation (all bands)</p>
+<p>
+</p>
+<table class="portrange">
+<tr><th colspan="2">Range</th></tr>
+<tr><th>min</th><td>-1.000000</td></tr>
 <tr><th>max</th><td>1.000000</td></tr>
 </table>
 </div>
@@ -195,6 +408,6 @@ var num_ports=4;
 </div>
 <!-- end of page !-->
 <div style="clear:both;"></div>
-<div class="footer"><hr/>Created by <a href="https://github.com/x42/lv2toweb">lv2toweb</a>. Generated on 2014-02-05 14:49:14 GMT</div>
+<div class="footer"><hr/>Created by <a href="https://github.com/x42/lv2toweb">lv2toweb</a>. Generated on 2014-02-05 14:49:18 GMT</div>
  </body>
  </html>
