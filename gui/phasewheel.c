@@ -81,7 +81,6 @@ typedef struct {
 	LV2UI_Controller controller;
 
 	float rate;
-	float ann_rate;
 
 	struct FFTAnalysis *fa;
 	struct FFTAnalysis *fb;
@@ -150,7 +149,7 @@ static void reinitialize_fft(MF2UI* ui, uint32_t fft_size) {
 	fftx_free(ui->fa);
 	fftx_free(ui->fb);
 
-	fft_size = MAX(64, fft_size);
+	fft_size = MIN(8192, MAX(64, fft_size));
 	fft_size--;
 	fft_size |= 0x3f;
 	fft_size |= fft_size >> 2;
@@ -1074,6 +1073,8 @@ cleanup(LV2UI_Handle handle)
 	robtk_select_destroy(ui->sel_fft);
 	robtk_lbl_destroy(ui->lbl_fft);
 	robtk_sep_destroy(ui->sep0);
+	robtk_sep_destroy(ui->sep1);
+	robtk_sep_destroy(ui->sep2);
 	robtk_dial_destroy(ui->gain);
 	robtk_cbtn_destroy(ui->btn_oct);
 	robtk_cbtn_destroy(ui->btn_norm);
@@ -1145,8 +1146,7 @@ static void process_audio(MF2UI* ui, const size_t n_elem, float const * const le
 			}
 		}
 
-		const float omega = 4.f * fast_log(1.f + n_elem / ui->rate);
-		ui->peak += omega * (peak - ui->peak) + 1e-15;
+		ui->peak += .04 * (peak - ui->peak) + 1e-15;
 		if (robtk_cbtn_get_active(ui->btn_norm)) {
 			robtk_dial_set_value(ui->gain, - fftx_power_to_dB(ui->peak));
 		}
