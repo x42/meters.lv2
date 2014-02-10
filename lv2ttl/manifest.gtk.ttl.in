@@ -29,3 +29,8 @@ mtr:phasewheelui_gtk
 	a ui:GtkUI ;
 	ui:binary <@LV2GTK6@@LIB_EXT@> ;
 	rdfs:seeAlso <@LV2NAME@.ttl> .
+
+mtr:stereoscopeui_gtk
+	a ui:GtkUI ;
+	ui:binary <@LV2GTK7@@LIB_EXT@> ;
+	rdfs:seeAlso <@LV2NAME@.ttl> .

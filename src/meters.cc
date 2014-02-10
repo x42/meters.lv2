@@ -538,6 +538,8 @@ lv2_descriptor(uint32_t index)
 	case 45: return &descriptorSpectrum2Gtk;
 	case 46: return &descriptorMultiPhase2;
 	case 47: return &descriptorMultiPhase2Gtk;
+	case 48: return &descriptorStereoScope;
+	case 49: return &descriptorStereoScopeGtk;
 	default: return NULL;
 	}
 }

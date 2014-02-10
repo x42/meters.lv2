@@ -30,6 +30,7 @@ LV2GTK3=goniometerUI_gtk
 LV2GTK4=dpmUI_gtk
 LV2GTK5=kmeterUI_gtk
 LV2GTK6=phasewheelUI_gtk
+LV2GTK7=stereoscopeUI_gtk
 
 LV2GUI1=needleUI_gl
 LV2GUI2=eburUI_gl
@@ -37,6 +38,7 @@ LV2GUI3=goniometerUI_gl
 LV2GUI4=dpmUI_gl
 LV2GUI5=kmeterUI_gl
 LV2GUI6=phasewheelUI_gl
+LV2GUI7=stereoscopeUI_gl
 
 MTRGUI=mtr:needle
 EBUGUI=mtr:eburui
@@ -44,6 +46,7 @@ GONGUI=mtr:goniometerui
 DPMGUI=mtr:dpmui
 KMRGUI=mtr:kmeterui
 MPWGUI=mtr:phasewheelui
+SFSGUI=mtr:stereoscopeui
 
 ###############################################################################
 
@@ -95,6 +98,7 @@ targets+=$(BUILDDIR)$(LV2GUI3)$(LIB_EXT)
 targets+=$(BUILDDIR)$(LV2GUI4)$(LIB_EXT)
 targets+=$(BUILDDIR)$(LV2GUI5)$(LIB_EXT)
 targets+=$(BUILDDIR)$(LV2GUI6)$(LIB_EXT)
+targets+=$(BUILDDIR)$(LV2GUI7)$(LIB_EXT)
 endif
 
 ifneq ($(BUILDGTK), no)
@@ -104,6 +108,7 @@ targets+=$(BUILDDIR)$(LV2GTK3)$(LIB_EXT)
 targets+=$(BUILDDIR)$(LV2GTK4)$(LIB_EXT)
 targets+=$(BUILDDIR)$(LV2GTK5)$(LIB_EXT)
 targets+=$(BUILDDIR)$(LV2GTK6)$(LIB_EXT)
+targets+=$(BUILDDIR)$(LV2GTK7)$(LIB_EXT)
 endif
 
 ###############################################################################
@@ -178,6 +183,7 @@ goniometer_UIDEP=zita-resampler/resampler.cc zita-resampler/resampler-table.cc
 goniometer_UISRC=zita-resampler/resampler.cc zita-resampler/resampler-table.cc -DTHREADSYNC
 
 phasewheel_UISRC=`pkg-config --cflags --libs fftw3f`
+stereoscope_UISRC=`pkg-config --cflags --libs fftw3f`
 
 ###############################################################################
 # build target definitions
@@ -205,13 +211,13 @@ $(BUILDDIR)manifest.ttl: lv2ttl/manifest.gui.ttl.in lv2ttl/manifest.gtk.ttl.in l
 ifneq ($(BUILDOPENGL), no)
 	sed "s/@LV2NAME@/$(LV2NAME)/g;s/@LIB_EXT@/$(LIB_EXT)/g;s/@URI_SUFFIX@//g" \
 	    lv2ttl/manifest.lv2.ttl.in >> $(BUILDDIR)manifest.ttl
-	sed "s/@LV2NAME@/$(LV2NAME)/g;s/@LIB_EXT@/$(LIB_EXT)/g;s/@UI_TYPE@/$(UI_TYPE)/;s/@LV2GUI1@/$(LV2GUI1)/g;s/@LV2GUI2@/$(LV2GUI2)/g;s/@LV2GUI3@/$(LV2GUI3)/g;s/@LV2GUI4@/$(LV2GUI4)/g;s/@LV2GUI5@/$(LV2GUI5)/g;s/@LV2GUI6@/$(LV2GUI6)/g" \
+	sed "s/@LV2NAME@/$(LV2NAME)/g;s/@LIB_EXT@/$(LIB_EXT)/g;s/@UI_TYPE@/$(UI_TYPE)/;s/@LV2GUI1@/$(LV2GUI1)/g;s/@LV2GUI2@/$(LV2GUI2)/g;s/@LV2GUI3@/$(LV2GUI3)/g;s/@LV2GUI4@/$(LV2GUI4)/g;s/@LV2GUI5@/$(LV2GUI5)/g;s/@LV2GUI6@/$(LV2GUI6)/g;s/@LV2GUI7@/$(LV2GUI7)/g" \
 	    lv2ttl/manifest.gui.ttl.in >> $(BUILDDIR)manifest.ttl
 endif
 ifneq ($(BUILDGTK), no)
 	sed "s/@LV2NAME@/$(LV2NAME)/g;s/@LIB_EXT@/$(LIB_EXT)/g;s/@URI_SUFFIX@/_gtk/g" \
 	    lv2ttl/manifest.lv2.ttl.in >> $(BUILDDIR)manifest.ttl
-	sed "s/@LV2NAME@/$(LV2NAME)/g;s/@LIB_EXT@/$(LIB_EXT)/g;s/@LV2GTK1@/$(LV2GTK1)/g;s/@LV2GTK2@/$(LV2GTK2)/g;s/@LV2GTK3@/$(LV2GTK3)/g;s/@LV2GTK4@/$(LV2GTK4)/g;s/@LV2GTK5@/$(LV2GTK5)/g;s/@LV2GTK6@/$(LV2GTK6)/g" \
+	sed "s/@LV2NAME@/$(LV2NAME)/g;s/@LIB_EXT@/$(LIB_EXT)/g;s/@LV2GTK1@/$(LV2GTK1)/g;s/@LV2GTK2@/$(LV2GTK2)/g;s/@LV2GTK3@/$(LV2GTK3)/g;s/@LV2GTK4@/$(LV2GTK4)/g;s/@LV2GTK5@/$(LV2GTK5)/g;s/@LV2GTK6@/$(LV2GTK6)/g;s/@LV2GTK7@/$(LV2GTK7)/g" \
 	    lv2ttl/manifest.gtk.ttl.in >> $(BUILDDIR)manifest.ttl
 endif
 
@@ -226,11 +232,11 @@ endif
 ifneq ($(BUILDOPENGL), no)
 	sed "s/@UI_URI_SUFFIX@/_gl/;s/@UI_TYPE@/$(UI_TYPE)/;s/@UI_REQ@/$(LV2UIREQ)/" \
 	    lv2ttl/$(LV2NAME).gui.ttl.in >> $(BUILDDIR)$(LV2NAME).ttl
-	sed "s/@URI_SUFFIX@//g;s/@NAME_SUFFIX@//g;s/@DPMGUI@/$(DPMGUI)_gl/g;s/@EBUGUI@/$(EBUGUI)_gl/g;s/@GONGUI@/$(GONGUI)_gl/g;s/@MTRGUI@/$(MTRGUI)_gl/g;s/@KMRGUI@/$(KMRGUI)_gl/g;s/@MPWGUI@/$(MPWGUI)_gl/g" \
+	sed "s/@URI_SUFFIX@//g;s/@NAME_SUFFIX@//g;s/@DPMGUI@/$(DPMGUI)_gl/g;s/@EBUGUI@/$(EBUGUI)_gl/g;s/@GONGUI@/$(GONGUI)_gl/g;s/@MTRGUI@/$(MTRGUI)_gl/g;s/@KMRGUI@/$(KMRGUI)_gl/g;s/@MPWGUI@/$(MPWGUI)_gl/g;s/@SFSGUI@/$(SFSGUI)_gl/g" \
 	  lv2ttl/$(LV2NAME).lv2.ttl.in >> $(BUILDDIR)$(LV2NAME).ttl
 endif
 ifneq ($(BUILDGTK), no)
-	sed "s/@URI_SUFFIX@/_gtk/g;s/@NAME_SUFFIX@/ GTK/g;s/@DPMGUI@/$(DPMGUI)_gtk/g;s/@EBUGUI@/$(EBUGUI)_gtk/g;s/@GONGUI@/$(GONGUI)_gtk/g;s/@MTRGUI@/$(MTRGUI)_gtk/g;s/@KMRGUI@/$(KMRGUI)_gtk/g;s/@MPWGUI@/$(MPWGUI)_gtk/g;" \
+	sed "s/@URI_SUFFIX@/_gtk/g;s/@NAME_SUFFIX@/ GTK/g;s/@DPMGUI@/$(DPMGUI)_gtk/g;s/@EBUGUI@/$(EBUGUI)_gtk/g;s/@GONGUI@/$(GONGUI)_gtk/g;s/@MTRGUI@/$(MTRGUI)_gtk/g;s/@KMRGUI@/$(KMRGUI)_gtk/g;s/@MPWGUI@/$(MPWGUI)_gtk/g;s/@SFSGUI@/$(SFSGUI)_gtk/g" \
 	  lv2ttl/$(LV2NAME).lv2.ttl.in >> $(BUILDDIR)$(LV2NAME).ttl
 endif
 
@@ -249,6 +255,7 @@ $(BUILDDIR)$(LV2GTK3)$(LIB_EXT): gui/goniometer.c src/goniometer.h \
 $(BUILDDIR)$(LV2GTK4)$(LIB_EXT): gui/dpm.c
 $(BUILDDIR)$(LV2GTK5)$(LIB_EXT): gui/kmeter.c
 $(BUILDDIR)$(LV2GTK6)$(LIB_EXT): gui/phasewheel.c src/uri2.h gui/fft.c
+$(BUILDDIR)$(LV2GTK7)$(LIB_EXT): gui/stereoscope.c src/uri2.h gui/fft.c
 
 $(BUILDDIR)$(LV2GUI1)$(LIB_EXT): $(UIIMGS) src/uris.h gui/needle.c gui/meterimage.c
 $(BUILDDIR)$(LV2GUI2)$(LIB_EXT): gui/ebur.c src/uris.h
@@ -257,6 +264,7 @@ $(BUILDDIR)$(LV2GUI3)$(LIB_EXT): gui/goniometer.c src/goniometer.h \
 $(BUILDDIR)$(LV2GUI4)$(LIB_EXT): gui/dpm.c
 $(BUILDDIR)$(LV2GUI5)$(LIB_EXT): gui/kmeter.c
 $(BUILDDIR)$(LV2GUI6)$(LIB_EXT): gui/phasewheel.c src/uri2.h gui/fft.c
+$(BUILDDIR)$(LV2GUI7)$(LIB_EXT): gui/stereoscope.c src/uri2.h gui/fft.c
 
 ###############################################################################
 # install/uninstall/clean target definitions
@@ -276,12 +284,14 @@ uninstall:
 	rm -f $(DESTDIR)$(LV2DIR)/$(BUNDLE)/$(LV2GUI4)$(LIB_EXT)
 	rm -f $(DESTDIR)$(LV2DIR)/$(BUNDLE)/$(LV2GUI5)$(LIB_EXT)
 	rm -f $(DESTDIR)$(LV2DIR)/$(BUNDLE)/$(LV2GUI6)$(LIB_EXT)
+	rm -f $(DESTDIR)$(LV2DIR)/$(BUNDLE)/$(LV2GUI7)$(LIB_EXT)
 	rm -f $(DESTDIR)$(LV2DIR)/$(BUNDLE)/$(LV2GTK1)$(LIB_EXT)
 	rm -f $(DESTDIR)$(LV2DIR)/$(BUNDLE)/$(LV2GTK2)$(LIB_EXT)
 	rm -f $(DESTDIR)$(LV2DIR)/$(BUNDLE)/$(LV2GTK3)$(LIB_EXT)
 	rm -f $(DESTDIR)$(LV2DIR)/$(BUNDLE)/$(LV2GTK4)$(LIB_EXT)
 	rm -f $(DESTDIR)$(LV2DIR)/$(BUNDLE)/$(LV2GTK5)$(LIB_EXT)
 	rm -f $(DESTDIR)$(LV2DIR)/$(BUNDLE)/$(LV2GTK6)$(LIB_EXT)
+	rm -f $(DESTDIR)$(LV2DIR)/$(BUNDLE)/$(LV2GTK7)$(LIB_EXT)
 	-rmdir $(DESTDIR)$(LV2DIR)/$(BUNDLE)
 
 clean:
@@ -292,7 +302,8 @@ clean:
 	  $(BUILDDIR)$(LV2GTK1)$(LIB_EXT) $(BUILDDIR)$(LV2GTK2)$(LIB_EXT) \
 	  $(BUILDDIR)$(LV2GTK3)$(LIB_EXT) $(BUILDDIR)$(LV2GTK4)$(LIB_EXT) \
 	  $(BUILDDIR)$(LV2GUI5)$(LIB_EXT) $(BUILDDIR)$(LV2GTK5)$(LIB_EXT) \
-	  $(BUILDDIR)$(LV2GUI6)$(LIB_EXT) $(BUILDDIR)$(LV2GTK6)$(LIB_EXT)
+	  $(BUILDDIR)$(LV2GUI6)$(LIB_EXT) $(BUILDDIR)$(LV2GTK6)$(LIB_EXT) \
+	  $(BUILDDIR)$(LV2GUI7)$(LIB_EXT) $(BUILDDIR)$(LV2GTK7)$(LIB_EXT)
 	rm -rf $(BUILDDIR)*.dSYM
 	-test -d $(BUILDDIR) && rmdir $(BUILDDIR) || true
 

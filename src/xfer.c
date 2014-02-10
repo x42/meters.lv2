@@ -93,6 +93,11 @@ xfer_instantiate(const LV2_Descriptor*    descriptor,
 		self->n_channels = 2;
 		self->stcor = new Stcorrdsp();
 		self->stcor->init(rate, 2e3f, 0.3f);
+	} else
+		if (!strcmp(descriptor->URI, MTR_URI "stereoscope")
+			|| !strcmp(descriptor->URI, MTR_URI "stereoscope_gtk"))
+	{
+		self->n_channels = 2;
 	} else {
 		free(self);
 		return NULL;
@@ -291,3 +296,5 @@ static const LV2_Descriptor descriptor ## ID = { \
 
 MXFERDESC(MultiPhase2, "phasewheel");
 MXFERDESC(MultiPhase2Gtk, "phasewheel_gtk");
+MXFERDESC(StereoScope, "stereoscope");
+MXFERDESC(StereoScopeGtk, "stereoscope_gtk");
