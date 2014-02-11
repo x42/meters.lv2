@@ -42,7 +42,7 @@ mtr:phasewheelui@UI_URI_SUFFIX@
 	]
 	.
 
-mtr:stereoscope@UI_URI_SUFFIX@
+mtr:stereoscopeui@UI_URI_SUFFIX@
 	a @UI_TYPE@;
 	@UI_REQ@
 	lv2:requiredFeature urid:map ;
