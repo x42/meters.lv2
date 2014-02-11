@@ -62,6 +62,7 @@
 
 typedef struct {
 	LV2_URID atom_Blank;
+	LV2_URID atom_Object;
 	LV2_URID atom_Int;
 	LV2_URID atom_Long;
 	LV2_URID atom_Float;
@@ -126,6 +127,7 @@ static inline void
 map_eburlv2_uris(LV2_URID_Map* map, EBULV2URIs* uris)
 {
 	uris->atom_Blank         = map->map(map->handle, LV2_ATOM__Blank);
+	uris->atom_Object        = map->map(map->handle, LV2_ATOM__Object);
 	uris->atom_Int           = map->map(map->handle, LV2_ATOM__Int);
 	uris->atom_Long          = map->map(map->handle, LV2_ATOM__Long);
 	uris->atom_Float         = map->map(map->handle, LV2_ATOM__Float);

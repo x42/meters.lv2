@@ -249,7 +249,7 @@ ebur128_run(LV2_Handle instance, uint32_t n_samples)
 	if (self->control) {
 		LV2_Atom_Event* ev = lv2_atom_sequence_begin(&(self->control)->body);
 		while(!lv2_atom_sequence_is_end(&(self->control)->body, (self->control)->atom.size, ev)) {
-			if (ev->body.type == self->uris.atom_Blank) {
+			if (ev->body.type == self->uris.atom_Blank || ev->body.type == self->uris.atom_Object) {
 				const LV2_Atom_Object* obj = (LV2_Atom_Object*)&ev->body;
 				if (obj->body.otype == self->uris.time_Position) {
 					update_position(self, obj);

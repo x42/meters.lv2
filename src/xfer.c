@@ -228,7 +228,7 @@ xfer_run(LV2_Handle handle, uint32_t n_samples)
 		/* for each message from UI... */
 		while(!lv2_atom_sequence_is_end(&(self->control)->body, (self->control)->atom.size, ev)) {
 			/* .. only look at atom-events.. */
-			if (ev->body.type == self->uris.atom_Blank) {
+			if (ev->body.type == self->uris.atom_Blank || ev->body.type == self->uris.atom_Object) {
 				const LV2_Atom_Object* obj = (LV2_Atom_Object*)&ev->body;
 				/* interpret atom-objects: */
 				if (obj->body.otype == self->uris.ui_on) {
