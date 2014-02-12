@@ -501,7 +501,7 @@ static inline void draw_point(cairo_t *cr,
 		const float ccc, const float dist, float phase)
 {
 		float clr[3];
-		hsl2rgb(clr, .75 - .8 * pk, .9, .2 + pk * .4);
+		hsl2rgb(clr, .70 - .72 * pk, .9, .2 + pk * .4);
 
 		cairo_set_line_width (cr, PH_POINT);
 		cairo_set_source_rgba(cr, clr[0], clr[1], clr[2], 0.6 + pk * .4);

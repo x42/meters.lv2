@@ -346,7 +346,7 @@ static void plot_data_fft(SFSUI* ui) {
 		const float a_lr = ui->lr[i];
 
 		float clr[3];
-		hsl2rgb(clr, .70 - .8 * pk, .9, .3 + pk * .4);
+		hsl2rgb(clr, .70 - .72 * pk, .9, .3 + pk * .4);
 		cairo_set_source_rgba(cr, clr[0], clr[1], clr[2], 0.05 + pk * .2);
 		cairo_set_line_width (cr, MAX(1.0, (y - y1)));
 
@@ -400,7 +400,7 @@ static void plot_data_oct(SFSUI* ui) {
 		const float pk = a_level > 0.0 ? 1.0 : (80 + a_level) / 80.0;
 
 		float clr[3];
-		hsl2rgb(clr, .70 - .8 * pk, .9, .3 + pk * .4);
+		hsl2rgb(clr, .70 - .72 * pk, .9, .3 + pk * .4);
 		cairo_set_source_rgba(cr, clr[0], clr[1], clr[2], 0.8);
 
 		if (fabsf(a_lr -.5) < .05) {
