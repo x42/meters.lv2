@@ -54,7 +54,6 @@ typedef struct {
 	LV2UI_Controller     controller;
 
   RobWidget* m0;
-	RobTkScale* fader;
 
 	cairo_surface_t* sf[MAX_METERS];
 	cairo_surface_t* an[MAX_METERS];
