@@ -1,6 +1,6 @@
 /* FFT Phase-Wheel Display
  *
- * Copyright (C) 2013 Robin Gareus <robin@gareus.org>
+ * Copyright (C) 2013-2014 Robin Gareus <robin@gareus.org>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,19 +16,48 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#define MTR_URI "http://gareus.org/oss/lv2/meters#"
-#define MTR_GUI "phasewheelui"
+/* various GUI pixel sizes */
 
-#define FFT_BINS_MAX 8192 // half of the FFT data-size
+#define PH_RAD   (160) ///< radius of main data display
+#define PH_POINT (3.0) ///< radius a single data point
 
-enum {
-	MF_PHASE = 6,
-	MF_GAIN,
-	MF_CUTOFF,
-	MF_FFT,
-	MF_BAND,
-	MF_NORM
-};
+#define XOFF 5
+#define YOFF 5
+
+/* alpha overlay [0..1]; 1.0: no persistence
+ *
+ * NB. Also change data-point's alpha accordingly in
+ * draw_point() to prevent stuck or overexposed pixels.
+ * FFT has more data-points than 1/octave mode.
+ */
+#define SCREEN_PERSIETSNCE_FFT (.20)
+#define SCREEN_PERSIETSNCE_FLT (.22)
+
+/* level range annotation */
+#define ANN_W (ui->width)
+#define ANN_H 32
+#define ANN_B 25 ///< offset from bottom
+
+/* phase correlation meter width/height */
+#define PC_BOUNDW ( 60.0f)
+#define PC_BOUNDH (ui->height)
+
+/* phase correlation meter inner sizes */
+#define PC_TOP       (  5.0f)
+#define PC_LEFT      ( 19.0f)
+#define PC_BLOCK     ( 10.0f)
+#define PC_WIDTH     ( 22.0f)
+#define PC_HEIGHT    (PC_BOUNDH - 2 * PC_TOP)
+#define PC_BLOCKSIZE (PC_HEIGHT - PC_BLOCK)
+
+static const float c_ann[4] = {0.5, 0.5, 0.5, 1.0}; // text annotation color
+static const float c_ahz[4] = {0.6, 0.6, 0.6, 0.5}; // frequency annotation
+static const float c_grd[4] = {0.4, 0.4, 0.4, 1.0}; // grid color
+
+
+/******************************************************************************
+ *
+ */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -46,30 +75,19 @@ enum {
 #define MAX(A,B) ( (A) > (B) ? (A) : (B) )
 #endif
 
+#define MTR_URI "http://gareus.org/oss/lv2/meters#"
+#define MTR_GUI "phasewheelui"
 
-/* various GUI pixel sizes */
+#define FFT_BINS_MAX 8192 // half of the FFT data-size
 
-#define PH_RAD 160
-
-#define XOFF 5
-#define YOFF 5
-
-#define ANN_H 32
-#define ANN_B 25
-
-#define PC_BOUNDW ( 60.0f)
-#define PC_BOUNDH (ui->height)
-
-#define PC_TOP    (  5.0f)
-#define PC_BLOCK  ( 10.0f)
-#define PC_LEFT   ( 19.0f)
-#define PC_WIDTH  ( 22.0f)
-#define PC_HEIGHT (PC_BOUNDH - 2 * PC_TOP)
-#define PC_BLOCKSIZE (PC_HEIGHT - PC_BLOCK)
-
-static const float c_ann[4] = {0.5, 0.5, 0.5, 1.0}; // text annotation color
-static const float c_ahz[4] = {0.6, 0.6, 0.6, 0.5}; // frequency annotation
-static const float c_grd[4] = {0.4, 0.4, 0.4, 1.0}; // grid color
+enum {
+	MF_PHASE = 6,
+	MF_GAIN,
+	MF_CUTOFF,
+	MF_FFT,
+	MF_BAND,
+	MF_NORM
+};
 
 
 typedef struct {
@@ -251,6 +269,7 @@ static void hsl2rgb(float c[3], const float hue, const float sat, const float lu
 	c[2] = rtk_hue2rgb(cp, cq, hue - 1.f/3.f);
 }
 
+/** prepare drawing surfaces, render fixed background */
 static void create_surfaces(MF2UI* ui) {
 	cairo_t* cr;
 	const double ccc = ui->width / 2.0 + .5;
@@ -325,6 +344,9 @@ static void create_surfaces(MF2UI* ui) {
 	cairo_destroy (cr);
 }
 
+/** draw frequency calibration circles
+ * and on screen annotations - sample-rate dependent
+ */
 static void update_grid(MF2UI* ui) {
 	const double ccc = ui->width / 2.0 + .5;
 	const double rad = (ui->width - XOFF) * .5;
@@ -347,15 +369,6 @@ static void update_grid(MF2UI* ui) {
 
 	CairoSetSouerceRGBA(c_grd);
 
-#define CIRC_ANN(FRQ, TXT) { \
-	const float dr = PH_RAD * fast_log10(1.0 + 2 * FRQ * ui->log_rate / ui->rate) / ui->log_base; \
-	cairo_arc (cr, ccc, ccc, dr, 0, 2.0 * M_PI); \
-	cairo_stroke(cr); \
-	const float px = ccc + dr * sinf(M_PI * -.75); \
-	const float py = ccc - dr * cosf(M_PI * -.75); \
-	write_text_full(cr, TXT, ui->font[0], px, py, M_PI * -.75, -2, c_ahz); \
-	}
-
 	float freq = 62.5;
 	while (freq < ui->rate / 2) {
 		char txt[16];
@@ -364,7 +377,16 @@ static void update_grid(MF2UI* ui) {
 		} else {
 			snprintf(txt, 16, "%d KHz", (int)ceil(freq/1000.f));
 		}
-		CIRC_ANN(freq, txt);
+
+		{
+			const float dr = PH_RAD * fast_log10(1.0 + 2 * freq * ui->log_rate / ui->rate) / ui->log_base;
+			cairo_arc (cr, ccc, ccc, dr, 0, 2.0 * M_PI);
+			cairo_stroke(cr);
+			const float px = ccc + dr * sinf(M_PI * -.75);
+			const float py = ccc - dr * cosf(M_PI * -.75);
+			write_text_full(cr, txt, ui->font[0], px, py, M_PI * -.75, -2, c_ahz);
+		}
+
 		freq *= 2.0;
 	}
 
@@ -395,6 +417,9 @@ static void update_grid(MF2UI* ui) {
 	cairo_destroy (cr);
 }
 
+/** draw level-range display
+ * depends on gain (dial) and cutoff
+ */
 static void update_annotations(MF2UI* ui) {
 	cairo_t* cr = cairo_create (ui->sf_gain);
 
@@ -402,7 +427,7 @@ static void update_annotations(MF2UI* ui) {
 	CairoSetSouerceRGBA(ui->c_bg);
 	cairo_fill (cr);
 
-	rounded_rectangle (cr, 3, 3 , ui->width - 6, ANN_H - 6, 6);
+	rounded_rectangle (cr, 3, 3 , ANN_W - 6, ANN_H - 6, 6);
 	if (ui->drag_cutoff_x >= 0 || ui->prelight_cutoff) {
 		cairo_set_source_rgba(cr, .15, .15, .15, 1.0);
 	} else {
@@ -413,12 +438,12 @@ static void update_annotations(MF2UI* ui) {
 	cairo_set_line_width (cr, 1.0);
 	const uint32_t mxw = ui->width - XOFF * 2 - 36;
 	const uint32_t mxo = XOFF + 18;
-	for (uint32_t i=0; i < mxw; ++i) {
 
+	for (uint32_t i=0; i < mxw; ++i) {
 		float pk = i / (float)mxw;
 
 		float clr[3];
-		hsl2rgb(clr, .75 - .8 * pk, .9, .2 + pk * .4);
+		hsl2rgb(clr, .70 - .72 * pk, .9, .2 + pk * .4);
 		cairo_set_source_rgba(cr, clr[0], clr[1], clr[2], 1.0);
 
 		cairo_move_to(cr, mxo + i + .5, ANN_B - 5);
@@ -428,12 +453,6 @@ static void update_annotations(MF2UI* ui) {
 
 	cairo_set_source_rgba(cr, .8, .8, .8, .8);
 
-#define DBTXT(DB, TXT) \
-	write_text_full(cr, TXT, ui->font[0], mxo + rint(mxw * (60.0 + DB) / 60.0), ANN_B - 14 , 0, 2, c_wht); \
-	cairo_move_to(cr, mxo + rint(mxw * (60.0 + DB) / 60.0) + .5, ANN_B - 7); \
-	cairo_line_to(cr, mxo + rint(mxw * (60.0 + DB) / 60.0) + .5, ANN_B); \
-	cairo_stroke(cr);
-
 	const float gain = robtk_dial_get_value(ui->gain);
 	for (int32_t db = -60; db <=0 ; db+= 10) {
 		char dbt[16];
@@ -442,9 +461,13 @@ static void update_annotations(MF2UI* ui) {
 		} else {
 			snprintf(dbt, 16, "%+.0fdB", (db - gain));
 		}
-		DBTXT(db, dbt)
+		write_text_full(cr, dbt, ui->font[0], mxo + rint(mxw * (60.0 + db) / 60.0), ANN_B - 14 , 0, 2, c_wht);
+		cairo_move_to(cr, mxo + rint(mxw * (60.0 + db) / 60.0) + .5, ANN_B - 7);
+		cairo_line_to(cr, mxo + rint(mxw * (60.0 + db) / 60.0) + .5, ANN_B);
+		cairo_stroke(cr);
 	}
 
+	/* black overlay above low-end cutoff */
 	if (ui->db_cutoff > -59) {
 		const float cox = rint(mxw * (ui->db_cutoff + 60.0)/ 60.0);
 		if (ui->drag_cutoff_x >= 0 || ui->prelight_cutoff) {
@@ -465,6 +488,13 @@ static void update_annotations(MF2UI* ui) {
 	cairo_destroy (cr);
 }
 
+/** draw a data-point
+ *
+ * @param pk level-peak, normalized 0..1 according to cutoff range + gain
+ * @param dx,dy  X,Y cartesian position
+ * @param ccc circle radius (optional, show spread if >0)
+ * @param dist, phase angular vector corresponding to X,Y (optional spread)
+ */
 static inline void draw_point(cairo_t *cr,
 		const float pk,
 		const float dx, const float dy,
@@ -473,7 +503,7 @@ static inline void draw_point(cairo_t *cr,
 		float clr[3];
 		hsl2rgb(clr, .75 - .8 * pk, .9, .2 + pk * .4);
 
-		cairo_set_line_width (cr, 3.0);
+		cairo_set_line_width (cr, PH_POINT);
 		cairo_set_source_rgba(cr, clr[0], clr[1], clr[2], 0.6 + pk * .4);
 		cairo_new_path (cr);
 		cairo_move_to(cr, dx, dy);
@@ -481,13 +511,13 @@ static inline void draw_point(cairo_t *cr,
 		if (ccc == 0) {
 			cairo_stroke_preserve(cr);
 			cairo_set_source_rgba(cr, clr[0], clr[1], clr[2], .1);
-			cairo_set_line_width (cr, 7.0);
+			cairo_set_line_width (cr, 2.f * PH_POINT + 1);
 		}
 		cairo_stroke(cr);
 
 		if (ccc > 0) {
 			const float dev = .01 * M_PI;
-			cairo_set_line_width(cr, 1.5);
+			cairo_set_line_width(cr, .5 * PH_POINT);
 			cairo_set_source_rgba(cr, clr[0], clr[1], clr[2], .1);
 			float pp = phase - .5 * M_PI;
 			cairo_arc (cr, ccc, ccc, dist, (pp-dev), (pp+dev));
@@ -495,6 +525,7 @@ static inline void draw_point(cairo_t *cr,
 		}
 }
 
+/* linear FFT data display */
 static void plot_data_fft(MF2UI* ui) {
 	cairo_t* cr;
 	const double ccc = ui->width / 2.0 + .5;
@@ -506,7 +537,7 @@ static void plot_data_fft(MF2UI* ui) {
 	cairo_clip_preserve (cr);
 
 	cairo_set_operator (cr, CAIRO_OPERATOR_OVER);
-	cairo_set_source_rgba(cr, 0, 0, 0, .20); // screen persistence
+	cairo_set_source_rgba(cr, 0, 0, 0, SCREEN_PERSIETSNCE_FFT);
 	cairo_fill(cr);
 	cairo_set_line_cap(cr, CAIRO_LINE_CAP_ROUND);
 	const float dnum = PH_RAD / ui->log_base;
@@ -526,6 +557,7 @@ static void plot_data_fft(MF2UI* ui) {
 	cairo_destroy (cr);
 }
 
+/* 1/Octave data display */
 static void plot_data_oct(MF2UI* ui) {
 	cairo_t* cr;
 	const double ccc = ui->width / 2.0 + .5;
@@ -537,7 +569,7 @@ static void plot_data_oct(MF2UI* ui) {
 	cairo_clip_preserve (cr);
 
 	cairo_set_operator (cr, CAIRO_OPERATOR_OVER);
-	cairo_set_source_rgba(cr, 0, 0, 0, .22); // screen persistence
+	cairo_set_source_rgba(cr, 0, 0, 0, SCREEN_PERSIETSNCE_FLT);
 	cairo_fill(cr);
 	cairo_set_line_cap(cr, CAIRO_LINE_CAP_ROUND);
 
@@ -585,6 +617,7 @@ static void plot_data_oct(MF2UI* ui) {
 	cairo_destroy (cr);
 }
 
+/* main drawing callback */
 static bool expose_event(RobWidget* handle, cairo_t* cr, cairo_rectangle_t *ev) {
 	MF2UI* ui = (MF2UI*)GET_HANDLE(handle);
 
@@ -615,6 +648,7 @@ static bool expose_event(RobWidget* handle, cairo_t* cr, cairo_rectangle_t *ev) 
 	return TRUE;
 }
 
+/* level range scale */
 static bool ga_expose_event(RobWidget* handle, cairo_t* cr, cairo_rectangle_t *ev) {
 	MF2UI* ui = (MF2UI*)GET_HANDLE(handle);
 
@@ -632,6 +666,7 @@ static bool ga_expose_event(RobWidget* handle, cairo_t* cr, cairo_rectangle_t *e
 	return TRUE;
 }
 
+/* stereo-phase correlation display */
 static bool pc_expose_event(RobWidget* handle, cairo_t* cr, cairo_rectangle_t *ev) {
 	MF2UI* ui = (MF2UI*)GET_HANDLE(handle);
 
@@ -673,7 +708,6 @@ static bool pc_expose_event(RobWidget* handle, cairo_t* cr, cairo_rectangle_t *e
 
 	/* annotations */
 	cairo_set_operator (cr, CAIRO_OPERATOR_SCREEN);
-	//CairoSetSouerceRGBA(c_grb);
 	CairoSetSouerceRGBA(c_grd);
 	cairo_set_line_width(cr, 1.0);
 
@@ -748,7 +782,7 @@ static void dial_annotation_db(RobTkDial * d, cairo_t *cr, void *data) {
 }
 
 /******************************************************************************
- * UI callbacks  - Range
+ * UI callbacks - Level Range Widget
  */
 
 static RobWidget* m2_mousedown(RobWidget* handle, RobTkBtnEvent *event) {
@@ -813,7 +847,7 @@ static void m2_leave(RobWidget *handle) {
 }
 
 /******************************************************************************
- * UI callbacks  - FFT Bins
+ * UI callbacks  - FFT Bins and buttons
  */
 
 static bool cb_set_fft (RobWidget* handle, void *data) {
@@ -847,6 +881,12 @@ static bool cb_set_norm (RobWidget* handle, void *data) {
  * widget hackery
  */
 
+static enum LVGLResize
+plugin_scale_mode(LV2UI_Handle handle)
+{
+	return LVGL_LAYOUT_TO_FIT;
+}
+
 static void
 size_request(RobWidget* handle, int *w, int *h) {
 	MF2UI* ui = (MF2UI*)GET_HANDLE(handle);
@@ -864,9 +904,13 @@ pc_size_request(RobWidget* handle, int *w, int *h) {
 static void
 ga_size_request(RobWidget* handle, int *w, int *h) {
 	MF2UI* ui = (MF2UI*)GET_HANDLE(handle);
-	*w = ui->width;
+	*w = ANN_W;
 	*h = ANN_H;
 }
+
+/******************************************************************************
+ * top-level widget layout and instantiation
+ */
 
 static RobWidget * toplevel(MF2UI* ui, void * const top)
 {
@@ -1047,12 +1091,6 @@ instantiate(
 	return ui;
 }
 
-static enum LVGLResize
-plugin_scale_mode(LV2UI_Handle handle)
-{
-	return LVGL_LAYOUT_TO_FIT;
-}
-
 static void
 cleanup(LV2UI_Handle handle)
 {
@@ -1120,7 +1158,6 @@ static void invalidate_pc(MF2UI* ui, const float val) {
 /******************************************************************************/
 
 static void process_audio(MF2UI* ui, const size_t n_elem, float const * const left, float const * const right) {
-	//if (pthread_mutex_trylock (&ui->fft_lock)) { return; }
 	pthread_mutex_lock(&ui->fft_lock);
 
 	fftx_run(ui->fa, n_elem, left);
@@ -1154,6 +1191,8 @@ static void process_audio(MF2UI* ui, const size_t n_elem, float const * const le
 	}
 	pthread_mutex_unlock(&ui->fft_lock);
 }
+
+/******************************************************************************/
 
 static void
 port_event(LV2UI_Handle handle,
