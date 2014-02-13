@@ -32,7 +32,7 @@
 #define GM_GIRTH  10.0f
 #define GM_WIDTH  (GM_GIRTH + GM_LEFT + GM_LEFT)
 #define MA_WIDTH  21.0f
-#define PK_WIDTH  26.0f
+#define PK_WIDTH  28.0f
 
 #define GM_HEIGHT (460.0f)
 #define GM_SCALE  (GM_HEIGHT - GM_TOP - GM_BOTTOM - 2.0)
