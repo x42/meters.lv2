@@ -512,7 +512,7 @@ static RobWidget * toplevel(SFSUI* ui, void * const top)
 
 	/* main drawing area */
 	ui->m0 = robwidget_new(ui);
-	ROBWIDGET_SETNAME(ui->m0, "mphase (m0)");
+	ROBWIDGET_SETNAME(ui->m0, "stsco (m0)");
 	robwidget_set_expose_event(ui->m0, expose_event);
 	robwidget_set_size_request(ui->m0, size_request);
 	rob_hbox_child_pack(ui->hbox1, ui->m0, FALSE, FALSE);
