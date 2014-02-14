@@ -52,3 +52,8 @@ mtr:stereoscopeui@UI_URI_SUFFIX@
 		ui:notifyType atom:Blank
 	]
 	.
+
+mtr:dr14meterui@UI_URI_SUFFIX@
+	a @UI_TYPE@;
+	@UI_REQ@
+	.

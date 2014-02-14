@@ -408,6 +408,7 @@ extension_data(const char* uri)
 #include "goniometerlv2.c"
 #include "spectrumlv2.c"
 #include "xfer.c"
+#include "dr14.c"
 
 #define mkdesc(ID, NAME, RUN) \
 static const LV2_Descriptor descriptor ## ID = { \
@@ -540,6 +541,10 @@ lv2_descriptor(uint32_t index)
 	case 47: return &descriptorMultiPhase2Gtk;
 	case 48: return &descriptorStereoScope;
 	case 49: return &descriptorStereoScopeGtk;
+	case 50: return &descriptorDR14_1;
+	case 51: return &descriptorDR14_1Gtk;
+	case 52: return &descriptorDR14_2;
+	case 53: return &descriptorDR14_2Gtk;
 	default: return NULL;
 	}
 }

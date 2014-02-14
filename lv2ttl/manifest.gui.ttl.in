@@ -34,3 +34,8 @@ mtr:stereoscopeui_gl
 	a @UI_TYPE@;
 	ui:binary <@LV2GUI7@@LIB_EXT@> ;
 	rdfs:seeAlso <@LV2NAME@.ttl> .
+
+mtr:dr14meterui_gl
+	a @UI_TYPE@;
+	ui:binary <@LV2GUI8@@LIB_EXT@> ;
+	rdfs:seeAlso <@LV2NAME@.ttl> .
