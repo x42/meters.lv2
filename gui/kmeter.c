@@ -59,6 +59,7 @@ typedef struct {
 	cairo_surface_t* an[MAX_METERS];
 	cairo_surface_t* ma[2];
 	cairo_pattern_t* mpat;
+	cairo_surface_t* lb[2];
 	PangoFontDescription *font;
 
 	float val[MAX_METERS];
@@ -77,6 +78,7 @@ typedef struct {
 	int  kstandard;
 	bool initialized;
 	bool reset_toggle;
+	bool dBFS;
 
 	int width;
 	int height;
@@ -259,6 +261,17 @@ static void write_text(
 	VAR = cairo_image_surface_create (CAIRO_FORMAT_RGB24, WIDTH, HEIGHT); \
 	cr = cairo_create (VAR);
 
+#define INIT_ANN_LB(VAR, WIDTH, HEIGHT) \
+	if (!VAR) \
+	VAR = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, WIDTH, HEIGHT); \
+	cr = cairo_create (VAR); \
+	cairo_set_operator (cr, CAIRO_OPERATOR_SOURCE); \
+	cairo_set_source_rgba(cr, .0, .0, .0, 0.0); \
+	cairo_rectangle (cr, 0, 0, WIDTH, HEIGHT); \
+	cairo_fill (cr); \
+	cairo_set_operator (cr, CAIRO_OPERATOR_OVER);
+
+
 #define INIT_BLACK_BG(VAR, WIDTH, HEIGHT) \
 	INIT_ANN_BG(VAR, WIDTH, HEIGHT) \
 	CairoSetSouerceRGBA(c_blk); \
@@ -268,6 +281,29 @@ static void write_text(
 static void create_metrics(KMUI* ui) {
 	cairo_t* cr;
 	PangoFontDescription *font = pango_font_description_from_string("Sans 6");
+
+	INIT_ANN_LB(ui->lb[0], ui->width, 20);
+	char kstd[10];
+	snprintf(kstd, 9, "K%d/RMS", ui->kstandard);
+	write_text(cr, kstd , font, ui->width - 3, 20, 4, c_blk);
+	cairo_destroy (cr);
+
+	INIT_ANN_LB(ui->lb[1], ui->width, 20);
+	if (ui->num_meters < 2) {
+		write_text(cr, "pe\nak" , font, 3, 12, 3, c_g90);
+		if (ui->dBFS)
+			write_text(cr, "dB\nFS" , font, ui->width - 3, 12, 1, c_g90);
+		else
+			write_text(cr, "dB" , font, ui->width - 3, 12, 1, c_g90);
+	} else {
+		write_text(cr, "peak" , font, 3, 12, 3, c_g90);
+		if (ui->dBFS)
+			write_text(cr, "dBFS" , font, ui->width - 3, 12, 1, c_g90);
+		else
+			write_text(cr, "dB " , font, ui->width - 3, 12, 1, c_g90);
+	}
+	cairo_destroy (cr);
+
 
 #define DO_THE_METER(DB, TXT) \
 	if (DB <= ui->kstandard) { \
@@ -305,10 +341,6 @@ static void create_metrics(KMUI* ui) {
 	cairo_rectangle (cr, 0, 0, MA_WIDTH, GM_HEIGHT);
 	cairo_fill (cr);
 	DO_THE_METRICS
-
-	char kstd[6];
-	snprintf(kstd, 5, "K%d", ui->kstandard);
-	write_text(cr, kstd , font, MA_WIDTH - 3, GM_HEIGHT, 4, c_blk);
 
 	cairo_destroy (cr);
 	pango_font_description_free(font);
@@ -474,17 +506,25 @@ static bool expose_event(RobWidget* handle, cairo_t* cr, cairo_rectangle_t *ev) 
 		cairo_stroke_preserve (cr);
 		cairo_clip (cr);
 
+
 		if (ui->peak_max > -90) {
+			const float peak_num = ui->dBFS ? ui->peak_max : ui->peak_max + ui->kstandard;
 			char buf[24];
-			if (ui->peak_max <= -10.0) {
-				sprintf(buf, "%.0f ", ui->peak_max);
+			if (fabsf(peak_num) >= 10.0) {
+				sprintf(buf, "%+.0f ", peak_num);
 			} else {
-				sprintf(buf, "%+.1f", ui->peak_max);
+				sprintf(buf, "%+.1f", peak_num);
 			}
 			write_text(cr, buf, ui->font, (ui->width + PK_WIDTH) / 2.0f - 4, GM_TOP/2, 1, c_g90);
 		}
 		cairo_restore(cr);
 	}
+
+	/* labels */
+	cairo_set_source_surface(cr, ui->lb[1], 0, 0);
+	cairo_paint (cr);
+	cairo_set_source_surface(cr, ui->lb[0], 0, GM_HEIGHT-20);
+	cairo_paint (cr);
 
 	return TRUE;
 }
@@ -495,6 +535,12 @@ static bool expose_event(RobWidget* handle, cairo_t* cr, cairo_rectangle_t *ev) 
 
 static RobWidget* cb_reset_peak (RobWidget* handle, RobTkBtnEvent *event) {
 	KMUI* ui = (KMUI*)GET_HANDLE(handle);
+	if (event->state & ROBTK_MOD_CTRL) {
+		ui->dBFS = !ui->dBFS;
+		ui->metrics_changed = true;
+		queue_draw(ui->m0);
+		return NULL;
+	}
 
 	ui->reset_toggle = !ui->reset_toggle;
 	float temp = ui->reset_toggle ? 1.0 : 0.0;
@@ -571,6 +617,7 @@ instantiate(
 	ui->c_bgr[2] = 93/255.0;
 	ui->c_bgr[3] = 1.0;
 
+	ui->dBFS = true;
 	ui->metrics_changed = true;
 
 	create_meter_pattern(ui);
@@ -612,6 +659,8 @@ cleanup(LV2UI_Handle handle)
 	cairo_pattern_destroy(ui->mpat);
 	cairo_surface_destroy(ui->ma[0]);
 	cairo_surface_destroy(ui->ma[1]);
+	cairo_surface_destroy(ui->lb[0]);
+	cairo_surface_destroy(ui->lb[1]);
 	pango_font_description_free(ui->font);
 
 	robwidget_destroy(ui->m0);
