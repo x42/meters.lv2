@@ -85,4 +85,5 @@ Screenshots
 ![screenshot](https://raw.github.com/x42/meters.lv2/master/doc/LV2meters.png "Various Needle Meters in Ardour")
 ![screenshot](https://raw.github.com/x42/meters.lv2/master/doc/spectr_and_goni.png "Spectum Analyzer and Stereo Phase Scope")
 ![screenshot](https://raw.github.com/x42/meters.lv2/master/doc/phasewheel.png "Phase/Frequency Wheel")
+![screenshot](https://raw.github.com/x42/meters.lv2/master/doc/dr14meter.png "DR14 Dynamic Range Meter (Pleasurize Music Foundation)")
 
