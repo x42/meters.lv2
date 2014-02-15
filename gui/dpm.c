@@ -99,7 +99,7 @@ typedef struct {
 	uint32_t num_meters;
 	bool display_freq;
 	bool reset_toggle;
-	bool initialized;
+	int  initialize;
 	bool metrics_changed;
 	bool show_peaks;
 	bool show_peaks_changed;
@@ -704,12 +704,12 @@ static RobWidget* cb_reset_peak (RobWidget* handle, RobTkBtnEvent *event) {
 		 * -- use unused reflevel in dBTP to notify plugin
 		 */
 		ui->reset_toggle = !ui->reset_toggle;
-		float temp = ui->reset_toggle ? 1.0 : 0.0;
+		float temp = ui->reset_toggle ? 1.0 : 2.0;
 		ui->write(ui->controller, 0, sizeof(float), 0, (const void*) &temp);
 	} else {
 		/* reset peak-hold in backend */
 		ui->reset_toggle = !ui->reset_toggle;
-		float temp = ui->reset_toggle ? 1.0 : 0.0;
+		float temp = ui->reset_toggle ? 1.0 : 2.0;
 		ui->write(ui->controller, 61, sizeof(float), 0, (const void*) &temp);
 	}
 	for (uint32_t i=0; i < ui->num_meters ; ++i) {
@@ -944,12 +944,12 @@ instantiate(
 
 	if (!ui->display_freq) {
 		/* dBTP run() re-sends peak-data */
-		ui->initialized = false;
+		ui->initialize = 0;
 		ui->reset_toggle = false;
 		float temp = -1;
 		ui->write(ui->controller, 0, sizeof(float), 0, (const void*) &temp);
 	} else {
-		ui->initialized = true;
+		ui->initialize = 2;
 	}
 
 	return ui;
@@ -1113,18 +1113,18 @@ static void handle_meter_connections(SAUI* ui, uint32_t port_index, float v) {
 	if (ui->num_meters == 1) {
 		if (port_index == 4) {
 			float np = ui->peak_val[0];
-			if (v > np)  { np = v; }
+			if (v != np)  { np = v; }
 			invalidate_meter(ui, 0, ui->val[0], np);
 		}
 	} else if (ui->num_meters == 2) {
 		if (port_index == 7) {
 			float np = ui->peak_val[0];
-			if (v > np)  { np = v; }
+			if (v != np)  { np = v; }
 			invalidate_meter(ui, 0, ui->val[0], np);
 		}
 		else if (port_index == 8) {
 			float np = ui->peak_val[1];
-			if (v > np)  { np = v; }
+			if (v != np)  { np = v; }
 			invalidate_meter(ui, 1, ui->val[1], np);
 		}
 	}
@@ -1140,11 +1140,18 @@ port_event(LV2UI_Handle handle,
 	SAUI* ui = (SAUI*)handle;
 	if (format != 0) return;
 
-	if (!ui->initialized && port_index != 0) {
-		ui->initialized = true;
-		float temp = -2;
+	if (port_index == 0) {
+		if (ui->initialize == 0) {
+			ui->initialize = 1;
+			float temp = -3;
+			ui->write(ui->controller, 0, sizeof(float), 0, (const void*) &temp);
+		}
+	} else if (ui->initialize == 1) {
+		ui->initialize = 2;
+		float temp = -4;
 		ui->write(ui->controller, 0, sizeof(float), 0, (const void*) &temp);
 	}
+
 	if (ui->display_freq) {
 		handle_spectrum_connections(ui, port_index, *(float *)buffer);
 	} else {

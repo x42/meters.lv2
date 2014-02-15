@@ -65,7 +65,7 @@ typedef struct {
 	float* peak[2];
 	float* hold;
 
-	int chn;
+	uint32_t chn;
 	float peak_max[2];
 	float peak_hold;
 
@@ -208,8 +208,7 @@ run(LV2_Handle instance, uint32_t n_samples)
 		self->rlgain = powf (10.0f, 0.05f * (self->p_refl + 18.0));
 	}
 
-	int c;
-	for (c = 0; c < self->chn; ++c) {
+	for (uint32_t c = 0; c < self->chn; ++c) {
 
 		float* const input  = self->input[c];
 		float* const output = self->output[c];
@@ -234,20 +233,24 @@ kmeter_run(LV2_Handle instance, uint32_t n_samples)
 	/* re-use port 0 to request/notify UI about
 	 * peak values - force change to ports */
 	if (self->p_refl != *self->reflvl) {
-		if (*self->reflvl >= 0) {
+
+		/* reset peak-hold */
+		if (fabsf(*self->reflvl) < 3) {
 			self->peak_hold = 0;
 			reinit_gui = true;
+			for (uint32_t c = 0; c < self->chn; ++c) {
+				self->mtr[c]->reset();
+			}
 		}
-
-		if (*self->reflvl == -1) {
+		/* re-notify UI, until UI acknowledges */
+		if (fabsf(*self->reflvl) == 3) {
 			reinit_gui = true;
 		} else {
 			self->p_refl = *self->reflvl;
 		}
 	}
 
-	int c;
-	for (c = 0; c < self->chn; ++c) {
+	for (uint32_t c = 0; c < self->chn; ++c) {
 
 		float* const input  = self->input[c];
 		float* const output = self->output[c];
@@ -297,7 +300,7 @@ static void
 cleanup(LV2_Handle instance)
 {
 	LV2meter* self = (LV2meter*)instance;
-	for (int c = 0; c < self->chn; ++c) {
+	for (uint32_t c = 0; c < self->chn; ++c) {
 		delete self->mtr[c];
 	}
 	free(instance);
@@ -312,19 +315,24 @@ dbtp_run(LV2_Handle instance, uint32_t n_samples)
 	/* re-use port 0 to request/notify UI about
 	 * peak values - force change to ports */
 	if (self->p_refl != *self->reflvl) {
-		if (*self->reflvl >= 0) {
+		/* reset peak-hold */
+		if (fabsf(*self->reflvl) < 3) {
+			reinit_gui = true;
 			self->peak_max[0] = 0;
 			self->peak_max[1] = 0;
+			for (uint32_t c = 0; c < self->chn; ++c) {
+				self->mtr[c]->reset();
+			}
 		}
-		if (*self->reflvl == -1) {
+		/* re-notify UI, until UI acknowledges */
+		if (fabsf(*self->reflvl) == 3) {
 			reinit_gui = true;
 		} else {
 			self->p_refl = *self->reflvl;
 		}
 	}
 
-	int c;
-	for (c = 0; c < self->chn; ++c) {
+	for (uint32_t c = 0; c < self->chn; ++c) {
 
 		float* const input  = self->input[c];
 		float* const output = self->output[c];

@@ -25,6 +25,7 @@ namespace LV2M {
 
 TruePeakdsp::TruePeakdsp (void)
 	: _m (0)
+	, _p (0)
 	, _res (true)
 	, _buf (NULL)
 {
@@ -125,15 +126,22 @@ void TruePeakdsp::process_max (float *p, int n)
 
 float TruePeakdsp::read (void)
 {
-    _res = true;
-    return _m;
+	_res = true;
+	return _m;
 }
 
 void TruePeakdsp::read (float &m, float &p)
 {
-    _res = true;
-		m = _m;
-		p = _p;
+	_res = true;
+	m = _m;
+	p = _p;
+}
+
+void TruePeakdsp::reset ()
+{
+	_res = true;
+	_m = 0;
+	_p = 0;
 }
 
 

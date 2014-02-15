@@ -1948,9 +1948,9 @@ mtr:dBTPmono@URI_SUFFIX@
 		lv2:index 0 ;
 		lv2:symbol "ref" ;
 		lv2:name "ui notification" ;
-		lv2:default -3.0 ;
+		lv2:default -4.0 ;
 		lv2:minimum -4.0 ;
-		lv2:maximum 0.0 ;
+		lv2:maximum  4.0 ;
 		lv2:portProperty pprop:notOnGUI ;
 	] , [
 		a lv2:AudioPort ,
@@ -2000,9 +2000,9 @@ mtr:dBTPstereo@URI_SUFFIX@
 		lv2:index 0 ;
 		lv2:symbol "ref" ;
 		lv2:name "ui notification" ;
-		lv2:default -3.0 ;
+		lv2:default -4.0 ;
 		lv2:minimum -4.0 ;
-		lv2:maximum 0.0 ;
+		lv2:maximum  4.0 ;
 		lv2:portProperty pprop:notOnGUI ;
 	] , [
 		a lv2:AudioPort ,
@@ -2084,9 +2084,9 @@ mtr:K12mono@URI_SUFFIX@
 		lv2:index 0 ;
 		lv2:symbol "ref" ;
 		lv2:name "ui notification" ;
-		lv2:default -3.0 ;
+		lv2:default -4.0 ;
 		lv2:minimum -4.0 ;
-		lv2:maximum 0.0 ;
+		lv2:maximum  4.0 ;
 		lv2:portProperty pprop:notOnGUI ;
 	] , [
 		a lv2:AudioPort ,
@@ -2146,9 +2146,9 @@ mtr:K12stereo@URI_SUFFIX@
 		lv2:index 0 ;
 		lv2:symbol "ref" ;
 		lv2:name "ui notification" ;
-		lv2:default -3.0 ;
+		lv2:default -4.0 ;
 		lv2:minimum -4.0 ;
-		lv2:maximum 0.0 ;
+		lv2:maximum  4.0 ;
 		lv2:portProperty pprop:notOnGUI ;
 	] , [
 		a lv2:AudioPort ,
@@ -2240,9 +2240,9 @@ mtr:K14mono@URI_SUFFIX@
 		lv2:index 0 ;
 		lv2:symbol "ref" ;
 		lv2:name "ui notification" ;
-		lv2:default -3.0 ;
+		lv2:default -4.0 ;
 		lv2:minimum -4.0 ;
-		lv2:maximum 0.0 ;
+		lv2:maximum  4.0 ;
 		lv2:portProperty pprop:notOnGUI ;
 	] , [
 		a lv2:AudioPort ,
@@ -2302,9 +2302,9 @@ mtr:K14stereo@URI_SUFFIX@
 		lv2:index 0 ;
 		lv2:symbol "ref" ;
 		lv2:name "ui notification" ;
-		lv2:default -3.0 ;
+		lv2:default -4.0 ;
 		lv2:minimum -4.0 ;
-		lv2:maximum 0.0 ;
+		lv2:maximum  4.0 ;
 		lv2:portProperty pprop:notOnGUI ;
 	] , [
 		a lv2:AudioPort ,
@@ -2396,9 +2396,9 @@ mtr:K20mono@URI_SUFFIX@
 		lv2:index 0 ;
 		lv2:symbol "ref" ;
 		lv2:name "ui notification" ;
-		lv2:default -3.0 ;
+		lv2:default -4.0 ;
 		lv2:minimum -4.0 ;
-		lv2:maximum 0.0 ;
+		lv2:maximum  4.0 ;
 		lv2:portProperty pprop:notOnGUI ;
 	] , [
 		a lv2:AudioPort ,
@@ -2458,9 +2458,9 @@ mtr:K20stereo@URI_SUFFIX@
 		lv2:index 0 ;
 		lv2:symbol "ref" ;
 		lv2:name "ui notification" ;
-		lv2:default -3.0 ;
+		lv2:default -4.0 ;
 		lv2:minimum -4.0 ;
-		lv2:maximum 0.0 ;
+		lv2:maximum  4.0 ;
 		lv2:portProperty pprop:notOnGUI ;
 	] , [
 		a lv2:AudioPort ,

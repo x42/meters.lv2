@@ -72,11 +72,10 @@ typedef struct {
 	float peak_max;
 
 	uint32_t num_meters;
-	//bool reset_toggle;
 	bool metrics_changed;
 
 	int  kstandard;
-	bool initialized;
+	int  initialize;
 	bool reset_toggle;
 	bool dBFS;
 
@@ -506,17 +505,18 @@ static bool expose_event(RobWidget* handle, cairo_t* cr, cairo_rectangle_t *ev) 
 		cairo_stroke_preserve (cr);
 		cairo_clip (cr);
 
-
-		if (ui->peak_max > -90) {
-			const float peak_num = ui->dBFS ? ui->peak_max : ui->peak_max + ui->kstandard;
-			char buf[24];
-			if (fabsf(peak_num) >= 10.0) {
-				sprintf(buf, "%+.0f ", peak_num);
-			} else {
-				sprintf(buf, "%+.1f", peak_num);
-			}
-			write_text(cr, buf, ui->font, (ui->width + PK_WIDTH) / 2.0f - 4, GM_TOP/2, 1, c_g90);
+		const float peak_num = ui->dBFS ? ui->peak_max : ui->peak_max + ui->kstandard;
+		char buf[24];
+		if (ui->peak_max > 99) {
+			sprintf(buf, "++++");
+		} else if (ui->peak_max <= -90) {
+			sprintf(buf, " -\u221E ");
+		} else if (fabsf(peak_num) > 9.94) {
+			sprintf(buf, "%+.0f ", peak_num);
+		} else {
+			sprintf(buf, "%+.1f", peak_num);
 		}
+		write_text(cr, buf, ui->font, (ui->width + PK_WIDTH) / 2.0f - 4, GM_TOP/2, 1, c_g90);
 		cairo_restore(cr);
 	}
 
@@ -539,11 +539,14 @@ static RobWidget* cb_reset_peak (RobWidget* handle, RobTkBtnEvent *event) {
 		ui->dBFS = !ui->dBFS;
 		ui->metrics_changed = true;
 		queue_draw(ui->m0);
+		float temp = (ui->dBFS) ? -4 : 4;
+		ui->write(ui->controller, 0, sizeof(float), 0, (const void*) &temp);
 		return NULL;
 	}
 
 	ui->reset_toggle = !ui->reset_toggle;
-	float temp = ui->reset_toggle ? 1.0 : 0.0;
+	float temp = ui->reset_toggle ? 1.0 : 2.0;
+	if (ui->dBFS) temp *= -1;
 	ui->write(ui->controller, 0, sizeof(float), 0, (const void*) &temp);
 	return NULL;
 }
@@ -636,7 +639,7 @@ instantiate(
 
 	*widget = toplevel(ui, ui_toplevel);
 
-	ui->initialized = false;
+	ui->initialize = 0;
 	ui->reset_toggle = false;
 
 	return ui;
@@ -774,14 +777,22 @@ port_event(LV2UI_Handle handle,
 	KMUI* ui = (KMUI*)handle;
 	if (format != 0) return;
 
-	if (!ui->initialized && port_index == 0 && *(float *)buffer != -1) {
-		float temp = -1;
-		ui->write(ui->controller, 0, sizeof(float), 0, (const void*) &temp);
-	}
-	else if (!ui->initialized && port_index != 0) {
-		ui->initialized = true;
-		float temp = -2;
-		ui->write(ui->controller, 0, sizeof(float), 0, (const void*) &temp);
+	if (port_index == 0) {
+		int val = *(float *)buffer;
+		/* re-request peak-value from backend */
+		if (ui->initialize == 0) {
+			ui->initialize = 1;
+			if ((val < 0) ^ ui->dBFS) {
+				ui->metrics_changed = true;
+			}
+			float temp = (val < 0) ? -3 : 3;
+			ui->write(ui->controller, 0, sizeof(float), 0, (const void*) &temp);
+		}
+		ui->dBFS = (val < 0);
+	} else if (ui->initialize == 1) {
+			ui->initialize = 2;
+			float temp = (ui->dBFS) ? -4 : 4;
+			ui->write(ui->controller, 0, sizeof(float), 0, (const void*) &temp);
 	}
 
 	handle_meter_connections(ui, port_index, *(float *)buffer);

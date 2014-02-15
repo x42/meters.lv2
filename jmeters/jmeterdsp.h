@@ -27,6 +27,7 @@ public:
 
     virtual void process (float *p, int n) = 0;
     virtual float read (void) = 0;
+    virtual void reset (void) {};
 };
 
 #endif
