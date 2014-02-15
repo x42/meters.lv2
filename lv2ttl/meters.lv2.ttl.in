@@ -35,7 +35,6 @@ mtr:VUmono@URI_SUFFIX@
 		lv2:index 3 ;
 		lv2:symbol "level1" ;
 		lv2:name "Level1" ;
-		lv2:default 0.0 ;
 		lv2:minimum 0.0 ;
 		lv2:maximum 1.0 ;
 	] ;
@@ -77,7 +76,6 @@ mtr:VUstereo@URI_SUFFIX@
 		lv2:index 3 ;
 		lv2:symbol "levelL" ;
 		lv2:name "LevelL" ;
-		lv2:default 0.0 ;
 		lv2:minimum 0.0 ;
 		lv2:maximum 1.0 ;
 	] , [
@@ -98,7 +96,6 @@ mtr:VUstereo@URI_SUFFIX@
 		lv2:index 6 ;
 		lv2:symbol "levelR" ;
 		lv2:name "LevelR" ;
-		lv2:default 0.0 ;
 		lv2:minimum 0.0 ;
 		lv2:maximum 1.0 ;
 	] ;
@@ -141,7 +138,6 @@ mtr:BBCmono@URI_SUFFIX@
 		lv2:index 3 ;
 		lv2:symbol "level1" ;
 		lv2:name "Level 1" ;
-		lv2:default 0.0 ;
 		lv2:minimum 0.0 ;
 		lv2:maximum 1.0 ;
 	] ;
@@ -183,7 +179,6 @@ mtr:BBCstereo@URI_SUFFIX@
 		lv2:index 3 ;
 		lv2:symbol "levelL" ;
 		lv2:name "LevelL" ;
-		lv2:default 0.0 ;
 		lv2:minimum 0.0 ;
 		lv2:maximum 1.0 ;
 	] , [
@@ -204,7 +199,6 @@ mtr:BBCstereo@URI_SUFFIX@
 		lv2:index 6 ;
 		lv2:symbol "levelR" ;
 		lv2:name "LevelR" ;
-		lv2:default 0.0 ;
 		lv2:minimum 0.0 ;
 		lv2:maximum 1.0 ;
 	] ;
@@ -247,7 +241,6 @@ mtr:EBUmono@URI_SUFFIX@
 		lv2:index 3 ;
 		lv2:symbol "level1" ;
 		lv2:name "Level 1" ;
-		lv2:default 0.0 ;
 		lv2:minimum 0.0 ;
 		lv2:maximum 1.0 ;
 	] ;
@@ -289,7 +282,6 @@ mtr:EBUstereo@URI_SUFFIX@
 		lv2:index 3 ;
 		lv2:symbol "levelL" ;
 		lv2:name "LevelL" ;
-		lv2:default 0.0 ;
 		lv2:minimum 0.0 ;
 		lv2:maximum 1.0 ;
 	] , [
@@ -310,7 +302,6 @@ mtr:EBUstereo@URI_SUFFIX@
 		lv2:index 6 ;
 		lv2:symbol "levelR" ;
 		lv2:name "LevelR" ;
-		lv2:default 0.0 ;
 		lv2:minimum 0.0 ;
 		lv2:maximum 1.0 ;
 	] ;
@@ -353,7 +344,6 @@ mtr:DINmono@URI_SUFFIX@
 		lv2:index 3 ;
 		lv2:symbol "level1" ;
 		lv2:name "Level 1" ;
-		lv2:default 0.0 ;
 		lv2:minimum 0.0 ;
 		lv2:maximum 1.0 ;
 	] ;
@@ -395,7 +385,6 @@ mtr:DINstereo@URI_SUFFIX@
 		lv2:index 3 ;
 		lv2:symbol "levelL" ;
 		lv2:name "LevelL" ;
-		lv2:default 0.0 ;
 		lv2:minimum 0.0 ;
 		lv2:maximum 1.0 ;
 	] , [
@@ -416,7 +405,6 @@ mtr:DINstereo@URI_SUFFIX@
 		lv2:index 6 ;
 		lv2:symbol "levelR" ;
 		lv2:name "LevelR" ;
-		lv2:default 0.0 ;
 		lv2:minimum 0.0 ;
 		lv2:maximum 1.0 ;
 	] ;
@@ -459,7 +447,6 @@ mtr:NORmono@URI_SUFFIX@
 		lv2:index 3 ;
 		lv2:symbol "level1" ;
 		lv2:name "Level 1" ;
-		lv2:default 0.0 ;
 		lv2:minimum 0.0 ;
 		lv2:maximum 1.0 ;
 	] ;
@@ -501,7 +488,6 @@ mtr:NORstereo@URI_SUFFIX@
 		lv2:index 3 ;
 		lv2:symbol "levelL" ;
 		lv2:name "LevelL" ;
-		lv2:default 0.0 ;
 		lv2:minimum 0.0 ;
 		lv2:maximum 1.0 ;
 	] , [
@@ -522,7 +508,6 @@ mtr:NORstereo@URI_SUFFIX@
 		lv2:index 6 ;
 		lv2:symbol "levelR" ;
 		lv2:name "LevelR" ;
-		lv2:default 0.0 ;
 		lv2:minimum 0.0 ;
 		lv2:maximum 1.0 ;
 	] ;
@@ -564,7 +549,6 @@ mtr:COR@URI_SUFFIX@
 		lv2:index 3 ;
 		lv2:symbol "levelL" ;
 		lv2:name "LevelL" ;
-		lv2:default 0.0 ;
 		lv2:minimum 0.0 ;
 		lv2:maximum 1.0 ;
 	] , [
@@ -696,7 +680,6 @@ mtr:goniometer@URI_SUFFIX@
 		lv2:symbol "UIcorrelation" ;
 		lv2:name "UI correlation" ;
 		lv2:portProperty pprop:notOnGUI ;
-		lv2:default 0.0 ;
 		lv2:minimum 0.0 ;
 		lv2:maximum 1.0 ;
 	] , [
@@ -706,7 +689,6 @@ mtr:goniometer@URI_SUFFIX@
 		lv2:symbol "UInotify" ;
 		lv2:name "UI notify" ;
 		lv2:portProperty pprop:notOnGUI ;
-		lv2:default 0.0 ;
 		lv2:minimum 0.0 ;
 		lv2:maximum 1.0 ;
 	] ;
@@ -734,7 +716,6 @@ mtr:spectr30mono@URI_SUFFIX@
 		lv2:index 1 ;
 		lv2:symbol "band31" ;
 		lv2:name "31.5Hz" ;
-		lv2:default -70.0 ;
 		lv2:minimum -70.0 ;
 		lv2:maximum   6.0 ;
 		units:unit units:db ;
@@ -743,7 +724,6 @@ mtr:spectr30mono@URI_SUFFIX@
 		lv2:index 2 ;
 		lv2:symbol "band40" ;
 		lv2:name "40Hz" ;
-		lv2:default -70.0 ;
 		lv2:minimum -70.0 ;
 		lv2:maximum   6.0 ;
 		units:unit units:db ;
@@ -752,7 +732,6 @@ mtr:spectr30mono@URI_SUFFIX@
 		lv2:index 3 ;
 		lv2:symbol "band50" ;
 		lv2:name "50Hz" ;
-		lv2:default -70.0 ;
 		lv2:minimum -70.0 ;
 		lv2:maximum   6.0 ;
 		units:unit units:db ;
@@ -761,7 +740,6 @@ mtr:spectr30mono@URI_SUFFIX@
 		lv2:index 4 ;
 		lv2:symbol "band63" ;
 		lv2:name "63Hz" ;
-		lv2:default -70.0 ;
 		lv2:minimum -70.0 ;
 		lv2:maximum   6.0 ;
 		units:unit units:db ;
@@ -770,7 +748,6 @@ mtr:spectr30mono@URI_SUFFIX@
 		lv2:index 5 ;
 		lv2:symbol "band80" ;
 		lv2:name "80Hz" ;
-		lv2:default -70.0 ;
 		lv2:minimum -70.0 ;
 		lv2:maximum   6.0 ;
 		units:unit units:db ;
@@ -779,7 +756,6 @@ mtr:spectr30mono@URI_SUFFIX@
 		lv2:index 6 ;
 		lv2:symbol "band100" ;
 		lv2:name "100Hz" ;
-		lv2:default -70.0 ;
 		lv2:minimum -70.0 ;
 		lv2:maximum   6.0 ;
 		units:unit units:db ;
@@ -788,7 +764,6 @@ mtr:spectr30mono@URI_SUFFIX@
 		lv2:index 7 ;
 		lv2:symbol "band125" ;
 		lv2:name "125Hz" ;
-		lv2:default -70.0 ;
 		lv2:minimum -70.0 ;
 		lv2:maximum   6.0 ;
 		units:unit units:db ;
@@ -797,7 +772,6 @@ mtr:spectr30mono@URI_SUFFIX@
 		lv2:index 8 ;
 		lv2:symbol "band160" ;
 		lv2:name "160Hz" ;
-		lv2:default -70.0 ;
 		lv2:minimum -70.0 ;
 		lv2:maximum   6.0 ;
 		units:unit units:db ;
@@ -806,7 +780,6 @@ mtr:spectr30mono@URI_SUFFIX@
 		lv2:index 9 ;
 		lv2:symbol "band200" ;
 		lv2:name "200Hz" ;
-		lv2:default -70.0 ;
 		lv2:minimum -70.0 ;
 		lv2:maximum   6.0 ;
 		units:unit units:db ;
@@ -815,7 +788,6 @@ mtr:spectr30mono@URI_SUFFIX@
 		lv2:index 10 ;
 		lv2:symbol "band250" ;
 		lv2:name "250Hz" ;
-		lv2:default -70.0 ;
 		lv2:minimum -70.0 ;
 		lv2:maximum   6.0 ;
 		units:unit units:db ;
@@ -824,7 +796,6 @@ mtr:spectr30mono@URI_SUFFIX@
 		lv2:index 11 ;
 		lv2:symbol "band315" ;
 		lv2:name "315Hz" ;
-		lv2:default -70.0 ;
 		lv2:minimum -70.0 ;
 		lv2:maximum   6.0 ;
 		units:unit units:db ;
@@ -833,7 +804,6 @@ mtr:spectr30mono@URI_SUFFIX@
 		lv2:index 12 ;
 		lv2:symbol "band400" ;
 		lv2:name "400Hz" ;
-		lv2:default -70.0 ;
 		lv2:minimum -70.0 ;
 		lv2:maximum   6.0 ;
 		units:unit units:db ;
@@ -842,7 +812,6 @@ mtr:spectr30mono@URI_SUFFIX@
 		lv2:index 13 ;
 		lv2:symbol "band500" ;
 		lv2:name "500Hz" ;
-		lv2:default -70.0 ;
 		lv2:minimum -70.0 ;
 		lv2:maximum   6.0 ;
 		units:unit units:db ;
@@ -851,7 +820,6 @@ mtr:spectr30mono@URI_SUFFIX@
 		lv2:index 14 ;
 		lv2:symbol "band630" ;
 		lv2:name "630Hz" ;
-		lv2:default -70.0 ;
 		lv2:minimum -70.0 ;
 		lv2:maximum   6.0 ;
 		units:unit units:db ;
@@ -860,7 +828,6 @@ mtr:spectr30mono@URI_SUFFIX@
 		lv2:index 15 ;
 		lv2:symbol "band800" ;
 		lv2:name "800Hz" ;
-		lv2:default -70.0 ;
 		lv2:minimum -70.0 ;
 		lv2:maximum   6.0 ;
 		units:unit units:db ;
@@ -869,7 +836,6 @@ mtr:spectr30mono@URI_SUFFIX@
 		lv2:index 16 ;
 		lv2:symbol "band1000" ;
 		lv2:name "1kHz" ;
-		lv2:default -70.0 ;
 		lv2:minimum -70.0 ;
 		lv2:maximum   6.0 ;
 		units:unit units:db ;
@@ -878,7 +844,6 @@ mtr:spectr30mono@URI_SUFFIX@
 		lv2:index 17 ;
 		lv2:symbol "band1250" ;
 		lv2:name "1.25kHz" ;
-		lv2:default -70.0 ;
 		lv2:minimum -70.0 ;
 		lv2:maximum   6.0 ;
 		units:unit units:db ;
@@ -887,7 +852,6 @@ mtr:spectr30mono@URI_SUFFIX@
 		lv2:index 18 ;
 		lv2:symbol "band1600" ;
 		lv2:name "1.6kHz" ;
-		lv2:default -70.0 ;
 		lv2:minimum -70.0 ;
 		lv2:maximum   6.0 ;
 		units:unit units:db ;
@@ -896,7 +860,6 @@ mtr:spectr30mono@URI_SUFFIX@
 		lv2:index 19 ;
 		lv2:symbol "band2000" ;
 		lv2:name "2kHz" ;
-		lv2:default -70.0 ;
 		lv2:minimum -70.0 ;
 		lv2:maximum   6.0 ;
 		units:unit units:db ;
@@ -905,7 +868,6 @@ mtr:spectr30mono@URI_SUFFIX@
 		lv2:index 20 ;
 		lv2:symbol "band2500" ;
 		lv2:name "2.5Hz" ;
-		lv2:default -70.0 ;
 		lv2:minimum -70.0 ;
 		lv2:maximum   6.0 ;
 		units:unit units:db ;
@@ -914,7 +876,6 @@ mtr:spectr30mono@URI_SUFFIX@
 		lv2:index 21 ;
 		lv2:symbol "band3150" ;
 		lv2:name "3.15Hz" ;
-		lv2:default -70.0 ;
 		lv2:minimum -70.0 ;
 		lv2:maximum   6.0 ;
 		units:unit units:db ;
@@ -923,7 +884,6 @@ mtr:spectr30mono@URI_SUFFIX@
 		lv2:index 22 ;
 		lv2:symbol "band4000" ;
 		lv2:name "4Hz" ;
-		lv2:default -70.0 ;
 		lv2:minimum -70.0 ;
 		lv2:maximum   6.0 ;
 		units:unit units:db ;
@@ -932,7 +892,6 @@ mtr:spectr30mono@URI_SUFFIX@
 		lv2:index 23 ;
 		lv2:symbol "band5000" ;
 		lv2:name "5kHz" ;
-		lv2:default -70.0 ;
 		lv2:minimum -70.0 ;
 		lv2:maximum   6.0 ;
 		units:unit units:db ;
@@ -941,7 +900,6 @@ mtr:spectr30mono@URI_SUFFIX@
 		lv2:index 24 ;
 		lv2:symbol "band6300" ;
 		lv2:name "6.3kHz" ;
-		lv2:default -70.0 ;
 		lv2:minimum -70.0 ;
 		lv2:maximum   6.0 ;
 		units:unit units:db ;
@@ -950,7 +908,6 @@ mtr:spectr30mono@URI_SUFFIX@
 		lv2:index 25 ;
 		lv2:symbol "band8000" ;
 		lv2:name "8Hz" ;
-		lv2:default -70.0 ;
 		lv2:minimum -70.0 ;
 		lv2:maximum   6.0 ;
 		units:unit units:db ;
@@ -959,7 +916,6 @@ mtr:spectr30mono@URI_SUFFIX@
 		lv2:index 26 ;
 		lv2:symbol "band10000" ;
 		lv2:name "10Hz" ;
-		lv2:default -70.0 ;
 		lv2:minimum -70.0 ;
 		lv2:maximum   6.0 ;
 		units:unit units:db ;
@@ -968,7 +924,6 @@ mtr:spectr30mono@URI_SUFFIX@
 		lv2:index 27 ;
 		lv2:symbol "band12500" ;
 		lv2:name "12.5Hz" ;
-		lv2:default -70.0 ;
 		lv2:minimum -70.0 ;
 		lv2:maximum   6.0 ;
 		units:unit units:db ;
@@ -977,7 +932,6 @@ mtr:spectr30mono@URI_SUFFIX@
 		lv2:index 28 ;
 		lv2:symbol "band16000" ;
 		lv2:name "16kHz" ;
-		lv2:default -70.0 ;
 		lv2:minimum -70.0 ;
 		lv2:maximum   6.0 ;
 		units:unit units:db ;
@@ -986,7 +940,6 @@ mtr:spectr30mono@URI_SUFFIX@
 		lv2:index 29 ;
 		lv2:symbol "band20000" ;
 		lv2:name "20kHz" ;
-		lv2:default -70.0 ;
 		lv2:minimum -70.0 ;
 		lv2:maximum   6.0 ;
 		units:unit units:db ;
@@ -995,7 +948,6 @@ mtr:spectr30mono@URI_SUFFIX@
 		lv2:index 30 ;
 		lv2:symbol "max25" ;
 		lv2:name "Peak 25Hz" ;
-		lv2:default -70.0 ;
 		lv2:minimum -70.0 ;
 		lv2:maximum   6.0 ;
 		units:unit units:db ;
@@ -1004,7 +956,6 @@ mtr:spectr30mono@URI_SUFFIX@
 		lv2:index 31 ;
 		lv2:symbol "max31" ;
 		lv2:name "Peak 31.5Hz" ;
-		lv2:default -70.0 ;
 		lv2:minimum -70.0 ;
 		lv2:maximum   6.0 ;
 		units:unit units:db ;
@@ -1013,7 +964,6 @@ mtr:spectr30mono@URI_SUFFIX@
 		lv2:index 32 ;
 		lv2:symbol "max40" ;
 		lv2:name "Peak 40Hz" ;
-		lv2:default -70.0 ;
 		lv2:minimum -70.0 ;
 		lv2:maximum   6.0 ;
 		units:unit units:db ;
@@ -1022,7 +972,6 @@ mtr:spectr30mono@URI_SUFFIX@
 		lv2:index 33 ;
 		lv2:symbol "max50" ;
 		lv2:name "Peak 50Hz" ;
-		lv2:default -70.0 ;
 		lv2:minimum -70.0 ;
 		lv2:maximum   6.0 ;
 		units:unit units:db ;
@@ -1031,7 +980,6 @@ mtr:spectr30mono@URI_SUFFIX@
 		lv2:index 34 ;
 		lv2:symbol "max63" ;
 		lv2:name "Peak 63Hz" ;
-		lv2:default -70.0 ;
 		lv2:minimum -70.0 ;
 		lv2:maximum   6.0 ;
 		units:unit units:db ;
@@ -1040,7 +988,6 @@ mtr:spectr30mono@URI_SUFFIX@
 		lv2:index 35 ;
 		lv2:symbol "max80" ;
 		lv2:name "Peak 80Hz" ;
-		lv2:default -70.0 ;
 		lv2:minimum -70.0 ;
 		lv2:maximum   6.0 ;
 		units:unit units:db ;
@@ -1049,7 +996,6 @@ mtr:spectr30mono@URI_SUFFIX@
 		lv2:index 36 ;
 		lv2:symbol "max100" ;
 		lv2:name "Peak 100Hz" ;
-		lv2:default -70.0 ;
 		lv2:minimum -70.0 ;
 		lv2:maximum   6.0 ;
 		units:unit units:db ;
@@ -1058,7 +1004,6 @@ mtr:spectr30mono@URI_SUFFIX@
 		lv2:index 37 ;
 		lv2:symbol "max125" ;
 		lv2:name "Peak 125Hz" ;
-		lv2:default -70.0 ;
 		lv2:minimum -70.0 ;
 		lv2:maximum   6.0 ;
 		units:unit units:db ;
@@ -1067,7 +1012,6 @@ mtr:spectr30mono@URI_SUFFIX@
 		lv2:index 38 ;
 		lv2:symbol "max160" ;
 		lv2:name "Peak 160Hz" ;
-		lv2:default -70.0 ;
 		lv2:minimum -70.0 ;
 		lv2:maximum   6.0 ;
 		units:unit units:db ;
@@ -1076,7 +1020,6 @@ mtr:spectr30mono@URI_SUFFIX@
 		lv2:index 39 ;
 		lv2:symbol "max200" ;
 		lv2:name "Peak 200Hz" ;
-		lv2:default -70.0 ;
 		lv2:minimum -70.0 ;
 		lv2:maximum   6.0 ;
 		units:unit units:db ;
@@ -1085,7 +1028,6 @@ mtr:spectr30mono@URI_SUFFIX@
 		lv2:index 40 ;
 		lv2:symbol "max250" ;
 		lv2:name "Peak 250Hz" ;
-		lv2:default -70.0 ;
 		lv2:minimum -70.0 ;
 		lv2:maximum   6.0 ;
 		units:unit units:db ;
@@ -1094,7 +1036,6 @@ mtr:spectr30mono@URI_SUFFIX@
 		lv2:index 41 ;
 		lv2:symbol "max315" ;
 		lv2:name "Peak 315Hz" ;
-		lv2:default -70.0 ;
 		lv2:minimum -70.0 ;
 		lv2:maximum   6.0 ;
 		units:unit units:db ;
@@ -1103,7 +1044,6 @@ mtr:spectr30mono@URI_SUFFIX@
 		lv2:index 42 ;
 		lv2:symbol "max400" ;
 		lv2:name "Peak 400Hz" ;
-		lv2:default -70.0 ;
 		lv2:minimum -70.0 ;
 		lv2:maximum   6.0 ;
 		units:unit units:db ;
@@ -1112,7 +1052,6 @@ mtr:spectr30mono@URI_SUFFIX@
 		lv2:index 43 ;
 		lv2:symbol "max500" ;
 		lv2:name "Peak 500Hz" ;
-		lv2:default -70.0 ;
 		lv2:minimum -70.0 ;
 		lv2:maximum   6.0 ;
 		units:unit units:db ;
@@ -1121,7 +1060,6 @@ mtr:spectr30mono@URI_SUFFIX@
 		lv2:index 44 ;
 		lv2:symbol "max630" ;
 		lv2:name "Peak 630Hz" ;
-		lv2:default -70.0 ;
 		lv2:minimum -70.0 ;
 		lv2:maximum   6.0 ;
 		units:unit units:db ;
@@ -1130,7 +1068,6 @@ mtr:spectr30mono@URI_SUFFIX@
 		lv2:index 45 ;
 		lv2:symbol "max800" ;
 		lv2:name "Peak 800Hz" ;
-		lv2:default -70.0 ;
 		lv2:minimum -70.0 ;
 		lv2:maximum   6.0 ;
 		units:unit units:db ;
@@ -1139,7 +1076,6 @@ mtr:spectr30mono@URI_SUFFIX@
 		lv2:index 46 ;
 		lv2:symbol "max1000" ;
 		lv2:name "Peak 1kHz" ;
-		lv2:default -70.0 ;
 		lv2:minimum -70.0 ;
 		lv2:maximum   6.0 ;
 		units:unit units:db ;
@@ -1148,7 +1084,6 @@ mtr:spectr30mono@URI_SUFFIX@
 		lv2:index 47 ;
 		lv2:symbol "max1250" ;
 		lv2:name "Peak 1.25kHz" ;
-		lv2:default -70.0 ;
 		lv2:minimum -70.0 ;
 		lv2:maximum   6.0 ;
 		units:unit units:db ;
@@ -1157,7 +1092,6 @@ mtr:spectr30mono@URI_SUFFIX@
 		lv2:index 48 ;
 		lv2:symbol "max1600" ;
 		lv2:name "Peak 1.6kHz" ;
-		lv2:default -70.0 ;
 		lv2:minimum -70.0 ;
 		lv2:maximum   6.0 ;
 		units:unit units:db ;
@@ -1166,7 +1100,6 @@ mtr:spectr30mono@URI_SUFFIX@
 		lv2:index 49 ;
 		lv2:symbol "max2000" ;
 		lv2:name "Peak 2kHz" ;
-		lv2:default -70.0 ;
 		lv2:minimum -70.0 ;
 		lv2:maximum   6.0 ;
 		units:unit units:db ;
@@ -1175,7 +1108,6 @@ mtr:spectr30mono@URI_SUFFIX@
 		lv2:index 50 ;
 		lv2:symbol "max2500" ;
 		lv2:name "Peak 2.5Hz" ;
-		lv2:default -70.0 ;
 		lv2:minimum -70.0 ;
 		lv2:maximum   6.0 ;
 		units:unit units:db ;
@@ -1184,7 +1116,6 @@ mtr:spectr30mono@URI_SUFFIX@
 		lv2:index 51 ;
 		lv2:symbol "max3150" ;
 		lv2:name "Peak 3.15Hz" ;
-		lv2:default -70.0 ;
 		lv2:minimum -70.0 ;
 		lv2:maximum   6.0 ;
 		units:unit units:db ;
@@ -1193,7 +1124,6 @@ mtr:spectr30mono@URI_SUFFIX@
 		lv2:index 52 ;
 		lv2:symbol "max4000" ;
 		lv2:name "Peak 4Hz" ;
-		lv2:default -70.0 ;
 		lv2:minimum -70.0 ;
 		lv2:maximum   6.0 ;
 		units:unit units:db ;
@@ -1202,7 +1132,6 @@ mtr:spectr30mono@URI_SUFFIX@
 		lv2:index 53 ;
 		lv2:symbol "max5000" ;
 		lv2:name "Peak 5kHz" ;
-		lv2:default -70.0 ;
 		lv2:minimum -70.0 ;
 		lv2:maximum   6.0 ;
 		units:unit units:db ;
@@ -1211,7 +1140,6 @@ mtr:spectr30mono@URI_SUFFIX@
 		lv2:index 54 ;
 		lv2:symbol "max6300" ;
 		lv2:name "Peak 6.3kHz" ;
-		lv2:default -70.0 ;
 		lv2:minimum -70.0 ;
 		lv2:maximum   6.0 ;
 		units:unit units:db ;
@@ -1220,7 +1148,6 @@ mtr:spectr30mono@URI_SUFFIX@
 		lv2:index 55 ;
 		lv2:symbol "max8000" ;
 		lv2:name "Peak 8Hz" ;
-		lv2:default -70.0 ;
 		lv2:minimum -70.0 ;
 		lv2:maximum   6.0 ;
 		units:unit units:db ;
@@ -1229,7 +1156,6 @@ mtr:spectr30mono@URI_SUFFIX@
 		lv2:index 56 ;
 		lv2:symbol "max10000" ;
 		lv2:name "Peak 10Hz" ;
-		lv2:default -70.0 ;
 		lv2:minimum -70.0 ;
 		lv2:maximum   6.0 ;
 		units:unit units:db ;
@@ -1238,7 +1164,6 @@ mtr:spectr30mono@URI_SUFFIX@
 		lv2:index 57 ;
 		lv2:symbol "max12500" ;
 		lv2:name "Peak 12.5Hz" ;
-		lv2:default -70.0 ;
 		lv2:minimum -70.0 ;
 		lv2:maximum   6.0 ;
 		units:unit units:db ;
@@ -1247,7 +1172,6 @@ mtr:spectr30mono@URI_SUFFIX@
 		lv2:index 58 ;
 		lv2:symbol "max16000" ;
 		lv2:name "Peak 16kHz" ;
-		lv2:default -70.0 ;
 		lv2:minimum -70.0 ;
 		lv2:maximum   6.0 ;
 		units:unit units:db ;
@@ -1256,7 +1180,6 @@ mtr:spectr30mono@URI_SUFFIX@
 		lv2:index 59 ;
 		lv2:symbol "max20000" ;
 		lv2:name "Peak 20kHz" ;
-		lv2:default -70.0 ;
 		lv2:minimum -70.0 ;
 		lv2:maximum   6.0 ;
 		units:unit units:db ;
@@ -1328,7 +1251,6 @@ mtr:spectr30stereo@URI_SUFFIX@
 		lv2:index 0 ;
 		lv2:symbol "band25" ;
 		lv2:name "25Hz" ;
-		lv2:default -70.0 ;
 		lv2:minimum -70.0 ;
 		lv2:maximum   6.0 ;
 		units:unit units:db ;
@@ -1337,7 +1259,6 @@ mtr:spectr30stereo@URI_SUFFIX@
 		lv2:index 1 ;
 		lv2:symbol "band31" ;
 		lv2:name "31.5Hz" ;
-		lv2:default -70.0 ;
 		lv2:minimum -70.0 ;
 		lv2:maximum   6.0 ;
 		units:unit units:db ;
@@ -1346,7 +1267,6 @@ mtr:spectr30stereo@URI_SUFFIX@
 		lv2:index 2 ;
 		lv2:symbol "band40" ;
 		lv2:name "40Hz" ;
-		lv2:default -70.0 ;
 		lv2:minimum -70.0 ;
 		lv2:maximum   6.0 ;
 		units:unit units:db ;
@@ -1355,7 +1275,6 @@ mtr:spectr30stereo@URI_SUFFIX@
 		lv2:index 3 ;
 		lv2:symbol "band50" ;
 		lv2:name "50Hz" ;
-		lv2:default -70.0 ;
 		lv2:minimum -70.0 ;
 		lv2:maximum   6.0 ;
 		units:unit units:db ;
@@ -1364,7 +1283,6 @@ mtr:spectr30stereo@URI_SUFFIX@
 		lv2:index 4 ;
 		lv2:symbol "band63" ;
 		lv2:name "63Hz" ;
-		lv2:default -70.0 ;
 		lv2:minimum -70.0 ;
 		lv2:maximum   6.0 ;
 		units:unit units:db ;
@@ -1373,7 +1291,6 @@ mtr:spectr30stereo@URI_SUFFIX@
 		lv2:index 5 ;
 		lv2:symbol "band80" ;
 		lv2:name "80Hz" ;
-		lv2:default -70.0 ;
 		lv2:minimum -70.0 ;
 		lv2:maximum   6.0 ;
 		units:unit units:db ;
@@ -1382,7 +1299,6 @@ mtr:spectr30stereo@URI_SUFFIX@
 		lv2:index 6 ;
 		lv2:symbol "band100" ;
 		lv2:name "100Hz" ;
-		lv2:default -70.0 ;
 		lv2:minimum -70.0 ;
 		lv2:maximum   6.0 ;
 		units:unit units:db ;
@@ -1391,7 +1307,6 @@ mtr:spectr30stereo@URI_SUFFIX@
 		lv2:index 7 ;
 		lv2:symbol "band125" ;
 		lv2:name "125Hz" ;
-		lv2:default -70.0 ;
 		lv2:minimum -70.0 ;
 		lv2:maximum   6.0 ;
 		units:unit units:db ;
@@ -1400,7 +1315,6 @@ mtr:spectr30stereo@URI_SUFFIX@
 		lv2:index 8 ;
 		lv2:symbol "band160" ;
 		lv2:name "160Hz" ;
-		lv2:default -70.0 ;
 		lv2:minimum -70.0 ;
 		lv2:maximum   6.0 ;
 		units:unit units:db ;
@@ -1409,7 +1323,6 @@ mtr:spectr30stereo@URI_SUFFIX@
 		lv2:index 9 ;
 		lv2:symbol "band200" ;
 		lv2:name "200Hz" ;
-		lv2:default -70.0 ;
 		lv2:minimum -70.0 ;
 		lv2:maximum   6.0 ;
 		units:unit units:db ;
@@ -1418,7 +1331,6 @@ mtr:spectr30stereo@URI_SUFFIX@
 		lv2:index 10 ;
 		lv2:symbol "band250" ;
 		lv2:name "250Hz" ;
-		lv2:default -70.0 ;
 		lv2:minimum -70.0 ;
 		lv2:maximum   6.0 ;
 		units:unit units:db ;
@@ -1427,7 +1339,6 @@ mtr:spectr30stereo@URI_SUFFIX@
 		lv2:index 11 ;
 		lv2:symbol "band315" ;
 		lv2:name "315Hz" ;
-		lv2:default -70.0 ;
 		lv2:minimum -70.0 ;
 		lv2:maximum   6.0 ;
 		units:unit units:db ;
@@ -1436,7 +1347,6 @@ mtr:spectr30stereo@URI_SUFFIX@
 		lv2:index 12 ;
 		lv2:symbol "band400" ;
 		lv2:name "400Hz" ;
-		lv2:default -70.0 ;
 		lv2:minimum -70.0 ;
 		lv2:maximum   6.0 ;
 		units:unit units:db ;
@@ -1445,7 +1355,6 @@ mtr:spectr30stereo@URI_SUFFIX@
 		lv2:index 13 ;
 		lv2:symbol "band500" ;
 		lv2:name "500Hz" ;
-		lv2:default -70.0 ;
 		lv2:minimum -70.0 ;
 		lv2:maximum   6.0 ;
 		units:unit units:db ;
@@ -1454,7 +1363,6 @@ mtr:spectr30stereo@URI_SUFFIX@
 		lv2:index 14 ;
 		lv2:symbol "band630" ;
 		lv2:name "630Hz" ;
-		lv2:default -70.0 ;
 		lv2:minimum -70.0 ;
 		lv2:maximum   6.0 ;
 		units:unit units:db ;
@@ -1463,7 +1371,6 @@ mtr:spectr30stereo@URI_SUFFIX@
 		lv2:index 15 ;
 		lv2:symbol "band800" ;
 		lv2:name "800Hz" ;
-		lv2:default -70.0 ;
 		lv2:minimum -70.0 ;
 		lv2:maximum   6.0 ;
 		units:unit units:db ;
@@ -1472,7 +1379,6 @@ mtr:spectr30stereo@URI_SUFFIX@
 		lv2:index 16 ;
 		lv2:symbol "band1000" ;
 		lv2:name "1kHz" ;
-		lv2:default -70.0 ;
 		lv2:minimum -70.0 ;
 		lv2:maximum   6.0 ;
 		units:unit units:db ;
@@ -1481,7 +1387,6 @@ mtr:spectr30stereo@URI_SUFFIX@
 		lv2:index 17 ;
 		lv2:symbol "band1250" ;
 		lv2:name "1.25kHz" ;
-		lv2:default -70.0 ;
 		lv2:minimum -70.0 ;
 		lv2:maximum   6.0 ;
 		units:unit units:db ;
@@ -1490,7 +1395,6 @@ mtr:spectr30stereo@URI_SUFFIX@
 		lv2:index 18 ;
 		lv2:symbol "band1600" ;
 		lv2:name "1.6kHz" ;
-		lv2:default -70.0 ;
 		lv2:minimum -70.0 ;
 		lv2:maximum   6.0 ;
 		units:unit units:db ;
@@ -1499,7 +1403,6 @@ mtr:spectr30stereo@URI_SUFFIX@
 		lv2:index 19 ;
 		lv2:symbol "band2000" ;
 		lv2:name "2kHz" ;
-		lv2:default -70.0 ;
 		lv2:minimum -70.0 ;
 		lv2:maximum   6.0 ;
 		units:unit units:db ;
@@ -1508,7 +1411,6 @@ mtr:spectr30stereo@URI_SUFFIX@
 		lv2:index 20 ;
 		lv2:symbol "band2500" ;
 		lv2:name "2.5Hz" ;
-		lv2:default -70.0 ;
 		lv2:minimum -70.0 ;
 		lv2:maximum   6.0 ;
 		units:unit units:db ;
@@ -1517,7 +1419,6 @@ mtr:spectr30stereo@URI_SUFFIX@
 		lv2:index 21 ;
 		lv2:symbol "band3150" ;
 		lv2:name "3.15Hz" ;
-		lv2:default -70.0 ;
 		lv2:minimum -70.0 ;
 		lv2:maximum   6.0 ;
 		units:unit units:db ;
@@ -1526,7 +1427,6 @@ mtr:spectr30stereo@URI_SUFFIX@
 		lv2:index 22 ;
 		lv2:symbol "band4000" ;
 		lv2:name "4Hz" ;
-		lv2:default -70.0 ;
 		lv2:minimum -70.0 ;
 		lv2:maximum   6.0 ;
 		units:unit units:db ;
@@ -1535,7 +1435,6 @@ mtr:spectr30stereo@URI_SUFFIX@
 		lv2:index 23 ;
 		lv2:symbol "band5000" ;
 		lv2:name "5kHz" ;
-		lv2:default -70.0 ;
 		lv2:minimum -70.0 ;
 		lv2:maximum   6.0 ;
 		units:unit units:db ;
@@ -1544,7 +1443,6 @@ mtr:spectr30stereo@URI_SUFFIX@
 		lv2:index 24 ;
 		lv2:symbol "band6300" ;
 		lv2:name "6.3kHz" ;
-		lv2:default -70.0 ;
 		lv2:minimum -70.0 ;
 		lv2:maximum   6.0 ;
 		units:unit units:db ;
@@ -1553,7 +1451,6 @@ mtr:spectr30stereo@URI_SUFFIX@
 		lv2:index 25 ;
 		lv2:symbol "band8000" ;
 		lv2:name "8Hz" ;
-		lv2:default -70.0 ;
 		lv2:minimum -70.0 ;
 		lv2:maximum   6.0 ;
 		units:unit units:db ;
@@ -1562,7 +1459,6 @@ mtr:spectr30stereo@URI_SUFFIX@
 		lv2:index 26 ;
 		lv2:symbol "band10000" ;
 		lv2:name "10Hz" ;
-		lv2:default -70.0 ;
 		lv2:minimum -70.0 ;
 		lv2:maximum   6.0 ;
 		units:unit units:db ;
@@ -1571,7 +1467,6 @@ mtr:spectr30stereo@URI_SUFFIX@
 		lv2:index 27 ;
 		lv2:symbol "band12500" ;
 		lv2:name "12.5Hz" ;
-		lv2:default -70.0 ;
 		lv2:minimum -70.0 ;
 		lv2:maximum   6.0 ;
 		units:unit units:db ;
@@ -1580,7 +1475,6 @@ mtr:spectr30stereo@URI_SUFFIX@
 		lv2:index 28 ;
 		lv2:symbol "band16000" ;
 		lv2:name "16kHz" ;
-		lv2:default -70.0 ;
 		lv2:minimum -70.0 ;
 		lv2:maximum   6.0 ;
 		units:unit units:db ;
@@ -1589,7 +1483,6 @@ mtr:spectr30stereo@URI_SUFFIX@
 		lv2:index 29 ;
 		lv2:symbol "band20000" ;
 		lv2:name "20kHz" ;
-		lv2:default -70.0 ;
 		lv2:minimum -70.0 ;
 		lv2:maximum   6.0 ;
 		units:unit units:db ;
@@ -1598,7 +1491,6 @@ mtr:spectr30stereo@URI_SUFFIX@
 		lv2:index 30 ;
 		lv2:symbol "max25" ;
 		lv2:name "Peak 25Hz" ;
-		lv2:default -70.0 ;
 		lv2:minimum -70.0 ;
 		lv2:maximum   6.0 ;
 		units:unit units:db ;
@@ -1607,7 +1499,6 @@ mtr:spectr30stereo@URI_SUFFIX@
 		lv2:index 31 ;
 		lv2:symbol "max31" ;
 		lv2:name "Peak 31.5Hz" ;
-		lv2:default -70.0 ;
 		lv2:minimum -70.0 ;
 		lv2:maximum   6.0 ;
 		units:unit units:db ;
@@ -1616,7 +1507,6 @@ mtr:spectr30stereo@URI_SUFFIX@
 		lv2:index 32 ;
 		lv2:symbol "max40" ;
 		lv2:name "Peak 40Hz" ;
-		lv2:default -70.0 ;
 		lv2:minimum -70.0 ;
 		lv2:maximum   6.0 ;
 		units:unit units:db ;
@@ -1625,7 +1515,6 @@ mtr:spectr30stereo@URI_SUFFIX@
 		lv2:index 33 ;
 		lv2:symbol "max50" ;
 		lv2:name "Peak 50Hz" ;
-		lv2:default -70.0 ;
 		lv2:minimum -70.0 ;
 		lv2:maximum   6.0 ;
 		units:unit units:db ;
@@ -1634,7 +1523,6 @@ mtr:spectr30stereo@URI_SUFFIX@
 		lv2:index 34 ;
 		lv2:symbol "max63" ;
 		lv2:name "Peak 63Hz" ;
-		lv2:default -70.0 ;
 		lv2:minimum -70.0 ;
 		lv2:maximum   6.0 ;
 		units:unit units:db ;
@@ -1643,7 +1531,6 @@ mtr:spectr30stereo@URI_SUFFIX@
 		lv2:index 35 ;
 		lv2:symbol "max80" ;
 		lv2:name "Peak 80Hz" ;
-		lv2:default -70.0 ;
 		lv2:minimum -70.0 ;
 		lv2:maximum   6.0 ;
 		units:unit units:db ;
@@ -1652,7 +1539,6 @@ mtr:spectr30stereo@URI_SUFFIX@
 		lv2:index 36 ;
 		lv2:symbol "max100" ;
 		lv2:name "Peak 100Hz" ;
-		lv2:default -70.0 ;
 		lv2:minimum -70.0 ;
 		lv2:maximum   6.0 ;
 		units:unit units:db ;
@@ -1661,7 +1547,6 @@ mtr:spectr30stereo@URI_SUFFIX@
 		lv2:index 37 ;
 		lv2:symbol "max125" ;
 		lv2:name "Peak 125Hz" ;
-		lv2:default -70.0 ;
 		lv2:minimum -70.0 ;
 		lv2:maximum   6.0 ;
 		units:unit units:db ;
@@ -1670,7 +1555,6 @@ mtr:spectr30stereo@URI_SUFFIX@
 		lv2:index 38 ;
 		lv2:symbol "max160" ;
 		lv2:name "Peak 160Hz" ;
-		lv2:default -70.0 ;
 		lv2:minimum -70.0 ;
 		lv2:maximum   6.0 ;
 		units:unit units:db ;
@@ -1679,7 +1563,6 @@ mtr:spectr30stereo@URI_SUFFIX@
 		lv2:index 39 ;
 		lv2:symbol "max200" ;
 		lv2:name "Peak 200Hz" ;
-		lv2:default -70.0 ;
 		lv2:minimum -70.0 ;
 		lv2:maximum   6.0 ;
 		units:unit units:db ;
@@ -1688,7 +1571,6 @@ mtr:spectr30stereo@URI_SUFFIX@
 		lv2:index 40 ;
 		lv2:symbol "max250" ;
 		lv2:name "Peak 250Hz" ;
-		lv2:default -70.0 ;
 		lv2:minimum -70.0 ;
 		lv2:maximum   6.0 ;
 		units:unit units:db ;
@@ -1697,7 +1579,6 @@ mtr:spectr30stereo@URI_SUFFIX@
 		lv2:index 41 ;
 		lv2:symbol "max315" ;
 		lv2:name "Peak 315Hz" ;
-		lv2:default -70.0 ;
 		lv2:minimum -70.0 ;
 		lv2:maximum   6.0 ;
 		units:unit units:db ;
@@ -1706,7 +1587,6 @@ mtr:spectr30stereo@URI_SUFFIX@
 		lv2:index 42 ;
 		lv2:symbol "max400" ;
 		lv2:name "Peak 400Hz" ;
-		lv2:default -70.0 ;
 		lv2:minimum -70.0 ;
 		lv2:maximum   6.0 ;
 		units:unit units:db ;
@@ -1715,7 +1595,6 @@ mtr:spectr30stereo@URI_SUFFIX@
 		lv2:index 43 ;
 		lv2:symbol "max500" ;
 		lv2:name "Peak 500Hz" ;
-		lv2:default -70.0 ;
 		lv2:minimum -70.0 ;
 		lv2:maximum   6.0 ;
 		units:unit units:db ;
@@ -1724,7 +1603,6 @@ mtr:spectr30stereo@URI_SUFFIX@
 		lv2:index 44 ;
 		lv2:symbol "max630" ;
 		lv2:name "Peak 630Hz" ;
-		lv2:default -70.0 ;
 		lv2:minimum -70.0 ;
 		lv2:maximum   6.0 ;
 		units:unit units:db ;
@@ -1733,7 +1611,6 @@ mtr:spectr30stereo@URI_SUFFIX@
 		lv2:index 45 ;
 		lv2:symbol "max800" ;
 		lv2:name "Peak 800Hz" ;
-		lv2:default -70.0 ;
 		lv2:minimum -70.0 ;
 		lv2:maximum   6.0 ;
 		units:unit units:db ;
@@ -1742,7 +1619,6 @@ mtr:spectr30stereo@URI_SUFFIX@
 		lv2:index 46 ;
 		lv2:symbol "max1000" ;
 		lv2:name "Peak 1kHz" ;
-		lv2:default -70.0 ;
 		lv2:minimum -70.0 ;
 		lv2:maximum   6.0 ;
 		units:unit units:db ;
@@ -1751,7 +1627,6 @@ mtr:spectr30stereo@URI_SUFFIX@
 		lv2:index 47 ;
 		lv2:symbol "max1250" ;
 		lv2:name "Peak 1.25kHz" ;
-		lv2:default -70.0 ;
 		lv2:minimum -70.0 ;
 		lv2:maximum   6.0 ;
 		units:unit units:db ;
@@ -1760,7 +1635,6 @@ mtr:spectr30stereo@URI_SUFFIX@
 		lv2:index 48 ;
 		lv2:symbol "max1600" ;
 		lv2:name "Peak 1.6kHz" ;
-		lv2:default -70.0 ;
 		lv2:minimum -70.0 ;
 		lv2:maximum   6.0 ;
 		units:unit units:db ;
@@ -1769,7 +1643,6 @@ mtr:spectr30stereo@URI_SUFFIX@
 		lv2:index 49 ;
 		lv2:symbol "max2000" ;
 		lv2:name "Peak 2kHz" ;
-		lv2:default -70.0 ;
 		lv2:minimum -70.0 ;
 		lv2:maximum   6.0 ;
 		units:unit units:db ;
@@ -1778,7 +1651,6 @@ mtr:spectr30stereo@URI_SUFFIX@
 		lv2:index 50 ;
 		lv2:symbol "max2500" ;
 		lv2:name "Peak 2.5Hz" ;
-		lv2:default -70.0 ;
 		lv2:minimum -70.0 ;
 		lv2:maximum   6.0 ;
 		units:unit units:db ;
@@ -1787,7 +1659,6 @@ mtr:spectr30stereo@URI_SUFFIX@
 		lv2:index 51 ;
 		lv2:symbol "max3150" ;
 		lv2:name "Peak 3.15Hz" ;
-		lv2:default -70.0 ;
 		lv2:minimum -70.0 ;
 		lv2:maximum   6.0 ;
 		units:unit units:db ;
@@ -1796,7 +1667,6 @@ mtr:spectr30stereo@URI_SUFFIX@
 		lv2:index 52 ;
 		lv2:symbol "max4000" ;
 		lv2:name "Peak 4Hz" ;
-		lv2:default -70.0 ;
 		lv2:minimum -70.0 ;
 		lv2:maximum   6.0 ;
 		units:unit units:db ;
@@ -1805,7 +1675,6 @@ mtr:spectr30stereo@URI_SUFFIX@
 		lv2:index 53 ;
 		lv2:symbol "max5000" ;
 		lv2:name "Peak 5kHz" ;
-		lv2:default -70.0 ;
 		lv2:minimum -70.0 ;
 		lv2:maximum   6.0 ;
 		units:unit units:db ;
@@ -1814,7 +1683,6 @@ mtr:spectr30stereo@URI_SUFFIX@
 		lv2:index 54 ;
 		lv2:symbol "max6300" ;
 		lv2:name "Peak 6.3kHz" ;
-		lv2:default -70.0 ;
 		lv2:minimum -70.0 ;
 		lv2:maximum   6.0 ;
 		units:unit units:db ;
@@ -1823,7 +1691,6 @@ mtr:spectr30stereo@URI_SUFFIX@
 		lv2:index 55 ;
 		lv2:symbol "max8000" ;
 		lv2:name "Peak 8Hz" ;
-		lv2:default -70.0 ;
 		lv2:minimum -70.0 ;
 		lv2:maximum   6.0 ;
 		units:unit units:db ;
@@ -1832,7 +1699,6 @@ mtr:spectr30stereo@URI_SUFFIX@
 		lv2:index 56 ;
 		lv2:symbol "max10000" ;
 		lv2:name "Peak 10Hz" ;
-		lv2:default -70.0 ;
 		lv2:minimum -70.0 ;
 		lv2:maximum   6.0 ;
 		units:unit units:db ;
@@ -1841,7 +1707,6 @@ mtr:spectr30stereo@URI_SUFFIX@
 		lv2:index 57 ;
 		lv2:symbol "max12500" ;
 		lv2:name "Peak 12.5Hz" ;
-		lv2:default -70.0 ;
 		lv2:minimum -70.0 ;
 		lv2:maximum   6.0 ;
 		units:unit units:db ;
@@ -1850,7 +1715,6 @@ mtr:spectr30stereo@URI_SUFFIX@
 		lv2:index 58 ;
 		lv2:symbol "max16000" ;
 		lv2:name "Peak 16kHz" ;
-		lv2:default -70.0 ;
 		lv2:minimum -70.0 ;
 		lv2:maximum   6.0 ;
 		units:unit units:db ;
@@ -1859,7 +1723,6 @@ mtr:spectr30stereo@URI_SUFFIX@
 		lv2:index 59 ;
 		lv2:symbol "max20000" ;
 		lv2:name "Peak 20kHz" ;
-		lv2:default -70.0 ;
 		lv2:minimum -70.0 ;
 		lv2:maximum   6.0 ;
 		units:unit units:db ;
@@ -1970,7 +1833,6 @@ mtr:dBTPmono@URI_SUFFIX@
 		lv2:index 3 ;
 		lv2:symbol "level1" ;
 		lv2:name "Level1" ;
-		lv2:default 0.0 ;
 		lv2:minimum 0.0 ;
 		lv2:maximum 1.0 ;
 	] , [
@@ -1980,7 +1842,6 @@ mtr:dBTPmono@URI_SUFFIX@
 		lv2:symbol "peak" ;
 		lv2:name "peak" ;
 		lv2:portProperty pprop:notOnGUI ;
-		lv2:default 0.0 ;
 		lv2:minimum 0.0 ;
 		lv2:maximum 1.0 ;
 	] ;
@@ -2022,7 +1883,6 @@ mtr:dBTPstereo@URI_SUFFIX@
 		lv2:index 3 ;
 		lv2:symbol "levelL" ;
 		lv2:name "LevelL" ;
-		lv2:default 0.0 ;
 		lv2:minimum 0.0 ;
 		lv2:maximum 1.0 ;
 	] , [
@@ -2043,7 +1903,6 @@ mtr:dBTPstereo@URI_SUFFIX@
 		lv2:index 6 ;
 		lv2:symbol "levelR" ;
 		lv2:name "LevelR" ;
-		lv2:default 0.0 ;
 		lv2:minimum 0.0 ;
 		lv2:maximum 1.0 ;
 	] , [
@@ -2053,7 +1912,6 @@ mtr:dBTPstereo@URI_SUFFIX@
 		lv2:symbol "peakL" ;
 		lv2:name "peakL" ;
 		lv2:portProperty pprop:notOnGUI ;
-		lv2:default 0.0 ;
 		lv2:minimum 0.0 ;
 		lv2:maximum 1.0 ;
 	] , [
@@ -2063,7 +1921,6 @@ mtr:dBTPstereo@URI_SUFFIX@
 		lv2:symbol "peakR" ;
 		lv2:name "peakR" ;
 		lv2:portProperty pprop:notOnGUI ;
-		lv2:default 0.0 ;
 		lv2:minimum 0.0 ;
 		lv2:maximum 1.0 ;
 	] ;
@@ -2106,7 +1963,6 @@ mtr:K12mono@URI_SUFFIX@
 		lv2:index 3 ;
 		lv2:symbol "level1" ;
 		lv2:name "Level1" ;
-		lv2:default 0.0 ;
 		lv2:minimum 0.0 ;
 		lv2:maximum 1.0 ;
 	] , [
@@ -2116,7 +1972,6 @@ mtr:K12mono@URI_SUFFIX@
 		lv2:symbol "peak" ;
 		lv2:name "peak" ;
 		lv2:portProperty pprop:notOnGUI ;
-		lv2:default 0.0 ;
 		lv2:minimum 0.0 ;
 		lv2:maximum 1.0 ;
 	] , [
@@ -2126,7 +1981,6 @@ mtr:K12mono@URI_SUFFIX@
 		lv2:symbol "hold" ;
 		lv2:name "peak hold" ;
 		lv2:portProperty pprop:notOnGUI ;
-		lv2:default 0.0 ;
 		lv2:minimum 0.0 ;
 		lv2:maximum 1.0 ;
 	] ;
@@ -2168,7 +2022,6 @@ mtr:K12stereo@URI_SUFFIX@
 		lv2:index 3 ;
 		lv2:symbol "levelL" ;
 		lv2:name "LevelL" ;
-		lv2:default 0.0 ;
 		lv2:minimum 0.0 ;
 		lv2:maximum 1.0 ;
 	] , [
@@ -2189,7 +2042,6 @@ mtr:K12stereo@URI_SUFFIX@
 		lv2:index 6 ;
 		lv2:symbol "levelR" ;
 		lv2:name "LevelR" ;
-		lv2:default 0.0 ;
 		lv2:minimum 0.0 ;
 		lv2:maximum 1.0 ;
 	] , [
@@ -2199,7 +2051,6 @@ mtr:K12stereo@URI_SUFFIX@
 		lv2:symbol "peakL" ;
 		lv2:name "peakL" ;
 		lv2:portProperty pprop:notOnGUI ;
-		lv2:default 0.0 ;
 		lv2:minimum 0.0 ;
 		lv2:maximum 1.0 ;
 	] , [
@@ -2209,7 +2060,6 @@ mtr:K12stereo@URI_SUFFIX@
 		lv2:symbol "peakR" ;
 		lv2:name "peakR" ;
 		lv2:portProperty pprop:notOnGUI ;
-		lv2:default 0.0 ;
 		lv2:minimum 0.0 ;
 		lv2:maximum 1.0 ;
 	] , [
@@ -2219,7 +2069,6 @@ mtr:K12stereo@URI_SUFFIX@
 		lv2:symbol "hold" ;
 		lv2:name "peak hold" ;
 		lv2:portProperty pprop:notOnGUI ;
-		lv2:default 0.0 ;
 		lv2:minimum 0.0 ;
 		lv2:maximum 1.0 ;
 	] ;
@@ -2262,7 +2111,6 @@ mtr:K14mono@URI_SUFFIX@
 		lv2:index 3 ;
 		lv2:symbol "level1" ;
 		lv2:name "Level1" ;
-		lv2:default 0.0 ;
 		lv2:minimum 0.0 ;
 		lv2:maximum 1.0 ;
 	] , [
@@ -2272,7 +2120,6 @@ mtr:K14mono@URI_SUFFIX@
 		lv2:symbol "peak" ;
 		lv2:name "peak" ;
 		lv2:portProperty pprop:notOnGUI ;
-		lv2:default 0.0 ;
 		lv2:minimum 0.0 ;
 		lv2:maximum 1.0 ;
 	] , [
@@ -2282,7 +2129,6 @@ mtr:K14mono@URI_SUFFIX@
 		lv2:symbol "hold" ;
 		lv2:name "peak hold" ;
 		lv2:portProperty pprop:notOnGUI ;
-		lv2:default 0.0 ;
 		lv2:minimum 0.0 ;
 		lv2:maximum 1.0 ;
 	] ;
@@ -2324,7 +2170,6 @@ mtr:K14stereo@URI_SUFFIX@
 		lv2:index 3 ;
 		lv2:symbol "levelL" ;
 		lv2:name "LevelL" ;
-		lv2:default 0.0 ;
 		lv2:minimum 0.0 ;
 		lv2:maximum 1.0 ;
 	] , [
@@ -2345,7 +2190,6 @@ mtr:K14stereo@URI_SUFFIX@
 		lv2:index 6 ;
 		lv2:symbol "levelR" ;
 		lv2:name "LevelR" ;
-		lv2:default 0.0 ;
 		lv2:minimum 0.0 ;
 		lv2:maximum 1.0 ;
 	] , [
@@ -2355,7 +2199,6 @@ mtr:K14stereo@URI_SUFFIX@
 		lv2:symbol "peakL" ;
 		lv2:name "peakL" ;
 		lv2:portProperty pprop:notOnGUI ;
-		lv2:default 0.0 ;
 		lv2:minimum 0.0 ;
 		lv2:maximum 1.0 ;
 	] , [
@@ -2365,7 +2208,6 @@ mtr:K14stereo@URI_SUFFIX@
 		lv2:symbol "peakR" ;
 		lv2:name "peakR" ;
 		lv2:portProperty pprop:notOnGUI ;
-		lv2:default 0.0 ;
 		lv2:minimum 0.0 ;
 		lv2:maximum 1.0 ;
 	] , [
@@ -2375,7 +2217,6 @@ mtr:K14stereo@URI_SUFFIX@
 		lv2:symbol "hold" ;
 		lv2:name "peak hold" ;
 		lv2:portProperty pprop:notOnGUI ;
-		lv2:default 0.0 ;
 		lv2:minimum 0.0 ;
 		lv2:maximum 1.0 ;
 	] ;
@@ -2418,7 +2259,6 @@ mtr:K20mono@URI_SUFFIX@
 		lv2:index 3 ;
 		lv2:symbol "level1" ;
 		lv2:name "Level1" ;
-		lv2:default 0.0 ;
 		lv2:minimum 0.0 ;
 		lv2:maximum 1.0 ;
 	] , [
@@ -2428,7 +2268,6 @@ mtr:K20mono@URI_SUFFIX@
 		lv2:symbol "peak" ;
 		lv2:name "peak" ;
 		lv2:portProperty pprop:notOnGUI ;
-		lv2:default 0.0 ;
 		lv2:minimum 0.0 ;
 		lv2:maximum 1.0 ;
 	] , [
@@ -2438,7 +2277,6 @@ mtr:K20mono@URI_SUFFIX@
 		lv2:symbol "hold" ;
 		lv2:name "peak hold" ;
 		lv2:portProperty pprop:notOnGUI ;
-		lv2:default 0.0 ;
 		lv2:minimum 0.0 ;
 		lv2:maximum 1.0 ;
 	] ;
@@ -2480,7 +2318,6 @@ mtr:K20stereo@URI_SUFFIX@
 		lv2:index 3 ;
 		lv2:symbol "levelL" ;
 		lv2:name "LevelL" ;
-		lv2:default 0.0 ;
 		lv2:minimum 0.0 ;
 		lv2:maximum 1.0 ;
 	] , [
@@ -2501,7 +2338,6 @@ mtr:K20stereo@URI_SUFFIX@
 		lv2:index 6 ;
 		lv2:symbol "levelR" ;
 		lv2:name "LevelR" ;
-		lv2:default 0.0 ;
 		lv2:minimum 0.0 ;
 		lv2:maximum 1.0 ;
 	] , [
@@ -2511,7 +2347,6 @@ mtr:K20stereo@URI_SUFFIX@
 		lv2:symbol "peakL" ;
 		lv2:name "peakL" ;
 		lv2:portProperty pprop:notOnGUI ;
-		lv2:default 0.0 ;
 		lv2:minimum 0.0 ;
 		lv2:maximum 1.0 ;
 	] , [
@@ -2521,7 +2356,6 @@ mtr:K20stereo@URI_SUFFIX@
 		lv2:symbol "peakR" ;
 		lv2:name "peakR" ;
 		lv2:portProperty pprop:notOnGUI ;
-		lv2:default 0.0 ;
 		lv2:minimum 0.0 ;
 		lv2:maximum 1.0 ;
 	] , [
@@ -2531,7 +2365,6 @@ mtr:K20stereo@URI_SUFFIX@
 		lv2:symbol "hold" ;
 		lv2:name "peak hold" ;
 		lv2:portProperty pprop:notOnGUI ;
-		lv2:default 0.0 ;
 		lv2:minimum 0.0 ;
 		lv2:maximum 1.0 ;
 	] ;
