@@ -117,6 +117,8 @@ typedef struct {
 
 } SAUI;
 
+static void invalidate_meter(SAUI* ui, int mtr, float val, float peak);
+
 /******************************************************************************
  * meter deflection
  */
@@ -725,9 +727,20 @@ static bool set_gain(RobWidget* w, void* handle) {
 	if (!ui->disable_signals) {
 		ui->write(ui->controller, 62, sizeof(float), 0, (const void*) &ui->gain);
 	}
+	if (ui->display_freq) { // should actually always be true here
+#if 0
+		for (uint32_t pidx=0; pidx < ui->num_meters ; ++pidx) {
+			invalidate_meter(ui, pidx, ui->val[pidx], ui->peak_val[pidx]);
+		}
+#else
+		ui->initialize = 1;
+		float temp = -3;
+		ui->write(ui->controller, ui->display_freq? 61 : 0,
+				sizeof(float), 0, (const void*) &temp);
+#endif
+	}
 	ui->metrics_changed = true;
 #if 1
-	// TODO force signal-change -> recalc deflected signals in invalidate_meter()
 	queue_draw(ui->m0);
 	return NULL;
 #else
@@ -1073,12 +1086,12 @@ static void handle_spectrum_connections(SAUI* ui, uint32_t port_index, float v) 
 		}
 		ui->disable_signals = false;
 	} else
-	if (port_index >= 0 && port_index < 30) {
+	if (v > -500 && port_index >= 0 && port_index < 30) {
 		int pidx = port_index;
 		float np = ui->peak_val[pidx];
 		invalidate_meter(ui, pidx, v, np);
 	}
-	if (port_index >= 30  && port_index < 60) {
+	if (v > -500 && port_index >= 30  && port_index < 60) {
 		int pidx = port_index - 30;
 		float nv = ui->val[pidx];
 		invalidate_meter(ui, pidx, nv, v);
@@ -1086,6 +1099,7 @@ static void handle_spectrum_connections(SAUI* ui, uint32_t port_index, float v) 
 }
 
 static void handle_meter_connections(SAUI* ui, uint32_t port_index, float v) {
+	if (v <= -500) return;
 	v = v > .00001f ? 20.0 * log10f(v) : -100.0;
 	if (port_index == 3) {
 		invalidate_meter(ui, 0, v, ui->peak_val[0]);
