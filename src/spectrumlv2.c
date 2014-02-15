@@ -189,7 +189,6 @@ spectrum_run(LV2_Handle instance, uint32_t n_samples)
 	}
 
 	if (self->rst_h != *self->rst_p) {
-				self->rst_h,  *self->rst_p);
 		/* reset peak-hold */
 		if (fabsf(*self->rst_p) < 3 || self->rst_h == 0) {
 			reinit_gui = true;
