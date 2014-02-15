@@ -89,6 +89,7 @@ typedef struct {
 	float peak_hist[DR_CHANNELS][2];
 	uint64_t num_fragments;
 	uint32_t hist[DR_CHANNELS][DR_HISTBINS];
+	bool reinit_gui;
 
 } LV2dr14;
 
@@ -133,6 +134,7 @@ dr14_instantiate(
 
 	self->n_channels = n_channels;
 	self->rate = rate;
+	self->reinit_gui = false;
 
 	map_eburlv2_uris(map, &self->uris);
 
@@ -354,6 +356,12 @@ dr14_run(LV2_Handle instance, uint32_t n_samples)
 			if (obj->body.otype == self->uris.mtr_dr14reset) {
 				reset_peaks(self);
 			}
+			if (obj->body.otype == self->uris.mtr_meters_on) {
+				self->reinit_gui = true;
+			}
+			if (obj->body.otype == self->uris.mtr_meters_off) {
+				self->reinit_gui = false;
+			}
 		}
 		ev = lv2_atom_sequence_next(ev);
 	}
@@ -430,6 +438,18 @@ dr14_run(LV2_Handle instance, uint32_t n_samples)
 	}
 
 	*self->p_block_count = 3.0 * self->num_fragments;
+
+	if (self->reinit_gui) {
+		if (self->n_channels > 1) {
+			*self->p_dr_total = 21;
+		}
+		for (uint32_t c = 0; c < self->n_channels; ++c) {
+			*self->p_m_peak[c] = -100;
+			*self->p_m_rms[c]  = -100;
+			*self->p_dr[c]     = 21;
+		}
+		*self->p_block_count = -1 - (rand() & 0xffff);
+	}
 
 	if (self->p_input[0] != self->p_output[0]) {
 		memcpy(self->p_output[0], self->p_input[0], sizeof(float) * n_samples);

@@ -591,8 +591,27 @@ static RobWidget * toplevel(DRUI* ui, void * const top)
  * LV2 callbacks
  */
 
-static void ui_enable(LV2UI_Handle handle) { }
-static void ui_disable(LV2UI_Handle handle) { }
+static void ui_enable(LV2UI_Handle handle) {
+	DRUI* ui = (DRUI*) (handle);
+	uint8_t obj_buf[128];
+	lv2_atom_forge_set_buffer(&ui->forge, obj_buf, 128);
+	LV2_Atom_Forge_Frame frame;
+	lv2_atom_forge_frame_time(&ui->forge, 0);
+	LV2_Atom* msg = (LV2_Atom*)lv2_atom_forge_blank(&ui->forge, &frame, 1, ui->uris.mtr_meters_on);
+	lv2_atom_forge_pop(&ui->forge, &frame);
+	ui->write(ui->controller, 0, lv2_atom_total_size(msg), ui->uris.atom_eventTransfer, msg);
+}
+
+static void ui_disable(LV2UI_Handle handle) {
+	DRUI* ui = (DRUI*) (handle);
+	uint8_t obj_buf[128];
+	lv2_atom_forge_set_buffer(&ui->forge, obj_buf, 128);
+	LV2_Atom_Forge_Frame frame;
+	lv2_atom_forge_frame_time(&ui->forge, 0);
+	LV2_Atom* msg = (LV2_Atom*)lv2_atom_forge_blank(&ui->forge, &frame, 1, ui->uris.mtr_meters_off);
+	lv2_atom_forge_pop(&ui->forge, &frame);
+	ui->write(ui->controller, 0, lv2_atom_total_size(msg), ui->uris.atom_eventTransfer, msg);
+}
 
 static LV2UI_Handle
 instantiate(
@@ -665,6 +684,7 @@ instantiate(
 	ui->font[2] = pango_font_description_from_string("Sans 8");
 
 	*widget = toplevel(ui, ui_toplevel);
+	ui_enable(ui);
 	return ui;
 }
 
@@ -795,8 +815,13 @@ port_event(LV2UI_Handle handle,
 
 	switch(port_index) {
 		case DR_BLKCNT:
-			if (ui->integration_time != (*(float *)buffer)) queue_draw(ui->m1);
-			ui->integration_time = (*(float *)buffer);
+			if (*(float *)buffer < 0) {
+				/* acknowledge UI re-init */
+				ui_disable(ui);
+			} else {
+				if (ui->integration_time != (*(float *)buffer)) queue_draw(ui->m1);
+				ui->integration_time = (*(float *)buffer);
+			}
 			break;
 		case DR_HOST_TRANSPORT:
 			ui->disable_signals = true;
