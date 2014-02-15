@@ -325,11 +325,12 @@ dbtp_run(LV2_Handle instance, uint32_t n_samples)
 			}
 		}
 		/* re-notify UI, until UI acknowledges */
-		if (fabsf(*self->reflvl) == 3) {
-			reinit_gui = true;
-		} else {
+		if (fabsf(*self->reflvl) != 3) {
 			self->p_refl = *self->reflvl;
 		}
+	}
+	if (fabsf(*self->reflvl) == 3) {
+		reinit_gui = true;
 	}
 
 	for (uint32_t c = 0; c < self->chn; ++c) {
@@ -347,13 +348,13 @@ dbtp_run(LV2_Handle instance, uint32_t n_samples)
 	if (reinit_gui) {
 		/* force parameter change */
 		if (self->chn == 1) {
-			*self->level[0] = -1 - (rand() & 0xffff);
-			*self->input[1] = -1; // portindex 4
+			*self->level[0] = -500 - (rand() & 0xffff);
+			*self->input[1] = -500 - (rand() & 0xffff); // portindex 4
 		} else if (self->chn == 2) {
-			*self->level[0] = -1 - (rand() & 0xffff);
-			*self->level[1] = -1;
-			*self->peak[0] = -1;
-			*self->peak[1] = -1;
+			*self->level[0] = -500 - (rand() & 0xffff);
+			*self->level[1] = -500 - (rand() & 0xffff);
+			*self->peak[0] = -500 - (rand() & 0xffff);
+			*self->peak[1] = -500 - (rand() & 0xffff);
 		}
 		return;
 	}

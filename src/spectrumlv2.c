@@ -92,6 +92,7 @@ spectrum_instantiate(
 	self->nchannels = nchannels;
 	self->rate = rate;
 
+	self->rst_h = -4;
 	self->spd_h = 1.0;
 	// 1.0 - e^(-2.0 * π * v / 48000)
 	self->omega = 1.0f - expf(-2.0 * M_PI * self->spd_h / rate);
@@ -161,6 +162,7 @@ spectrum_run(LV2_Handle instance, uint32_t n_samples)
 	LV2spec* self = (LV2spec*)instance;
 	float* inL = self->input[0];
 	float* inR = self->input[1];
+	bool reinit_gui = false;
 
 	/* calculate time-constant when it is changed,
 	 * (no-need to smoothen transition for the visual display)
@@ -171,8 +173,7 @@ spectrum_run(LV2_Handle instance, uint32_t n_samples)
 		if (v < 0.01) v = 0.01;
 		if (v > 15.0) v = 15.0;
 		self->omega = 1.0f - expf(-2.0 * M_PI * v / self->rate);
-		self->rst_h = -1; // reset peak-hold on change
-		//printf("LPF %f (%f) \n", self->omega, v);
+		self->rst_h = 0; // reset peak-hold on change
 	}
 
 	/* localize variables */
@@ -188,10 +189,20 @@ spectrum_run(LV2_Handle instance, uint32_t n_samples)
 	}
 
 	if (self->rst_h != *self->rst_p) {
-		self->rst_h = *self->rst_p;
-		for(int i = 0; i < FILTER_COUNT; ++i) {
-			max_f[i] = 0;
+				self->rst_h,  *self->rst_p);
+		/* reset peak-hold */
+		if (fabsf(*self->rst_p) < 3 || self->rst_h == 0) {
+			reinit_gui = true;
+			for(int i = 0; i < FILTER_COUNT; ++i) {
+				max_f[i] = 0;
+			}
 		}
+		if (fabsf(*self->rst_p) != 3) {
+			self->rst_h = *self->rst_p;
+		}
+	}
+	if (fabsf(*self->rst_p) == 3) {
+		reinit_gui = true;
 	}
 
 	const bool stereo = self->nchannels == 2;
@@ -229,9 +240,13 @@ spectrum_run(LV2_Handle instance, uint32_t n_samples)
 
 		const float vs = sqrtf(2. * val_f[i]);
 		const float mx = sqrtf(2. * max_f[i]);
-		// TODO - hold value peak in-between GUI update cycles.
 		*(self->spec[i]) = vs > .00001f ? 20.0 * log10f(vs) : -100.0;
-		*(self->maxf[i]) = mx > .00001f ? 20.0 * log10f(mx) : -100.0;
+		if (reinit_gui) {
+			/* force parameter change */
+			*(self->maxf[i]) = -500 - (rand() & 0xffff);
+		} else {
+			*(self->maxf[i]) = mx > .00001f ? 20.0 * log10f(mx) : -100.0;
+		}
 	}
 
 	if (self->input[0] != self->output[0]) {

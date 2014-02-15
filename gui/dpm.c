@@ -699,19 +699,12 @@ static bool expose_event(RobWidget* handle, cairo_t* cr, cairo_rectangle_t *ev) 
 
 static RobWidget* cb_reset_peak (RobWidget* handle, RobTkBtnEvent *event) {
 	SAUI* ui = (SAUI*)GET_HANDLE(handle);
-	if (!ui->display_freq) {
-		/* reset peak-hold in backend
-		 * -- use unused reflevel in dBTP to notify plugin
-		 */
-		ui->reset_toggle = !ui->reset_toggle;
-		float temp = ui->reset_toggle ? 1.0 : 2.0;
-		ui->write(ui->controller, 0, sizeof(float), 0, (const void*) &temp);
-	} else {
-		/* reset peak-hold in backend */
-		ui->reset_toggle = !ui->reset_toggle;
-		float temp = ui->reset_toggle ? 1.0 : 2.0;
-		ui->write(ui->controller, 61, sizeof(float), 0, (const void*) &temp);
-	}
+	ui->reset_toggle = !ui->reset_toggle;
+	/* reset peak-hold in backend */
+	float temp = ui->reset_toggle ? 1.0 : 2.0;
+	ui->write(ui->controller, ui->display_freq? 61 : 0,
+			sizeof(float), 0, (const void*) &temp);
+
 	for (uint32_t i=0; i < ui->num_meters ; ++i) {
 		ui->peak_val[i] = -100;
 		ui->peak_def[i] = deflect(ui, -100);
@@ -942,16 +935,8 @@ instantiate(
 
 	*widget = toplevel(ui, ui_toplevel);
 
-	if (!ui->display_freq) {
-		/* dBTP run() re-sends peak-data */
-		ui->initialize = 0;
-		ui->reset_toggle = false;
-		float temp = -1;
-		ui->write(ui->controller, 0, sizeof(float), 0, (const void*) &temp);
-	} else {
-		ui->initialize = 2;
-	}
-
+	ui->initialize = 0;
+	ui->reset_toggle = false;
 	return ui;
 }
 
@@ -1140,16 +1125,20 @@ port_event(LV2UI_Handle handle,
 	SAUI* ui = (SAUI*)handle;
 	if (format != 0) return;
 
-	if (port_index == 0) {
-		if (ui->initialize == 0) {
-			ui->initialize = 1;
-			float temp = -3;
-			ui->write(ui->controller, 0, sizeof(float), 0, (const void*) &temp);
-		}
-	} else if (ui->initialize == 1) {
+	if (ui->initialize == 0 && port_index == (ui->display_freq? 61 : 0)) {
+		ui->initialize = 1;
+		float temp = -3;
+		ui->write(ui->controller, ui->display_freq? 61 : 0,
+				sizeof(float), 0, (const void*) &temp);
+	} else if (ui->initialize == 1 && *(float *)buffer <= -500 && (
+			(ui->display_freq && port_index >= 30 && port_index < 60)
+			|| (!ui->display_freq && ui->num_meters == 1 && port_index == 4)
+			|| (!ui->display_freq && ui->num_meters == 2 && port_index == 7)
+			)) {
 		ui->initialize = 2;
 		float temp = -4;
-		ui->write(ui->controller, 0, sizeof(float), 0, (const void*) &temp);
+		ui->write(ui->controller, ui->display_freq? 61 : 0,
+				sizeof(float), 0, (const void*) &temp);
 	}
 
 	if (ui->display_freq) {

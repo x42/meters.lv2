@@ -789,7 +789,7 @@ port_event(LV2UI_Handle handle,
 			ui->write(ui->controller, 0, sizeof(float), 0, (const void*) &temp);
 		}
 		ui->dBFS = (val < 0);
-	} else if (ui->initialize == 1) {
+	} else if (ui->initialize == 1 && ((port_index == 5 && ui->num_meters == 1) || port_index == 9 && ui->num_meters == 2)) {
 			ui->initialize = 2;
 			float temp = (ui->dBFS) ? -4 : 4;
 			ui->write(ui->controller, 0, sizeof(float), 0, (const void*) &temp);

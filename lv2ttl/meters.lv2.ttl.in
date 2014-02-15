@@ -1199,9 +1199,9 @@ mtr:spectr30mono@URI_SUFFIX@
 		lv2:index 61 ;
 		lv2:symbol "UIreset" ;
 		lv2:name "UI reset peak" ;
-		lv2:default 0;
-		lv2:minimum 0.0 ;
-		lv2:maximum 1.0 ;
+		lv2:default -4.0;
+		lv2:minimum -4.0 ;
+		lv2:maximum  4.0 ;
 		lv2:portProperty pprop:notOnGUI ;
 	] , [
 		a lv2:ControlPort ,
@@ -1742,9 +1742,9 @@ mtr:spectr30stereo@URI_SUFFIX@
 		lv2:index 61 ;
 		lv2:symbol "UIreset" ;
 		lv2:name "UI reset peak" ;
-		lv2:default 0;
-		lv2:minimum 0.0 ;
-		lv2:maximum 1.0 ;
+		lv2:default -4.0;
+		lv2:minimum -4.0 ;
+		lv2:maximum  4.0 ;
 		lv2:portProperty pprop:notOnGUI ;
 	] , [
 		a lv2:ControlPort ,
