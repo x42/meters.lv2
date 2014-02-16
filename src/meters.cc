@@ -554,6 +554,10 @@ lv2_descriptor(uint32_t index)
 	case 51: return &descriptorDR14_1Gtk;
 	case 52: return &descriptorDR14_2;
 	case 53: return &descriptorDR14_2Gtk;
+	case 54: return &descriptorTPRMS_1;
+	case 55: return &descriptorTPRMS_1Gtk;
+	case 56: return &descriptorTPRMS_2;
+	case 57: return &descriptorTPRMS_2Gtk;
 	default: return NULL;
 	}
 }

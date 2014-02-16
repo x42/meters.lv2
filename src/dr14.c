@@ -78,7 +78,6 @@ typedef struct {
 	float  m_peak[DR_CHANNELS];
 	float  m_rms[DR_CHANNELS];
 	bool tranport_rolling;
-
 	uint64_t sample_count;
 
 	Kmeterdsp *km[DR_CHANNELS];
@@ -88,8 +87,9 @@ typedef struct {
 	float peak_cur[DR_CHANNELS];
 	float peak_hist[DR_CHANNELS][2];
 	uint64_t num_fragments;
-	uint32_t hist[DR_CHANNELS][DR_HISTBINS];
+	uint32_t *hist[DR_CHANNELS];
 	bool reinit_gui;
+	bool dr_operation_mode; // true for DR14 mode, false: dBTP+RMS only
 
 } LV2dr14;
 
@@ -105,16 +105,34 @@ dr14_instantiate(
 		const LV2_Feature* const* features)
 {
 	uint32_t n_channels;
+	bool dr_operation_mode;
 	if (!strcmp(descriptor->URI, MTR_URI "dr14stereo")
 			|| !strcmp(descriptor->URI, MTR_URI "dr14stereo_gtk"))
 	{
 		n_channels = 2;
+		dr_operation_mode = true;
 	}
 	else if (!strcmp(descriptor->URI, MTR_URI "dr14mono")
 			|| !strcmp(descriptor->URI, MTR_URI "dr14mono_gtk"))
 	{
 		n_channels = 1;
+		dr_operation_mode = true;
 	}
+	else if (!strcmp(descriptor->URI, MTR_URI "TPnRMSstereo")
+			|| !strcmp(descriptor->URI, MTR_URI "TPnRMSstereo_gtk"))
+	{
+		n_channels = 2;
+		dr_operation_mode = false;
+	}
+	else if (!strcmp(descriptor->URI, MTR_URI "TPnRMSmono")
+			|| !strcmp(descriptor->URI, MTR_URI "TPnRMSmono_gtk"))
+	{
+		n_channels = 1;
+		dr_operation_mode = false;
+	}
+
+
+
 	else { return NULL; }
 
   LV2_URID_Map* map = NULL;
@@ -133,6 +151,7 @@ dr14_instantiate(
 	if (!self) return NULL;
 
 	self->n_channels = n_channels;
+	self->dr_operation_mode = dr_operation_mode;
 	self->rate = rate;
 	self->reinit_gui = false;
 
@@ -150,6 +169,9 @@ dr14_instantiate(
 		self->tp[c]->init(rate);
 		self->m_rms[c] = -81;
 		self->m_peak[c] = -81;
+		if (dr_operation_mode) {
+			self->hist[c] = (uint32_t*) calloc(DR_HISTBINS, sizeof(uint32_t));
+		}
 	}
 
 	return (LV2_Handle)self;
@@ -242,7 +264,9 @@ reset_peaks(LV2dr14* self) {
 		self->peak_cur[c] = 0;
 		self->peak_hist[c][0] = self->peak_hist[c][1] = 0;
 		self->km[c]->reset();
-		memset(self->hist[c], 0, DR_HISTBINS * sizeof(int32_t));
+		if (self->dr_operation_mode) {
+			memset(self->hist[c], 0, DR_HISTBINS * sizeof(int32_t));
+		}
 	}
 	self->sample_count = 0;
 	self->num_fragments = 0;
@@ -387,19 +411,21 @@ dr14_run(LV2_Handle instance, uint32_t n_samples)
 	uint64_t scnt = self->sample_count;
 	const uint64_t slmt = self->n_sample_cnt;
 
-	// TODO: optimize, unroll loop to remaining samples / block
-	for (uint32_t s = 0; s < n_samples; ++s) {
-		for (uint32_t c = 0; c < self->n_channels; ++c) {
-			const float v = self->p_input[c][s];
-			self->rms_sum[c] += v * v;
-			self->peak_cur[c] = MAX(self->peak_cur[c], v);
+	if (self->dr_operation_mode) {
+		// TODO: optimize, unroll loop to remaining samples / block
+		for (uint32_t s = 0; s < n_samples; ++s) {
+			for (uint32_t c = 0; c < self->n_channels; ++c) {
+				const float v = self->p_input[c][s];
+				self->rms_sum[c] += v * v;
+				self->peak_cur[c] = MAX(self->peak_cur[c], v);
+			}
+			if (++scnt > slmt) {
+				dr14_calc_rms_score(self);
+				scnt = 0;
+			}
 		}
-		if (++scnt > slmt) {
-			dr14_calc_rms_score(self);
-			scnt = 0;
-		}
+		self->sample_count = scnt;
 	}
-	self->sample_count = scnt;
 
 
 	/* assing values to ports, clap to ranges,
@@ -408,28 +434,33 @@ dr14_run(LV2_Handle instance, uint32_t n_samples)
 	float dr_total = 0;
 	int   dr_valid = 0;
 	for (uint32_t c = 0; c < self->n_channels; ++c) {
+		float rv, rp;
 		float pv, pp;
 		self->tp[c]->read(pv, pp);
+		self->km[c]->read(rv, rp);
 		self->m_dbtp[c] = MAX(self->m_dbtp[c], pp);
 
-		const float rdb = self->m_rms[c];
-		const float pdb = self->m_peak[c];
-		const float dr = MIN(0,pdb) - rdb;
-		if (rdb > -80 && pdb > -80) {
-			dr_total += dr;
-			dr_valid++;
-		}
-
 		/* assign output data to ports */
-		*self->p_v_rms[c]  = coeff_to_db(self->km[c]->read());
+		*self->p_v_rms[c]  = coeff_to_db(rv);
 		*self->p_v_peak[c] = coeff_to_db(pv);
 		*self->p_m_peak[c] = coeff_to_db(self->m_dbtp[c]);
 
-		*self->p_dr[c]     = (rdb > -80 && pdb > -80) ? MAX(1, MIN(20, dr)) : 21;
-		*self->p_m_rms[c]  = rdb;
+		if (self->dr_operation_mode) {
+			const float rdb = self->m_rms[c];
+			const float pdb = self->m_peak[c];
+			const float dr = MIN(0,pdb) - rdb;
+			if (rdb > -80 && pdb > -80) {
+				dr_total += dr;
+				dr_valid++;
+			}
+			*self->p_dr[c]     = (rdb > -80 && pdb > -80) ? MAX(1, MIN(20, dr)) : 21;
+			*self->p_m_rms[c]  = rdb;
+		} else {
+			*self->p_m_rms[c]  = coeff_to_db(rp);
+		}
 	}
 
-	if (self->n_channels > 1) {
+	if (self->n_channels > 1 && self->dr_operation_mode) {
 		if (dr_valid > 0) {
 			*self->p_dr_total = MAX(1, MIN(20, dr_total / (float) dr_valid));
 		} else {
@@ -440,13 +471,15 @@ dr14_run(LV2_Handle instance, uint32_t n_samples)
 	*self->p_block_count = 3.0 * self->num_fragments;
 
 	if (self->reinit_gui) {
-		if (self->n_channels > 1) {
+		if (self->n_channels > 1 && self->dr_operation_mode) {
 			*self->p_dr_total = 21;
 		}
 		for (uint32_t c = 0; c < self->n_channels; ++c) {
 			*self->p_m_peak[c] = -100;
 			*self->p_m_rms[c]  = -100;
-			*self->p_dr[c]     = 21;
+			if (self->dr_operation_mode) {
+				*self->p_dr[c]     = 21;
+			}
 		}
 		*self->p_block_count = -1 - (rand() & 0xffff);
 	}
@@ -467,6 +500,9 @@ dr14_cleanup(LV2_Handle instance)
 	for (uint32_t c = 0; c < self->n_channels; ++c) {
 		delete self->km[c];
 		delete self->tp[c];
+		if (self->dr_operation_mode) {
+			free(self->hist[c]);
+		}
 	}
 
 	free(instance);
@@ -488,3 +524,8 @@ DR14DESC(DR14_1, "dr14mono");
 DR14DESC(DR14_2, "dr14stereo");
 DR14DESC(DR14_1Gtk, "dr14mono_gtk");
 DR14DESC(DR14_2Gtk, "dr14stereo_gtk");
+
+DR14DESC(TPRMS_1, "TPnRMSmono");
+DR14DESC(TPRMS_2, "TPnRMSstereo");
+DR14DESC(TPRMS_1Gtk, "TPnRMSmono_gtk");
+DR14DESC(TPRMS_2Gtk, "TPnRMSstereo_gtk");
