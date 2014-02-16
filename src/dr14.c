@@ -425,13 +425,13 @@ dr14_run(LV2_Handle instance, uint32_t n_samples)
 		*self->p_v_peak[c] = coeff_to_db(pv);
 		*self->p_m_peak[c] = coeff_to_db(self->m_dbtp[c]);
 
-		*self->p_dr[c]     = (rdb > -80 && pdb > -80) ? MAX(0, MIN(20, dr)) : 21;
+		*self->p_dr[c]     = (rdb > -80 && pdb > -80) ? MAX(1, MIN(20, dr)) : 21;
 		*self->p_m_rms[c]  = rdb;
 	}
 
 	if (self->n_channels > 1) {
 		if (dr_valid > 0) {
-			*self->p_dr_total = MAX(0, MIN(20, dr_total / (float) dr_valid));
+			*self->p_dr_total = MAX(1, MIN(20, dr_total / (float) dr_valid));
 		} else {
 			*self->p_dr_total = 21;
 		}
