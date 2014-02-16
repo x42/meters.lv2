@@ -733,7 +733,7 @@ static void invalidate_peak(KMUI* ui, int mtr, float val) {
 }
 
 static void invalidate_hold(KMUI* ui, float val) {
-	//if (ui->peak_max == val) return;
+	if (ui->peak_max == val) return;
 	ui->peak_max = val;
 	INVALIDATE_RECT((ui->width - PK_WIDTH) / 2.0f - 1, GM_TOP/2 - 9, PK_WIDTH+2, 18);
 }
@@ -789,7 +789,7 @@ port_event(LV2UI_Handle handle,
 			ui->write(ui->controller, 0, sizeof(float), 0, (const void*) &temp);
 		}
 		ui->dBFS = (val < 0);
-	} else if (ui->initialize == 1 && ((port_index == 5 && ui->num_meters == 1) || port_index == 9 && ui->num_meters == 2)) {
+	} else if (ui->initialize == 1 && ((port_index == 5 && ui->num_meters == 1) || (port_index == 9 && ui->num_meters == 2))) {
 			ui->initialize = 2;
 			float temp = (ui->dBFS) ? -4 : 4;
 			ui->write(ui->controller, 0, sizeof(float), 0, (const void*) &temp);
