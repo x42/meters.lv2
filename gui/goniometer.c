@@ -55,6 +55,7 @@ typedef void Stcorrdsp;
 #define GM_RAD2   (100.0f)
 
 #define MAX_CAIRO_PATH 32
+#define PC_BLOCKSIZE (PC_HEIGHT - PC_BLOCK - 2)
 
 #define GAINSCALE(x) (x > .01 ? ((20 * log10f(x) + 40) / 6.60206) : 0)
 #define INV_GAINSCALE(x) (powf(10, .05*((x * 6.602059) - 40)))
@@ -780,13 +781,12 @@ static bool expose_event(RobWidget* handle, cairo_t* cr, cairo_rectangle_t *ev) 
 		cairo_fill(cr);
 
 		CairoSetSouerceRGBA(c_blk);
-		cairo_set_line_width(cr, 1.0);
 		rounded_rectangle (cr, PC_LEFT -1.0, PC_TOP - 2.0 , PC_WIDTH + 2.0, PC_HEIGHT + 4.0, 6);
 		cairo_fill(cr);
 
 		/* value */
 		CairoSetSouerceRGBA(c_glb);
-		const float c = (PC_HEIGHT - PC_BLOCK) * ui->cor;
+		const float c = .5 + rintf(PC_BLOCKSIZE * ui->cor_u);
 		rounded_rectangle (cr, PC_LEFT, PC_TOP + c, PC_WIDTH, PC_BLOCK, 2);
 		cairo_fill(cr);
 
@@ -1391,14 +1391,12 @@ static void invalidate_gm(GMUI* ui) {
  * backend communication
  */
 static void invalidate_pc(GMUI* ui) {
-	float c;
-#define PC_BLOCKSIZE (PC_HEIGHT - PC_BLOCK)
+	float c0, c1;
 	if (rint(PC_BLOCKSIZE * ui->cor_u * 2) == rint (PC_BLOCKSIZE * ui->cor * 2)) return;
-	c = PC_BLOCKSIZE * ui->cor_u;
-	queue_tiny_area(ui->m0, PC_LEFT, PC_TOP + c -1 , PC_WIDTH, PC_BLOCK + 2);
+	c0 = PC_BLOCKSIZE * MIN(ui->cor_u, ui->cor);
+	c1 = PC_BLOCKSIZE * MAX(ui->cor_u, ui->cor);
 	ui->cor_u = ui->cor;
-	c = PC_BLOCKSIZE * ui->cor_u;
-	queue_tiny_area(ui->m0, PC_LEFT, PC_TOP + c -1 , PC_WIDTH, PC_BLOCK + 2);
+	queue_tiny_area(ui->m0, PC_LEFT, floorf(PC_TOP + c0), PC_WIDTH, ceilf(PC_BLOCK + 1 + c1 - c0));
 }
 
 /******************************************************************************
