@@ -121,7 +121,7 @@ typedef struct {
 	float lp0, lp1;
 	float hpw;
 
-	float cor, cor_u;
+	float cor;
 	uint32_t ntfy_u, ntfy_b;
 
 	float gain;
@@ -786,7 +786,7 @@ static bool expose_event(RobWidget* handle, cairo_t* cr, cairo_rectangle_t *ev) 
 
 		/* value */
 		CairoSetSouerceRGBA(c_glb);
-		const float c = .5 + rintf(PC_BLOCKSIZE * ui->cor_u);
+		const float c = .5 + rintf(PC_BLOCKSIZE * ui->cor);
 		rounded_rectangle (cr, PC_LEFT, PC_TOP + c, PC_WIDTH, PC_BLOCK, 2);
 		cairo_fill(cr);
 
@@ -1062,7 +1062,6 @@ instantiate(
 	ui->gain = 1.0;
 
 	ui->cor = 0.5;
-	ui->cor_u = 0.5;
 	ui->ntfy_b = 0;
 	ui->ntfy_u = 1;
 	ui->disable_signals = false;
@@ -1390,12 +1389,12 @@ static void invalidate_gm(GMUI* ui) {
 /******************************************************************************
  * backend communication
  */
-static void invalidate_pc(GMUI* ui) {
+static void invalidate_pc(GMUI* ui, const float val) {
 	float c0, c1;
-	if (rint(PC_BLOCKSIZE * ui->cor_u * 2) == rint (PC_BLOCKSIZE * ui->cor * 2)) return;
-	c0 = PC_BLOCKSIZE * MIN(ui->cor_u, ui->cor);
-	c1 = PC_BLOCKSIZE * MAX(ui->cor_u, ui->cor);
-	ui->cor_u = ui->cor;
+	if (rint(PC_BLOCKSIZE * ui->cor * 2) == rint (PC_BLOCKSIZE * val * 2)) return;
+	c0 = PC_BLOCKSIZE * MIN(ui->cor, val);
+	c1 = PC_BLOCKSIZE * MAX(ui->cor, val);
+	ui->cor = val;
 	queue_tiny_area(ui->m0, PC_LEFT, floorf(PC_TOP + c0), PC_WIDTH, ceilf(PC_BLOCK + 1 + c1 - c0));
 }
 
@@ -1421,8 +1420,7 @@ port_event(LV2UI_Handle handle,
 		}
 	} else
 	if (port_index == 5) {
-		ui->cor = 0.5f * (1.0f - *(float *)buffer);
-		invalidate_pc(ui);
+		invalidate_pc(ui, 0.5f * (1.0f - *(float *)buffer));
 	} else
 	if (port_index == 6) {
 		ui->ntfy_b = (uint32_t) (*(float *)buffer);

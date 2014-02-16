@@ -131,7 +131,7 @@ typedef struct {
 
 	float db_cutoff;
 	float db_thresh;
-	float cor, cor_u;
+	float cor;
 
 	float phase[FFT_BINS_MAX];
 	float level[FFT_BINS_MAX];
@@ -1071,7 +1071,7 @@ instantiate(
 	ui->db_thresh = 0.000001; // (-60dB)^2
 	ui->drag_cutoff_x = -1;
 	ui->prelight_cutoff = false;
-	ui->cor = ui->cor_u = 0.5;
+	ui->cor = 0.5;
 	ui->disable_signals = false;
 	ui->update_annotations = false;
 	ui->update_grid = false;
@@ -1146,13 +1146,12 @@ extension_data(const char* uri)
  */
 
 static void invalidate_pc(MF2UI* ui, const float val) {
-	float c;
-	if (rint(PC_BLOCKSIZE * ui->cor_u * 2) == rint (PC_BLOCKSIZE * val * 2)) return;
-	c = rintf(PC_TOP + PC_BLOCKSIZE * ui->cor_u);
-	queue_tiny_area(ui->m1, PC_LEFT, c - 1 , PC_WIDTH, PC_BLOCK + 2);
-	ui->cor_u = ui->cor = val;
-	c = rintf(PC_TOP + PC_BLOCKSIZE * ui->cor_u);
-	queue_tiny_area(ui->m1, PC_LEFT, c - 1 , PC_WIDTH, PC_BLOCK + 2);
+	float c0, c1;
+	if (rint(PC_BLOCKSIZE * ui->cor * 2) == rint (PC_BLOCKSIZE * val * 2)) return;
+	c0 = PC_BLOCKSIZE * MIN(ui->cor, val);
+	c1 = PC_BLOCKSIZE * MAX(ui->cor, val);
+	ui->cor = val;
+	queue_tiny_area(ui->m1, PC_LEFT, floorf(PC_TOP + c0), PC_WIDTH, ceilf(PC_BLOCK + 1 + c1 - c0));
 }
 
 /******************************************************************************/
