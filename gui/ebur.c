@@ -1012,7 +1012,7 @@ static void invalidate_changed(EBUrUI* ui, int what) {
 			rect.height = 2 + MAX3(CY, dy0, dy1) - rect.y;
 
 			ui->fastradar = ui->radar_pos_cur;
-			queue_tiny_area(ui->m0, rect.x, rect.y, rect.width, rect.height);
+			queue_tiny_area(ui->m0, floorf(rect.x), floorf(rect.y), ceilf(rect.width), ceilf(rect.height));
 		} else {
 			/// XXX may be ignored IFF coincides with ring-lvl, hence:
 			ui->fullradar = true;
@@ -1066,7 +1066,7 @@ static void invalidate_histogram_line(EBUrUI* ui, int p) {
 
 	//printf("Q HIST: %.1f+%.1f %.1fx%.1f\n", rect.x, rect.y, rect.width, rect.height);
 	if (!ui->fasthist) {
-		queue_tiny_area(ui->m0, rect.x, rect.y, rect.width, rect.height);
+		queue_tiny_area(ui->m0, floorf(rect.x), floorf(rect.y), ceilf(rect.width), ceilf(rect.height));
 		ui->fasthist = true;
 	} else if (!ui->fullradar) {
 		ui->fullradar = true;
