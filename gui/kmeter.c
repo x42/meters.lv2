@@ -26,6 +26,8 @@
 #define MTR_URI "http://gareus.org/oss/lv2/meters#"
 #define MTR_GUI "kmeterui"
 
+#define LVGL_RESIZEABLE
+
 #define GM_TOP    25.5f
 #define GM_BOTTOM  9.5f
 #define GM_LEFT    4.5f
@@ -35,13 +37,13 @@
 #define PK_WIDTH  28.0f
 
 #define GM_HEIGHT (460.0f)
-#define GM_SCALE  (GM_HEIGHT - GM_TOP - GM_BOTTOM - 2.0)
+#define GM_SCALE  (ui->height - GM_TOP - GM_BOTTOM - 2.0)
 
 #define MAX_METERS 2
 
-#define	TOF ((GM_TOP           ) / GM_HEIGHT)
-#define	BOF ((GM_TOP + GM_SCALE) / GM_HEIGHT)
-#define	YVAL(x) ((GM_TOP + GM_SCALE - (x)) / GM_HEIGHT)
+#define	TOF ((GM_TOP           ) / ui->height)
+#define	BOF ((GM_TOP + GM_SCALE) / ui->height)
+#define	YVAL(x) ((GM_TOP + GM_SCALE - (x)) / ui->height)
 #define	YPOS(x) (GM_TOP + GM_SCALE - (x))
 
 #define UINT_TO_RGB(u,r,g,b) { (*(r)) = ((u)>>16)&0xff; (*(g)) = ((u)>>8)&0xff; (*(b)) = (u)&0xff; }
@@ -73,6 +75,7 @@ typedef struct {
 
 	uint32_t num_meters;
 	bool metrics_changed;
+	bool size_changed;
 
 	int  kstandard;
 	int  initialize;
@@ -119,8 +122,7 @@ static int deflect(KMUI* ui, float val) {
 static void render_meter(KMUI*, int, int, int, int, int);
 
 static void create_meter_pattern(KMUI* ui) {
-	const int width = GM_WIDTH;
-	const int height = GM_HEIGHT;
+	if (ui->mpat) cairo_pattern_destroy (ui->mpat);
 
 	int clr[12];
 	float stp[5];
@@ -143,7 +145,7 @@ static void create_meter_pattern(KMUI* ui) {
 	const double softT =  2.0 / (double) GM_SCALE;
 	const double softB =  2.0 / (double) GM_SCALE;
 
-	cairo_pattern_t* pat = cairo_pattern_create_linear (0.0, 0.0, 0.0, height);
+	cairo_pattern_t* pat = cairo_pattern_create_linear (0.0, 0.0, 0.0, ui->height);
 
 	cairo_pattern_add_color_stop_rgb (pat,  .0, .0 , .0, .0);
 	cairo_pattern_add_color_stop_rgb (pat, TOF - onep,      .0 , .0, .0);
@@ -205,7 +207,7 @@ static void create_meter_pattern(KMUI* ui) {
 	cairo_pattern_add_color_stop_rgb (pat, 1.0, .0 , .0, .0);
 
 	if (!getenv("NO_METER_SHADE") || strlen(getenv("NO_METER_SHADE")) == 0) {
-		cairo_pattern_t* shade_pattern = cairo_pattern_create_linear (0.0, 0.0, width, 0.0);
+		cairo_pattern_t* shade_pattern = cairo_pattern_create_linear (0.0, 0.0, GM_WIDTH, 0.0);
 		cairo_pattern_add_color_stop_rgba (shade_pattern, (GM_LEFT-1.0) / GM_WIDTH,   0.0, 0.0, 0.0, 0.15);
 		cairo_pattern_add_color_stop_rgba (shade_pattern, (GM_LEFT + GM_GIRTH * .35) / GM_WIDTH, 1.0, 1.0, 1.0, 0.10);
 		cairo_pattern_add_color_stop_rgba (shade_pattern, (GM_LEFT + GM_GIRTH * .53) / GM_WIDTH, 0.0, 0.0, 0.0, 0.05);
@@ -213,15 +215,15 @@ static void create_meter_pattern(KMUI* ui) {
 
 		cairo_surface_t* surface;
 		cairo_t* tc = 0;
-		surface = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, width, height);
+		surface = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, GM_WIDTH, ui->height);
 		tc = cairo_create (surface);
 		cairo_set_source (tc, pat);
-		cairo_rectangle (tc, 0, 0, width, height);
+		cairo_rectangle (tc, 0, 0, GM_WIDTH, ui->height);
 		cairo_fill (tc);
 		cairo_pattern_destroy (pat);
 
 		cairo_set_source (tc, shade_pattern);
-		cairo_rectangle (tc, 0, 0, width, height);
+		cairo_rectangle (tc, 0, 0, GM_WIDTH, ui->height);
 		cairo_fill (tc);
 		cairo_pattern_destroy (shade_pattern);
 
@@ -229,9 +231,9 @@ static void create_meter_pattern(KMUI* ui) {
 		cairo_save (tc);
 		cairo_set_line_width(tc, 1.0);
 		cairo_set_source_rgba(tc, .0, .0, .0, 0.4);
-		for (float y=0.5; y < height; y+= 2.0) {
+		for (float y=0.5; y < ui->height; y+= 2.0) {
 			cairo_move_to(tc, 0, y);
-			cairo_line_to(tc, width, y);
+			cairo_line_to(tc, GM_WIDTH, y);
 			cairo_stroke (tc);
 		}
 		cairo_restore (tc);
@@ -256,12 +258,12 @@ static void write_text(
 }
 
 #define INIT_ANN_BG(VAR, WIDTH, HEIGHT) \
-	if (!VAR) \
+	if (VAR) cairo_surface_destroy(VAR);\
 	VAR = cairo_image_surface_create (CAIRO_FORMAT_RGB24, WIDTH, HEIGHT); \
 	cr = cairo_create (VAR);
 
 #define INIT_ANN_LB(VAR, WIDTH, HEIGHT) \
-	if (!VAR) \
+	if (VAR) cairo_surface_destroy(VAR);\
 	VAR = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, WIDTH, HEIGHT); \
 	cr = cairo_create (VAR); \
 	cairo_set_operator (cr, CAIRO_OPERATOR_SOURCE); \
@@ -328,16 +330,16 @@ static void create_metrics(KMUI* ui) {
 	DO_THE_METER( -40, "-40") \
 	DO_THE_METER( -60, "-60") \
 
-	INIT_ANN_BG(ui->ma[0], MA_WIDTH, GM_HEIGHT);
+	INIT_ANN_BG(ui->ma[0], MA_WIDTH, ui->height);
 	CairoSetSouerceRGBA(ui->c_bgr);
-	cairo_rectangle (cr, 0, 0, MA_WIDTH, GM_HEIGHT);
+	cairo_rectangle (cr, 0, 0, MA_WIDTH, ui->height);
 	cairo_fill (cr);
 	DO_THE_METRICS
 	cairo_destroy (cr);
 
-	INIT_ANN_BG(ui->ma[1], MA_WIDTH, GM_HEIGHT)
+	INIT_ANN_BG(ui->ma[1], MA_WIDTH, ui->height)
 	CairoSetSouerceRGBA(ui->c_bgr);
-	cairo_rectangle (cr, 0, 0, MA_WIDTH, GM_HEIGHT);
+	cairo_rectangle (cr, 0, 0, MA_WIDTH, ui->height);
 	cairo_fill (cr);
 	DO_THE_METRICS
 
@@ -345,12 +347,12 @@ static void create_metrics(KMUI* ui) {
 	pango_font_description_free(font);
 
 #define ALLOC_SF(VAR) \
-	if (!VAR) \
-	VAR = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, GM_WIDTH, GM_HEIGHT);\
+	if (VAR) cairo_surface_destroy(VAR);\
+	VAR = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, GM_WIDTH, ui->height);\
 	cr = cairo_create (VAR);\
 	CairoSetSouerceRGBA(ui->c_bgr); \
 	cairo_set_operator (cr, CAIRO_OPERATOR_SOURCE);\
-	cairo_rectangle (cr, 0, 0, GM_WIDTH, GM_HEIGHT);\
+	cairo_rectangle (cr, 0, 0, GM_WIDTH, ui->height);\
 	cairo_fill (cr);
 
 #define GAINLINE(DB) \
@@ -451,6 +453,12 @@ static void render_meter(KMUI* ui, int i, int v_old, int v_new, int m_old, int m
 static bool expose_event(RobWidget* handle, cairo_t* cr, cairo_rectangle_t *ev) {
 	KMUI* ui = (KMUI*)GET_HANDLE(handle);
 
+	if (ui->size_changed) {
+		create_metrics(ui);
+		create_meter_pattern(ui);
+		ui->size_changed = false;
+		ui->metrics_changed = false;
+	}
 	if (ui->metrics_changed) {
 		ui->metrics_changed = false;
 		create_metrics(ui);
@@ -468,7 +476,7 @@ static bool expose_event(RobWidget* handle, cairo_t* cr, cairo_rectangle_t *ev) 
 	cairo_paint (cr);
 
 	for (uint32_t i = 0; i < ui->num_meters ; ++i) {
-		if (!rect_intersect_a(ev, MA_WIDTH + GM_WIDTH * i, 0, GM_WIDTH, GM_HEIGHT)) continue;
+		if (!rect_intersect_a(ev, MA_WIDTH + GM_WIDTH * i, 0, GM_WIDTH, ui->height)) continue;
 
 		const int v_old = ui->val_vis[i];
 		const int v_new = ui->val_def[i];
@@ -523,7 +531,7 @@ static bool expose_event(RobWidget* handle, cairo_t* cr, cairo_rectangle_t *ev) 
 	/* labels */
 	cairo_set_source_surface(cr, ui->lb[1], 0, 0);
 	cairo_paint (cr);
-	cairo_set_source_surface(cr, ui->lb[0], 0, GM_HEIGHT-20);
+	cairo_set_source_surface(cr, ui->lb[0], 0, ui->height-20);
 	cairo_paint (cr);
 
 	return TRUE;
@@ -559,13 +567,22 @@ static void
 size_request(RobWidget* handle, int *w, int *h) {
 	KMUI* ui = (KMUI*)GET_HANDLE(handle);
 	*w = ui->width;
-	*h = ui->height;
+	*h = GM_HEIGHT;
+}
+
+static void
+size_allocate(RobWidget* handle, int w, int h) {
+	KMUI* ui = (KMUI*)GET_HANDLE(handle);
+	ui->height = h;
+	ui->size_changed = true;
+	robwidget_set_size(handle, ui->width, h);
+	queue_draw(ui->m0);
 }
 
 static RobWidget * toplevel(KMUI* ui, void * const top)
 {
 	/* main widget: layout */
-	ui->rw = rob_hbox_new(FALSE, 2);
+	ui->rw = rob_vbox_new(FALSE, 0);
 	robwidget_make_toplevel(ui->rw, top);
 
 	/* DPM main drawing area */
@@ -574,9 +591,10 @@ static RobWidget * toplevel(KMUI* ui, void * const top)
 
 	robwidget_set_expose_event(ui->m0, expose_event);
 	robwidget_set_size_request(ui->m0, size_request);
+	robwidget_set_size_allocate(ui->m0, size_allocate);
 	robwidget_set_mousedown(ui->m0, cb_reset_peak);
 
-	rob_hbox_child_pack(ui->rw, ui->m0, TRUE, TRUE);
+	rob_vbox_child_pack(ui->rw, ui->m0, TRUE, TRUE);
 	return ui->rw;
 }
 
@@ -621,9 +639,9 @@ instantiate(
 	ui->c_bgr[3] = 1.0;
 
 	ui->dBFS = true;
+	ui->size_changed = true;
 	ui->metrics_changed = true;
 
-	create_meter_pattern(ui);
 	ui->font = pango_font_description_from_string("Mono 7");
 
 	for (uint32_t i=0; i < ui->num_meters ; ++i) {
@@ -682,7 +700,7 @@ extension_data(const char* uri)
  * backend communication
  */
 
-#define INVALIDATE_RECT(XX,YY,WW,HH) queue_tiny_area(ui->m0, XX, YY, WW, HH);
+#define INVALIDATE_RECT(XX,YY,WW,HH) queue_tiny_area(ui->m0, floorf(XX), floorf(YY), WW, HH);
 
 static void invalidate_meter(KMUI* ui, int mtr, float val) {
 	const int v_old = ui->val_def[mtr];
