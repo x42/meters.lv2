@@ -1019,7 +1019,7 @@ static void invalidate_meter(SAUI* ui, int mtr, float val, float peak) {
 		queue_tiny_area(ui->m0, mtr * GM_WIDTH + MA_WIDTH + GM_WIDTH/2 - 32, GM_TXT - 10, 64, 54);
 	}
 
-	if (rintf(m_old * 10.0f) != rintf(m_new * 10.0f) && !ui->display_freq) {
+	if (rintf(ui->peak_val[mtr] * 10.0f) != rintf(peak * 10.0f) && !ui->display_freq) {
 		INVALIDATE_RECT(mtr * GM_WIDTH + MA_WIDTH, GM_TOP/2 - 7, GM_WIDTH, 18);
 	}
 
