@@ -1248,9 +1248,9 @@ instantiate(
 	rob_hbox_child_pack(ui->b_box, GBT_W(ui->cbn_lines), FALSE, FALSE);
 
 	/* global packing */
-	rob_vbox_child_pack(ui->box, ui->m0, FALSE, FALSE);
-	rob_vbox_child_pack(ui->box, ui->b_box, FALSE, FALSE);
-	rob_vbox_child_pack(ui->box, ui->c_tbl, FALSE, FALSE);
+	rob_vbox_child_pack(ui->box, ui->m0, FALSE, TRUE);
+	rob_vbox_child_pack(ui->box, ui->b_box, FALSE, TRUE);
+	rob_vbox_child_pack(ui->box, ui->c_tbl, FALSE, TRUE);
 
 	robtk_cbtn_set_active(ui->cbn_preferences, FALSE);
 	restore_state(ui);
