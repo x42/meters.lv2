@@ -17,6 +17,7 @@
  */
 
 /* various GUI pixel sizes */
+#define LVGL_RESIZEABLE
 
 #define PH_RAD   (160) ///< radius of main data display
 #define PH_POINT (3.0) ///< radius a single data point
@@ -884,7 +885,7 @@ static bool cb_set_norm (RobWidget* handle, void *data) {
 static enum LVGLResize
 plugin_scale_mode(LV2UI_Handle handle)
 {
-	return LVGL_LAYOUT_TO_FIT;
+	return LVGL_ZOOM_TO_ASPECT;
 }
 
 static void
