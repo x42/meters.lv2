@@ -121,6 +121,7 @@ typedef struct {
 	RobTkSep* sep0;
 	RobTkSep* sep1;
 	RobTkSep* sep2;
+	RobTkSep* sep3;
 
 	cairo_surface_t* sf_dat;
 	cairo_surface_t* sf_ann;
@@ -150,6 +151,8 @@ typedef struct {
 	bool update_grid;
 	uint32_t width;
 	uint32_t height;
+	uint32_t m0_width;
+	uint32_t m0_height;
 
 	float log_rate;
 	float log_base;
@@ -160,6 +163,7 @@ typedef struct {
 
 	float c_fg[4];
 	float c_bg[4];
+	float scale;
 } MF2UI;
 
 
@@ -622,6 +626,11 @@ static void plot_data_oct(MF2UI* ui) {
 static bool expose_event(RobWidget* handle, cairo_t* cr, cairo_rectangle_t *ev) {
 	MF2UI* ui = (MF2UI*)GET_HANDLE(handle);
 
+	cairo_translate(cr,
+			(ui->m0_width - ui->width * ui->scale) * .5,
+			(ui->m0_height - ui->height * ui->scale) * .5);
+	cairo_scale(cr, ui->scale, ui->scale);
+
 	if (ui->update_grid) {
 		update_grid(ui);
 		ui->update_grid = false;
@@ -885,14 +894,36 @@ static bool cb_set_norm (RobWidget* handle, void *data) {
 static enum LVGLResize
 plugin_scale_mode(LV2UI_Handle handle)
 {
-	return LVGL_ZOOM_TO_ASPECT;
+	return LVGL_LAYOUT_TO_FIT;
 }
 
 static void
 size_request(RobWidget* handle, int *w, int *h) {
 	MF2UI* ui = (MF2UI*)GET_HANDLE(handle);
-	*w = ui->width;
-	*h = ui->height;
+	*w = 2 * (PH_RAD + XOFF);
+	*h = 2 * (PH_RAD + YOFF);
+}
+
+static void
+m0_set_scaling(RobWidget* rw, int w, int h) {
+	MF2UI* ui = (MF2UI*)GET_HANDLE(rw);
+	const int dflw = 2 * (PH_RAD + YOFF);
+	const int dflh = 2 * (PH_RAD + YOFF);
+	float scale = MIN(w/(float)dflw, h/(float)dflh);
+	scale = rintf(scale*10)/10.0;
+	if (scale < .5 ) scale = .5;
+	if (scale > 2.5 ) scale = 2.5;
+	ui->m0_width = w;
+	ui->m0_height = h;
+	ui->scale  = scale;
+	//printf("SCALE: %f\n",scale);
+	queue_draw(rw);
+}
+
+static void
+m0_size_allocate(RobWidget* rw, int w, int h) {
+	m0_set_scaling(rw, w, h);
+	robwidget_set_size(rw, w, h);
 }
 
 static void
@@ -924,7 +955,7 @@ static RobWidget * toplevel(MF2UI* ui, void * const top)
 	ui->hbox3 = rob_hbox_new(FALSE, 0);
 	ui->sep2 = robtk_sep_new(true);
 
-	rob_vbox_child_pack(ui->rw, ui->hbox1, FALSE, FALSE);
+	rob_vbox_child_pack(ui->rw, ui->hbox1, TRUE, TRUE);
 	rob_vbox_child_pack(ui->rw, ui->hbox2, FALSE, FALSE);
 	rob_vbox_child_pack(ui->rw, robtk_sep_widget(ui->sep2), FALSE, FALSE);
 	rob_vbox_child_pack(ui->rw, ui->hbox3, FALSE, FALSE);
@@ -941,7 +972,8 @@ static RobWidget * toplevel(MF2UI* ui, void * const top)
 	ROBWIDGET_SETNAME(ui->m0, "mphase (m0)");
 	robwidget_set_expose_event(ui->m0, expose_event);
 	robwidget_set_size_request(ui->m0, size_request);
-	rob_hbox_child_pack(ui->hbox1, ui->m0, FALSE, FALSE);
+	robwidget_set_size_allocate(ui->m0, m0_size_allocate);
+	rob_hbox_child_pack(ui->hbox1, ui->m0, TRUE, TRUE);
 
 	/* phase correlation */
 	ui->m1 = robwidget_new(ui);
@@ -957,6 +989,10 @@ static RobWidget * toplevel(MF2UI* ui, void * const top)
 	robwidget_set_size_request(ui->m2, ga_size_request);
 	rob_hbox_child_pack(ui->hbox2, ui->m2, FALSE, FALSE);
 
+	ui->sep3 = robtk_sep_new(true);
+	robtk_sep_set_linewidth(ui->sep3, 0);
+	rob_hbox_child_pack(ui->hbox2, robtk_sep_widget(ui->sep3), TRUE, TRUE);
+
 	robwidget_set_mousedown(ui->m2, m2_mousedown);
 	robwidget_set_mouseup(ui->m2, m2_mouseup);
 	robwidget_set_mousemove(ui->m2, m2_mousemove);
@@ -966,7 +1002,7 @@ static RobWidget * toplevel(MF2UI* ui, void * const top)
 	/* gain dial */
 	ui->gain = robtk_dial_new_with_size(-40.0, 40.0, .01,
 			60, 40, 30.5, 16.5, 10);
-	robtk_dial_set_alignment(ui->gain, .5, 1.0);
+	robtk_dial_set_alignment(ui->gain, 1.0, 0.5);
 	robtk_dial_set_value(ui->gain, 0);
 	robtk_dial_set_default(ui->gain, 20.0);
 	robtk_dial_set_callback(ui->gain, cb_set_gain, ui);
@@ -1081,6 +1117,7 @@ instantiate(
 	ui->freq_bins = 0;
 	ui->pgain = -100;
 	ui->peak = 0;
+	ui->scale = 1.0;
 
 	ui->width  = 2 * (PH_RAD + XOFF);
 	ui->height = 2 * (PH_RAD + YOFF);
@@ -1114,6 +1151,7 @@ cleanup(LV2UI_Handle handle)
 	robtk_sep_destroy(ui->sep0);
 	robtk_sep_destroy(ui->sep1);
 	robtk_sep_destroy(ui->sep2);
+	robtk_sep_destroy(ui->sep3);
 	robtk_dial_destroy(ui->gain);
 	robtk_cbtn_destroy(ui->btn_oct);
 	robtk_cbtn_destroy(ui->btn_norm);
