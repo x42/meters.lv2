@@ -20,7 +20,7 @@
 #define LVGL_RESIZEABLE
 
 #define PH_RAD   (160) ///< radius of main data display
-#define PH_POINT (3.0) ///< radius a single data point
+#define PH_POINT (ui->pscale * 3.0) ///< radius a single data point
 
 #define XOFF 5
 #define YOFF 5
@@ -35,7 +35,7 @@
 #define SCREEN_PERSIETSNCE_FLT (.22)
 
 /* level range annotation */
-#define ANN_W (ui->width)
+#define ANN_W (2 * (PH_RAD + XOFF))
 #define ANN_H 32
 #define ANN_B 25 ///< offset from bottom
 
@@ -122,6 +122,7 @@ typedef struct {
 	RobTkSep* sep1;
 	RobTkSep* sep2;
 	RobTkSep* sep3;
+	RobTkSep* sep4;
 
 	cairo_surface_t* sf_dat;
 	cairo_surface_t* sf_ann;
@@ -164,6 +165,7 @@ typedef struct {
 	float c_fg[4];
 	float c_bg[4];
 	float scale;
+	float pscale;
 } MF2UI;
 
 
@@ -275,11 +277,12 @@ static void hsl2rgb(float c[3], const float hue, const float sat, const float lu
 }
 
 /** prepare drawing surfaces, render fixed background */
-static void create_surfaces(MF2UI* ui) {
+static void m0_create_surfaces(MF2UI* ui) {
 	cairo_t* cr;
 	const double ccc = ui->width / 2.0 + .5;
 	const double rad = (ui->width - XOFF) * .5;
 
+	if (ui->sf_ann) cairo_surface_destroy(ui->sf_ann);
 	ui->sf_ann = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, ui->width, ui->height);
 	cr = cairo_create (ui->sf_ann);
 	cairo_rectangle (cr, 0, 0, ui->width, ui->height);
@@ -287,6 +290,7 @@ static void create_surfaces(MF2UI* ui) {
 	cairo_fill (cr);
 	cairo_destroy (cr);
 
+	if (ui->sf_dat) cairo_surface_destroy(ui->sf_dat);
 	ui->sf_dat = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, ui->width, ui->height);
 	cr = cairo_create (ui->sf_dat);
 	cairo_set_operator (cr, CAIRO_OPERATOR_SOURCE);
@@ -298,7 +302,10 @@ static void create_surfaces(MF2UI* ui) {
 	cairo_arc (cr, ccc, ccc, rad, 0, 2.0 * M_PI);
 	cairo_fill (cr);
 	cairo_destroy (cr);
+}
 
+static void m1_create_surfaces(MF2UI* ui) {
+	cairo_t* cr;
 	ui->sf_pc[0] = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, PC_WIDTH, 16);
 	cr = cairo_create (ui->sf_pc[0]);
 	cairo_set_operator (cr, CAIRO_OPERATOR_SOURCE);
@@ -316,8 +323,11 @@ static void create_surfaces(MF2UI* ui) {
 	cairo_fill (cr);
 	write_text_full(cr, "-1", ui->font[1], PC_WIDTH / 2, 10, 0, 2, c_ann);
 	cairo_destroy (cr);
+}
 
-	ui->sf_gain = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, ui->width, 40);
+static void m2_create_surfaces(MF2UI* ui) {
+	cairo_t* cr;
+	ui->sf_gain = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, ANN_W, 40);
 
 #define AMPLABEL(V, O, T, X) \
 	{ \
@@ -384,7 +394,7 @@ static void update_grid(MF2UI* ui) {
 		}
 
 		{
-			const float dr = PH_RAD * fast_log10(1.0 + 2 * freq * ui->log_rate / ui->rate) / ui->log_base;
+			const float dr = ui->scale * PH_RAD * fast_log10(1.0 + 2 * freq * ui->log_rate / ui->rate) / ui->log_base;
 			cairo_arc (cr, ccc, ccc, dr, 0, 2.0 * M_PI);
 			cairo_stroke(cr);
 			const float px = ccc + dr * sinf(M_PI * -.75);
@@ -428,7 +438,7 @@ static void update_grid(MF2UI* ui) {
 static void update_annotations(MF2UI* ui) {
 	cairo_t* cr = cairo_create (ui->sf_gain);
 
-	cairo_rectangle (cr, 0, 0, ui->width, 40);
+	cairo_rectangle (cr, 0, 0, ANN_W, 40);
 	CairoSetSouerceRGBA(ui->c_bg);
 	cairo_fill (cr);
 
@@ -441,7 +451,7 @@ static void update_annotations(MF2UI* ui) {
 	cairo_fill (cr);
 
 	cairo_set_line_width (cr, 1.0);
-	const uint32_t mxw = ui->width - XOFF * 2 - 36;
+	const uint32_t mxw = ANN_W - XOFF * 2 - 36;
 	const uint32_t mxo = XOFF + 18;
 
 	for (uint32_t i=0; i < mxw; ++i) {
@@ -500,7 +510,7 @@ static void update_annotations(MF2UI* ui) {
  * @param ccc circle radius (optional, show spread if >0)
  * @param dist, phase angular vector corresponding to X,Y (optional spread)
  */
-static inline void draw_point(cairo_t *cr,
+static inline void draw_point(MF2UI* ui, cairo_t *cr,
 		const float pk,
 		const float dx, const float dy,
 		const float ccc, const float dist, float phase)
@@ -545,7 +555,7 @@ static void plot_data_fft(MF2UI* ui) {
 	cairo_set_source_rgba(cr, 0, 0, 0, SCREEN_PERSIETSNCE_FFT);
 	cairo_fill(cr);
 	cairo_set_line_cap(cr, CAIRO_LINE_CAP_ROUND);
-	const float dnum = PH_RAD / ui->log_base;
+	const float dnum = ui->scale * PH_RAD / ui->log_base;
 	const float denom = ui->log_rate / (float)ui->fft_bins;
 	for (uint32_t i = 1; i < ui->fft_bins-1 ; ++i) {
 		if (ui->level[i] < 0) continue;
@@ -557,7 +567,7 @@ static void plot_data_fft(MF2UI* ui) {
 		const float dy = ccc - dist * cosf(ui->phase[i]);
 		const float pk = level > 0.0 ? 1.0 : (60 + level) / 60.0;
 
-		draw_point(cr, pk, dx, dy, ccc, dist, ui->phase[i]);
+		draw_point(ui, cr, pk, dx, dy, ccc, dist, ui->phase[i]);
 	}
 	cairo_destroy (cr);
 }
@@ -578,7 +588,7 @@ static void plot_data_oct(MF2UI* ui) {
 	cairo_fill(cr);
 	cairo_set_line_cap(cr, CAIRO_LINE_CAP_ROUND);
 
-	const float dnum = PH_RAD / ui->log_base;
+	const float dnum = ui->scale * PH_RAD / ui->log_base;
 	const float denom = 2.0 * ui->log_rate / ui->rate;
 
 	uint32_t fi = 1;
@@ -616,7 +626,7 @@ static void plot_data_oct(MF2UI* ui) {
 			dy = ccc - dist * cosf(phase);
 		}
 
-		draw_point(cr, pk, dx, dy, 0, 0, 0);
+		draw_point(ui, cr, pk, dx, dy, 0, 0, 0);
 	}
 
 	cairo_destroy (cr);
@@ -626,15 +636,18 @@ static void plot_data_oct(MF2UI* ui) {
 static bool expose_event(RobWidget* handle, cairo_t* cr, cairo_rectangle_t *ev) {
 	MF2UI* ui = (MF2UI*)GET_HANDLE(handle);
 
-	cairo_translate(cr,
-			(ui->m0_width - ui->width * ui->scale) * .5,
-			(ui->m0_height - ui->height * ui->scale) * .5);
-	cairo_scale(cr, ui->scale, ui->scale);
-
 	if (ui->update_grid) {
+		ui->width  = floor(ui->scale * 2 * (PH_RAD + XOFF));
+		ui->height = floor(ui->scale * 2 * (PH_RAD + YOFF));
+
+		m0_create_surfaces(ui);
 		update_grid(ui);
 		ui->update_grid = false;
 	}
+
+	cairo_translate(cr,
+			rint((ui->m0_width - ui->width) * .5),
+			rint((ui->m0_height - ui->height) * .5));
 
 	if (pthread_mutex_trylock (&ui->fft_lock) == 0 ) {
 		if (robtk_cbtn_get_active(ui->btn_oct)) {
@@ -680,6 +693,8 @@ static bool ga_expose_event(RobWidget* handle, cairo_t* cr, cairo_rectangle_t *e
 static bool pc_expose_event(RobWidget* handle, cairo_t* cr, cairo_rectangle_t *ev) {
 	MF2UI* ui = (MF2UI*)GET_HANDLE(handle);
 
+	cairo_translate(cr, 0, rint((ui->m0_height - ui->height) * .5));
+
 	cairo_rectangle (cr, ev->x, ev->y, ev->width, ev->height);
 	cairo_clip (cr);
 
@@ -693,7 +708,7 @@ static bool pc_expose_event(RobWidget* handle, cairo_t* cr, cairo_rectangle_t *e
 
 	CairoSetSouerceRGBA(c_blk);
 	cairo_set_line_width(cr, 1.0);
-	rounded_rectangle (cr, PC_LEFT, PC_TOP + 1.0, PC_WIDTH, PC_HEIGHT - 2.0, 6);
+	rounded_rectangle (cr, PC_LEFT-1, PC_TOP + 1.0, PC_WIDTH+2, PC_HEIGHT - 2.0, 3);
 	cairo_fill_preserve(cr);
 	cairo_save(cr);
 	cairo_clip(cr);
@@ -824,7 +839,7 @@ static RobWidget* m2_mouseup(RobWidget* handle, RobTkBtnEvent *event) {
 static RobWidget* m2_mousemove(RobWidget* handle, RobTkBtnEvent *event) {
 	MF2UI* ui = (MF2UI*)GET_HANDLE(handle);
 	if (ui->drag_cutoff_x < 0) return NULL;
-	const float mxw = 60. / (float) (ui->width - XOFF * 2 - 36);
+	const float mxw = 60. / (float) (ANN_W - XOFF * 2 - 36);
 	const float diff = (event->x - ui->drag_cutoff_x) * mxw;
 	float cutoff = ui->drag_cutoff_db + diff;
 	if (cutoff < -59) cutoff = -59;
@@ -899,7 +914,6 @@ plugin_scale_mode(LV2UI_Handle handle)
 
 static void
 size_request(RobWidget* handle, int *w, int *h) {
-	MF2UI* ui = (MF2UI*)GET_HANDLE(handle);
 	*w = 2 * (PH_RAD + XOFF);
 	*h = 2 * (PH_RAD + YOFF);
 }
@@ -910,13 +924,14 @@ m0_set_scaling(RobWidget* rw, int w, int h) {
 	const int dflw = 2 * (PH_RAD + YOFF);
 	const int dflh = 2 * (PH_RAD + YOFF);
 	float scale = MIN(w/(float)dflw, h/(float)dflh);
-	scale = rintf(scale*10)/10.0;
-	if (scale < .5 ) scale = .5;
-	if (scale > 2.5 ) scale = 2.5;
+	//scale = rintf(scale*10)/10.0;
+	//if (scale < .5 ) scale = .5;
+	//if (scale > 2.5 ) scale = 2.5;
 	ui->m0_width = w;
 	ui->m0_height = h;
 	ui->scale  = scale;
-	//printf("SCALE: %f\n",scale);
+	ui->pscale = sqrtf(scale);
+	ui->update_grid = true;
 	queue_draw(rw);
 }
 
@@ -927,15 +942,18 @@ m0_size_allocate(RobWidget* rw, int w, int h) {
 }
 
 static void
+pc_size_allocate(RobWidget* rw, int w, int h) {
+	robwidget_set_size(rw, PC_BOUNDW, h);
+}
+
+static void
 pc_size_request(RobWidget* handle, int *w, int *h) {
-	MF2UI* ui = (MF2UI*)GET_HANDLE(handle);
 	*w = PC_BOUNDW;
-	*h = PC_BOUNDH;
+	*h = 2 * (PH_RAD + YOFF);
 }
 
 static void
 ga_size_request(RobWidget* handle, int *w, int *h) {
-	MF2UI* ui = (MF2UI*)GET_HANDLE(handle);
 	*w = ANN_W;
 	*h = ANN_H;
 }
@@ -956,16 +974,16 @@ static RobWidget * toplevel(MF2UI* ui, void * const top)
 	ui->sep2 = robtk_sep_new(true);
 
 	rob_vbox_child_pack(ui->rw, ui->hbox1, TRUE, TRUE);
-	rob_vbox_child_pack(ui->rw, ui->hbox2, FALSE, FALSE);
-	rob_vbox_child_pack(ui->rw, robtk_sep_widget(ui->sep2), FALSE, FALSE);
-	rob_vbox_child_pack(ui->rw, ui->hbox3, FALSE, FALSE);
-
+	rob_vbox_child_pack(ui->rw, ui->hbox2, FALSE, TRUE);
+	rob_vbox_child_pack(ui->rw, robtk_sep_widget(ui->sep2), FALSE, TRUE);
+	rob_vbox_child_pack(ui->rw, ui->hbox3, FALSE, TRUE);
 
 	ui->font[0] = pango_font_description_from_string("Mono 7");
 	ui->font[1] = pango_font_description_from_string("Mono 8");
 	get_color_from_theme(0, ui->c_fg);
 	get_color_from_theme(1, ui->c_bg);
-	create_surfaces(ui);
+	m1_create_surfaces(ui);
+	m2_create_surfaces(ui);
 
 	/* main drawing area */
 	ui->m0 = robwidget_new(ui);
@@ -980,18 +998,24 @@ static RobWidget * toplevel(MF2UI* ui, void * const top)
 	ROBWIDGET_SETNAME(ui->m1, "phase (m1)");
 	robwidget_set_expose_event(ui->m1, pc_expose_event);
 	robwidget_set_size_request(ui->m1, pc_size_request);
-	rob_hbox_child_pack(ui->hbox1, ui->m1, FALSE, FALSE);
+	robwidget_set_size_allocate(ui->m1, pc_size_allocate);
+	rob_hbox_child_pack(ui->hbox1, ui->m1, FALSE, TRUE);
+
+	/* gain box */
+	ui->sep3 = robtk_sep_new(true);
+	ui->sep4 = robtk_sep_new(true);
+	robtk_sep_set_linewidth(ui->sep3, 0);
+	robtk_sep_set_linewidth(ui->sep4, 0);
 
 	/* gain annotation */
 	ui->m2 = robwidget_new(ui);
-	ROBWIDGET_SETNAME(ui->m1, "gain (m2)");
+	ROBWIDGET_SETNAME(ui->m2, "gain (m2)");
 	robwidget_set_expose_event(ui->m2, ga_expose_event);
 	robwidget_set_size_request(ui->m2, ga_size_request);
-	rob_hbox_child_pack(ui->hbox2, ui->m2, FALSE, FALSE);
 
-	ui->sep3 = robtk_sep_new(true);
-	robtk_sep_set_linewidth(ui->sep3, 0);
 	rob_hbox_child_pack(ui->hbox2, robtk_sep_widget(ui->sep3), TRUE, TRUE);
+	rob_hbox_child_pack(ui->hbox2, ui->m2, FALSE, FALSE);
+	rob_hbox_child_pack(ui->hbox2, robtk_sep_widget(ui->sep4), TRUE, TRUE);
 
 	robwidget_set_mousedown(ui->m2, m2_mousedown);
 	robwidget_set_mouseup(ui->m2, m2_mouseup);
@@ -1118,6 +1142,7 @@ instantiate(
 	ui->pgain = -100;
 	ui->peak = 0;
 	ui->scale = 1.0;
+	ui->pscale = 1.0;
 
 	ui->width  = 2 * (PH_RAD + XOFF);
 	ui->height = 2 * (PH_RAD + YOFF);
@@ -1152,6 +1177,7 @@ cleanup(LV2UI_Handle handle)
 	robtk_sep_destroy(ui->sep1);
 	robtk_sep_destroy(ui->sep2);
 	robtk_sep_destroy(ui->sep3);
+	robtk_sep_destroy(ui->sep4);
 	robtk_dial_destroy(ui->gain);
 	robtk_cbtn_destroy(ui->btn_oct);
 	robtk_cbtn_destroy(ui->btn_norm);
