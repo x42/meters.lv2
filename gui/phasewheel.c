@@ -921,12 +921,9 @@ size_request(RobWidget* handle, int *w, int *h) {
 static void
 m0_set_scaling(RobWidget* rw, int w, int h) {
 	MF2UI* ui = (MF2UI*)GET_HANDLE(rw);
-	const int dflw = 2 * (PH_RAD + YOFF);
-	const int dflh = 2 * (PH_RAD + YOFF);
-	float scale = MIN(w/(float)dflw, h/(float)dflh);
-	//scale = rintf(scale*10)/10.0;
-	//if (scale < .5 ) scale = .5;
-	//if (scale > 2.5 ) scale = 2.5;
+	const float dflw = 2 * (PH_RAD + YOFF);
+	const float dflh = 2 * (PH_RAD + YOFF);
+	float scale = MIN(w/dflw, h/dflh);
 	ui->m0_width = w;
 	ui->m0_height = h;
 	ui->scale  = scale;
