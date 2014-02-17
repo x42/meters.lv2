@@ -153,8 +153,8 @@ void TruePeakdsp::init (float fsamp)
 	_z1 = _z2 = .0f;
 	_w1 = 4000.0f / fsamp / 4.0;
 	_w2 = 17200.0f / fsamp / 4.0;
-	_w3 = 1.0f - 5.2f / fsamp / 4.0;
-	_g = 0.501f;
+	_w3 = 1.0f - 7.0f / fsamp / 4.0;
+	_g = 0.502f;
 
 	/* q/d initialize */
 	float zero[8192];
