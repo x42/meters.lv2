@@ -36,7 +36,7 @@
 #define MA_WIDTH  21.0f
 #define PK_WIDTH  28.0f
 
-#define GM_HEIGHT (460.0f)
+#define GM_HEIGHT (396.0f)
 #define GM_SCALE  (ui->height - GM_TOP - GM_BOTTOM - 2.0)
 
 #define MAX_METERS 2
