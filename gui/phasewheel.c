@@ -936,11 +936,13 @@ m0_set_scaling(RobWidget* rw, int w, int h) {
 	const float dflw = 2 * (PH_RAD + YOFF);
 	const float dflh = 2 * (PH_RAD + YOFF);
 	float scale = MIN(w/dflw, h/dflh);
-	ui->m0_width = w;
-	ui->m0_height = h;
-	ui->scale  = scale;
-	ui->pscale = sqrtf(scale);
-	ui->update_grid = true;
+	if (scale != ui->scale) {
+		ui->m0_width = w;
+		ui->m0_height = h;
+		ui->scale  = scale;
+		ui->pscale = sqrtf(scale);
+		ui->update_grid = true;
+	}
 	queue_draw(rw);
 }
 
