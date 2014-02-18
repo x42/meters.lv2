@@ -2597,6 +2597,15 @@ mtr:stereoscope@URI_SUFFIX@
 		lv2:minimum 0 ;
 		lv2:maximum 1 ;
 	  rdfs:comment "Group data by frequency bands. This allows for 1/frequency (pink noise) signal level normalization. It also speeds up visualization for large FFT sizes and decreases CPU/GPU usage due to visualization." ;
+	] , [
+		a lv2:ControlPort, lv2:InputPort ;
+		lv2:index 8 ;
+		lv2:symbol "persistence" ;
+		lv2:name "Screen Persistence" ;
+		lv2:minimum 0 ;
+		lv2:maximum 100 ;
+		lv2:default 62 ;
+	  rdfs:comment "Screen persistence (fade out speed). 0: no persistence, 100: permanent. Values above ~66 result in a permanent shadow.";
 	] ;
 	rdfs:comment "Stereo Scope display channel difference per frequency."
 	.

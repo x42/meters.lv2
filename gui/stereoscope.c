@@ -23,7 +23,8 @@
 
 enum {
 	SS_FFT = 6,
-	SS_BAND
+	SS_BAND,
+	SS_SCREEN
 };
 
 #include <stdio.h>
@@ -76,7 +77,9 @@ typedef struct {
 
 	RobTkCBtn* btn_oct;
 	RobTkSelect* sel_fft;
+	RobTkDial* screen;
 	RobTkLbl* lbl_fft;
+	RobTkLbl* lbl_screen;
 	RobTkSep* sep0;
 	RobTkSep* sep2;
 
@@ -322,8 +325,16 @@ static void plot_data_fft(SFSUI* ui) {
 	rounded_rectangle (cr, SS_BORDER, SS_BORDER, SS_SIZE, SS_SIZE, SS_BORDER);
 	cairo_clip_preserve (cr);
 
+	const float persistence = robtk_dial_get_value(ui->screen);
+	float transp;
 	cairo_set_operator (cr, CAIRO_OPERATOR_OVER);
-	cairo_set_source_rgba(cr, 0, 0, 0, .015); // screen persistence
+	if (persistence > 0) {
+		cairo_set_source_rgba(cr, 0, 0, 0, .25 - .0025 * persistence);
+		transp = 0.05;
+	} else {
+		cairo_set_source_rgba(cr, 0, 0, 0, 1.0);
+		transp = .5;
+	}
 	cairo_fill(cr);
 
 	cairo_set_line_cap(cr, CAIRO_LINE_CAP_ROUND);
@@ -347,7 +358,7 @@ static void plot_data_fft(SFSUI* ui) {
 
 		float clr[3];
 		hsl2rgb(clr, .70 - .72 * pk, .9, .3 + pk * .4);
-		cairo_set_source_rgba(cr, clr[0], clr[1], clr[2], 0.05 + pk * .2);
+		cairo_set_source_rgba(cr, clr[0], clr[1], clr[2], transp  + pk * .2);
 		cairo_set_line_width (cr, MAX(1.0, (y - y1)));
 
 		cairo_move_to(cr, xmid, y);
@@ -364,8 +375,13 @@ static void plot_data_oct(SFSUI* ui) {
 	rounded_rectangle (cr, SS_BORDER, SS_BORDER, SS_SIZE, SS_SIZE, SS_BORDER);
 	cairo_clip_preserve (cr);
 
+	const float persistence = robtk_dial_get_value(ui->screen);
 	cairo_set_operator (cr, CAIRO_OPERATOR_OVER);
-	cairo_set_source_rgba(cr, 0, 0, 0, .22); // screen persistence
+	if (persistence > 0) {
+		cairo_set_source_rgba(cr, 0, 0, 0, .33 - .0033 * persistence);
+	} else {
+		cairo_set_source_rgba(cr, 0, 0, 0, 1.0);
+	}
 	cairo_fill(cr);
 	cairo_set_line_cap(cr, CAIRO_LINE_CAP_ROUND);
 
@@ -479,6 +495,14 @@ static bool cb_set_oct (RobWidget* handle, void *data) {
 	return TRUE;
 }
 
+static bool cb_set_persistence (RobWidget* handle, void *data) {
+	SFSUI* ui = (SFSUI*) (data);
+	const float val = robtk_dial_get_value(ui->screen);
+	if (ui->disable_signals) return TRUE;
+	ui->write(ui->controller, SS_SCREEN, sizeof(float), 0, (const void*) &val);
+	return TRUE;
+}
+
 /******************************************************************************
  * widget hackery
  */
@@ -517,6 +541,15 @@ static RobWidget * toplevel(SFSUI* ui, void * const top)
 	robwidget_set_size_request(ui->m0, size_request);
 	rob_hbox_child_pack(ui->hbox1, ui->m0, FALSE, FALSE);
 
+	/* screen persistence dial */
+	ui->lbl_screen = robtk_lbl_new("Persistence:");
+	ui->screen = robtk_dial_new_with_size(0.0, 100.0, 1,
+			22, 22, 10.5, 10.5, 10);
+	robtk_dial_set_alignment(ui->screen, 1.0, 0.5);
+	robtk_dial_set_value(ui->screen, 62);
+	robtk_dial_set_default(ui->screen, 62.0);
+	robtk_dial_set_callback(ui->screen, cb_set_persistence, ui);
+
 	/* fft bins */
 	ui->lbl_fft = robtk_lbl_new("FFT Samples:");
 	ui->sel_fft = robtk_select_new();
@@ -544,6 +577,8 @@ static RobWidget * toplevel(SFSUI* ui, void * const top)
 	ui->sep0 = robtk_sep_new(true);
 	robtk_sep_set_linewidth(ui->sep0, 0);
 
+	rob_hbox_child_pack(ui->hbox2, robtk_lbl_widget(ui->lbl_screen), FALSE, FALSE);
+	rob_hbox_child_pack(ui->hbox2, robtk_dial_widget(ui->screen), FALSE, FALSE);
 	rob_hbox_child_pack(ui->hbox2, robtk_lbl_widget(ui->lbl_fft), FALSE, FALSE);
 	rob_hbox_child_pack(ui->hbox2, robtk_select_widget(ui->sel_fft), FALSE, FALSE);
 	rob_hbox_child_pack(ui->hbox2, robtk_sep_widget(ui->sep0), TRUE, FALSE);
@@ -634,7 +669,9 @@ cleanup(LV2UI_Handle handle)
 	cairo_surface_destroy(ui->sf_dat);
 
 	robtk_select_destroy(ui->sel_fft);
+	robtk_dial_destroy(ui->screen);
 	robtk_lbl_destroy(ui->lbl_fft);
+	robtk_lbl_destroy(ui->lbl_screen);
 	robtk_sep_destroy(ui->sep0);
 	robtk_sep_destroy(ui->sep2);
 	robtk_cbtn_destroy(ui->btn_oct);
@@ -763,6 +800,11 @@ port_event(LV2UI_Handle handle,
 		float val = *(float *)buffer;
 		ui->disable_signals = true;
 		robtk_cbtn_set_active(ui->btn_oct, val != 0);
+		ui->disable_signals = false;
+	}
+	else if (port_index == SS_SCREEN) {
+		ui->disable_signals = true;
+		robtk_dial_set_value(ui->screen, *(float *)buffer);
 		ui->disable_signals = false;
 	}
 }
