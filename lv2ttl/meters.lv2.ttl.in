@@ -2497,6 +2497,15 @@ mtr:phasewheel@URI_SUFFIX@
 		lv2:minimum 0 ;
 		lv2:maximum 1 ;
 	  rdfs:comment "Auto-gain. Normalize signal level, set gain to detected (per band) peak signal level.";
+	] , [
+		a lv2:ControlPort, lv2:InputPort ;
+		lv2:index 12 ;
+		lv2:symbol "persistence" ;
+		lv2:name "Screen Persistence" ;
+		lv2:minimum 0 ;
+		lv2:maximum 100 ;
+		lv2:default 62 ;
+	  rdfs:comment "Screen persistence (fade out speed). 0: no persistence, 100: permanent. Values above ~66 result in a permanent shadow.";
 	] ;
 	rdfs:comment "Phase/Frequency Wheel - display stereo-signal phase (angle) relative to frequency (radius)."
 	.

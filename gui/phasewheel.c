@@ -78,7 +78,8 @@ enum {
 	MF_CUTOFF,
 	MF_FFT,
 	MF_BAND,
-	MF_NORM
+	MF_NORM,
+	MF_SCREEN
 };
 
 
@@ -905,6 +906,14 @@ static bool cb_set_norm (RobWidget* handle, void *data) {
 	return TRUE;
 }
 
+static bool cb_set_persistence (RobWidget* handle, void *data) {
+	MF2UI* ui = (MF2UI*) (data);
+	const float val = robtk_dial_get_value(ui->screen);
+	if (ui->disable_signals) return TRUE;
+	ui->write(ui->controller, MF_SCREEN, sizeof(float), 0, (const void*) &val);
+	return TRUE;
+}
+
 /******************************************************************************
  * widget hackery
  */
@@ -1073,6 +1082,7 @@ static RobWidget * toplevel(MF2UI* ui, void * const top)
 	robtk_dial_set_alignment(ui->screen, 1.0, 0.5);
 	robtk_dial_set_value(ui->screen, 62);
 	robtk_dial_set_default(ui->screen, 62.0);
+	robtk_dial_set_callback(ui->screen, cb_set_persistence, ui);
 
 	/* explicit alignment */
 	ui->sep0 = robtk_sep_new(true);
@@ -1355,6 +1365,11 @@ port_event(LV2UI_Handle handle,
 		float val = *(float *)buffer;
 		ui->disable_signals = true;
 		robtk_cbtn_set_active(ui->btn_norm, val != 0);
+		ui->disable_signals = false;
+	}
+	else if (port_index == MF_SCREEN) {
+		ui->disable_signals = true;
+		robtk_dial_set_value(ui->screen, *(float *)buffer);
 		ui->disable_signals = false;
 	}
 }
