@@ -27,14 +27,16 @@
 #define MTR_URI "http://gareus.org/oss/lv2/meters#"
 #define MTR_GUI "dr14meterui"
 
+#define LVGL_RESIZEABLE
+
 #define GM_MARGIN_X 5.f
-#define GM_MARGIN_Y (ui->dr_operation_mode ? 5.f : 45.f)
+#define GM_MARGIN_Y (ui->dr_operation_mode ? 6.f : 45.f)
 
 #define GM_GIRTH  20.0f
-#define GM_RANGE (450.0f)
+#define GM_HEIGHT (396.0f)
 
 #define GM_WIDTH  (GM_GIRTH + GM_MARGIN_X + GM_MARGIN_X)
-#define GM_HEIGHT (GM_RANGE + GM_MARGIN_Y + 5.f)
+#define GM_RANGE  (ui->height - GM_MARGIN_Y - 5.f)
 
 #define MA_WIDTH  ( 22.0f)
 
@@ -101,9 +103,10 @@ typedef struct {
 	cairo_pattern_t* mpat;
 	cairo_pattern_t* rpat;
 	cairo_pattern_t* spat;
-	PangoFontDescription *font[3];
+	PangoFontDescription *font[4];
 
 	uint32_t num_meters;
+	bool size_changed;
 	bool dr_operation_mode;
 
 	int width;
@@ -117,7 +120,7 @@ typedef struct {
  * Drawing
  */
 
-static int deflect(float val) {
+static int deflect(DRUI* ui, float val) {
 	int lvl = rintf(GM_RANGE * (val + 70.f) / 73.f);
 	if (lvl < 0) lvl = 0;
 	if (lvl >= GM_RANGE) lvl = GM_RANGE;
@@ -125,11 +128,15 @@ static int deflect(float val) {
 }
 
 static void create_meter_pattern(DRUI* ui) {
+	if (ui->mpat) cairo_pattern_destroy(ui->mpat);
+	if (ui->rpat) cairo_pattern_destroy(ui->rpat);
+	if (ui->spat) cairo_pattern_destroy(ui->spat);
+
 	cairo_pattern_t* pat = cairo_pattern_create_linear (0.0, 0.0, 0.0, GM_RANGE);
 	cairo_pattern_add_color_stop_rgb (pat, .0, .0 , .0, .0);
 
 #define PSTOP(DB, R, G, B) \
-	cairo_pattern_add_color_stop_rgb (pat, 1.f - deflect(DB) / GM_RANGE, R, G, B);
+	cairo_pattern_add_color_stop_rgb (pat, 1.f - deflect(ui, DB) / GM_RANGE, R, G, B);
 
 	PSTOP(-70.0, 0.0, 0.2, 0.5)
 	PSTOP(-65.0, 0.0, 0.5, 0.2)
@@ -207,11 +214,11 @@ static void create_meter_pattern(DRUI* ui) {
 static void create_surfaces(DRUI* ui) {
 	cairo_t* cr;
 
-	PangoFontDescription *font = pango_font_description_from_string("Mono 7");
+	PangoFontDescription *font = ui->font[0];
 
 	// MA_WIDTH
 #define TICK(DB, LR) { \
-	const int y0 = GM_MARGIN_Y + GM_RANGE - deflect(DB); \
+	const int y0 = GM_MARGIN_Y + GM_RANGE - deflect(ui, DB); \
 	char txt[8]; snprintf(txt, 8, "%+.0f", DB); \
 	cairo_move_to(cr, LR ? 0.5 : MA_WIDTH-.5, y0 + .5); \
 	cairo_close_path(cr); \
@@ -241,16 +248,19 @@ static void create_surfaces(DRUI* ui) {
 	TICK(-60.f, LR) \
 	cairo_set_line_width(cr, 1.0);  \
 	for (int i = -69; i < 3; ++i) { \
-		const int y0 = GM_MARGIN_Y + GM_RANGE - deflect(i); \
+		const int y0 = GM_MARGIN_Y + GM_RANGE - deflect(ui, i); \
 		cairo_move_to(cr, LR ? 0.5 : MA_WIDTH-.5, y0 + .5); \
 		cairo_close_path(cr); \
 		cairo_stroke(cr); \
 	} \
 	write_text_full(cr, LR ? "-\u221E " : "-\u221E", font, MA_WIDTH - (LR ? 1 : 4), GM_MARGIN_Y + GM_RANGE -2, 0, 1, ui->c_txt);
 
-	ui->ma[0] = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, MA_WIDTH, GM_HEIGHT);
+	if (ui->ma[0]) cairo_surface_destroy(ui->ma[0]);
+	if (ui->ma[1]) cairo_surface_destroy(ui->ma[1]);
+
+	ui->ma[0] = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, MA_WIDTH, ui->height);
 	cr = cairo_create (ui->ma[0]);
-	cairo_rectangle (cr, 0, 0, MA_WIDTH, GM_HEIGHT);
+	cairo_rectangle (cr, 0, 0, MA_WIDTH, ui->height);
 	CairoSetSouerceRGBA(ui->c_bgr);
 	cairo_fill (cr);
 	XTICKS(false);
@@ -262,9 +272,9 @@ static void create_surfaces(DRUI* ui) {
 	}
 	cairo_destroy (cr);
 
-	ui->ma[1] = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, MA_WIDTH, GM_HEIGHT);
+	ui->ma[1] = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, MA_WIDTH, ui->height);
 	cr = cairo_create (ui->ma[1]);
-	cairo_rectangle (cr, 0, 0, MA_WIDTH, GM_HEIGHT);
+	cairo_rectangle (cr, 0, 0, MA_WIDTH, ui->height);
 	CairoSetSouerceRGBA(ui->c_bgr);
 	cairo_fill (cr);
 	XTICKS(true);
@@ -301,17 +311,23 @@ static void format_db(char *buf, const float val) {
 static bool m0_expose_event(RobWidget* handle, cairo_t* cr, cairo_rectangle_t *ev) {
 	DRUI* ui = (DRUI*)GET_HANDLE(handle);
 
+	if (ui->size_changed) {
+		create_surfaces(ui);
+		create_meter_pattern(ui);
+		ui->size_changed = false;
+	}
+
 	cairo_rectangle (cr, ev->x, ev->y, ev->width, ev->height);
 	cairo_clip (cr);
 
 	cairo_set_operator (cr, CAIRO_OPERATOR_OVER);
 
 	/* metric areas */
-	if (rect_intersect_a(ev, 0, 0, MA_WIDTH, GM_HEIGHT)) {
+	if (rect_intersect_a(ev, 0, 0, MA_WIDTH, ui->height)) {
 		cairo_set_source_surface(cr, ui->ma[0], 0, 0);
 		cairo_paint (cr);
 	}
-	if (rect_intersect_a(ev, MA_WIDTH + GM_WIDTH * ui->num_meters, 0, MA_WIDTH, GM_HEIGHT)) {
+	if (rect_intersect_a(ev, MA_WIDTH + GM_WIDTH * ui->num_meters, 0, MA_WIDTH, ui->height)) {
 		cairo_set_source_surface(cr, ui->ma[1], MA_WIDTH + GM_WIDTH * ui->num_meters, 0);
 		cairo_paint (cr);
 	}
@@ -322,10 +338,10 @@ static bool m0_expose_event(RobWidget* handle, cairo_t* cr, cairo_rectangle_t *e
 		const float x0 = MA_WIDTH + GM_WIDTH * i;
 		const float xm = x0 + GM_MARGIN_X;
 
-		if (!rect_intersect_a(ev, x0, 0, GM_WIDTH, GM_HEIGHT)) continue;
+		if (!rect_intersect_a(ev, x0, 0, GM_WIDTH, ui->height)) continue;
 
 		/* background */
-		cairo_rectangle (cr, x0, 0, GM_WIDTH, GM_HEIGHT);
+		cairo_rectangle (cr, x0, 0, GM_WIDTH, ui->height);
 		CairoSetSouerceRGBA(ui->c_bgr);
 		cairo_fill (cr);
 
@@ -397,7 +413,7 @@ static bool m0_expose_event(RobWidget* handle, cairo_t* cr, cairo_rectangle_t *e
 			cairo_fill(cr);
 		}
 		else if (rms_p > -70 && ui->dr14_v[i] < 21) {
-			const int px_peak_p = deflect(rms_p + ui->dr14_v[i]);
+			const int px_peak_p = deflect(ui, rms_p + ui->dr14_v[i]);
 			if (ui->dr14_v[i] < 7.5) {
 				cairo_set_source_rgba(cr, .9, .3, .3, 0.33);
 			} else if (ui->dr14_v[i] < 13.5) {
@@ -495,7 +511,7 @@ static bool m1_expose_event(RobWidget* handle, cairo_t* cr, cairo_rectangle_t *e
 		float const * cl = c_grn;
 		if (dr < 7.5) cl = c_red;
 		else if (dr < 13.5) cl = c_nyl;
-		write_text_full(cr, txt, ui->font[0], AN_WIDTH/2, y0+50, 0, 5, cl);
+		write_text_full(cr, txt, ui->font[3], AN_WIDTH/2, y0+50, 0, 5, cl);
 	}
 
 	if (ui->integration_time > 0) {
@@ -554,7 +570,16 @@ static void
 m0_size_request(RobWidget* handle, int *w, int *h) {
 	DRUI* ui = (DRUI*)GET_HANDLE(handle);
 	*w = ui->width;
-	*h = ui->height;
+	*h = GM_HEIGHT;
+}
+
+static void
+m0_size_allocate(RobWidget* handle, int w, int h) {
+	DRUI* ui = (DRUI*)GET_HANDLE(handle);
+	ui->height = h;
+	ui->size_changed = true;
+	robwidget_set_size(handle, ui->width, h);
+	queue_draw(ui->m0);
 }
 
 static void
@@ -568,7 +593,7 @@ m1_size_request(RobWidget* handle, int *w, int *h) {
 static RobWidget * toplevel(DRUI* ui, void * const top)
 {
 	/* main widget: layout */
-	ui->rw = rob_hbox_new(FALSE, 2);
+	ui->rw = rob_hbox_new(FALSE, 6);
 	robwidget_make_toplevel(ui->rw, top);
 
 	/* DPM main drawing area */
@@ -576,6 +601,7 @@ static RobWidget * toplevel(DRUI* ui, void * const top)
 	ROBWIDGET_SETNAME(ui->m0, "dr14 (m0)");
 	robwidget_set_expose_event(ui->m0, m0_expose_event);
 	robwidget_set_size_request(ui->m0, m0_size_request);
+	robwidget_set_size_allocate(ui->m0, m0_size_allocate);
 
 	if (ui->dr_operation_mode) {
 		ui->m1 = robwidget_new(ui);
@@ -597,7 +623,7 @@ static RobWidget * toplevel(DRUI* ui, void * const top)
 		robtk_sep_set_linewidth(ui->sep0, 0);
 
 		ui->lbl0 = robtk_lbl_new(" P: dBTP (max)\n R: Top20 RMS/3s\n"
-#if 1
+#if 0
 				"\nNote:\n The DR value is\n not suitable for\n any professional\n work. Prefer the\n EBU-R128 meter.\n"
 #endif
 				);
@@ -608,10 +634,10 @@ static RobWidget * toplevel(DRUI* ui, void * const top)
 		rob_vbox_child_pack(ui->ctlbox, robtk_cbtn_widget(ui->btn_transport), FALSE, FALSE);
 		rob_vbox_child_pack(ui->ctlbox, robtk_pbtn_widget(ui->btn_reset), FALSE, FALSE);
 
-		rob_hbox_child_pack(ui->rw, ui->m0, FALSE, FALSE);
+		rob_hbox_child_pack(ui->rw, ui->m0, FALSE, TRUE);
 		rob_hbox_child_pack(ui->rw, ui->ctlbox, FALSE, FALSE);
 	} else {
-		rob_hbox_child_pack(ui->rw, ui->m0, FALSE, FALSE);
+		rob_hbox_child_pack(ui->rw, ui->m0, FALSE, TRUE);
 		robwidget_set_mousedown(ui->m0, m0_mousedown);
 	}
 	return ui->rw;
@@ -715,13 +741,13 @@ instantiate(
 	ui->width = 2.0 * MA_WIDTH + ui->num_meters * GM_WIDTH;
 	ui->height = GM_HEIGHT;
 
-	create_meter_pattern(ui);
-	create_surfaces(ui);
+	ui->size_changed = true;
 
 	if (ui->dr_operation_mode) {
-		ui->font[0] = pango_font_description_from_string("Mono 28");
+		ui->font[0] = pango_font_description_from_string("Mono 7");
 		ui->font[1] = pango_font_description_from_string("Mono 11");
 		ui->font[2] = pango_font_description_from_string("Sans 8");
+		ui->font[3] = pango_font_description_from_string("Mono 28");
 	} else {
 		ui->font[0] = pango_font_description_from_string("Mono 7");
 	}
@@ -751,6 +777,7 @@ cleanup(LV2UI_Handle handle)
 	if (ui->dr_operation_mode) {
 		pango_font_description_free(ui->font[1]);
 		pango_font_description_free(ui->font[2]);
+		pango_font_description_free(ui->font[3]);
 
 		robtk_pbtn_destroy(ui->btn_reset);
 		robtk_cbtn_destroy(ui->btn_transport);
@@ -799,14 +826,14 @@ static void invalidate_meter(DRUI* ui, const int mtr, const int px1, const int p
 }
 
 static void invalidate_dbtp_v(DRUI* ui, int mtr, float val) {
-	int px = deflect(val);
+	int px = deflect(ui, val);
 	invalidate_meter(ui, mtr, ui->px_dbtp_v[mtr][0], px, 0);
 	ui->px_dbtp_v[mtr][1] = px;
 	ui->dbtp_v[mtr][1] = val;
 }
 
 static void invalidate_dbtp_p(DRUI* ui, int mtr, float val) {
-	int px = deflect(val);
+	int px = deflect(ui, val);
 	invalidate_meter(ui, mtr, ui->px_dbtp_p[mtr][0], px, 0);
 	if (VCMP(ui->dbtp_p[mtr][0], val)) queue_draw(ui->m1);
 	ui->px_dbtp_p[mtr][1] = px;
@@ -815,7 +842,7 @@ static void invalidate_dbtp_p(DRUI* ui, int mtr, float val) {
 }
 
 static void invalidate_rms_v(DRUI* ui, int mtr, float val) {
-	int px = deflect(val);
+	int px = deflect(ui, val);
 	invalidate_meter(ui, mtr, ui->px_rms_v[mtr][0], px, 0);
 	ui->px_rms_v[mtr][1] = px;
 	if (RCMP(ui->rms_v[mtr][0], val)) { INVALIDATE_RECT(MA_WIDTH + GM_WIDTH * mtr, 28, GM_WIDTH, 12); }
@@ -823,7 +850,7 @@ static void invalidate_rms_v(DRUI* ui, int mtr, float val) {
 }
 
 static void invalidate_rms_p(DRUI* ui, int mtr, float val) {
-	int px = deflect(val);
+	int px = deflect(ui, val);
 	invalidate_meter(ui, mtr, ui->px_rms_p[mtr][0], px, 3);
 	if (VCMP(ui->rms_p[mtr][0], val)) queue_draw(ui->m1);
 	ui->px_rms_p[mtr][1] = px;
