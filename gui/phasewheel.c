@@ -25,15 +25,6 @@
 #define XOFF 5
 #define YOFF 5
 
-/* alpha overlay [0..1]; 1.0: no persistence
- *
- * NB. Also change data-point's alpha accordingly in
- * draw_point() to prevent stuck or overexposed pixels.
- * FFT has more data-points than 1/octave mode.
- */
-#define SCREEN_PERSIETSNCE_FFT (.20)
-#define SCREEN_PERSIETSNCE_FLT (.22)
-
 /* level range annotation */
 #define ANN_W (2 * (PH_RAD + XOFF))
 #define ANN_H 32
@@ -113,11 +104,13 @@ typedef struct {
 	RobWidget* hbox2;
 	RobWidget* hbox3;
 
+	RobTkDial* screen;
 	RobTkDial* gain;
 	RobTkCBtn* btn_oct;
 	RobTkCBtn* btn_norm;
 	RobTkSelect* sel_fft;
 	RobTkLbl* lbl_fft;
+	RobTkLbl* lbl_screen;
 	RobTkSep* sep0;
 	RobTkSep* sep1;
 	RobTkSep* sep2;
@@ -546,13 +539,18 @@ static void plot_data_fft(MF2UI* ui) {
 	const double ccc = ui->width / 2.0 + .5;
 	const double rad = (ui->width - XOFF) * .5;
 	const float gain = robtk_dial_get_value(ui->gain);
+	const float persistence = robtk_dial_get_value(ui->screen);
 
 	cr = cairo_create (ui->sf_dat);
 	cairo_arc (cr, ccc, ccc, rad, 0, 2.0 * M_PI);
 	cairo_clip_preserve (cr);
 
 	cairo_set_operator (cr, CAIRO_OPERATOR_OVER);
-	cairo_set_source_rgba(cr, 0, 0, 0, SCREEN_PERSIETSNCE_FFT);
+	if (persistence > 0) {
+		cairo_set_source_rgba(cr, 0, 0, 0, .3 - .003 * persistence);
+	} else {
+		cairo_set_source_rgba(cr, 0, 0, 0, 1.0);
+	}
 	cairo_fill(cr);
 	cairo_set_line_cap(cr, CAIRO_LINE_CAP_ROUND);
 	const float dnum = ui->scale * PH_RAD / ui->log_base;
@@ -578,13 +576,18 @@ static void plot_data_oct(MF2UI* ui) {
 	const double ccc = ui->width / 2.0 + .5;
 	const double rad = (ui->width - XOFF) * .5;
 	const float gain = robtk_dial_get_value(ui->gain);
+	const float persistence = robtk_dial_get_value(ui->screen);
 
 	cr = cairo_create (ui->sf_dat);
 	cairo_arc (cr, ccc, ccc, rad, 0, 2.0 * M_PI);
 	cairo_clip_preserve (cr);
 
 	cairo_set_operator (cr, CAIRO_OPERATOR_OVER);
-	cairo_set_source_rgba(cr, 0, 0, 0, SCREEN_PERSIETSNCE_FLT);
+	if (persistence > 0) {
+		cairo_set_source_rgba(cr, 0, 0, 0, .33 - .0033 * persistence);
+	} else {
+		cairo_set_source_rgba(cr, 0, 0, 0, 1.0);
+	}
 	cairo_fill(cr);
 	cairo_set_line_cap(cr, CAIRO_LINE_CAP_ROUND);
 
@@ -1032,7 +1035,7 @@ static RobWidget * toplevel(MF2UI* ui, void * const top)
 	rob_hbox_child_pack(ui->hbox2, robtk_dial_widget(ui->gain), FALSE, FALSE);
 
 	/* fft bins */
-	ui->lbl_fft = robtk_lbl_new("FFT Samples:");
+	ui->lbl_fft = robtk_lbl_new("FFT:");
 	ui->sel_fft = robtk_select_new();
 	robtk_select_add_item(ui->sel_fft,   64, "128");
 	robtk_select_add_item(ui->sel_fft,  128, "256");
@@ -1055,7 +1058,7 @@ static RobWidget * toplevel(MF2UI* ui, void * const top)
 	robtk_cbtn_set_color_on(ui->btn_oct,  .2, .8, .1);
 	robtk_cbtn_set_color_off(ui->btn_oct, .1, .3, .1);
 
-	/* N/octave */
+	/* Normalize */
 	ui->btn_norm = robtk_cbtn_new("Normalize", GBT_LED_LEFT, false);
 	robtk_cbtn_set_active(ui->btn_norm, false);
 	robtk_cbtn_set_callback(ui->btn_norm, cb_set_norm, ui);
@@ -1063,12 +1066,22 @@ static RobWidget * toplevel(MF2UI* ui, void * const top)
 	robtk_cbtn_set_color_on(ui->btn_norm,  .2, .8, .1);
 	robtk_cbtn_set_color_off(ui->btn_norm, .1, .3, .1);
 
+	/* screen persistence dial */
+	ui->lbl_screen = robtk_lbl_new("Persistence:");
+	ui->screen = robtk_dial_new_with_size(0.0, 100.0, 1,
+			22, 22, 10.5, 10.5, 10);
+	robtk_dial_set_alignment(ui->screen, 1.0, 0.5);
+	robtk_dial_set_value(ui->screen, 62);
+	robtk_dial_set_default(ui->screen, 62.0);
+
 	/* explicit alignment */
 	ui->sep0 = robtk_sep_new(true);
 	robtk_sep_set_linewidth(ui->sep0, 0);
 	ui->sep1 = robtk_sep_new(true);
 	robtk_sep_set_linewidth(ui->sep1, 0);
 
+	rob_hbox_child_pack(ui->hbox3, robtk_lbl_widget(ui->lbl_screen), FALSE, FALSE);
+	rob_hbox_child_pack(ui->hbox3, robtk_dial_widget(ui->screen), FALSE, FALSE);
 	rob_hbox_child_pack(ui->hbox3, robtk_lbl_widget(ui->lbl_fft), FALSE, FALSE);
 	rob_hbox_child_pack(ui->hbox3, robtk_select_widget(ui->sel_fft), FALSE, FALSE);
 	rob_hbox_child_pack(ui->hbox3, robtk_sep_widget(ui->sep0), TRUE, FALSE);
@@ -1170,12 +1183,14 @@ cleanup(LV2UI_Handle handle)
 
 	robtk_select_destroy(ui->sel_fft);
 	robtk_lbl_destroy(ui->lbl_fft);
+	robtk_lbl_destroy(ui->lbl_screen);
 	robtk_sep_destroy(ui->sep0);
 	robtk_sep_destroy(ui->sep1);
 	robtk_sep_destroy(ui->sep2);
 	robtk_sep_destroy(ui->sep3);
 	robtk_sep_destroy(ui->sep4);
 	robtk_dial_destroy(ui->gain);
+	robtk_dial_destroy(ui->screen);
 	robtk_cbtn_destroy(ui->btn_oct);
 	robtk_cbtn_destroy(ui->btn_norm);
 
