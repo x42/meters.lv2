@@ -435,6 +435,16 @@ static RobWidget* mousedown(RobWidget* handle, RobTkBtnEvent *event) {
 	return handle;
 }
 
+/* stereo-phase correlation - resize to 100% only */
+static RobWidget* mousedown_cor(RobWidget* handle, RobTkBtnEvent *event) {
+	MetersLV2UI* ui = (MetersLV2UI*)GET_HANDLE(handle);
+	if (event->state & ROBTK_MOD_CTRL) {
+		robwidget_resize_toplevel(ui->rw, 300 * width_scale(ui), 170);
+	}
+	return NULL;
+}
+
+
 static RobWidget* mouseup(RobWidget* handle, RobTkBtnEvent *event) {
 	MetersLV2UI* ui = (MetersLV2UI*)GET_HANDLE(handle);
 	ui->drag_x = ui->drag_y = -1;
@@ -590,6 +600,8 @@ instantiate(
 		robwidget_set_mousedown(ui->rw, mousedown);
 		robwidget_set_mouseup(ui->rw, mouseup);
 		robwidget_set_mousemove(ui->rw, mousemove)
+	} else {
+		robwidget_set_mousedown(ui->rw, mousedown_cor);
 	}
 
 	*widget = ui->rw;
