@@ -26,13 +26,18 @@
 #define MTR_URI "http://gareus.org/oss/lv2/meters#"
 #define MTR_GUI "dpmui"
 
+#define LVGL_RESIZEABLE
+
 #define GM_TOP    (ui->display_freq ?  4.5f : 23.5f)
 #define GM_LEFT   (ui->display_freq ?  1.5f :  8.5f)
 #define GM_GIRTH  (ui->display_freq ? 10.0f : 12.0f)
 #define GM_WIDTH  (ui->display_freq ? 13.0f : 28.0f)
 
-#define GM_HEIGHT (ui->display_freq ? 400.0f:460.0f)
-#define GM_TXT    (GM_HEIGHT - (ui->display_freq ? 52.0f : 11.0f))
+#define GM_MINH   (396.0f)
+
+//#define GM_HEIGHT (ui->display_freq ? 400.0f:460.0f)
+#define GM_HEIGHT (ui->height)
+#define GM_TXT    (GM_HEIGHT - (ui->display_freq ? 51.0f : 11.0f))
 #define GM_SCALE  (GM_TXT - GM_TOP - (ui->display_freq ? 8.5f : 12.5))
 #define GM_PEAK   (12.f)
 
@@ -102,6 +107,7 @@ typedef struct {
 	bool reset_toggle;
 	int  initialize;
 	bool metrics_changed;
+	bool size_changed;
 	bool show_peaks;
 	bool show_peaks_changed;
 	uint32_t misc_state;
@@ -187,6 +193,7 @@ static void create_meter_pattern(SAUI* ui) {
 	const int width = GM_WIDTH;
 	const int height = GM_HEIGHT;
 
+	if (ui->mpat) cairo_pattern_destroy(ui->mpat);
 	int clr[12];
 	float stp[5];
 
@@ -276,10 +283,12 @@ static void create_meter_pattern(SAUI* ui) {
 
 	if (!getenv("NO_METER_SHADE") || strlen(getenv("NO_METER_SHADE")) == 0) {
 		cairo_pattern_t* shade_pattern = cairo_pattern_create_linear (0.0, 0.0, width, 0.0);
-		cairo_pattern_add_color_stop_rgba (shade_pattern, (GM_LEFT-1.0) / GM_WIDTH,   0.0, 0.0, 0.0, 0.15);
-		cairo_pattern_add_color_stop_rgba (shade_pattern, (GM_LEFT + GM_GIRTH * .35) / GM_WIDTH, 1.0, 1.0, 1.0, 0.10);
+		cairo_pattern_add_color_stop_rgba (shade_pattern,  .0, 0.0, 0.0, 0.0, 0.90);
+		cairo_pattern_add_color_stop_rgba (shade_pattern, (GM_LEFT-1.0) / GM_WIDTH,   0.0, 0.0, 0.0, 0.55);
+		cairo_pattern_add_color_stop_rgba (shade_pattern, (GM_LEFT + GM_GIRTH * .35) / GM_WIDTH, 1.0, 1.0, 1.0, 0.12);
 		cairo_pattern_add_color_stop_rgba (shade_pattern, (GM_LEFT + GM_GIRTH * .53) / GM_WIDTH, 0.0, 0.0, 0.0, 0.05);
-		cairo_pattern_add_color_stop_rgba (shade_pattern, (GM_LEFT+1.0+GM_GIRTH) / GM_WIDTH,  0.0, 0.0, 0.0, 0.25);
+		cairo_pattern_add_color_stop_rgba (shade_pattern, (GM_LEFT+1.0+GM_GIRTH) / GM_WIDTH,  0.0, 0.0, 0.0, 0.55);
+		cairo_pattern_add_color_stop_rgba (shade_pattern, 1.0, 0.0, 0.0, 0.0, 0.90);
 
 		cairo_surface_t* surface;
 		cairo_t* tc = 0;
@@ -298,7 +307,7 @@ static void create_meter_pattern(SAUI* ui) {
 		// LED stripes
 		cairo_save (tc);
 		cairo_set_line_width(tc, 1.0);
-		cairo_set_source_rgba(tc, .0, .0, .0, 0.4);
+		cairo_set_source_rgba(tc, .0, .0, .0, 0.6);
 		for (float y=0.5; y < height; y+= 2.0) {
 			cairo_move_to(tc, 0, y);
 			cairo_line_to(tc, width, y);
@@ -324,7 +333,6 @@ static void write_text(
 	write_text_full(cr, txt, font, x, y, ang, align, col);
 }
 
-static void alloc_annotations(SAUI* ui) {
 
 #define FONT_LBL ui->font[FONT_S08]
 #define FONT_MTR ui->font[FONT_S06]
@@ -332,7 +340,7 @@ static void alloc_annotations(SAUI* ui) {
 #define FONT_SPK ui->font[FONT_M08]
 
 #define INIT_ANN_BG(VAR, WIDTH, HEIGHT) \
-	if (!VAR) \
+	if (VAR) cairo_surface_destroy(VAR); \
 	VAR = cairo_image_surface_create (CAIRO_FORMAT_RGB24, WIDTH, HEIGHT); \
 	cr = cairo_create (VAR);
 
@@ -342,6 +350,7 @@ static void alloc_annotations(SAUI* ui) {
 	cairo_rectangle (cr, 0, 0, WIDTH, WIDTH); \
 	cairo_fill (cr);
 
+static void alloc_annotations(SAUI* ui) {
 	cairo_t* cr;
 	if (ui->display_freq) {
 		/* frequecy table */
@@ -389,7 +398,7 @@ static void alloc_annotations(SAUI* ui) {
 
 static void realloc_metrics(SAUI* ui) {
 	const float dboff = ui->gain;
-	if (rint(ui->cache_ma * 5) == rint(dboff * 5)) {
+	if (!ui->size_changed && rint(ui->cache_ma * 5) == rint(dboff * 5)) {
 		return;
 	}
 	ui->cache_ma = dboff;
@@ -444,14 +453,14 @@ static void realloc_metrics(SAUI* ui) {
 static void prepare_metersurface(SAUI* ui) {
 	const float dboff = ui->gain;
 
-	if (rint(ui->cache_sf * 5) == rint(dboff * 5)) {
+	if (!ui->size_changed && rint(ui->cache_sf * 5) == rint(dboff * 5)) {
 		return;
 	}
 	ui->cache_sf = dboff;
 
 	cairo_t* cr;
 #define ALLOC_SF(VAR) \
-	if (!VAR) \
+	if (VAR) cairo_surface_destroy(VAR); \
 	VAR = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, GM_WIDTH, GM_HEIGHT);\
 	cr = cairo_create (VAR);\
 	CairoSetSouerceRGBA(ui->c_bgr); \
@@ -569,10 +578,14 @@ static void format_val(char *buf, const float val) {
 static bool expose_event(RobWidget* handle, cairo_t* cr, cairo_rectangle_t *ev) {
 	SAUI* ui = (SAUI*)GET_HANDLE(handle);
 
-	if (ui->metrics_changed) {
-		ui->metrics_changed = false;
+	if (ui->size_changed) {
+		create_meter_pattern(ui);
+	}
+	if (ui->metrics_changed || ui->size_changed) {
 		realloc_metrics(ui);
 		prepare_metersurface(ui);
+		ui->metrics_changed = false;
+		ui->size_changed = false;
 	}
 
 	cairo_rectangle (cr, ev->x, ev->y, ev->width, ev->height);
@@ -608,6 +621,7 @@ static bool expose_event(RobWidget* handle, cairo_t* cr, cairo_rectangle_t *ev) 
 	}
 
 	if (ev->width >= ui->width && ev->width >= ui->height) {
+		/* full expose/redraw */
 		ui->show_peaks_changed = false;
 	}
 
@@ -804,7 +818,16 @@ static void
 size_request(RobWidget* handle, int *w, int *h) {
 	SAUI* ui = (SAUI*)GET_HANDLE(handle);
 	*w = ui->width;
-	*h = ui->height;
+	*h = GM_MINH;
+}
+
+static void
+size_allocate(RobWidget* handle, int w, int h) {
+	SAUI* ui = (SAUI*)GET_HANDLE(handle);
+	ui->height = floor(h/2) * 2;
+	ui->size_changed = true;
+	robwidget_set_size(handle, ui->width, h);
+	queue_draw(ui->m0);
 }
 
 static RobWidget * toplevel(SAUI* ui, void * const top)
@@ -819,6 +842,7 @@ static RobWidget * toplevel(SAUI* ui, void * const top)
 
 	robwidget_set_expose_event(ui->m0, expose_event);
 	robwidget_set_size_request(ui->m0, size_request);
+	robwidget_set_size_allocate(ui->m0, size_allocate);
 	robwidget_set_mousedown(ui->m0, cb_reset_peak);
 	if (ui->display_freq) {
 		robwidget_set_mousemove(ui->m0, mousemove);
@@ -855,10 +879,10 @@ static RobWidget * toplevel(SAUI* ui, void * const top)
 
 	/* layout */
 
-	rob_hbox_child_pack(ui->rw, ui->m0, TRUE, FALSE);
+	rob_hbox_child_pack(ui->rw, ui->m0, FALSE, TRUE);
 	if (ui->display_freq) {
-		rob_hbox_child_pack(ui->rw, robtk_sep_widget(ui->sep_h0), FALSE, FALSE);
-		rob_hbox_child_pack(ui->rw, ui->c_box, FALSE, FALSE);
+		rob_hbox_child_pack(ui->rw, robtk_sep_widget(ui->sep_h0), FALSE, TRUE);
+		rob_hbox_child_pack(ui->rw, ui->c_box, FALSE, TRUE);
 
 		rob_vbox_child_pack(ui->c_box, robtk_scale_widget(ui->fader), TRUE, TRUE);
 #if 1 // display speed, value-LPF config
@@ -923,6 +947,7 @@ instantiate(
 	ui->cache_ma = -100;
 	ui->highlight = -1;
 	ui->metrics_changed = true;
+	ui->size_changed = true;
 
 	ui->show_peaks_changed = false;
 	ui->show_peaks = true;
@@ -930,7 +955,6 @@ instantiate(
 
 	initialize_font_cache(ui);
 	alloc_annotations(ui);
-	create_meter_pattern(ui);
 
 	for (uint32_t i=0; i < ui->num_meters ; ++i) {
 		ui->val[i] = -100.0;
@@ -941,7 +965,7 @@ instantiate(
 	ui->disable_signals = false;
 
 	ui->width = 2.0 * MA_WIDTH + ui->num_meters * GM_WIDTH;
-	ui->height = GM_HEIGHT;
+	ui->height = GM_MINH;
 
 	*widget = toplevel(ui, ui_toplevel);
 
