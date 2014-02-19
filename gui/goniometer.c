@@ -544,8 +544,8 @@ static void draw_pc_annotation(GMUI* ui, cairo_t* cr) {
 	cairo_set_line_width(cr, 1.5);
 
 #define PC_ANNOTATION(YPOS) \
-	cairo_move_to(cr, PC_LEFT + 2.0, PC_TOP + YPOS - 1.0); \
-	cairo_line_to(cr, PC_LEFT + PC_WIDTH - 2.0, PC_TOP + YPOS - 1.0);\
+	cairo_move_to(cr, PC_LEFT + 2.0, rintf(PC_TOP + YPOS) - .5); \
+	cairo_line_to(cr, PC_LEFT + PC_WIDTH - 2.0, rintf(PC_TOP + YPOS) - .5);\
 	cairo_stroke(cr);
 
 	PC_ANNOTATION(PC_HEIGHT * 0.1);
@@ -557,8 +557,8 @@ static void draw_pc_annotation(GMUI* ui, cairo_t* cr) {
 	PC_ANNOTATION(PC_HEIGHT * 0.8);
 	PC_ANNOTATION(PC_HEIGHT * 0.9);
 
-	DRAW_LABEL(5, PC_LEFT + 16, PC_TOP + 14);
-	DRAW_LABEL(6, PC_LEFT + 16, PC_TOP + PC_HEIGHT - 2);
+	DRAW_LABEL(5, PC_LEFT + 16, PC_TOP + 14.5);
+	DRAW_LABEL(6, PC_LEFT + 16, PC_TOP + PC_HEIGHT - 2.5);
 
 	CairoSetSouerceRGBA(c_glr);
 	cairo_set_line_width(cr, 1.5);
