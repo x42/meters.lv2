@@ -551,7 +551,7 @@ static bool cb_reset (RobWidget* handle, void *data) {
 	lv2_atom_forge_set_buffer(&ui->forge, obj_buf, 128);
 	LV2_Atom_Forge_Frame frame;
 	lv2_atom_forge_frame_time(&ui->forge, 0);
-	LV2_Atom* msg = (LV2_Atom*)lv2_atom_forge_blank(&ui->forge, &frame, 1, ui->uris.mtr_dr14reset);
+	LV2_Atom* msg = (LV2_Atom*)x_forge_object(&ui->forge, &frame, 1, ui->uris.mtr_dr14reset);
 	lv2_atom_forge_pop(&ui->forge, &frame);
 	ui->write(ui->controller, 0, lv2_atom_total_size(msg), ui->uris.atom_eventTransfer, msg);
 	return TRUE;
@@ -653,7 +653,7 @@ static void ui_enable(LV2UI_Handle handle) {
 	lv2_atom_forge_set_buffer(&ui->forge, obj_buf, 128);
 	LV2_Atom_Forge_Frame frame;
 	lv2_atom_forge_frame_time(&ui->forge, 0);
-	LV2_Atom* msg = (LV2_Atom*)lv2_atom_forge_blank(&ui->forge, &frame, 1, ui->uris.mtr_meters_on);
+	LV2_Atom* msg = (LV2_Atom*)x_forge_object(&ui->forge, &frame, 1, ui->uris.mtr_meters_on);
 	lv2_atom_forge_pop(&ui->forge, &frame);
 	ui->write(ui->controller, 0, lv2_atom_total_size(msg), ui->uris.atom_eventTransfer, msg);
 }
@@ -664,7 +664,7 @@ static void ui_disable(LV2UI_Handle handle) {
 	lv2_atom_forge_set_buffer(&ui->forge, obj_buf, 128);
 	LV2_Atom_Forge_Frame frame;
 	lv2_atom_forge_frame_time(&ui->forge, 0);
-	LV2_Atom* msg = (LV2_Atom*)lv2_atom_forge_blank(&ui->forge, &frame, 1, ui->uris.mtr_meters_off);
+	LV2_Atom* msg = (LV2_Atom*)x_forge_object(&ui->forge, &frame, 1, ui->uris.mtr_meters_off);
 	lv2_atom_forge_pop(&ui->forge, &frame);
 	ui->write(ui->controller, 0, lv2_atom_total_size(msg), ui->uris.atom_eventTransfer, msg);
 }

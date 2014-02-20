@@ -28,6 +28,12 @@
 
 #define MTR_URI "http://gareus.org/oss/lv2/meters#"
 
+#ifdef HAVE_LV2_1_8
+#define x_forge_object lv2_atom_forge_object
+#else
+#define x_forge_object lv2_atom_forge_blank
+#endif
+
 #define HIST_LEN (751)
 
 #define MTR__ebulevels        MTR_URI "ebulevels"
@@ -182,7 +188,7 @@ forge_kvcontrolmessage(LV2_Atom_Forge* forge,
 {
 	LV2_Atom_Forge_Frame frame;
 	lv2_atom_forge_frame_time(forge, 0);
-	LV2_Atom* msg = (LV2_Atom*)lv2_atom_forge_blank(forge, &frame, 1, uri);
+	LV2_Atom* msg = (LV2_Atom*)x_forge_object(forge, &frame, 1, uri);
 
 	lv2_atom_forge_property_head(forge, uris->mtr_cckey, 0);
 	lv2_atom_forge_int(forge, key);

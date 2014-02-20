@@ -1561,7 +1561,7 @@ port_event(LV2UI_Handle handle,
 	if (format == uris->atom_eventTransfer) {
 		LV2_Atom* atom = (LV2_Atom*)buffer;
 
-		if (atom->type == uris->atom_Blank) {
+		if (atom->type == uris->atom_Blank || atom->type == uris->atom_Object) {
 			LV2_Atom_Object* obj = (LV2_Atom_Object*)atom;
 			if (obj->body.otype == uris->mtr_ebulevels) {
 				parse_ebulevels(ui, obj);

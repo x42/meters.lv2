@@ -368,7 +368,7 @@ ebur128_run(LV2_Handle instance, uint32_t n_samples)
 			}
 			LV2_Atom_Forge_Frame frame;
 			lv2_atom_forge_frame_time(&self->forge, 0);
-			lv2_atom_forge_blank(&self->forge, &frame, 1, self->uris.rdr_radarpoint);
+			x_forge_object(&self->forge, &frame, 1, self->uris.rdr_radarpoint);
 			lv2_atom_forge_property_head(&self->forge, self->uris.ebu_loudnessM, 0);  lv2_atom_forge_float(&self->forge, self->radarM[self->radar_resync]);
 			lv2_atom_forge_property_head(&self->forge, self->uris.ebu_loudnessS, 0);  lv2_atom_forge_float(&self->forge, self->radarS[self->radar_resync]);
 			lv2_atom_forge_property_head(&self->forge, self->uris.rdr_pointpos, 0); lv2_atom_forge_int(&self->forge, self->radar_resync);
@@ -391,7 +391,7 @@ ebur128_run(LV2_Handle instance, uint32_t n_samples)
 		if (self->ui_active) {
 			LV2_Atom_Forge_Frame frame; // max 128 bytes
 			lv2_atom_forge_frame_time(&self->forge, 0);
-			lv2_atom_forge_blank(&self->forge, &frame, 1, self->uris.rdr_radarpoint);
+			x_forge_object(&self->forge, &frame, 1, self->uris.rdr_radarpoint);
 			lv2_atom_forge_property_head(&self->forge, self->uris.ebu_loudnessM, 0);  lv2_atom_forge_float(&self->forge, self->radarMC);
 			lv2_atom_forge_property_head(&self->forge, self->uris.ebu_loudnessS, 0);  lv2_atom_forge_float(&self->forge, self->radarSC);
 			lv2_atom_forge_property_head(&self->forge, self->uris.rdr_pointpos, 0); lv2_atom_forge_int(&self->forge, self->radar_pos_cur);
@@ -432,7 +432,7 @@ ebur128_run(LV2_Handle instance, uint32_t n_samples)
 					self->histS[i] = vs;
 					LV2_Atom_Forge_Frame frame; // max 128 bytes
 					lv2_atom_forge_frame_time(&self->forge, 0);
-					lv2_atom_forge_blank(&self->forge, &frame, 1, self->uris.rdr_histpoint);
+					x_forge_object(&self->forge, &frame, 1, self->uris.rdr_histpoint);
 					lv2_atom_forge_property_head(&self->forge, self->uris.ebu_loudnessM, 0);  lv2_atom_forge_int(&self->forge, vm);
 					lv2_atom_forge_property_head(&self->forge, self->uris.ebu_loudnessS, 0);  lv2_atom_forge_int(&self->forge, vs);
 					lv2_atom_forge_property_head(&self->forge, self->uris.rdr_pointpos, 0); lv2_atom_forge_int(&self->forge, i);
@@ -445,7 +445,7 @@ ebur128_run(LV2_Handle instance, uint32_t n_samples)
 			if (max_changed) {
 				LV2_Atom_Forge_Frame frame; // max 128 bytes
 				lv2_atom_forge_frame_time(&self->forge, 0);
-				lv2_atom_forge_blank(&self->forge, &frame, 1, self->uris.rdr_histogram);
+				x_forge_object(&self->forge, &frame, 1, self->uris.rdr_histogram);
 				lv2_atom_forge_property_head(&self->forge, self->uris.ebu_loudnessM, 0); lv2_atom_forge_int(&self->forge, self->hist_maxM);
 				lv2_atom_forge_property_head(&self->forge, self->uris.ebu_loudnessS, 0); lv2_atom_forge_int(&self->forge, self->hist_maxS);
 				lv2_atom_forge_pop(&self->forge, &frame);
@@ -457,7 +457,7 @@ ebur128_run(LV2_Handle instance, uint32_t n_samples)
 	if (self->ui_active) {
 		LV2_Atom_Forge_Frame frame; // max 264 bytes
 		lv2_atom_forge_frame_time(&self->forge, 0);
-		lv2_atom_forge_blank(&self->forge, &frame, 1, self->uris.mtr_ebulevels);
+		x_forge_object(&self->forge, &frame, 1, self->uris.mtr_ebulevels);
 		lv2_atom_forge_property_head(&self->forge, self->uris.ebu_loudnessM, 0);   lv2_atom_forge_float(&self->forge, lm);
 		lv2_atom_forge_property_head(&self->forge, self->uris.ebu_maxloudnM, 0);   lv2_atom_forge_float(&self->forge, mm);
 		lv2_atom_forge_property_head(&self->forge, self->uris.ebu_loudnessS, 0);   lv2_atom_forge_float(&self->forge, ls);

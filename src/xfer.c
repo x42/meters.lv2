@@ -150,7 +150,7 @@ static void tx_rawaudio(LV2_Atom_Forge *forge, XferLV2URIs *uris,
 	LV2_Atom_Forge_Frame frame;
 	/* forge container object of type 'rawaudio' */
 	lv2_atom_forge_frame_time(forge, 0);
-	lv2_atom_forge_blank(forge, &frame, 1, uris->rawaudio);
+	x_forge_object(forge, &frame, 1, uris->rawaudio);
 
 	/* add integer attribute 'channelid' */
 	lv2_atom_forge_property_head(forge, uris->channelid, 0);
@@ -171,7 +171,7 @@ static void tx_rawstereo(LV2_Atom_Forge *forge, XferLV2URIs *uris,
 	LV2_Atom_Forge_Frame frame;
 	/* forge container object of type 'rawaudio' */
 	lv2_atom_forge_frame_time(forge, 0);
-	lv2_atom_forge_blank(forge, &frame, 1, uris->rawstereo);
+	x_forge_object(forge, &frame, 1, uris->rawstereo);
 
 	lv2_atom_forge_property_head(forge, uris->audioleft, 0);
 	lv2_atom_forge_vector(forge, sizeof(float), uris->atom_Float, n_samples, left);
@@ -213,7 +213,7 @@ xfer_run(LV2_Handle handle, uint32_t n_samples)
 		/* forge container object of type 'ui_state' */
 		LV2_Atom_Forge_Frame frame;
 		lv2_atom_forge_frame_time(&self->forge, 0);
-		lv2_atom_forge_blank(&self->forge, &frame, 1, self->uris.ui_state);
+		x_forge_object(&self->forge, &frame, 1, self->uris.ui_state);
 		/* forge attributes for 'ui_state' */
 		lv2_atom_forge_property_head(&self->forge, self->uris.samplerate, 0);
 		lv2_atom_forge_float(&self->forge, self->rate);
