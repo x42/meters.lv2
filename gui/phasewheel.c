@@ -25,6 +25,8 @@
 #define XOFF 5
 #define YOFF 5
 
+#define MIN_CUTOFF (-80.f) // dB
+
 /* level range annotation */
 #define ANN_W (2 * (PH_RAD + XOFF))
 #define ANN_H 32
@@ -447,12 +449,20 @@ static void update_annotations(MF2UI* ui) {
 	cairo_set_line_width (cr, 1.0);
 	const uint32_t mxw = ANN_W - XOFF * 2 - 36;
 	const uint32_t mxo = XOFF + 18;
+	const float cutoff = ui->db_cutoff;
+	const uint32_t   cutoff_m = floor(mxw * (MIN_CUTOFF - cutoff) / MIN_CUTOFF);
+	assert(cutoff_m < mxw);
+	const uint32_t   cutoff_w = mxw - cutoff_m;
 
 	for (uint32_t i=0; i < mxw; ++i) {
-		float pk = i / (float)mxw;
-
 		float clr[3];
-		hsl2rgb(clr, .70 - .72 * pk, .9, .2 + pk * .4);
+		if (i < cutoff_m) {
+			clr[0] = clr[1] = clr[2] = .1;
+		} else {
+			const float pk = (i-cutoff_m) / (float)cutoff_w;
+			hsl2rgb(clr, .68 - .72 * pk, .9, .2 + pk * .4);
+		}
+
 		cairo_set_source_rgba(cr, clr[0], clr[1], clr[2], 1.0);
 
 		cairo_move_to(cr, mxo + i + .5, ANN_B - 5);
@@ -463,27 +473,23 @@ static void update_annotations(MF2UI* ui) {
 	cairo_set_source_rgba(cr, .8, .8, .8, .8);
 
 	const float gain = robtk_dial_get_value(ui->gain);
-	for (int32_t db = -60; db <=0 ; db+= 10) {
+	for (int32_t db = MIN_CUTOFF; db <=0 ; db+= 10) {
 		char dbt[16];
 		if (db == 0) {
 			snprintf(dbt, 16, "\u2265%+.0fdB", (db - gain));
 		} else {
 			snprintf(dbt, 16, "%+.0fdB", (db - gain));
 		}
-		write_text_full(cr, dbt, ui->font[0], mxo + rint(mxw * (60.0 + db) / 60.0), ANN_B - 14 , 0, 2, c_wht);
-		cairo_move_to(cr, mxo + rint(mxw * (60.0 + db) / 60.0) + .5, ANN_B - 7);
-		cairo_line_to(cr, mxo + rint(mxw * (60.0 + db) / 60.0) + .5, ANN_B);
+		write_text_full(cr, dbt, ui->font[0], mxo + rint(mxw * (-MIN_CUTOFF + db) / -MIN_CUTOFF), ANN_B - 14 , 0, 2, c_wht);
+		cairo_move_to(cr, mxo + rint(mxw * (-MIN_CUTOFF + db) / -MIN_CUTOFF) + .5, ANN_B - 7);
+		cairo_line_to(cr, mxo + rint(mxw * (-MIN_CUTOFF + db) / -MIN_CUTOFF) + .5, ANN_B);
 		cairo_stroke(cr);
 	}
 
 	/* black overlay above low-end cutoff */
-	if (ui->db_cutoff > -59) {
-		const float cox = rint(mxw * (ui->db_cutoff + 60.0)/ 60.0);
-		if (ui->drag_cutoff_x >= 0 || ui->prelight_cutoff) {
-			cairo_rectangle(cr, mxo, 6, cox, ANN_B - 6);
-		} else {
-			cairo_rectangle(cr, mxo, ANN_B - 6, cox, 7);
-		}
+	if (ui->db_cutoff > MIN_CUTOFF && (ui->drag_cutoff_x >= 0 || ui->prelight_cutoff)) {
+		const float cox = rint(mxw * (ui->db_cutoff - MIN_CUTOFF)/ -MIN_CUTOFF);
+		cairo_rectangle(cr, mxo, 6, cox, ANN_B - 6);
 		cairo_set_source_rgba(cr, .0, .0, .0, .7);
 		cairo_fill(cr);
 
@@ -510,7 +516,7 @@ static inline void draw_point(MF2UI* ui, cairo_t *cr,
 		const float ccc, const float dist, float phase)
 {
 		float clr[3];
-		hsl2rgb(clr, .70 - .72 * pk, .9, .2 + pk * .4);
+		hsl2rgb(clr, .68 - .72 * pk, .9, .2 + pk * .4);
 
 		cairo_set_line_width (cr, PH_POINT);
 		cairo_set_source_rgba(cr, clr[0], clr[1], clr[2], 0.3 + pk * .7);
@@ -556,15 +562,16 @@ static void plot_data_fft(MF2UI* ui) {
 	cairo_set_line_cap(cr, CAIRO_LINE_CAP_ROUND);
 	const float dnum = ui->scale * PH_RAD / ui->log_base;
 	const float denom = ui->log_rate / (float)ui->fft_bins;
+	const float cutoff = ui->db_cutoff;
 	for (uint32_t i = 1; i < ui->fft_bins-1 ; ++i) {
 		if (ui->level[i] < 0) continue;
 		const float level = gain + fftx_power_to_dB(ui->level[i]);
-		if (level < ui->db_cutoff) continue;
+		if (level < cutoff) continue;
 
 		const float dist = dnum * fast_log10(1.0 + i * denom);
 		const float dx = ccc + dist * sinf(ui->phase[i]);
 		const float dy = ccc - dist * cosf(ui->phase[i]);
-		const float pk = level > 0.0 ? 1.0 : (60 + level) / 60.0;
+		const float pk = level > 0.0 ? 1.0 : (cutoff - level) / cutoff;
 
 		draw_point(ui, cr, pk, dx, dy, ccc, dist, ui->phase[i]);
 	}
@@ -594,6 +601,7 @@ static void plot_data_oct(MF2UI* ui) {
 
 	const float dnum = ui->scale * PH_RAD / ui->log_base;
 	const float denom = 2.0 * ui->log_rate / ui->rate;
+	const float cutoff = ui->db_cutoff;
 
 	uint32_t fi = 1;
 	for (uint32_t i = 0; i < ui->freq_bins; ++i) {
@@ -614,11 +622,11 @@ static void plot_data_oct(MF2UI* ui) {
 		}
 		if (a_cnt == 0) continue;
 		a_level = gain + fftx_power_to_dB (a_level);
-		if (a_level < ui->db_cutoff) continue;
+		if (a_level < cutoff) continue;
 
 		a_freq /= (float)a_cnt;
 		const float dist = dnum * fast_log10(1.0 + a_freq * denom);
-		const float pk = a_level > 0.0 ? 1.0 : (60 + a_level) / 60.0;
+		const float pk = a_level > 0.0 ? 1.0 : (cutoff - a_level) / cutoff;
 
 		float dx, dy;
 		if (a_cnt == 1) {
@@ -775,7 +783,7 @@ static bool cb_set_gain (RobWidget* handle, void *data) {
 		ui->update_annotations = true;
 		queue_draw(ui->m2);
 	}
-	const float thresh = pow10f(.05 * (-60-val));
+	const float thresh = pow10f(.05 * (MIN_CUTOFF - val));
 	ui->db_thresh = thresh * thresh;
 	if (ui->disable_signals) return TRUE;
 	if (robtk_cbtn_get_active(ui->btn_norm)) return TRUE;
@@ -843,11 +851,11 @@ static RobWidget* m2_mouseup(RobWidget* handle, RobTkBtnEvent *event) {
 static RobWidget* m2_mousemove(RobWidget* handle, RobTkBtnEvent *event) {
 	MF2UI* ui = (MF2UI*)GET_HANDLE(handle);
 	if (ui->drag_cutoff_x < 0) return NULL;
-	const float mxw = 60. / (float) (ANN_W - XOFF * 2 - 36);
+	const float mxw = -MIN_CUTOFF / (float) (ANN_W - XOFF * 2 - 36);
 	const float diff = (event->x - ui->drag_cutoff_x) * mxw;
 	float cutoff = ui->drag_cutoff_db + diff;
-	if (cutoff < -59) cutoff = -59;
-	if (cutoff > -10) cutoff = -10;
+	if (cutoff <= MIN_CUTOFF) cutoff = MIN_CUTOFF;
+	if (cutoff >= -10) cutoff = -10;
 	if (ui->db_cutoff != cutoff) {
 		ui->db_cutoff = cutoff;
 		ui->update_annotations = true;
@@ -1150,8 +1158,8 @@ instantiate(
 	ui->controller = controller;
 
 	ui->rate = 48000;
-	ui->db_cutoff = -59;
-	ui->db_thresh = 0.000001; // (-60dB)^2
+	ui->db_cutoff = -60;
+	ui->db_thresh = 0.000001; // (-60dB)^2 // XXX
 	ui->drag_cutoff_x = -1;
 	ui->prelight_cutoff = false;
 	ui->cor = 0.5;
@@ -1343,7 +1351,7 @@ port_event(LV2UI_Handle handle,
 	}
 	else if (port_index == MF_CUTOFF) {
 		float val = *(float *)buffer;
-		if (ui->drag_cutoff_x < 0 && val >= -59 && val <= -10) {
+		if (ui->drag_cutoff_x < 0 && val >= MIN_CUTOFF && val <= -10) {
 			ui->db_cutoff = val;
 			ui->update_annotations = true;
 			queue_draw(ui->m2);
