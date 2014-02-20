@@ -138,8 +138,8 @@ ifeq ($(shell pkg-config --atleast-version=1.4.2 lv2 && echo yes), yes)
   LV2UIREQ+=lv2:requiredFeature ui:idleInterface; lv2:extensionData ui:idleInterface;
 endif
 
-# check for lv2_atom_forge_object  new in 1.8, deprecates lv2_atom_forge_blank
-ifeq ($(shell pkg-config --atleast-version=1.8.0 lv2 && echo yes), yes)
+# check for lv2_atom_forge_object  new in 1.8.1 deprecates lv2_atom_forge_blank
+ifeq ($(shell pkg-config --atleast-version=1.8.1 lv2 && echo yes), yes)
 	override CFLAGS += -DHAVE_LV2_1_8
 endif
 
