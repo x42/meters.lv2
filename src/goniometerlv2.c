@@ -95,7 +95,7 @@ goniometer_instantiate(
 	self->s_sfact = 4;
 	self->s_linewidth = .75;
 	self->s_pointwidth = 1.75;
-	self->s_persistency = 88;
+	self->s_persistency = 33;
 	self->s_max_freq = 50;
 	self->s_compress = 0.0;
 	self->s_gattack = 54.0;

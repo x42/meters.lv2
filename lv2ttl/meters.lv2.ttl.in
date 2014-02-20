@@ -2504,7 +2504,7 @@ mtr:phasewheel@URI_SUFFIX@
 		lv2:name "Screen Persistence" ;
 		lv2:minimum 0 ;
 		lv2:maximum 100 ;
-		lv2:default 62 ;
+		lv2:default 33 ;
 	  rdfs:comment "Screen persistence (fade out speed). 0: no persistence, 100: permanent. Values above ~66 result in a permanent shadow.";
 	] ;
 	rdfs:comment "Phase/Frequency Wheel - display stereo-signal phase (angle) relative to frequency (radius)."
@@ -2604,7 +2604,7 @@ mtr:stereoscope@URI_SUFFIX@
 		lv2:name "Screen Persistence" ;
 		lv2:minimum 0 ;
 		lv2:maximum 100 ;
-		lv2:default 62 ;
+		lv2:default 50 ;
 	  rdfs:comment "Screen persistence (fade out speed). 0: no persistence, 100: permanent. Values above ~66 result in a permanent shadow.";
 	] ;
 	rdfs:comment "Stereo Scope display channel difference per frequency."

@@ -546,8 +546,8 @@ static RobWidget * toplevel(SFSUI* ui, void * const top)
 	ui->screen = robtk_dial_new_with_size(0.0, 100.0, 1,
 			22, 22, 10.5, 10.5, 10);
 	robtk_dial_set_alignment(ui->screen, 1.0, 0.5);
-	robtk_dial_set_value(ui->screen, 62);
-	robtk_dial_set_default(ui->screen, 62.0);
+	robtk_dial_set_value(ui->screen, 50);
+	robtk_dial_set_default(ui->screen, 50.0);
 	robtk_dial_set_callback(ui->screen, cb_set_persistence, ui);
 
 	/* fft bins */

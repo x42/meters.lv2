@@ -1118,7 +1118,7 @@ instantiate(
 	robtk_dial_set_default(ui->spn_gdecay, 58.0);
 	robtk_dial_set_default(ui->spn_gtarget, 40.0);
 	robtk_dial_set_default(ui->spn_grms, 50.0);
-	robtk_dial_set_default(ui->spn_alpha, 88.0);
+	robtk_dial_set_default(ui->spn_alpha, 33.0);
 	robtk_spin_set_default(ui->spn_vfreq, 50.0);
 	robtk_spin_set_default(ui->spn_src_fact, 4.0);
 	robtk_spin_set_default(ui->spn_psize, 1.25); // see also cb_lines()
