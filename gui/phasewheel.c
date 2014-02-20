@@ -524,9 +524,9 @@ static inline void draw_point(MF2UI* ui, cairo_t *cr,
 		}
 		cairo_stroke(cr);
 
-		if (ccc > 0) {
-			const float dev = .01 * M_PI;
-			cairo_set_line_width(cr, .5 * PH_POINT);
+		if (ccc > 0 && dist > 0) {
+			const float dev = .01256 * ccc / dist; // .004 * M_PI * ccc / dist
+			cairo_set_line_width(cr, PH_POINT);
 			cairo_set_source_rgba(cr, clr[0], clr[1], clr[2], .1);
 			float pp = phase - .5 * M_PI;
 			cairo_arc (cr, ccc, ccc, dist, (pp-dev), (pp+dev));
