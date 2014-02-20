@@ -513,7 +513,7 @@ static inline void draw_point(MF2UI* ui, cairo_t *cr,
 		hsl2rgb(clr, .70 - .72 * pk, .9, .2 + pk * .4);
 
 		cairo_set_line_width (cr, PH_POINT);
-		cairo_set_source_rgba(cr, clr[0], clr[1], clr[2], 0.6 + pk * .4);
+		cairo_set_source_rgba(cr, clr[0], clr[1], clr[2], 0.3 + pk * .7);
 		cairo_new_path (cr);
 		cairo_move_to(cr, dx, dy);
 		cairo_close_path(cr);
