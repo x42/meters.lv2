@@ -168,6 +168,11 @@ typedef struct {
 
 } EBUrUI;
 
+
+/******************************************************************************
+ * fast math helpers
+ */
+
 static inline float fast_log2 (float val)
 {
 	union {float f; int i;} t;
@@ -189,7 +194,9 @@ static inline float fast_log10 (const float val)
 	return fast_log2(val) * 0.301029996f;
 }
 
-
+/******************************************************************************
+ * meter colors
+ */
 
 static float radar_deflect(const float v, const float r) {
 	if (v < -60) return 0;
@@ -197,9 +204,8 @@ static float radar_deflect(const float v, const float r) {
 	return (v + 60.0) * r / 60.0;
 }
 
-static void radar_color(cairo_t* cr, const float v, float alpha) {
-	if (alpha > 0.9) alpha = 0.9;
-	else if (alpha < 0) alpha = 1.0;
+static void radar_color(cairo_t* cr, const float v) {
+	const float alpha = 1.0;
 
 	if (v < -70) {
 		cairo_set_source_rgba (cr, .3, .3, .3, alpha);
@@ -222,37 +228,28 @@ static void radar_color(cairo_t* cr, const float v, float alpha) {
 	}
 }
 
-/******************************************************************************
- * custom visuals
- */
-
-#define LUFS(V) ((V) < -100 ? -INFINITY : (lufs ? (V) : (V) + 23.0))
-#define FONT(A) ui->font[(A)]
-
-static void write_text(
-		cairo_t* cr,
-		const char *txt,
-		PangoFontDescription *font, //const char *font,
-		const float x, const float y,
-		const float ang, const int align,
-		const float * const col) {
-	write_text_full(cr, txt, font, x, y, ang, align, col);
-}
-
-
 static cairo_pattern_t * radar_pattern(cairo_t* crx, float cx, float cy, float rad) {
 	cairo_pattern_t * pat = cairo_pattern_create_radial(cx, cy, 0, cx, cy, rad);
 	cairo_pattern_add_color_stop_rgba(pat, 0.0 ,  .0, .0, .0, 0.0);
-	cairo_pattern_add_color_stop_rgba(pat, 0.10,  .0, .0, .0, 1.0);
-	cairo_pattern_add_color_stop_rgba(pat, radar_deflect(-50, 1.0),  .0, .0, .5, 1.0);
-	cairo_pattern_add_color_stop_rgba(pat, radar_deflect(-47, 1.0),  .0, .0, .8, 1.0);
-	cairo_pattern_add_color_stop_rgba(pat, radar_deflect(-41, 1.0),  .0, .5, .2, 1.0);
-	cairo_pattern_add_color_stop_rgba(pat, radar_deflect(-31, 1.0),  .0, .7, .0, 1.0);
-	cairo_pattern_add_color_stop_rgba(pat, radar_deflect(-25, 1.0),  .0, .9, .0, 1.0);
-	cairo_pattern_add_color_stop_rgba(pat, radar_deflect(-22, 1.0), .75,.75, .0, 1.0);
+	cairo_pattern_add_color_stop_rgba(pat, 0.05,  .0, .0, .0, 1.0); // -57
+
+	cairo_pattern_add_color_stop_rgba(pat, radar_deflect(-53.0, 1.0),  .0, .0, .5, 1.0);
+
+	cairo_pattern_add_color_stop_rgba(pat, radar_deflect(-48.0, 1.0),  .0, .0, .8, 1.0);
+	cairo_pattern_add_color_stop_rgba(pat, radar_deflect(-46.5, 1.0),  .0, .5, .4, 1.0);
+
+	cairo_pattern_add_color_stop_rgba(pat, radar_deflect(-36.0, 1.0),  .0, .6, .0, 1.0);
+	cairo_pattern_add_color_stop_rgba(pat, radar_deflect(-34.0, 1.0),  .0, .8, .0, 1.0);
+
+	cairo_pattern_add_color_stop_rgba(pat, radar_deflect(-24.0, 1.0),  .1, .9, .1, 1.0);
+	cairo_pattern_add_color_stop_rgba(pat, radar_deflect(-22.0, 1.0), .75,.75, .0, 1.0);
+
 	cairo_pattern_add_color_stop_rgba(pat, radar_deflect(-11.5, 1.0),  .8, .4, .0, 1.0);
-	cairo_pattern_add_color_stop_rgba(pat, radar_deflect( -4, 1.0),  .8, .0, .0, 1.0);
-	cairo_pattern_add_color_stop_rgba(pat, 1.0 ,  .9, .0, .0, 1.0);
+	cairo_pattern_add_color_stop_rgba(pat, radar_deflect(-10.5, 1.0),  .7, .1, .1, 1.0);
+
+	cairo_pattern_add_color_stop_rgba(pat, radar_deflect( -4.5, 1.0),  .9, .0, .0, 1.0);
+	cairo_pattern_add_color_stop_rgba(pat, radar_deflect( -3.5, 1.0),   1, .1, .0, 1.0);
+	cairo_pattern_add_color_stop_rgba(pat, 1.0 ,                        1, .1, .0, 1.0);
 	return pat;
 }
 
@@ -315,6 +312,23 @@ static cairo_pattern_t * histogram_pattern(cairo_t* crx, float cx, float cy, flo
 	cairo_pattern_set_matrix (pat, &m);
 
 	return pat;
+}
+
+/******************************************************************************
+ * custom visuals
+ */
+
+#define LUFS(V) ((V) < -100 ? -INFINITY : (lufs ? (V) : (V) + 23.0))
+#define FONT(A) ui->font[(A)]
+
+static void write_text(
+		cairo_t* cr,
+		const char *txt,
+		PangoFontDescription *font, //const char *font,
+		const float x, const float y,
+		const float ang, const int align,
+		const float * const col) {
+	write_text_full(cr, txt, font, x, y, ang, align, col);
 }
 
 static cairo_surface_t * hlabel_surface(EBUrUI* ui) {
@@ -387,7 +401,6 @@ static cairo_surface_t * clabel_surface(EBUrUI* ui, bool plus9, bool plus24, boo
 	return sf;
 }
 
-
 static void ring_leds(EBUrUI* ui, int *l, int *m) {
 	const bool rings = robtk_rbtn_get_active(ui->cbx_ring_short);
 	const bool plus9 = robtk_rbtn_get_active(ui->cbx_sc9);
@@ -413,6 +426,10 @@ static void initialize_font_cache(EBUrUI* ui) {
 	assert(ui->font[FONT_S09]);
 	assert(ui->font[FONT_S08]);
 }
+
+/******************************************************************************
+ * Areas for partial exposure
+ */
 
 static void leveldisplaypath(cairo_t *cr) {
 	cairo_move_to(cr,CLPX( 37), CLPY(190));
@@ -456,13 +473,16 @@ static void leveldisplaypath(cairo_t *cr) {
 }
 
 const static cairo_rectangle_t rect_is_level = {COORD_MTR_X, COORD_MTR_Y, 320, 290}; // match w/COORD_BINFO
-//const static cairo_rectangle_t rect_is_radar = {39, 63, 291-39, 315-63};
 const static cairo_rectangle_t rect_is_radar = {CX-RADIUS-9, CY-RADIUS-9, 2*RADIUS+12, 2*RADIUS+12};
 
 #define RDR_INV_X (CX-RADIUS -2.5) // 43
 #define RDR_INV_Y (CY-RADIUS -2.5) // 68
 #define RDR_INV_W (2*RADIUS + 5)
 #define RDR_INV_H (2*RADIUS + 5)
+
+/******************************************************************************
+ * Main drawing function
+ */
 
 static bool expose_event(RobWidget* handle, cairo_t* cr, cairo_rectangle_t *ev) {
 	EBUrUI* ui = (EBUrUI*)GET_HANDLE(handle);
@@ -798,40 +818,24 @@ static bool expose_event(RobWidget* handle, cairo_t* cr, cairo_rectangle_t *ev) 
 				val = (float) rng * .5 - 59.0f;
 			}
 			if (rng <= cl) {
-				radar_color(cr, val, -1);
+				radar_color(cr, val);
 			} else {
 				CairoSetSouerceRGBA(c_g30);
 			}
-#if 0
-			cairo_save(cr);
-			cairo_translate (cr, CX, CY);
-			cairo_rotate (cr, ang);
-			cairo_translate (cr, RADIUS10, 0);
-			cairo_move_to(cr,  0.5, 0);
-			if (!maxed && cm > 0 && (rng >= cm || (rng == ulp && cm >= ulp))) {
-				radar_color(cr, val, -1);
-				cairo_line_to(cr, 12.5, 0);
-				maxed = true;
-			} else {
-				cairo_line_to(cr,  9.5, 0);
-			}
-			cairo_stroke (cr);
-			cairo_restore(cr);
-#else
+
 			float cc = sinf(ang);
 			float sc = cosf(ang);
 			cairo_move_to(cr,   CX + RADIUS10 * sc, CY + RADIUS10 * cc);
 
 			/* highligh peak */
 			if (!maxed && cm > 0 && (rng >= cm || (rng == ulp && cm >= ulp))) {
-				radar_color(cr, val, -1);
+				radar_color(cr, val);
 				cairo_line_to(cr, CX + RADIUS22 * sc, CY + RADIUS22 * cc);
 				maxed = true;
 			} else {
 				cairo_line_to(cr, CX + RADIUS19 * sc, CY + RADIUS19 * cc);
 			}
 			cairo_stroke (cr);
-#endif
 		}
 
 		cairo_set_source_surface(cr, ui->lvl_label, 0, 0);
@@ -915,6 +919,10 @@ static bool expose_event(RobWidget* handle, cairo_t* cr, cairo_rectangle_t *ev) 
 
 	return TRUE;
 }
+
+/******************************************************************************
+ * partial exposure
+ */
 
 #define INVALIDATE_RECT(XX,YY,WW,HH) queue_draw_area(ui->m0, XX, YY, WW, HH)
 #define MIN2(A,B) ( (A) < (B) ? (A) : (B) )
@@ -1164,10 +1172,10 @@ static bool spn_radartime(RobWidget *w, void* handle) {
 
 static void
 size_request(RobWidget* handle, int *w, int *h) {
-	//EBUrUI* ui = (EBUrUI*)GET_HANDLE(handle);
 	*w = COORD_ALL_W;
 	*h = COORD_ALL_H;
 }
+
 /******************************************************************************
  * LV2 callbacks
  */
