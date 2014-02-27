@@ -10,16 +10,22 @@ It includes needle style meters (mono and stereo variants)
 *   IEC 60268-10 Type IIa / BBC
 *   IEC 60268-10 Type IIb / EBU
 *   IEC 60268-17 / VU
+
+Stereo & Mono variants of bar-graph meters:
+
 *   30 Band 1/3 octave spectrum analyzer IEC 61260
 *   Digital True-Peak Meter (4x Oversampling), Type II rise-time, 13.3dB/s falloff.
+*   True-Peak (4x Oversampling) + RMS (600ms integration time) combined with numeric readout
+*   DR14 (pleasurizemusic.com, specs by tischmeyer/algorithmix)
 
-and the following stereo plugins
+and the following stereo plugins:
 
 *   EBU R128 Meter with Histogram and History
 *   Stereo Phase Correlation Meter (Needle Display)
 *   Digital True-Peak Meter (4x Oversampling)
 *   Goniometer (Stereo Phase Scope)
 *   Phase/Frequency Wheel
+*   Stereo/Frequency Monitor
 
 Currently the plugins come in both Gtk and openGL variants (both
 versions are installed in parallel).
