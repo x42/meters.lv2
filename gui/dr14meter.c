@@ -450,7 +450,7 @@ static bool m0_expose_event(RobWidget* handle, cairo_t* cr, cairo_rectangle_t *e
 
 		if (dbtp_p > -70) {
 			cairo_set_line_cap(cr, CAIRO_LINE_CAP_BUTT);
-			cairo_set_line_width(cr, 1.0);
+			cairo_set_line_width(cr, 2.0);
 			cairo_move_to(cr, 0, MTRYOFF(px_dbtp_p) + 0.5);
 			cairo_line_to(cr, GM_GIRTH, MTRYOFF(px_dbtp_p) + 0.5);
 			cairo_set_source(cr, ui->mpat);
