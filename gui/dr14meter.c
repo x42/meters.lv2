@@ -355,22 +355,37 @@ static bool m0_expose_event(RobWidget* handle, cairo_t* cr, cairo_rectangle_t *e
 			const float xf = xm -1 + GM_GIRTH / 2;
 			char buf[8];
 
-			if (rect_intersect_a(ev, xf, 4, GM_GIRTH, 8)) {
+			if (rect_intersect_a(ev, xf, 2, GM_GIRTH, 8)) {
 				format_db(buf, dbtp_p);
-				write_text_full(cr, buf, ui->font[0], xf,  8, 0, 2, dbtp_p > -1 ? c_red : c_wht);
+				if (dbtp_p > -1) {
+					rounded_rectangle (cr, xm-.5, 2 , GM_GIRTH+1, 11, 3);
+					CairoSetSouerceRGBA(c_prd);
+					cairo_fill (cr);
+				}
+				write_text_full(cr, buf, ui->font[0], xf,  8, 0, 2, c_wht);
 			}
-			if (rect_intersect_a(ev, xf, 16, GM_GIRTH, 8)) {
+			if (rect_intersect_a(ev, xf, 14, GM_GIRTH, 8)) {
+				if (rms_p > -1) {
+					rounded_rectangle (cr, xm-.5, 14, GM_GIRTH+1, 11, 3);
+					CairoSetSouerceRGBA(c_prd);
+					cairo_fill (cr);
+				}
 #if 0 // current true-peak value w/falloff
 				format_db(buf, dbtp_v);
 				write_text_full(cr, buf, ui->font[0], xf, 20, 0, 2, dbtp_v > -1 ? c_red : c_wht);
 #else // dBFS w/hold-off (note rms_p name is misleading here due to DR14 compat)
 				format_db(buf, rms_p);
-				write_text_full(cr, buf, ui->font[0], xf, 20, 0, 2, rms_p > -1 ? c_red : c_wht);
+				write_text_full(cr, buf, ui->font[0], xf, 20, 0, 2, c_wht);
 #endif
 			}
-			if (rect_intersect_a(ev, xf, 28, GM_GIRTH, 8)) {
+			if (rect_intersect_a(ev, xf, 26, GM_GIRTH, 8)) {
+				if (rms_v > -9) {
+					rounded_rectangle (cr, xm-.5, 26 , GM_GIRTH+1, 11, 3);
+					CairoSetSouerceRGBA(rms_v > -1 ? c_prd : c_ora);
+					cairo_fill (cr);
+				}
 				format_db(buf, rms_v);
-				write_text_full(cr, buf, ui->font[0], xf, 32, 0, 2, rms_v > -9 ? c_glb : c_wht);
+				write_text_full(cr, buf, ui->font[0], xf, 32, 0, 2, c_wht);
 			}
 		}
 
@@ -837,7 +852,7 @@ static void invalidate_dbtp_p(DRUI* ui, int mtr, float val) {
 	invalidate_meter(ui, mtr, ui->px_dbtp_p[mtr][0], px, 0);
 	if (VCMP(ui->dbtp_p[mtr][0], val)) queue_draw(ui->m1);
 	ui->px_dbtp_p[mtr][1] = px;
-	if (RCMP(ui->dbtp_p[mtr][0], val)) { INVALIDATE_RECT(MA_WIDTH + GM_WIDTH * mtr, 4, GM_WIDTH, 12); }
+	if (RCMP(ui->dbtp_p[mtr][0], val)) { INVALIDATE_RECT(MA_WIDTH + GM_WIDTH * mtr, 2, GM_WIDTH, 12); }
 	ui->dbtp_p[mtr][1] = val;
 }
 
@@ -845,7 +860,7 @@ static void invalidate_rms_v(DRUI* ui, int mtr, float val) {
 	int px = deflect(ui, val);
 	invalidate_meter(ui, mtr, ui->px_rms_v[mtr][0], px, 0);
 	ui->px_rms_v[mtr][1] = px;
-	if (RCMP(ui->rms_v[mtr][0], val)) { INVALIDATE_RECT(MA_WIDTH + GM_WIDTH * mtr, 28, GM_WIDTH, 12); }
+	if (RCMP(ui->rms_v[mtr][0], val)) { INVALIDATE_RECT(MA_WIDTH + GM_WIDTH * mtr, 26, GM_WIDTH, 12); }
 	ui->rms_v[mtr][1] = val;
 }
 
@@ -854,7 +869,7 @@ static void invalidate_rms_p(DRUI* ui, int mtr, float val) {
 	invalidate_meter(ui, mtr, ui->px_rms_p[mtr][0], px, 3);
 	if (VCMP(ui->rms_p[mtr][0], val)) queue_draw(ui->m1);
 	ui->px_rms_p[mtr][1] = px;
-	if (RCMP(ui->rms_p[mtr][0], val)) { INVALIDATE_RECT(MA_WIDTH + GM_WIDTH * mtr, 16, GM_WIDTH, 12); }
+	if (RCMP(ui->rms_p[mtr][0], val)) { INVALIDATE_RECT(MA_WIDTH + GM_WIDTH * mtr, 14, GM_WIDTH, 12); }
 	ui->rms_p[mtr][1] = val;
 }
 
