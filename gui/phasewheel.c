@@ -783,7 +783,11 @@ static bool cb_set_gain (RobWidget* handle, void *data) {
 		ui->update_annotations = true;
 		queue_draw(ui->m2);
 	}
+#ifdef __USE_GNU
 	const float thresh = pow10f(.05 * (MIN_CUTOFF - val));
+#else
+	const float thresh = powf(10, .05 * (MIN_CUTOFF - val));
+#endif
 	ui->db_thresh = thresh * thresh;
 	if (ui->disable_signals) return TRUE;
 	if (robtk_cbtn_get_active(ui->btn_norm)) return TRUE;

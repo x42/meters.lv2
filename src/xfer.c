@@ -196,7 +196,7 @@ xfer_run(LV2_Handle handle, uint32_t n_samples)
 	if (capacity < size + 128) {
 		capacity_ok = false;
 		if (!printed_capacity_warning) {
-			fprintf(stderr, "meters.lv2 error: LV2 comm-buffersize is insufficient %d/%d bytes.\n",
+			fprintf(stderr, "meters.lv2 error: LV2 comm-buffersize is insufficient %d/%zu bytes.\n",
 					capacity, size + 160);
 			printed_capacity_warning = true;
 		}
