@@ -8,7 +8,7 @@ if test "$ARCH" = i386; then
   make clean all CFLAGS="-arch i386 -mmacosx-version-min=10.5" LDFLAGS="-arch i386 -mmacosx-version-min=10.5"
 else
   ARCH=x86_64
-  make clean all CFLAGS="-mmacosx-version-min=10.5" LDFLAGS="-mmacosx-version-min=10.5" KXURI=no
+  make clean all CFLAGS="-mmacosx-version-min=10.5" LDFLAGS="-mmacosx-version-min=10.5" # KXURI=no
 fi
 
 export TARGET_BUILD_DIR="$TLD/build/"
@@ -47,6 +47,7 @@ deploy_lib () {
         cp "$TARGET_DEPLOY_DIR/$libname.ALL" "$TARGET_DEPLOY_DIR/$libname"
       rm "$TARGET_DEPLOY_DIR/$libname.ALL"
       install_name_tool -id @loader_path/$libname "$TARGET_DEPLOY_DIR/$libname"
+      strip -x "$TARGET_DEPLOY_DIR/$libname"
       follow_dependencies $libname
     fi
     export INSTALLED="$INSTALLED $libname"
@@ -61,6 +62,7 @@ cp -v "$TARGET_BUILD_DIR/"*.dylib "$TARGET_DEPLOY_DIR"
 cd $TARGET_DEPLOY_DIR 
 for libname in *.dylib; do
   install_name_tool -id "$libname" "$libname"
+  strip -x "$libname"
 done
 
 MORELIBS=`otool -arch all -L *.dylib | egrep '\/((opt|usr)\/local\/lib|gtk\/inst\/lib)'| awk '{print $1}'`
