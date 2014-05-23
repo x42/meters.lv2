@@ -399,7 +399,7 @@ static bool m0_expose_event(RobWidget* handle, cairo_t* cr, cairo_rectangle_t *e
 				format_db(buf, dbtp_p);
 				if (dbtp_p > -1) {
 					rounded_rectangle (cr, xm-.5, 2 , GM_GIRTH+1, 11, 3);
-					CairoSetSouerceRGBA(c_prd);
+					CairoSetSouerceRGBA(c_ptr);
 					cairo_fill (cr);
 				}
 				write_text_full(cr, buf, ui->font[0], xf,  8, 0, 2, c_wht);
@@ -407,7 +407,7 @@ static bool m0_expose_event(RobWidget* handle, cairo_t* cr, cairo_rectangle_t *e
 			if (rect_intersect_a(ev, xf, 14, GM_GIRTH, 8)) {
 				if (rms_p > -1) {
 					rounded_rectangle (cr, xm-.5, 14, GM_GIRTH+1, 11, 3);
-					CairoSetSouerceRGBA(c_prd);
+					CairoSetSouerceRGBA(c_ptr);
 					cairo_fill (cr);
 				}
 #if 0 // current true-peak value w/falloff
@@ -421,7 +421,7 @@ static bool m0_expose_event(RobWidget* handle, cairo_t* cr, cairo_rectangle_t *e
 			if (rect_intersect_a(ev, xf, 26, GM_GIRTH, 8)) {
 				if (rms_v > -9) {
 					rounded_rectangle (cr, xm-.5, 26 , GM_GIRTH+1, 11, 3);
-					CairoSetSouerceRGBA(rms_v > -1 ? c_prd : c_ora);
+					CairoSetSouerceRGBA(rms_v > -1 ? c_ptr : c_ora);
 					cairo_fill (cr);
 				}
 				format_db(buf, rms_v);
