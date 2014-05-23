@@ -294,6 +294,9 @@ static void draw_rb(GMUI* ui, gmringbuf *rb) {
 	const float decay_pow = ui->decay_pow;
 	const float g_target = ui->g_target;
 	const float g_rms = ui->g_rms;
+#ifdef WITH_INFLATE
+	const float compress = .02 * robtk_dial_get_value(ui->spn_compress);
+#endif
 
 	if (composit) {
 		ui->sfc = (ui->sfc + 1) % 3;
@@ -399,7 +402,7 @@ static void draw_rb(GMUI* ui, gmringbuf *rb) {
 			rms_1 += ui->lp1 * ui->lp1;
 			rms_c++;
 		}
-
+#ifdef WITH_INFLATE
 		float x, y;
 		if (compress > 0.0 && compress <= 2.0) {
 			const float volume = sqrt(ax * ax + ay * ay);
@@ -417,6 +420,10 @@ static void draw_rb(GMUI* ui, gmringbuf *rb) {
 			x = GM_CENTER - ui->gain * ax * GM_RAD2;
 			y = GM_CENTER - ui->gain * ay * GM_RAD2;
 		}
+#else
+		const float x = GM_CENTER - ui->gain * ax * GM_RAD2;
+		const float y = GM_CENTER - ui->gain * ay * GM_RAD2;
+#endif
 
 		const float linelensquare = (ui->last_x - x) * (ui->last_x - x) + (ui->last_y - y) * (ui->last_y - y);
 		if ( linelensquare < 2.0) continue;
@@ -1234,12 +1241,19 @@ instantiate(
 	rob_table_attach((ui->c_tbl), GLB_W(ui->lbl_psize)            , 0, 1, row, row+1, 4, 0, RTK_SHRINK, RTK_SHRINK);
 	rob_table_attach_defaults((ui->c_tbl), GSP_W(ui->spn_psize)   , 1, 2, row, row+1);
 
+#ifdef WITH_INFLATE
 	row++;
 	rob_table_attach((ui->c_tbl), GLB_W(ui->lbl_vfreq)            , 0, 1, row, row+1, 4, 0, RTK_SHRINK, RTK_SHRINK);
 	rob_table_attach_defaults((ui->c_tbl), GSP_W(ui->spn_vfreq)   , 1, 2, row, row+1);
 
 	rob_table_attach((ui->c_tbl), GLB_W(ui->lbl_compress)         , 3, 4, row, row+1, 4, 0, RTK_SHRINK, RTK_SHRINK);
 	rob_table_attach_defaults((ui->c_tbl), GED_W(ui->spn_compress), 4, 5, row, row+1);
+#else
+	rob_table_attach((ui->c_tbl), GLB_W(ui->lbl_vfreq)            , 3, 4, row, row+1, 4, 0, RTK_SHRINK, RTK_SHRINK);
+	rob_table_attach_defaults((ui->c_tbl), GSP_W(ui->spn_vfreq)   , 4, 5, row, row+1);
+
+	robtk_sep_set_linewidth(ui->sep_v0, 0);
+#endif
 
 	/* button box packing */
 	rob_hbox_child_pack(ui->b_box, GBT_W(ui->cbn_preferences), FALSE, FALSE);
