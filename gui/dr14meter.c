@@ -217,14 +217,14 @@ static void create_meter_pattern(DRUI* ui) {
 
 	PSTOP(-70.0, 0.0, 0.2, 0.5)
 	PSTOP(-65.0, 0.0, 0.5, 0.2)
-	PSTOP(-40.5, 0.2, 0.7, 0.0)
-	PSTOP(-40.0, 0.0, 1.0, 0.0)
-	PSTOP(-20.5, 0.0, 1.0, 0.0)
+	PSTOP(-40.2, 0.2, 0.7, 0.0)
+	PSTOP(-39.9, 0.0, 1.0, 0.0)
+	PSTOP(-20.3, 0.0, 1.0, 0.0)
 	PSTOP(-20.0, 0.9, 0.9, 0.0)
-	PSTOP(-14.5, 0.9, 0.9, 0.0)
-	PSTOP(-14.0, 1.0, 0.6, 0.2)
-	PSTOP(-12.5, 1.0, 0.6, 0.2)
-	PSTOP(-12.0, 1.0, 0.0, 0.0)
+	PSTOP(-14.1, 0.9, 0.9, 0.0)
+	PSTOP(-13.8, 1.0, 0.6, 0.2)
+	PSTOP(-12.2, 1.0, 0.6, 0.2)
+	PSTOP(-11.2, 1.0, 0.0, 0.0)
 	PSTOP(  6.0, 1.0, 0.0, 0.0)
 	{
 		cairo_pattern_t* shade_pattern = cairo_pattern_create_linear (0.0, 0.0, GM_GIRTH, 0.0);
@@ -456,7 +456,7 @@ static bool m0_expose_event(RobWidget* handle, cairo_t* cr, cairo_rectangle_t *e
 			cairo_rectangle (cr, 0, MTRYOFF(px_rms_v), GM_GIRTH, px_rms_v);
 			cairo_set_source(cr, ui->dr_operation_mode ? ui->rpat : ui->kpat);
 			cairo_fill_preserve(cr);
-			cairo_set_source_rgba(cr, .0, .0, .0, 0.5);
+			cairo_set_source_rgba(cr, .0, .0, .0, 0.35);
 			cairo_fill(cr);
 		}
 
