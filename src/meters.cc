@@ -265,7 +265,7 @@ kmeter_run(LV2_Handle instance, uint32_t n_samples)
 	if (reinit_gui) {
 		/* force parameter change */
 		if (self->chn == 1) {
-			*self->output[0] = -1 - (rand() & 0xffff); // portindex 5
+			*self->output[1] = -1 - (rand() & 0xffff); // portindex 5
 		} else if (self->chn == 2) {
 			*self->hold = -1 - (rand() & 0xffff);
 		}
