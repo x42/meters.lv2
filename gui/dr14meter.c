@@ -102,6 +102,7 @@ typedef struct {
 	cairo_surface_t* ma[2]; // meter annotations/scale/ticks left&right
 	cairo_pattern_t* mpat;
 	cairo_pattern_t* rpat;
+	cairo_pattern_t* kpat;
 	cairo_pattern_t* spat;
 	PangoFontDescription *font[4];
 
@@ -130,6 +131,7 @@ static int deflect(DRUI* ui, float val) {
 static void create_meter_pattern(DRUI* ui) {
 	if (ui->mpat) cairo_pattern_destroy(ui->mpat);
 	if (ui->rpat) cairo_pattern_destroy(ui->rpat);
+	if (ui->kpat) cairo_pattern_destroy(ui->kpat);
 	if (ui->spat) cairo_pattern_destroy(ui->spat);
 
 	cairo_pattern_t* pat = cairo_pattern_create_linear (0.0, 0.0, 0.0, GM_RANGE);
@@ -206,6 +208,44 @@ static void create_meter_pattern(DRUI* ui) {
 		ui->rpat = cairo_pattern_create_for_surface (surface);
 		cairo_destroy (tc);
 		cairo_surface_destroy (surface);
+	}
+
+	cairo_pattern_destroy (pat);
+
+	pat = cairo_pattern_create_linear (0.0, 0.0, 0.0, GM_RANGE);
+	cairo_pattern_add_color_stop_rgb (pat, .0, .0 , .0, .0);
+
+	PSTOP(-70.0, 0.0, 0.2, 0.5)
+	PSTOP(-65.0, 0.0, 0.5, 0.2)
+	PSTOP(-40.5, 0.2, 0.7, 0.0)
+	PSTOP(-40.0, 0.0, 1.0, 0.0)
+	PSTOP(-20.5, 0.0, 1.0, 0.0)
+	PSTOP(-20.0, 0.9, 0.9, 0.0)
+	PSTOP(-14.5, 0.9, 0.9, 0.0)
+	PSTOP(-14.0, 1.0, 0.6, 0.2)
+	PSTOP(-12.5, 1.0, 0.6, 0.2)
+	PSTOP(-12.0, 1.0, 0.0, 0.0)
+	PSTOP(  6.0, 1.0, 0.0, 0.0)
+	{
+		cairo_pattern_t* shade_pattern = cairo_pattern_create_linear (0.0, 0.0, GM_GIRTH, 0.0);
+		cairo_pattern_add_color_stop_rgba (shade_pattern, 0.0, 0.0, 0.0, 0.0, 0.05);
+		cairo_pattern_add_color_stop_rgba (shade_pattern, 1.0, 1.0, 1.0, 1.0, 0.08);
+
+		cairo_surface_t* surface;
+		cairo_t* tc = 0;
+		surface = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, GM_GIRTH, GM_RANGE);
+		tc = cairo_create (surface);
+		cairo_set_source (tc, pat);
+		cairo_rectangle (tc, 0, 0, GM_GIRTH, GM_RANGE);
+		cairo_fill (tc);
+
+		cairo_set_source (tc, shade_pattern);
+		cairo_rectangle (tc, 0, 0, GM_GIRTH, GM_RANGE);
+		cairo_fill (tc);
+		ui->kpat = cairo_pattern_create_for_surface (surface);
+		cairo_destroy (tc);
+		cairo_surface_destroy (surface);
+		cairo_pattern_destroy (shade_pattern);
 	}
 
 	cairo_pattern_destroy (pat);
@@ -414,7 +454,7 @@ static bool m0_expose_event(RobWidget* handle, cairo_t* cr, cairo_rectangle_t *e
 
 		if (rms_v > -70) {
 			cairo_rectangle (cr, 0, MTRYOFF(px_rms_v), GM_GIRTH, px_rms_v);
-			cairo_set_source(cr, ui->rpat);
+			cairo_set_source(cr, ui->dr_operation_mode ? ui->rpat : ui->kpat);
 			cairo_fill_preserve(cr);
 			cairo_set_source_rgba(cr, .0, .0, .0, 0.5);
 			cairo_fill(cr);
@@ -784,6 +824,7 @@ cleanup(LV2UI_Handle handle)
 	DRUI* ui = (DRUI*)handle;
 	cairo_pattern_destroy(ui->mpat);
 	cairo_pattern_destroy(ui->rpat);
+	cairo_pattern_destroy(ui->kpat);
 	cairo_pattern_destroy(ui->spat);
 	cairo_surface_destroy(ui->ma[0]);
 	cairo_surface_destroy(ui->ma[1]);
