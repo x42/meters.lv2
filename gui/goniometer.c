@@ -288,7 +288,6 @@ static void draw_rb(GMUI* ui, gmringbuf *rb) {
 	const bool autogain = robtk_cbtn_get_active(ui->cbn_autogain);
 	const bool lines = robtk_cbtn_get_active(ui->cbn_lines);
 	const float line_width = robtk_spin_get_value(ui->spn_psize);
-	const float compress = .02 * robtk_dial_get_value(ui->spn_compress);
 	const float persist = .5 + .005 * robtk_dial_get_value(ui->spn_alpha);
 	const float attack_pow = ui->attack_pow;
 	const float decay_pow = ui->decay_pow;
