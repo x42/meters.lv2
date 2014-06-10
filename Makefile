@@ -192,8 +192,8 @@ DSPDEPS=$(DSPSRC) jmeters/jmeterdsp.h jmeters/vumeterdsp.h \
 goniometer_UIDEP=zita-resampler/resampler.cc zita-resampler/resampler-table.cc
 goniometer_UISRC=zita-resampler/resampler.cc zita-resampler/resampler-table.cc -DTHREADSYNC
 
-phasewheel_UISRC=`pkg-config --cflags --libs fftw3f`
-stereoscope_UISRC=`pkg-config --cflags --libs fftw3f`
+phasewheel_UISRC=`pkg-config --cflags fftw3f` `pkg-config --variable=libdir fftw3f`/libfftw3f.a -lm
+stereoscope_UISRC=`pkg-config --cflags fftw3f` `pkg-config --variable=libdir fftw3f`/libfftw3f.a -lm
 
 ###############################################################################
 # build target definitions

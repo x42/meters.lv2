@@ -18,11 +18,14 @@
 
 #include <stdio.h>
 #include <sys/types.h>
+#include <pthread.h>
 #include <fftw3.h>
 
 #ifndef MIN
 #define MIN(A,B) ( (A) < (B) ? (A) : (B) )
 #endif
+
+static pthread_mutex_t fftw_planner_lock = PTHREAD_MUTEX_INITIALIZER;
 
 /******************************************************************************
  * internal FFT abstraction
@@ -137,13 +140,17 @@ void fftx_init(struct FFTAnalysis *ft, uint32_t window_size, double rate, double
 
 	fftx_reset(ft);
 
+	pthread_mutex_lock(&fftw_planner_lock);
 	ft->fftplan = fftwf_plan_r2r_1d(window_size, ft->fft_in, ft->fft_out, FFTW_R2HC, FFTW_MEASURE);
+	pthread_mutex_unlock(&fftw_planner_lock);
 }
 
 FFTX_FN_PREFIX
 void fftx_free(struct FFTAnalysis *ft) {
 	if (!ft) return;
+	pthread_mutex_lock(&fftw_planner_lock);
 	fftwf_destroy_plan(ft->fftplan);
+	pthread_mutex_unlock(&fftw_planner_lock);
 	free(ft->hann_window);
 	free(ft->ringbuf);
 	free(ft->fft_in);
