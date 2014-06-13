@@ -12,7 +12,7 @@ LIBDIR ?= lib
 EXTERNALUI?=yes
 KXURI?=yes
 
-override CFLAGS += -g $(OPTIMIZATIONS)
+override CFLAGS += -g -fvisibility=hidden $(OPTIMIZATIONS)
 BUILDDIR=build/
 RW?=robtk/
 ###############################################################################
@@ -67,13 +67,13 @@ ifeq ($(UNAME),Darwin)
   GLUILIBS=-framework Cocoa -framework OpenGL
   BUILDGTK=no
 else
-  LV2LDFLAGS=-Wl,-Bstatic -Wl,-Bdynamic
+  LV2LDFLAGS=-Wl,-Bstatic -Wl,-Bdynamic -Wl,--as-needed -pthread
   LIB_EXT=.so
   UI_TYPE=ui:X11UI
   PUGL_SRC=$(RW)pugl/pugl_x11.c
   PKG_LIBS=glu gl
   GLUILIBS=-lX11
-  GLUICFLAGS+=`pkg-config --cflags glu`
+  GLUICFLAGS+=`pkg-config --cflags glu` -pthread
 endif
 
 ifeq ($(EXTERNALUI), yes)
@@ -127,9 +127,33 @@ ifeq ($(shell pkg-config --exists glib-2.0 gtk+-2.0 pango cairo $(PKG_LIBS) || e
   $(error "This plugin requires cairo, pango, openGL, glib-2.0 and gtk+-2.0")
 endif
 
-ifeq ($(shell pkg-config --exists fftw3f || echo no), no)
-  $(error "fftw3f library was not found")
+ifneq ($(shell test -f fftw-3.3.4/.libs/libfftw3f.a || echo no), no)
+  FFTW=-Ifftw-3.3.4/api fftw-3.3.4/.libs/libfftw3f.a -lm
+else
+  ifeq ($(shell pkg-config --exists fftw3f || echo no), no)
+    $(error "fftw3f library was not found")
+  endif
+  FFTWA=`pkg-config --variable=libdir fftw3f`/libfftw3f.a
+  ifeq ($(shell test -f $(FFTWA) || echo no), no)
+    FFTWA=`pkg-config --libs fftw3f`
+  endif
+  $(warning "**********************************************************")
+  $(warning "           the fftw3 library is not thread-safe           ")
+  $(warning "**********************************************************")
+  $(info "These plugins may cause crashes when used in a plugin-host")
+  $(info "where libfftw3f symbols are mapped in the global namespace.")
+  $(info "Neither these plugins nor the host has control over possible")
+  $(info "other plugins calling the fftw panner simultaneously.")
+  $(info "Consider statically linking these plugins against a custom build")
+  $(info "of libfftw3f.a built with -fvisibility=hidden to avoid this issue.")
+  $(warning "")
+  $(warning "**********************************************************")
+  $(warning "     run   ./static_fft.sh    prior to make to do so.     ")
+  $(warning "**********************************************************")
+  $(warning "")
+  FFTW=`pkg-config --cflags fftw3f` $(FFTWA) -lm
 endif
+export FFTW
 
 # check for LV2 idle thread
 ifeq ($(shell pkg-config --atleast-version=1.4.2 lv2 && echo yes), yes)
@@ -140,7 +164,7 @@ endif
 
 # check for lv2_atom_forge_object  new in 1.8.1 deprecates lv2_atom_forge_blank
 ifeq ($(shell pkg-config --atleast-version=1.8.1 lv2 && echo yes), yes)
-	override CFLAGS += -DHAVE_LV2_1_8
+  override CFLAGS += -DHAVE_LV2_1_8
 endif
 
 ifneq ($(MAKECMDGOALS), submodules)
@@ -192,8 +216,8 @@ DSPDEPS=$(DSPSRC) jmeters/jmeterdsp.h jmeters/vumeterdsp.h \
 goniometer_UIDEP=zita-resampler/resampler.cc zita-resampler/resampler-table.cc
 goniometer_UISRC=zita-resampler/resampler.cc zita-resampler/resampler-table.cc -DTHREADSYNC
 
-phasewheel_UISRC=`pkg-config --cflags fftw3f` `pkg-config --variable=libdir fftw3f`/libfftw3f.a -lm
-stereoscope_UISRC=`pkg-config --cflags fftw3f` `pkg-config --variable=libdir fftw3f`/libfftw3f.a -lm
+$(eval phasewheel_UISRC=$(value FFTW))
+$(eval stereoscope_UISRC=$(value FFTW))
 
 ###############################################################################
 # build target definitions
