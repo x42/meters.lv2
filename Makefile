@@ -143,7 +143,7 @@ else
   $(info "These plugins may cause crashes when used in a plugin-host")
   $(info "where libfftw3f symbols are mapped in the global namespace.")
   $(info "Neither these plugins nor the host has control over possible")
-  $(info "other plugins calling the fftw panner simultaneously.")
+  $(info "other plugins calling the fftw planner simultaneously.")
   $(info "Consider statically linking these plugins against a custom build")
   $(info "of libfftw3f.a built with -fvisibility=hidden to avoid this issue.")
   $(warning "")
