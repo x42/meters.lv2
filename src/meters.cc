@@ -101,6 +101,12 @@ typedef struct {
 	int hist_maxM;
 	int hist_maxS;
 
+	// signal distribution - use 'S' for 1st/left channel
+	int hist_peakS;
+	double hist_avgS;
+	double hist_tmpS; // helper var for variance
+	double hist_varS; // running variance
+
 } LV2meter;
 
 
@@ -418,6 +424,7 @@ extension_data(const char* uri)
 #include "spectrumlv2.c"
 #include "xfer.c"
 #include "dr14.c"
+#include "sigdistlv2.c"
 
 #define mkdesc(ID, NAME, RUN) \
 static const LV2_Descriptor descriptor ## ID = { \
@@ -564,6 +571,8 @@ lv2_descriptor(uint32_t index)
 	case 55: return &descriptorTPRMS_1Gtk;
 	case 56: return &descriptorTPRMS_2;
 	case 57: return &descriptorTPRMS_2Gtk;
+	case 58: return &descriptorSDH;
+	case 59: return &descriptorSDHGtk;
 	default: return NULL;
 	}
 }

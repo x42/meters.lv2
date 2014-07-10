@@ -57,3 +57,8 @@ mtr:dr14meterui@UI_URI_SUFFIX@
 	a @UI_TYPE@;
 	@UI_REQ@
 	.
+
+mtr:sdhmeterui@UI_URI_SUFFIX@
+	a @UI_TYPE@;
+	@UI_REQ@
+	.
