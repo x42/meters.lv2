@@ -28,8 +28,12 @@
 
 #define LVGL_RESIZEABLE
 
-#define BORDER_RIGHT (55)
+#define BORDER_RIGHT (69)
 #define BORDER_BOTTOM (16)
+
+#define ANNL (ui->width - BORDER_RIGHT + 6)
+#define LX_L (ui->width - BORDER_RIGHT + 12)
+#define LX_R (ui->width - 3)
 
 #define MTR_URI "http://gareus.org/oss/lv2/meters#"
 #define MTR_GUI "sdhmeterui"
@@ -60,9 +64,11 @@ typedef struct {
 
 	RobTkCBtn* cbx_transport;
 	RobTkCBtn* cbx_autoreset;
+	RobTkCBtn* cbx_logscaley;
+	RobTkCBtn* cbx_logscalex;
 
 	RobWidget* m0;
-	RobWidget* hbox;
+	RobWidget* btnbox;
 	RobTkSep*  sep;
 
 	bool redraw_labels;
@@ -111,7 +117,7 @@ static void initialize_font_cache(SDHui* ui) {
 }
 
 /******************************************************************************
- * Main drawing function
+ * Helpers for Drawing
  */
 
 static void format_num(char *buf, const int num) {
@@ -145,12 +151,48 @@ static void format_duration(char *buf, const float sec) {
 	}
 }
 
+static inline float y_log_pos(const int i) {
+	return log10f (1.f + i);
+}
+
+static inline float log_scale (const float v) {
+	// (-20 * 2.5)  -50dB .. 0, non-linearity ^2
+	if (v < 0.00316f) {
+		return 0;
+	} else {
+		const float l = log10f (v);
+		return (l + 2.5) * (l + 2.5) * .16f;
+	}
+}
+
+static inline float _x_log_pos (const float sig) {
+	float pos;
+	if (sig > 0) {
+		pos = log_scale (sig);
+	} else if (sig < 0) {
+		pos = -log_scale (-sig);
+	} else {
+		pos = 0;
+	}
+	return pos * DIST_RANGE + DIST_ZERO;
+}
+
+static inline float x_log_pos (const int i) {
+	return _x_log_pos((i - DIST_ZERO) / DIST_RANGE);
+}
+
+/******************************************************************************
+ * Main drawing function
+ */
+
 static bool expose_event(RobWidget* handle, cairo_t* cr, cairo_rectangle_t *ev) {
 	SDHui* ui = (SDHui*)GET_HANDLE(handle);
 	cairo_rectangle (cr, ev->x, ev->y, ev->width, ev->height);
 	cairo_clip (cr);
 
 	const bool active = ui->integration_spl > 1 && ui->hist_max > 0;
+	const bool logscale_y = robtk_cbtn_get_active(ui->cbx_logscaley);
+	const bool logscale_x = robtk_cbtn_get_active(ui->cbx_logscalex);
 
 	const float da_width  = ui->width  - BORDER_RIGHT;
 	const float da_height = ui->height - BORDER_BOTTOM;
@@ -198,20 +240,24 @@ static bool expose_event(RobWidget* handle, cairo_t* cr, cairo_rectangle_t *ev) 
 	}
 
 	/* Y tick - marks */
-	cairo_move_to (cr, da_width, 9.5);
-	cairo_line_to (cr, da_width + 6, 9.5);
-	cairo_stroke(cr);
 
-	cairo_move_to (cr, da_width, da_height + .5);
-	cairo_line_to (cr, da_width + 6, da_height + .5);
-	cairo_stroke(cr);
-
-	// TODO 3rd (or more) Y-axis label
-	// TODO Y log-scale
+	for (int i = 0; i <= 20; ++i) {
+		const float ytick = da_height - .5 - rintf((da_height - 10) *
+				(logscale_y ? y_log_pos(i) / y_log_pos(20) : (i / 20.f) )
+				);
+		const float ticlen = (i % 5 == 0 ) ? 4.5 : 2.5;
+		cairo_move_to (cr, da_width, ytick);
+		cairo_line_to (cr, da_width + ticlen, ytick);
+		cairo_stroke(cr);
+	}
 
 	/* X tick - marks */
-	for (int i = -10; i <= 10; ++i) {
-		const float xtick = rintf((DIST_ZERO + DIST_RANGE * i / 10.f) * da_width / DIST_SIZE ) - .5;
+	for (int i = -12; i <= 12; ++i) {
+		const float sig = i * .1f;
+		const float pos = logscale_x
+			? _x_log_pos(sig)
+			: (DIST_ZERO + DIST_RANGE * sig);
+		const float xtick = rintf (pos * da_width / DIST_SIZE) - .5;
 		const float ticlen = ((i + 10) % 5 == 0 ) ? 4.5 : 2.5;
 		cairo_move_to (cr, xtick, da_height);
 		cairo_line_to (cr, xtick, da_height + ticlen);
@@ -225,30 +271,43 @@ static bool expose_event(RobWidget* handle, cairo_t* cr, cairo_rectangle_t *ev) 
 	cairo_move_to (cr, x0, 0);
 	cairo_line_to (cr, x0, da_height);
 	cairo_stroke(cr);
-	write_text(cr, "-1.0 ", FONT(FONT_M08), x0, ui->height, 0, 5, c_wht);
 
 	const float x1 = rintf(da_width * (DIST_ZERO + DIST_RANGE) / DIST_SIZE) - .5;
 	cairo_move_to (cr, x1, 0);
 	cairo_line_to (cr, x1, da_height);
 	cairo_stroke(cr);
-	write_text(cr, "1.0", FONT(FONT_M08), x1, ui->height, 0, 5, c_wht);
 
 	cairo_set_dash(cr, NULL, 0, 0);
 
+	/* X - labels */
+	write_text(cr, "-1.0 ", FONT(FONT_M08), x0, ui->height, 0, 5, c_wht);
+	write_text(cr, "1.0", FONT(FONT_M08), x1, ui->height, 0, 5, c_wht);
+	{
+		const float xp5 = rintf ((logscale_x ? _x_log_pos(.5) : (DIST_ZERO + DIST_RANGE * .5)) * da_width / DIST_SIZE);
+		write_text(cr, "0.5", FONT(FONT_M08), xp5, ui->height, 0, 5, c_wht);
+		const float xm5 = rintf ((logscale_x ? _x_log_pos(-.5) : (DIST_ZERO + DIST_RANGE * -.5)) * da_width / DIST_SIZE);
+		write_text(cr, "-0.5 ", FONT(FONT_M08), xm5, ui->height, 0, 5, c_wht);
+	}
+
 	/* unit labels */
 	write_text(cr, "[sample]", FONT(FONT_S08), xctr, ui->height, 0, 5, c_g80);
-	write_text(cr, "[multiplicity]", FONT(FONT_S08), da_width + 2, da_height * .5, M_PI / -2.f, 8, c_g80);
+	write_text(cr, "[multiplicity]", FONT(FONT_S08), LX_R, 5, M_PI / -2.f, 4, c_g80);
 
 	if (active) {
 		const float lw = MAX (2.0, da_width / DIST_SIZE);
-		const float mlt_y = (da_height - lw - 10) / (float)ui->hist_max;
+		const float mlt_y = (da_height - lw - 10) /
+			(logscale_y ? y_log_pos(ui->hist_max) : (float)ui->hist_max);
 		const float mlt_x = da_width / DIST_SIZE;
 
 		const double avg = ui->hist_avg / (double) ui->integration_spl;
 		const double stddev = sqrt(ui->hist_var / ((double)(ui->integration_spl - 1.0)));
 
-		const float avg_x = ((DIST_ZERO + DIST_RANGE * avg) * mlt_x) - .5;
-		const float dev_x = ((DIST_RANGE * stddev) * mlt_x);
+		const float avg_x = logscale_x
+			? (_x_log_pos(avg) * mlt_x) - .5
+			: ((DIST_ZERO + DIST_RANGE * avg) * mlt_x) - .5;
+		const float dev_x = logscale_x
+			? (_x_log_pos(stddev) - DIST_ZERO) * mlt_x
+			: ((DIST_RANGE * stddev) * mlt_x);
 
 		if (dev_x > 1) {
 			cairo_set_source_rgba (cr, .0, .0, .9, .5);
@@ -258,7 +317,9 @@ static bool expose_event(RobWidget* handle, cairo_t* cr, cairo_rectangle_t *ev) 
 		}
 
 		if (ui->hist_peakbin >= 0) {
-			const float peakbinx = rintf(ui->hist_peakbin * mlt_x) - .5;
+			const float peakbinx = -.5 + rintf (mlt_x
+					* (logscale_x ? x_log_pos(ui->hist_peakbin) : ui->hist_peakbin)
+					);
 			CairoSetSouerceRGBA(c_ora);
 			cairo_set_line_width(cr, 1.5);
 			cairo_move_to (cr, peakbinx, 0);
@@ -281,65 +342,101 @@ static bool expose_event(RobWidget* handle, cairo_t* cr, cairo_rectangle_t *ev) 
 		cairo_set_line_width(cr, lw);
 
 		const float yoff = da_height;
-#if 0 // points
-		cairo_set_line_cap(cr, CAIRO_LINE_CAP_ROUND);
-		for (int i=0; i < DIST_BIN; ++i) {
-			cairo_move_to (cr,
-					i * mlt_x - .5,
-					yoff - ui->histS[i] * mlt_y);
-			cairo_close_path(cr);
-			cairo_stroke(cr);
-		}
-		cairo_set_line_cap (cr, CAIRO_LINE_CAP_BUTT);
-#else // lines
-		cairo_move_to (cr, 0, da_height - ui->histS[0] * mlt_y);
-		for (int i=1; i < DIST_BIN; ++i) {
-			cairo_line_to (cr,
-					i * mlt_x - .5,
-					yoff - ui->histS[i] * mlt_y);
+		if (logscale_x) {
+			if (logscale_y) {
+				cairo_move_to (cr, x_log_pos(0) * mlt_x - .5, yoff - y_log_pos(ui->histS[0]) * mlt_y);
+				for (int i=1; i < DIST_BIN; ++i) {
+					cairo_line_to (cr,
+							 x_log_pos(i) * mlt_x - .5,
+							yoff - y_log_pos(ui->histS[i]) * mlt_y);
+				}
+			} else {
+				cairo_move_to (cr, x_log_pos(0) * mlt_x - .5, yoff - ui->histS[0] * mlt_y);
+				for (int i=1; i < DIST_BIN; ++i) {
+					cairo_line_to (cr,
+							x_log_pos(i) * mlt_x - .5,
+							yoff - ui->histS[i] * mlt_y);
+				}
+			}
+		} else {
+			if (logscale_y) {
+				cairo_move_to (cr, 0, yoff - y_log_pos(ui->histS[0]) * mlt_y);
+				for (int i=1; i < DIST_BIN; ++i) {
+					cairo_line_to (cr,
+							i * mlt_x - .5,
+							yoff - y_log_pos(ui->histS[i]) * mlt_y);
+				}
+			} else {
+				cairo_move_to (cr, 0, yoff - ui->histS[0] * mlt_y);
+				for (int i=1; i < DIST_BIN; ++i) {
+					cairo_line_to (cr,
+							i * mlt_x - .5,
+							yoff - ui->histS[i] * mlt_y);
+				}
+			}
 		}
 		cairo_stroke(cr);
-#endif
 
-		// Numeric Readout
+		/* Y - Axis annotations */
 		char buf[256];
 		format_num(buf, ui->hist_max);
-		write_text(cr, buf, FONT(FONT_M08), da_width + 8, 10, 0, 3, c_wht);
-		write_text(cr, "0", FONT(FONT_M08), da_width + 8, da_height, 0, 3, c_wht);
+		write_text(cr, buf, FONT(FONT_M08), ANNL, 10, 0, 3, c_wht);
+		write_text(cr, "0", FONT(FONT_M08), ANNL, da_height, 0, 3, c_wht);
+		if (logscale_y) {
+#define YLOGLABEL(i) \
+	format_num(buf, rintf(powf(1.f + i, y_log_pos(ui->hist_max) / y_log_pos(20)) - 1.f)); \
+	write_text(cr, buf, FONT(FONT_M08), ANNL, \
+			da_height - rintf((da_height - 10) * y_log_pos(i) / y_log_pos(20)) , 0, 3, c_wht);
+			YLOGLABEL(5);
+			YLOGLABEL(10);
+			YLOGLABEL(15);
+		} else {
+#define YLINLABEL(i) \
+	format_num(buf, ui->hist_max * i); \
+	write_text(cr, buf, FONT(FONT_M08), ANNL, \
+			da_height - rintf((da_height - 10) * i) , 0, 3, c_wht);
+			YLINLABEL(.25f)
+			YLINLABEL(.50f)
+			YLINLABEL(.75f)
+		}
 
-		/* clock */
-		float txty = 12 * 3;
+		/* Numeric Readout */
+		float txty;
 
-		write_text(cr, "Peak:", FONT(FONT_S08), da_width + 5, txty, 0, 9, c_ora); txty += 12;
+		txty = da_height - 78;
+
+		write_text(cr, "Peak:", FONT(FONT_S08), LX_L, txty, 0, 9, c_ora); txty += 12;
 		sprintf(buf, "%.3f", (ui->hist_peakbin - DIST_ZERO) / DIST_RANGE);
-		write_text(cr, buf, FONT(FONT_M08), ui->width - 3, txty, 0, 7, c_wht); txty += 12;
+		write_text(cr, buf, FONT(FONT_M08), LX_R, txty, 0, 7, c_wht); txty += 12;
 
-		write_text(cr, "Avg:", FONT(FONT_S08), da_width + 5, txty, 0, 9, c_nyl); txty += 12;
+		write_text(cr, "Avg:", FONT(FONT_S08), LX_L, txty, 0, 9, c_nyl); txty += 12;
 		sprintf(buf, "%.3f", avg);
-		write_text(cr, buf, FONT(FONT_M08), ui->width - 3, txty, 0, 7, c_wht); txty += 12;
+		write_text(cr, buf, FONT(FONT_M08), LX_R, txty, 0, 7, c_wht); txty += 12;
 
 		static const float c_blu[4] = {0.2, 0.2, 1.0, 1.0};
-		write_text(cr, "StdDev:", FONT(FONT_S08), da_width + 5, txty, 0, 9, c_blu); txty += 12;
+		write_text(cr, "StdDev:", FONT(FONT_S08), LX_L, txty, 0, 9, c_blu); txty += 12;
 		sprintf(buf, "%.3f", stddev);
-		write_text(cr, buf, FONT(FONT_M08), ui->width - 3, txty, 0, 7, c_wht); txty += 12;
+		write_text(cr, buf, FONT(FONT_M08), LX_R, txty, 0, 7, c_wht);
 
-		txty = da_height - 12 * 7;
+		txty = logscale_y ? da_height - 159 : rintf(da_height * .625f) - 24;
 
-		write_text(cr, "Time:", FONT(FONT_S08), da_width + 5, txty, 0, 9, c_wht); txty += 12;
+		write_text(cr, "Time:", FONT(FONT_S08), LX_L, txty, 0, 9, c_grn); txty += 12;
 		format_duration(buf, ui->integration_spl / ui->rate);
-		write_text(cr, buf, FONT(FONT_M08), ui->width - 3, txty, 0, 7, c_wht); txty += 12;
+		write_text(cr, buf, FONT(FONT_M08), LX_R, txty, 0, 7, c_wht); txty += 12;
 
-		write_text(cr, "Samples:", FONT(FONT_S08), da_width + 5, txty, 0, 9, c_wht); txty += 12;
+		write_text(cr, "Samples:", FONT(FONT_S08), LX_L, txty, 0, 9, c_grn); txty += 12;
 		format_num(buf, ui->integration_spl);
-		write_text(cr, buf, FONT(FONT_M08), ui->width - 3, txty, 0, 7, c_wht);
+		write_text(cr, buf, FONT(FONT_M08), LX_R, txty, 0, 7, c_wht);
 
 		if (ui->integration_spl >= 2147483647) {
 			// show EOC 2^31
-			write_text(cr, "The histogram buffer is full.\nData acquisition suspended.", FONT(FONT_S08), xctr, rintf(ui->height * .5f), 0, 2, c_wht);
+			write_text(cr, "The histogram buffer is full.\nData acquisition suspended.",
+					FONT(FONT_S08), xctr, rintf(ui->height * .5f), 0, 2, c_wht);
 		}
 
 	} else {
-		write_text(cr, "No histogram\ndata available.", FONT(FONT_S08), xctr, rintf(ui->height * .5f), 0, 2, c_blk);
+		write_text(cr, "No histogram\ndata available.",
+				FONT(FONT_S08), xctr, rintf(ui->height * .5f), 0, 2, c_blk);
 	}
 
 	/* border */
@@ -427,6 +524,12 @@ static bool cbx_autoreset(RobWidget *w, void* handle) {
 	return TRUE;
 }
 
+static bool cbx_logscale(RobWidget *w, void* handle) {
+	SDHui* ui = (SDHui*)handle;
+	queue_draw(ui->m0);
+	return TRUE;
+}
+
 /******************************************************************************
  * widget hackery
  */
@@ -503,7 +606,7 @@ instantiate(
 	robwidget_make_toplevel(ui->box, ui_toplevel);
 	ROBWIDGET_SETNAME(ui->box, "sigdist");
 
-	ui->hbox = rob_hbox_new(TRUE, 0);
+	ui->btnbox = rob_table_new(/*rows*/2, /*cols*/ 3, FALSE);
 	ui->sep  = robtk_sep_new(true);
 
 	/* main drawing area */
@@ -521,25 +624,37 @@ instantiate(
 
 	ui->cbx_transport  = robtk_cbtn_new("Host Transport", GBT_LED_LEFT, true);
 	ui->cbx_autoreset  = robtk_cbtn_new("Reset on Start", GBT_LED_LEFT, true);
+	ui->cbx_logscaley  = robtk_cbtn_new("Y-LogScale", GBT_LED_LEFT, true);
+	ui->cbx_logscalex  = robtk_cbtn_new("X-LogScale", GBT_LED_LEFT, true);
+
+	robtk_cbtn_set_color_on (ui->cbx_logscaley, .1, .3, .8);
+	robtk_cbtn_set_color_off(ui->cbx_logscaley, .1, .1, .3);
+	robtk_cbtn_set_color_on (ui->cbx_logscalex, .1, .3, .8);
+	robtk_cbtn_set_color_off(ui->cbx_logscalex, .1, .1, .3);
+
 
 	robtk_pbtn_set_alignment(ui->btn_reset, 0.5, 0.5);
 	robtk_cbtn_set_alignment(ui->btn_start, 0.5, 0.5);
 
 	/* button packing */
-	rob_hbox_child_pack(ui->hbox, robtk_cbtn_widget(ui->btn_start), FALSE, FALSE);
-	rob_hbox_child_pack(ui->hbox, robtk_pbtn_widget(ui->btn_reset), FALSE, FALSE);
-	rob_hbox_child_pack(ui->hbox, robtk_cbtn_widget(ui->cbx_transport), FALSE, FALSE);
-	rob_hbox_child_pack(ui->hbox, robtk_cbtn_widget(ui->cbx_autoreset), FALSE, FALSE);
+	rob_table_attach_defaults(ui->btnbox, robtk_cbtn_widget(ui->btn_start), 0, 1, 0, 1);
+	rob_table_attach_defaults(ui->btnbox, robtk_pbtn_widget(ui->btn_reset), 0, 1, 1, 2);
+	rob_table_attach_defaults(ui->btnbox, robtk_cbtn_widget(ui->cbx_transport), 1, 2, 0, 1);
+	rob_table_attach_defaults(ui->btnbox, robtk_cbtn_widget(ui->cbx_autoreset), 1, 2, 1, 2);
+	rob_table_attach_defaults(ui->btnbox, robtk_cbtn_widget(ui->cbx_logscaley), 2, 3, 0, 1);
+	rob_table_attach_defaults(ui->btnbox, robtk_cbtn_widget(ui->cbx_logscalex), 2, 3, 1, 2);
 
 	/* global packing */
-	rob_vbox_child_pack(ui->box, robtk_sep_widget(ui->sep), FALSE, TRUE);
-	rob_vbox_child_pack(ui->box, ui->hbox, FALSE, TRUE);
+	//rob_vbox_child_pack(ui->box, robtk_sep_widget(ui->sep), FALSE, TRUE);
+	rob_vbox_child_pack(ui->box, ui->btnbox, FALSE, TRUE);
 
 	/* signals */
 	robtk_cbtn_set_callback(ui->btn_start, btn_start, ui);
 	robtk_pbtn_set_callback(ui->btn_reset, btn_reset, ui);
 	robtk_cbtn_set_callback(ui->cbx_transport, cbx_transport, ui);
 	robtk_cbtn_set_callback(ui->cbx_autoreset, cbx_autoreset, ui);
+	robtk_cbtn_set_callback(ui->cbx_logscaley, cbx_logscale, ui);
+	robtk_cbtn_set_callback(ui->cbx_logscalex, cbx_logscale, ui);
 
 	*widget = ui->box;
 
@@ -570,12 +685,14 @@ cleanup(LV2UI_Handle handle)
 
 	robtk_cbtn_destroy(ui->cbx_transport);
 	robtk_cbtn_destroy(ui->cbx_autoreset);
+	robtk_cbtn_destroy(ui->cbx_logscaley);
+	robtk_cbtn_destroy(ui->cbx_logscalex);
 	robtk_cbtn_destroy(ui->btn_start);
 	robtk_pbtn_destroy(ui->btn_reset);
 
 	robtk_sep_destroy(ui->sep);
 	robwidget_destroy(ui->m0);
-	rob_box_destroy(ui->hbox);
+	rob_table_destroy(ui->btnbox);
 	rob_box_destroy(ui->box);
 	free(ui);
 }
