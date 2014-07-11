@@ -4,7 +4,7 @@
 #   make CFLAGS=-O2
 #   make install DESTDIR=$(CURDIR)/debian/meters.lv2 PREFIX=/usr
 #
-OPTIMIZATIONS ?= -msse -msse2 -mfpmath=sse -ffast-math -fomit-frame-pointer -O3 -fno-finite-math-only
+OPTIMIZATIONS ?= -msse -msse2 -mfpmath=sse -fomit-frame-pointer -O3 -fno-finite-math-only
 PREFIX ?= /usr/local
 CFLAGS ?= -Wall -Wno-unused-function
 LIBDIR ?= lib
