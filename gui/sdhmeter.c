@@ -122,11 +122,15 @@ static void initialize_font_cache(SDHui* ui) {
 
 static void format_num(char *buf, const int num) {
 	if (num >= 1000000000) {
-		sprintf(buf, "%dM", num / 1000000);
+		sprintf(buf, "%.0fM", num / 1000000.f);
+	} else if (num >= 100000000) {
+		sprintf(buf, "%.1fM", num / 1000000.f);
 	} else if (num >= 10000000) {
 		sprintf(buf, "%.2fM", num / 1000000.f);
+	} else if (num >= 100000) {
+		sprintf(buf, "%.0fK", num / 1000.f);
 	} else if (num >= 10000) {
-		sprintf(buf, "%dK", num / 1000);
+		sprintf(buf, "%.1fK", num / 1000.f);
 	} else {
 		sprintf(buf, "%d", num);
 	}
@@ -151,11 +155,15 @@ static void format_duration(char *buf, const float sec) {
 	}
 }
 
-static inline float y_log_pos(const int i) {
-	return log10f (1.f + i);
+static inline float y_exp_pos(const float i) {
+	return 2.5f * (-1.f + expf (i));
 }
 
-static inline float log_scale (const float v) {
+static inline float y_log_pos(const int i) {
+	return logf (1.f + .4f * i);
+}
+
+static inline float x_log_scale (const float v) {
 	// (-20 * 2.5)  -50dB .. 0, non-linearity ^2
 	if (v < 0.00316f) {
 		return 0;
@@ -168,9 +176,9 @@ static inline float log_scale (const float v) {
 static inline float _x_log_pos (const float sig) {
 	float pos;
 	if (sig > 0) {
-		pos = log_scale (sig);
+		pos = x_log_scale (sig);
 	} else if (sig < 0) {
-		pos = -log_scale (-sig);
+		pos = -x_log_scale (-sig);
 	} else {
 		pos = 0;
 	}
@@ -384,7 +392,7 @@ static bool expose_event(RobWidget* handle, cairo_t* cr, cairo_rectangle_t *ev) 
 		write_text(cr, "0", FONT(FONT_M08), ANNL, da_height, 0, 3, c_wht);
 		if (logscale_y) {
 #define YLOGLABEL(i) \
-	format_num(buf, rintf(powf(1.f + i, y_log_pos(ui->hist_max) / y_log_pos(20)) - 1.f)); \
+	format_num(buf, rintf( y_exp_pos(y_log_pos(ui->hist_max) * y_log_pos(i) / y_log_pos(20)))); \
 	write_text(cr, buf, FONT(FONT_M08), ANNL, \
 			da_height - rintf((da_height - 10) * y_log_pos(i) / y_log_pos(20)) , 0, 3, c_wht);
 			YLOGLABEL(5);
