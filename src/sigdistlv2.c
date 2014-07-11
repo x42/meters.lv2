@@ -140,6 +140,7 @@ sdh_instantiate(
 	self->tranport_rolling = false;
 	self->ebu_integrating = false;
 
+	self->ui_settings = 0;
 	self->send_state_to_ui = false;
 
 	for (int i=0; i < HIST_LEN; ++i) {
@@ -204,6 +205,7 @@ sdh_run(LV2_Handle instance, uint32_t n_samples)
 		self->send_state_to_ui = false;
 		forge_kvcontrolmessage(&self->forge, &self->uris, self->uris.mtr_control, CTL_LV2_FTM, self->follow_transport_mode);
 		forge_kvcontrolmessage(&self->forge, &self->uris, self->uris.mtr_control, CTL_SAMPLERATE, self->rate);
+		forge_kvcontrolmessage(&self->forge, &self->uris, self->uris.mtr_control, CTL_UISETTINGS, self->ui_settings);
 	}
 
 	/* Process incoming events from GUI */
@@ -218,11 +220,6 @@ sdh_run(LV2_Handle instance, uint32_t n_samples)
 				else if (obj->body.otype == self->uris.mtr_meters_on) {
 					self->ui_active = true;
 					self->send_state_to_ui = true;
-					/* resync histogram */
-					for (int i=0; i < HIST_LEN; ++i) {
-						self->histS[i] = 0;
-					}
-					self->hist_maxS = 0;
 				}
 				else if (obj->body.otype == self->uris.mtr_meters_off) {
 					self->ui_active = false;
@@ -257,6 +254,9 @@ sdh_run(LV2_Handle instance, uint32_t n_samples)
 							} else {
 								self->follow_transport_mode&=~2;
 							}
+							break;
+						case CTL_UISETTINGS:
+							self->ui_settings = (uint32_t) v;
 							break;
 						default:
 							break;
@@ -326,7 +326,7 @@ sdh_run(LV2_Handle instance, uint32_t n_samples)
 	if (self->radar_resync >= fps_limit) {
 		self->radar_resync = self->radar_resync % fps_limit;
 
-		if (self->ui_active && self->ebu_integrating) {
+		if (self->ui_active && (self->ebu_integrating || self->send_state_to_ui)) {
 			// TODO limit data-array to changed values only
 			// this needs a 'smart' approach, depending on n_samples:
 			// if less than half of the data was changed: use key+value pairs.
@@ -395,8 +395,9 @@ sdh_save(LV2_Handle        instance,
      const LV2_Feature* const* features)
 {
 	LV2meter* self = (LV2meter*)instance;
-	uint32_t cfg = self->follow_transport_mode << 8;
-	store(handle, self->uris.ebu_state,
+	uint32_t cfg = self->ui_settings;
+	cfg |= self->follow_transport_mode << 8;
+	store(handle, self->uris.sdh_state,
 			(void*) &cfg, sizeof(uint32_t),
 			self->uris.atom_Int,
 			LV2_STATE_IS_POD | LV2_STATE_IS_PORTABLE);
@@ -417,6 +418,7 @@ sdh_restore(LV2_Handle              instance,
   const void* value = retrieve(handle, self->uris.sdh_state, &size, &type, &valflags);
   if (value && size == sizeof(uint32_t) && type == self->uris.atom_Int) {
 		uint32_t cfg = *((const int*)value);
+		self->ui_settings = cfg & 0xff;
 		self->follow_transport_mode = (cfg >> 8) & 0x3;
 		self->send_state_to_ui = true;
 	}

@@ -534,6 +534,10 @@ static bool cbx_autoreset(RobWidget *w, void* handle) {
 
 static bool cbx_logscale(RobWidget *w, void* handle) {
 	SDHui* ui = (SDHui*)handle;
+	uint32_t v = 0;
+	v |= robtk_cbtn_get_active(ui->cbx_logscaley) ? 1 : 0;
+	v |= robtk_cbtn_get_active(ui->cbx_logscalex) ? 2 : 0;
+	forge_message_kv(ui, ui->uris.mtr_meters_cfg, CTL_UISETTINGS, (float)v);
 	queue_draw(ui->m0);
 	return TRUE;
 }
@@ -766,6 +770,13 @@ port_event(LV2UI_Handle handle,
 					invalidate_changed(ui, 0);
 				} else if (k == CTL_LV2_RESYNCDONE) {
 					invalidate_changed(ui, -1);
+				} else if (k == CTL_UISETTINGS) {
+					uint32_t vv = v;
+					ui->disable_signals = true;
+					robtk_cbtn_set_active(ui->cbx_logscaley, (vv & 1) == 1);
+					robtk_cbtn_set_active(ui->cbx_logscalex, (vv & 2) == 2);
+					ui->disable_signals = false;
+					invalidate_changed(ui, 0);
 				}
 			} else if (obj->body.otype == uris->sdh_histogram) {
 				LV2_Atom *hm = NULL;
