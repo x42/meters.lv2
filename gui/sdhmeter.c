@@ -317,17 +317,19 @@ static bool expose_event(RobWidget* handle, cairo_t* cr, cairo_rectangle_t *ev) 
 			? (_x_log_pos(stddev) - DIST_ZERO) * mlt_x
 			: ((DIST_RANGE * stddev) * mlt_x);
 
+		cairo_save(cr);
+		cairo_rectangle (cr, 0, 0, da_width, da_height);
+		cairo_clip(cr);
+
+		/* Blue Box indicating Standard Deviation */
 		if (dev_x > 1) {
-			cairo_save(cr);
-			cairo_rectangle (cr, 0, 0, da_width, da_height);
-			cairo_clip(cr);
 			cairo_set_source_rgba (cr, .0, .0, .9, .5);
 			cairo_rectangle (cr, avg_x + .5 - dev_x, 0,
 					dev_x + dev_x, da_height);
 			cairo_fill(cr);
-			cairo_restore(cr);
 		}
 
+		/* Draw Orange Arrow at Peak-bin */
 		if (ui->hist_peakbin >= 0) {
 			const float peakbinx = -.5 + rintf (mlt_x
 					* (logscale_x ? x_log_pos(ui->hist_peakbin) : ui->hist_peakbin)
@@ -345,24 +347,26 @@ static bool expose_event(RobWidget* handle, cairo_t* cr, cairo_rectangle_t *ev) 
 
 		cairo_set_line_width(cr, 1.0);
 
-		if (avg_x >= 0 && avg_x < DIST_SIZE) {
+		/* Yellow Line at Average Value */
+		if (avg_x > 0 && avg_x < da_width) {
 			CairoSetSouerceRGBA(c_nyl);
 			cairo_move_to (cr, avg_x, 0);
 			cairo_line_to (cr, avg_x, da_height);
 			cairo_stroke(cr);
 		}
 
-		// Plot Data
+		/* Plot Data */
 		CairoSetSouerceRGBA(c_red);
 		cairo_set_line_width(cr, lw);
 
 		const float yoff = da_height;
+
 		if (logscale_x) {
 			if (logscale_y) {
 				cairo_move_to (cr, x_log_pos(0) * mlt_x - .5, yoff - y_log_pos(ui->histS[0]) * mlt_y);
 				for (int i=1; i < DIST_BIN; ++i) {
 					cairo_line_to (cr,
-							 x_log_pos(i) * mlt_x - .5,
+							x_log_pos(i) * mlt_x - .5,
 							yoff - y_log_pos(ui->histS[i]) * mlt_y);
 				}
 			} else {
@@ -391,6 +395,8 @@ static bool expose_event(RobWidget* handle, cairo_t* cr, cairo_rectangle_t *ev) 
 			}
 		}
 		cairo_stroke(cr);
+
+		cairo_restore(cr);
 
 		/* Y - Axis annotations */
 		char buf[256];
