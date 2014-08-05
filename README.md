@@ -16,18 +16,22 @@ Stereo & Mono variants of bar-graph meters:
 *   30 Band 1/3 octave spectrum analyzer IEC 61260
 *   Digital True-Peak Meter (4x Oversampling), Type II rise-time, 13.3dB/s falloff.
 *   True-Peak (4x Oversampling) + RMS (600ms integration time) combined with numeric readout
+*   K-12, K-14, K-20 / RMS type K-Meters according to the K-system introduced by Bob Katz
 *   DR14 (pleasurizemusic.com, specs by tischmeyer/algorithmix)
 
 and the following stereo plugins:
 
 *   EBU R128 Meter with Histogram and History
 *   Stereo Phase Correlation Meter (Needle Display)
-*   Digital True-Peak Meter (4x Oversampling)
 *   Goniometer (Stereo Phase Scope)
 *   Phase/Frequency Wheel
 *   Stereo/Frequency Monitor
 
-Currently the plugins come in both Gtk and openGL variants (both
+as well as a mono:
+
+*   Signal Distribution Histogram
+
+Currently all plugins come in both Gtk and openGL variants (both
 versions are installed in parallel).
 
 
@@ -89,7 +93,9 @@ Screenshots
 
 ![screenshot](https://raw.github.com/x42/meters.lv2/master/doc/LV2ebur128.png "EBU R128 Meter GUI")
 ![screenshot](https://raw.github.com/x42/meters.lv2/master/doc/LV2meters.png "Various Needle Meters in Ardour")
-![screenshot](https://raw.github.com/x42/meters.lv2/master/doc/spectr_and_goni.png "Spectum Analyzer and Stereo Phase Scope")
+![screenshot](https://raw.github.com/x42/meters.lv2/master/doc/spectr_and_goni.png "Spectrum Analyzer and Stereo Phase Scope")
 ![screenshot](https://raw.github.com/x42/meters.lv2/master/doc/phasewheel.png "Phase/Frequency Wheel")
 ![screenshot](https://raw.github.com/x42/meters.lv2/master/doc/dr14meter.png "DR14 Dynamic Range Meter (Pleasurize Music Foundation)")
+![screenshot](https://raw.github.com/x42/meters.lv2/master/doc/stereoscope.png "Stereo/Frequency Scope")
+![screenshot](https://raw.github.com/x42/meters.lv2/master/doc/sigdisthist.png "Signal Distribution Histogram")
 
