@@ -96,7 +96,7 @@ static void img_write_text(cairo_t* cr,
 	cairo_rotate (cr, ang);
 	cairo_translate (cr, -tw/2.0, -th/2.0);
 	pango_cairo_layout_path(cr, pl);
-	pango_cairo_show_layout(cr, pl);
+	cairo_fill(cr);
 	g_object_unref(pl);
 	cairo_restore(cr);
 	cairo_new_path (cr);

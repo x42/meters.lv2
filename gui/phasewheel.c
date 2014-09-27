@@ -809,7 +809,7 @@ static void annotation_txt(MF2UI *ui, RobTkDial * d, cairo_t *cr, const char *tx
 	cairo_fill(cr);
 	CairoSetSouerceRGBA(c_wht);
 	pango_cairo_layout_path(cr, pl);
-	pango_cairo_show_layout(cr, pl);
+	cairo_fill(cr);
 	g_object_unref(pl);
 	cairo_restore(cr);
 	cairo_new_path(cr);
