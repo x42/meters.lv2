@@ -576,3 +576,13 @@ lv2_descriptor(uint32_t index)
 	default: return NULL;
 	}
 }
+
+#ifdef _WIN32
+static void __attribute__((constructor)) x42_init() {
+	        pthread_win32_process_attach_np();
+}
+
+static void __attribute__((destructor)) x42_fini() {
+	        pthread_win32_process_detach_np();
+}
+#endif

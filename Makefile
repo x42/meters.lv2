@@ -79,6 +79,19 @@ else
   GLUICFLAGS+=`pkg-config --cflags glu` -pthread
 endif
 
+ifeq ($(XWIN), yes)
+  CC=i686-w64-mingw32-gcc
+  CXX=i686-w64-mingw32-g++
+  LV2LDFLAGS=-Wl,-Bstatic -Wl,-Bdynamic -Wl,--as-needed -lpthread
+  LIB_EXT=.dll
+  PUGL_SRC=$(RW)pugl/pugl_win.cpp
+  PKG_LIBS=
+  GLUILIBS=-lws2_32 -lwinmm -lopengl32 -lglu32 -lgdi32 -lcomdlg32 -lpthread
+  BUILDGTK=no
+  GLUICFLAGS=-I.
+  override LDFLAGS += -static-libgcc -static-libstdc++
+endif
+
 ifeq ($(EXTERNALUI), yes)
   ifeq ($(KXURI), yes)
     UI_TYPE=kx:Widget
@@ -119,6 +132,7 @@ targets+=$(BUILDDIR)$(LV2GTK6)$(LIB_EXT)
 targets+=$(BUILDDIR)$(LV2GTK7)$(LIB_EXT)
 targets+=$(BUILDDIR)$(LV2GTK8)$(LIB_EXT)
 targets+=$(BUILDDIR)$(LV2GTK9)$(LIB_EXT)
+PKG_LIBS+=gtk+-2.0
 endif
 
 ###############################################################################
@@ -128,8 +142,8 @@ ifeq ($(shell pkg-config --exists lv2 || echo no), no)
   $(error "LV2 SDK was not found")
 endif
 
-ifeq ($(shell pkg-config --exists glib-2.0 gtk+-2.0 pango cairo $(PKG_LIBS) || echo no), no)
-  $(error "This plugin requires cairo, pango, openGL, glib-2.0 and gtk+-2.0")
+ifeq ($(shell pkg-config --exists glib-2.0 pango cairo $(PKG_LIBS) || echo no), no)
+  $(error "These plugins requires $(PKG_LIBS) cairo pango glib-2.0")
 endif
 
 ifneq ($(shell test -f fftw-3.3.4/.libs/libfftw3f.a || echo no), no)
@@ -183,7 +197,12 @@ ifneq ($(MAKECMDGOALS), submodules)
   endif
 endif
 
+ifneq ($(XWIN), yes)
 override CFLAGS += -fPIC
+else
+override CFLAGS += -DPTW32_STATIC_LIB
+override CXXFLAGS += -DPTW32_STATIC_LIB
+endif
 override CFLAGS += `pkg-config --cflags lv2`
 
 ###############################################################################
@@ -195,7 +214,11 @@ GTKUICFLAGS+=`pkg-config --cflags gtk+-2.0 cairo pango`
 GTKUILIBS+=`pkg-config --libs gtk+-2.0 cairo pango`
 
 GLUICFLAGS+=`pkg-config --cflags cairo pango`
+ifneq ($(XWIN), yes)
 GLUILIBS+=`pkg-config --libs cairo pango pangocairo $(PKG_LIBS)`
+else
+GLUILIBS+=`pkg-config --libs --static cairo pangocairo pango $(PKG_LIBS)` -lpthread -lusp10
+endif
 
 ifeq ($(GLTHREADSYNC), yes)
   GLUICFLAGS+=-DTHREADSYNC
