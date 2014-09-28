@@ -153,8 +153,8 @@ void fftx_free(struct FFTAnalysis *ft) {
 	pthread_mutex_unlock(&fftw_planner_lock);
 	free(ft->hann_window);
 	free(ft->ringbuf);
-	free(ft->fft_in);
-	free(ft->fft_out);
+	fftwf_free(ft->fft_in);
+	fftwf_free(ft->fft_out);
 	free(ft->power);
 	free(ft->phase);
 	free(ft->phase_h);
