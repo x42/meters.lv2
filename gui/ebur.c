@@ -321,6 +321,14 @@ static cairo_pattern_t * histogram_pattern(cairo_t* crx, float cx, float cy, flo
 #define LUFS(V) ((V) < -100 ? -INFINITY : (lufs ? (V) : (V) + 23.0))
 #define FONT(A) ui->font[(A)]
 
+static char *format_lufs(char *buf, const float val) {
+	if (val < -100)
+		sprintf(buf, "   -\u221E");
+	else
+		sprintf(buf, "%+5.1f", val);
+	return buf;
+}
+
 static void write_text(
 		cairo_t* cr,
 		const char *txt,
@@ -494,6 +502,7 @@ static bool expose_event(RobWidget* handle, cairo_t* cr, cairo_rectangle_t *ev) 
 	const bool dbtp  = robtk_cbtn_get_active(ui->cbx_truepeak);
 
 	char buf[128];
+	char lufb0[15], lufb1[15];
 	int redraw_part = 0;
 	/* initialized */
 	if (!ui->cpattern) {
@@ -577,7 +586,7 @@ static bool expose_event(RobWidget* handle, cairo_t* cr, cairo_rectangle_t *ev) 
 	if (rect_intersect_a(ev, COORD_LEVEL_X, COORD_ML_Y, COORD_LEVEL_W, COORD_LEVEL_H)) {
 		/* big level as text */
 		ui->prev_lvl[0] = rings ? ui->ls : ui->lm;
-		sprintf(buf, "%+5.1f %s", LUFS(ui->prev_lvl[0]), lufs ? "LUFS" : "LU");
+		sprintf(buf, "%s %s", format_lufs(lufb0, LUFS(ui->prev_lvl[0])), lufs ? "LUFS" : "LU");
 		write_text(cr, buf, FONT(FONT_M14), CX , COORD_ML_Y+4, 0, 8, c_wht);
 	}
 
@@ -598,7 +607,7 @@ static bool expose_event(RobWidget* handle, cairo_t* cr, cairo_rectangle_t *ev) 
 		cairo_fill (cr);
 		/* display max level as text */
 		ui->prev_lvl[1] = rings ? ui->ms: ui->mm;
-		sprintf(buf, "Max:\n%+5.1f %s", LUFS(ui->prev_lvl[1]), lufs ? "LUFS" : "LU");
+		sprintf(buf, "Max:\n%s %s", format_lufs(lufb0, LUFS(ui->prev_lvl[1])), lufs ? "LUFS" : "LU");
 		write_text(cr, buf, FONT(FONT_M09), COORD_MX_X+50-10, COORD_ML_Y+5, 0, 7, c_wht);
 	}
 
@@ -622,7 +631,7 @@ static bool expose_event(RobWidget* handle, cairo_t* cr, cairo_rectangle_t *ev) 
 
 		/* true-peak val */
 		ui->prev_lvl[4] = ui->tp;
-		sprintf(buf, "%+5.1f", ui->tp);
+		sprintf(buf, "%s", format_lufs(lufb0, ui->tp));
 		write_text(cr, buf, FONT(FONT_M09), COORD_TP_X+65, COORD_ML_Y+5, 0, 7, c_wht);
 		write_text(cr, "dBTP", FONT(FONT_M09), COORD_TP_X+65, COORD_ML_Y+19, 0, 7, c_wht);
 	}
@@ -861,7 +870,7 @@ static bool expose_event(RobWidget* handle, cairo_t* cr, cairo_rectangle_t *ev) 
 		cairo_fill (cr);
 
 		if (ui->il > -60) {
-			sprintf(buf, "Int:   %+5.1f %s", LUFS(ui->il), lufs ? "LUFS" : "LU");
+			sprintf(buf, "Int:   %s %s", format_lufs(lufb0, LUFS(ui->il)), lufs ? "LUFS" : "LU");
 			write_text(cr, buf, FONT(FONT_M09), COORD_BI_X+10 , COORD_BI_Y+40, 0,  6, c_wht);
 		} else {
 			sprintf(buf, "[Integrating over 5 sec]");
@@ -869,8 +878,9 @@ static bool expose_event(RobWidget* handle, cairo_t* cr, cairo_rectangle_t *ev) 
 		}
 
 		if (ui->rx > -60.0 && ui->rn > -60.0) {
-			sprintf(buf, "Range: %+5.1f..%+5.1f %s (%4.1f)",
-					LUFS(ui->rn), LUFS(ui->rx), lufs ? "LUFS" : "LU", (ui->rx - ui->rn));
+			sprintf(buf, "Range: %s..%s %s (%4.1f)",
+					format_lufs(lufb0, LUFS(ui->rn)), format_lufs(lufb1, LUFS(ui->rx)),
+					lufs ? "LUFS" : "LU", (ui->rx - ui->rn));
 			write_text(cr, buf, FONT(FONT_M09), COORD_BI_X+10 , COORD_BI_Y+55, 0,  6, c_wht);
 		} else {
 			sprintf(buf, "[Collecting 10 sec range.]");
@@ -911,9 +921,9 @@ static bool expose_event(RobWidget* handle, cairo_t* cr, cairo_rectangle_t *ev) 
 		ui->prev_lvl[2] = !rings ? ui->ls : ui->lm;
 		ui->prev_lvl[3] = !rings ? ui->ms : ui->mm;
 		write_text(cr, rings ? "Mom":"Short", FONT(FONT_S08), COORD_BR_X+85, COORD_BI_Y-45+bottom_max_offset, 0, 8, c_wht);
-		sprintf(buf, "%+5.1f %s", LUFS(ui->prev_lvl[2]), lufs ? "LUFS" : "LU");
+		sprintf(buf, "%s %s", format_lufs(lufb0, LUFS(ui->prev_lvl[2])), lufs ? "LUFS" : "LU");
 		write_text(cr, buf, FONT(FONT_M09), COORD_BR_X+105, COORD_BI_Y-25+bottom_max_offset, 0, 7, c_wht);
-		sprintf(buf, "Max:%+5.1f %s", LUFS(ui->prev_lvl[3]), lufs ? "LUFS" : "LU");
+		sprintf(buf, "Max:%s %s", format_lufs(lufb0, LUFS(ui->prev_lvl[3])), lufs ? "LUFS" : "LU");
 		write_text(cr, buf, FONT(FONT_M09), COORD_BR_X+105, COORD_BI_Y-10+bottom_max_offset, 0, 7, c_wht);
 	}
 
