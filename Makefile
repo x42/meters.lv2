@@ -8,6 +8,7 @@ OPTIMIZATIONS ?= -msse -msse2 -mfpmath=sse -fomit-frame-pointer -O3 -fno-finite-
 PREFIX ?= /usr/local
 CFLAGS ?= -Wall -Wno-unused-function
 LIBDIR ?= lib
+STRIP  ?= strip
 
 EXTERNALUI?=yes
 KXURI?=yes
@@ -307,7 +308,7 @@ $(BUILDDIR)$(LV2NAME)$(LIB_EXT): src/meters.cc $(DSPDEPS) src/ebulv2.cc src/uris
 	$(CXX) $(CPPFLAGS) $(CFLAGS) $(CXXFLAGS) \
 	  -o $(BUILDDIR)$(LV2NAME)$(LIB_EXT) src/$(LV2NAME).cc $(DSPSRC) \
 	  -shared $(LV2LDFLAGS) $(LDFLAGS) $(LOADLIBES)
-	strip -x $(BUILDDIR)$(LV2NAME)$(LIB_EXT)
+	$(STRIP) -x $(BUILDDIR)$(LV2NAME)$(LIB_EXT)
 
 -include $(RW)robtk.mk
 
