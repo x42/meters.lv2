@@ -1175,7 +1175,7 @@ instantiate(
 	ui->freq_bins = 0;
 	ui->pgain = -100;
 	ui->peak = 0;
-	ui->scale = 1.0;
+	ui->scale = 0.0;
 	ui->pscale = 1.0;
 
 	ui->width  = 2 * (PH_RAD + XOFF);
