@@ -948,7 +948,7 @@ m0_set_scaling(RobWidget* rw, int w, int h) {
 	const float dflw = 2 * (PH_RAD + YOFF);
 	const float dflh = 2 * (PH_RAD + YOFF);
 	float scale = MIN(w/dflw, h/dflh);
-	if (scale != ui->scale) {
+	if (scale != ui->scale || (int)ui->m0_width != h || (int)ui->m0_height != h) {
 		ui->m0_width = w;
 		ui->m0_height = h;
 		ui->scale  = scale;
@@ -967,6 +967,7 @@ m0_size_allocate(RobWidget* rw, int w, int h) {
 static void
 pc_size_allocate(RobWidget* rw, int w, int h) {
 	robwidget_set_size(rw, PC_BOUNDW, h);
+	queue_draw(rw);
 }
 
 static void
