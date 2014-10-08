@@ -112,6 +112,7 @@ typedef struct {
 	cairo_surface_t* sf[3];
 	cairo_surface_t* an[7];
 	cairo_surface_t* dial[4];
+	cairo_surface_t* sf_nfo;
 
 #ifdef CLIP_GM
 	float crop_x0[3], crop_y0[3], crop_x1[3], crop_y1[3];
@@ -140,6 +141,8 @@ typedef struct {
 	int w_width;
 	int w_height;
 	int xrundisplay;
+
+	const char *nfo;
 } GMUI;
 
 static bool cb_preferences(RobWidget *w, gpointer handle);
@@ -260,6 +263,15 @@ static void alloc_annotations(GMUI* ui) {
 	INIT_DIAL_SF(ui->dial[1], "peak", "rms ")
 	INIT_DIAL_SF(ui->dial[2], "  0%", "100%")
 	INIT_DIAL_SF(ui->dial[3], " 15%", "600%")
+
+	if (ui->nfo) {
+		PangoFontDescription *fd = pango_font_description_from_string("Sans 8");
+		create_text_surface2(&ui->sf_nfo,
+				GM_BOUNDS, 12,
+				GM_BOUNDS -2, 0,
+				ui->nfo, fd, 0, 7, c_g30);
+		pango_font_description_free(fd);
+	}
 }
 
 static void alloc_sf(GMUI* ui) {
@@ -541,6 +553,10 @@ static void draw_gm_labels(GMUI* ui, cairo_t* cr) {
 	cairo_line_to(cr, GM_CENTER, GM_CENTER + GM_RADIUS * 0.7079);
 	cairo_stroke(cr);
 
+	if (ui->sf_nfo) {
+		cairo_set_source_surface(cr, ui->sf_nfo, 0, GM_BOUNDS - 12);
+		cairo_paint (cr);
+	}
 	cairo_restore(cr);
 }
 
@@ -1055,6 +1071,7 @@ instantiate(
 
 	ui->write      = write_function;
 	ui->controller = controller;
+	ui->nfo        = robtk_info(ui_toplevel);
 
 	get_color_from_theme(0, ui->c_txt);
 	alloc_sf(ui);
@@ -1346,6 +1363,7 @@ cleanup(LV2UI_Handle handle)
 	for (int i=0; i < 4 ; ++i) {
 		cairo_surface_destroy(ui->dial[i]);
 	}
+	cairo_surface_destroy(ui->sf_nfo);
 
 	robtk_cbtn_destroy(ui->cbn_autogain);
 	robtk_cbtn_destroy(ui->cbn_src);

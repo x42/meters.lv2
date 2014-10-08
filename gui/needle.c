@@ -47,6 +47,7 @@ typedef struct {
 
 	cairo_surface_t * bg;
 	cairo_surface_t * adj;
+	cairo_surface_t * sf_nfo;
 	unsigned char   * img0;
 	unsigned char   * img1;
 	float col[3];
@@ -84,6 +85,8 @@ typedef struct {
 	float n_yc;
 	float m_r0;
 	float m_r1;
+
+	const char *nfo;
 
 } MetersLV2UI;
 
@@ -181,6 +184,19 @@ static void set_needle_sizes(MetersLV2UI* ui) {
 	char fontname[32];
 	sprintf(fontname, "Sans %d", (int)rint(8.0 * ui->scale));
 	ui->font = pango_font_description_from_string(fontname);
+
+	if (ui->sf_nfo) {
+		cairo_surface_destroy(ui->sf_nfo);
+		ui->sf_nfo = NULL;
+	}
+	if (ui->nfo) {
+		PangoFontDescription *fd = pango_font_description_from_string("Sans 8");
+		create_text_surface2(&ui->sf_nfo,
+				ui->width, 12,
+				ui->width - 2, 0,
+				ui->nfo, fd, 0, 7, c_g30);
+		pango_font_description_free(fd);
+	}
 }
 
 static void draw_background (MetersLV2UI* ui, cairo_t* cr, float xoff, float yoff) {
@@ -193,6 +209,11 @@ static void draw_background (MetersLV2UI* ui, cairo_t* cr, float xoff, float yof
 	cairo_rectangle (cr, xoff * w / ui->m_width, 0, w, h);
 	cairo_fill(cr);
 	cairo_restore(cr);
+
+	if (ui->sf_nfo) {
+		cairo_set_source_surface(cr, ui->sf_nfo, 0, ui->m_height - 12);
+		cairo_paint (cr);
+	}
 }
 
 
@@ -578,10 +599,13 @@ instantiate(
 	ui->cal_rad    = cal2rad(ui->type, ui->cal);
 	ui->bg         = NULL;
 	ui->adj        = NULL;
+	ui->sf_nfo     = NULL;
 	ui->img0       = NULL;
 	ui->drag_x     = ui->drag_y = -1;
 	ui->scale      = 1.0;
 	ui->font       = NULL;
+
+	ui->nfo = robtk_info(ui_toplevel);
 	set_needle_sizes(ui);
 
 	setup_images(ui);
@@ -619,6 +643,7 @@ static void
 cleanup(LV2UI_Handle handle)
 {
 	MetersLV2UI* ui = (MetersLV2UI*)handle;
+	cairo_surface_destroy(ui->sf_nfo);
 	cairo_surface_destroy(ui->bg);
 	cairo_surface_destroy(ui->adj);
 	pango_font_description_free(ui->font);

@@ -16,6 +16,7 @@ KXURI?=yes
 override CFLAGS += -g -fvisibility=hidden $(OPTIMIZATIONS)
 BUILDDIR=build/
 RW?=robtk/
+meter_VERSION?=$(shell git describe --tags HEAD | sed 's/-g.*$$//;s/^v//' || echo "LV2")
 ###############################################################################
 LIB_EXT=.so
 
@@ -80,9 +81,9 @@ else
   GLUICFLAGS+=`pkg-config --cflags glu` -pthread
 endif
 
-ifeq ($(XWIN), yes)
-  CC=i686-w64-mingw32-gcc
-  CXX=i686-w64-mingw32-g++
+ifneq ($(XWIN),)
+  CC=$(XWIN)-gcc
+  CXX=$(XWIN)-g++
   LV2LDFLAGS=-Wl,-Bstatic -Wl,-Bdynamic -Wl,--as-needed -lpthread
   LIB_EXT=.dll
   PUGL_SRC=$(RW)pugl/pugl_win.cpp
@@ -171,7 +172,7 @@ else
   $(warning "     run   ./static_fft.sh    prior to make to do so.     ")
   $(warning "**********************************************************")
   $(warning "")
-  FFTW=`pkg-config --cflags fftw3f` $(FFTWA) -lm
+  $(eval FFTW=`pkg-config --cflags fftw3f` $(FFTWA) -lm)
 endif
 export FFTW
 
@@ -198,13 +199,14 @@ ifneq ($(MAKECMDGOALS), submodules)
   endif
 endif
 
-ifneq ($(XWIN), yes)
+ifeq ($(XWIN),)
 override CFLAGS += -fPIC
 else
 override CFLAGS += -DPTW32_STATIC_LIB
 override CXXFLAGS += -DPTW32_STATIC_LIB
 endif
-override CFLAGS += `pkg-config --cflags lv2`
+override CFLAGS += `pkg-config --cflags lv2` -DVERSION="\"$(meter_VERSION)\""
+override CXXFLAGS += -DVERSION="\"$(meter_VERSION)\""
 
 ###############################################################################
 
@@ -215,11 +217,14 @@ GTKUICFLAGS+=`pkg-config --cflags gtk+-2.0 cairo pango`
 GTKUILIBS+=`pkg-config --libs gtk+-2.0 cairo pango`
 
 GLUICFLAGS+=`pkg-config --cflags cairo pango`
-ifneq ($(XWIN), yes)
+ifeq ($(XWIN),)
 GLUILIBS+=`pkg-config --libs cairo pango pangocairo $(PKG_LIBS)`
 else
 GLUILIBS+=`pkg-config --libs --static cairo pangocairo pango $(PKG_LIBS)` -lpthread -lusp10
 endif
+
+GLUICFLAGS+=$(LIC_CFLAGS)
+GLUILIBS+=$(LIC_LOADLIBES)
 
 ifeq ($(GLTHREADSYNC), yes)
   GLUICFLAGS+=-DTHREADSYNC

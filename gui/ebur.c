@@ -165,7 +165,7 @@ typedef struct {
 
 	bool fasttracked[5];
 	float prev_lvl[5]; // ls,lm,mm,ms, tp
-
+	const char *nfo;
 } EBUrUI;
 
 
@@ -580,7 +580,9 @@ static bool expose_event(RobWidget* handle, cairo_t* cr, cairo_rectangle_t *ev) 
 	cairo_stroke(cr);
 
 	if (rect_intersect_a(ev, 12, COORD_ML_Y, 10, 50)) {
-		write_text(cr, "x42 EBU R128 LV2", FONT(FONT_S08), 3 , 12, 1.5 * M_PI, 7, c_gry);
+		write_text(cr,
+				ui->nfo ? ui->nfo : "x42 EBU R128 LV2",
+				FONT(FONT_S08), 1, 15, 1.5 * M_PI, 7, c_g30);
 	}
 
 	if (rect_intersect_a(ev, COORD_LEVEL_X, COORD_ML_Y, COORD_LEVEL_W, COORD_LEVEL_H)) {
@@ -1229,6 +1231,7 @@ instantiate(
 		return NULL;
 	}
 
+	ui->nfo = robtk_info(ui_toplevel);
 	map_eburlv2_uris(ui->map, &ui->uris);
 
 	lv2_atom_forge_init(&ui->forge, ui->map);

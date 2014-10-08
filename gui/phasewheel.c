@@ -122,6 +122,7 @@ typedef struct {
 
 	cairo_surface_t* sf_dat;
 	cairo_surface_t* sf_ann;
+	cairo_surface_t* sf_nfo;
 
 	PangoFontDescription *font[2];
 	cairo_surface_t* sf_dial;
@@ -162,6 +163,8 @@ typedef struct {
 	float c_bg[4];
 	float scale;
 	float pscale;
+
+	const char *nfo;
 } MF2UI;
 
 
@@ -705,6 +708,16 @@ static bool ga_expose_event(RobWidget* handle, cairo_t* cr, cairo_rectangle_t *e
 static bool pc_expose_event(RobWidget* handle, cairo_t* cr, cairo_rectangle_t *ev) {
 	MF2UI* ui = (MF2UI*)GET_HANDLE(handle);
 
+	if (!ui->sf_nfo && ui->nfo) {
+		PangoFontDescription *fd = pango_font_description_from_string("Sans 8");
+		create_text_surface2(&ui->sf_nfo,
+				12, PC_BOUNDH,
+				0, PC_TOP,
+				ui->nfo, fd, M_PI * -.5, 7, c_g60);
+			pango_font_description_free(fd);
+	}
+
+	cairo_save(cr);
 	cairo_translate(cr, 0, rint((ui->m0_height - ui->height) * .5));
 
 	cairo_rectangle (cr, ev->x, ev->y, ev->width, ev->height);
@@ -765,6 +778,14 @@ static bool pc_expose_event(RobWidget* handle, cairo_t* cr, cairo_rectangle_t *e
 	CairoSetSouerceRGBA(c_glr);
 	cairo_set_line_width(cr, 1.5);
 	PC_ANNOTATION(PC_HEIGHT * 0.5, 1.5);
+
+	cairo_restore(cr);
+	if (ui->sf_nfo) {
+		cairo_rectangle (cr, ev->x, ev->y, ev->width, ev->height);
+		cairo_clip (cr);
+		cairo_set_source_surface(cr, ui->sf_nfo, PC_BOUNDW - 14, 0);
+		cairo_paint (cr);
+	}
 
 	return TRUE;
 }
@@ -1156,6 +1177,7 @@ instantiate(
 		return NULL;
 	}
 
+	ui->nfo = robtk_info(ui_toplevel);
 	map_xfer_uris(ui->map, &ui->uris);
 	lv2_atom_forge_init(&ui->forge, ui->map);
 
@@ -1199,6 +1221,7 @@ cleanup(LV2UI_Handle handle)
 	pango_font_description_free(ui->font[0]);
 	pango_font_description_free(ui->font[1]);
 
+	cairo_surface_destroy(ui->sf_nfo);
 	cairo_surface_destroy(ui->sf_ann);
 	cairo_surface_destroy(ui->sf_dat);
 	cairo_surface_destroy(ui->sf_gain);
