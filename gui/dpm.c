@@ -751,12 +751,8 @@ static bool set_gain(RobWidget* w, void* handle) {
 #endif
 	}
 	ui->metrics_changed = true;
-#if 1
 	queue_draw(ui->m0);
-	return NULL;
-#else
-	return cb_reset_peak(ui->m0, NULL);
-#endif
+	return TRUE;
 }
 
 static bool set_speed(RobWidget* w, void* handle) {
@@ -800,7 +796,7 @@ static RobWidget* mousemove(RobWidget* handle, RobTkBtnEvent *event) {
 	}
 
 	const uint32_t mtr = x / ((int) GM_WIDTH);
-	if (mtr >=0 && mtr < ui->num_meters) {
+	if (mtr < ui->num_meters) {
 		if (ui->highlight != (int) mtr) { queue_draw(ui->m0); }
 		ui->highlight = mtr;
 	} else {
@@ -1105,7 +1101,7 @@ static void handle_spectrum_connections(SAUI* ui, uint32_t port_index, float v) 
 		}
 		ui->disable_signals = false;
 	} else
-	if (v > -500 && port_index >= 0 && port_index < 30) {
+	if (v > -500 && port_index < 30) {
 		int pidx = port_index;
 		float np = ui->peak_val[pidx];
 		invalidate_meter(ui, pidx, v, np);

@@ -146,7 +146,7 @@ spectrum_connect_port(LV2_Handle instance, uint32_t port, void* data)
 	case SA_AMP:
 		break;
 	default:
-		if (port >= 0 && port < 30) {
+		if (port < 30) {
 			self->spec[port] = (float*) data;
 		}
 		if (port >= 30 && port < 60) {
