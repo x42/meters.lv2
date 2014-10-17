@@ -247,7 +247,7 @@ DSPDEPS=$(DSPSRC) jmeters/jmeterdsp.h jmeters/vumeterdsp.h \
   zita-resampler/resampler.h zita-resampler/resampler-table.h
 
 goniometer_UIDEP=zita-resampler/resampler.cc zita-resampler/resampler-table.cc
-goniometer_UISRC=zita-resampler/resampler.cc zita-resampler/resampler-table.cc -DTHREADSYNC
+goniometer_UISRC=zita-resampler/resampler.cc zita-resampler/resampler-table.cc
 
 $(eval phasewheel_UISRC=$(value FFTW))
 $(eval stereoscope_UISRC=$(value FFTW))
