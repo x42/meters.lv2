@@ -527,8 +527,7 @@ static bool expose_event(RobWidget* handle, cairo_t* cr, cairo_rectangle_t *ev) 
 #if 0 // DEBUG
 	printf("IS: %.1f+%.1f  %.1fx%.1f\n", ev->x, ev->y, ev->width, ev->height);
 #endif
-	cairo_rectangle (cr, ev->x, ev->y, ev->width, ev->height);
-	cairo_clip (cr);
+	bool clip_set = false;
 
 	if (ev->x == 0 && ev->y == 0 && ev->width == COORD_ALL_W && ev->height == COORD_ALL_H) {
 		redraw_part = 3;
@@ -539,8 +538,6 @@ static bool expose_event(RobWidget* handle, cairo_t* cr, cairo_rectangle_t *ev) 
 	} else if (ev->x == COORD_BR_X && ev->y == COORD_BINFO_Y-1
 			&& ev->width == COORD_BINFO_W && ev->height == COORD_BINFO_H+1) {
 		// bottom right info box (when integrating)
-		cairo_rectangle (cr, ev->x, ev->y, ev->width, ev->height);
-		cairo_clip (cr);
 		redraw_part = 0;
 	} else if (ev->x == COORD_MTR_X && ev->y == COORD_MTR_Y) {
 		redraw_part = 1;
@@ -550,6 +547,7 @@ static bool expose_event(RobWidget* handle, cairo_t* cr, cairo_rectangle_t *ev) 
 		} else {
 			leveldisplaypath(cr);
 			cairo_clip (cr);
+			clip_set = true;
 		}
 		//printf("NO RDR BUT LVL\n");
 	} else if (ev->x >= CX - RADIUS5 && ev->x <= CX+RADIUS5 && ev->y >= CY - RADIUS5 && ev->y <= CY + RADIUS5) {
@@ -558,6 +556,7 @@ static bool expose_event(RobWidget* handle, cairo_t* cr, cairo_rectangle_t *ev) 
 		//printf("RADAR ONLY\n");
 		cairo_arc (cr, CX, CY, RADIUS1, 0, 2.0 * M_PI);
 		cairo_clip (cr);
+		clip_set = true;
 	} else {
 		redraw_part = 0;
 		if (rect_intersect(ev, &rect_is_radar)) {
@@ -567,6 +566,12 @@ static bool expose_event(RobWidget* handle, cairo_t* cr, cairo_rectangle_t *ev) 
 			redraw_part |= 1;
 		}
 	}
+
+	if (!clip_set) {
+		cairo_rectangle (cr, ev->x, ev->y, ev->width, ev->height);
+		cairo_clip (cr);
+	}
+
 	ui->fasttracked[0] = ui->fasttracked[1] = ui->fasttracked[2] = ui->fasttracked[3] = ui->fasttracked[4] = false;
 	ui->fasthist = false;
 	ui->fastradar = -1;
