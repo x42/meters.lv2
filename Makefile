@@ -217,10 +217,9 @@ GTKUICFLAGS+=`pkg-config --cflags gtk+-2.0 cairo pango`
 GTKUILIBS+=`pkg-config --libs gtk+-2.0 cairo pango`
 
 GLUICFLAGS+=`pkg-config --cflags cairo pango`
-ifeq ($(XWIN),)
-GLUILIBS+=`pkg-config --libs cairo pango pangocairo $(PKG_LIBS)`
-else
-GLUILIBS+=`pkg-config --libs --static cairo pangocairo pango $(PKG_LIBS)` -lpthread -lusp10
+GLUILIBS+=`pkg-config --libs $(PKG_UI_FLAGS) cairo pangocairo pango $(PKG_LIBS)`
+ifneq ($(XWIN),)
+GLUILIBS+=-lpthread -lusp10
 endif
 
 GLUICFLAGS+=$(LIC_CFLAGS)
