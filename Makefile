@@ -15,6 +15,7 @@ KXURI?=yes
 
 override CFLAGS += -g -fvisibility=hidden $(OPTIMIZATIONS)
 BUILDDIR=build/
+APPBLD=x42/
 RW?=robtk/
 meter_VERSION?=$(shell git describe --tags HEAD | sed 's/-g.*$$//;s/^v//' || echo "LV2")
 ###############################################################################
@@ -272,6 +273,18 @@ submodules:
 
 all: submodule_check $(BUILDDIR)manifest.ttl $(BUILDDIR)$(LV2NAME).ttl $(targets)
 
+jackapps: \
+	$(APPBLD)x42-dr14 \
+	$(APPBLD)x42-ebur128 \
+	$(APPBLD)x42-goniometer \
+	$(APPBLD)x42-histogram \
+	$(APPBLD)x42-k20rms \
+	$(APPBLD)x42-phase-correlation \
+	$(APPBLD)x42-phasewheel \
+	$(APPBLD)x42-spectrum30 \
+	$(APPBLD)x42-stereoscope \
+	$(APPBLD)x42-truepeakrms \
+
 $(BUILDDIR)manifest.ttl: lv2ttl/manifest.gui.ttl.in lv2ttl/manifest.gtk.ttl.in lv2ttl/manifest.lv2.ttl.in lv2ttl/manifest.ttl.in Makefile
 	@mkdir -p $(BUILDDIR)
 	sed "s/@LV2NAME@/$(LV2NAME)/g" \
@@ -314,6 +327,54 @@ $(BUILDDIR)$(LV2NAME)$(LIB_EXT): src/meters.cc $(DSPDEPS) src/ebulv2.cc src/uris
 	  -o $(BUILDDIR)$(LV2NAME)$(LIB_EXT) src/$(LV2NAME).cc $(DSPSRC) \
 	  -shared $(LV2LDFLAGS) $(LDFLAGS) $(LOADLIBES)
 	$(STRIP) -x $(BUILDDIR)$(LV2NAME)$(LIB_EXT)
+
+
+JACKCFLAGS=-I. $(CFLAGS) $(CXXFLAGS)
+JACKCFLAGS+=`pkg-config --cflags jack lv2 pango pangocairo $(PKG_GL_LIBS)`
+JACKLIBS=-lm `pkg-config $(PKG_UI_FLAGS) --libs jack` $(GLUILIBS)
+
+## JACK applications TODO: explicit dependencies
+
+$(eval x42_ebur128_JACKSRC = src/meters.cc $(DSPSRC))
+x42_ebur128_JACKGUI = gui/ebur.c
+x42_ebur128_LV2HTTL = lv2ttl/ebur128.h
+
+$(eval x42_phase_correlation_JACKSRC = src/meters.cc $(DSPSRC))
+x42_phase_correlation_JACKGUI = gui/needle.c
+x42_phase_correlation_LV2HTTL = lv2ttl/cor.h
+
+$(eval x42_dr14_JACKSRC = src/meters.cc $(DSPSRC))
+x42_dr14_JACKGUI = gui/dr14meter.c
+x42_dr14_LV2HTTL = lv2ttl/dr14stereo.h
+
+$(eval x42_k20rms_JACKSRC = src/meters.cc $(DSPSRC))
+x42_k20rms_JACKGUI = gui/kmeter.c
+x42_k20rms_LV2HTTL = lv2ttl/k20stereo.h
+
+$(eval x42_goniometer_JACKSRC = src/meters.cc $(DSPSRC))
+x42_goniometer_JACKGUI = gui/goniometer.c
+x42_goniometer_LV2HTTL = lv2ttl/goniometer.h
+
+$(eval x42_phasewheel_JACKSRC = src/meters.cc $(DSPSRC) $(value FFTW))
+x42_phasewheel_JACKGUI = gui/phasewheel.c
+x42_phasewheel_LV2HTTL = lv2ttl/phasewheel.h
+
+$(eval x42_histogram_JACKSRC = src/meters.cc $(DSPSRC))
+x42_histogram_JACKGUI = gui/sdhmeter.c
+x42_histogram_LV2HTTL = lv2ttl/sigdisthist.h
+
+$(eval x42_spectrum30_JACKSRC = src/meters.cc $(DSPSRC))
+x42_spectrum30_JACKGUI = gui/dpm.c
+x42_spectrum30_LV2HTTL = lv2ttl/spectr30.h
+
+$(eval x42_stereoscope_JACKSRC = src/meters.cc $(DSPSRC) $(value FFTW))
+x42_stereoscope_JACKGUI = gui/stereoscope.c
+x42_stereoscope_LV2HTTL = lv2ttl/stereoscope.h
+
+$(eval x42_truepeakrms_JACKSRC = src/meters.cc $(DSPSRC))
+x42_truepeakrms_JACKGUI = gui/dr14meter.c
+x42_truepeakrms_LV2HTTL = lv2ttl/tp_rms_stereo.h
+
 
 -include $(RW)robtk.mk
 
@@ -389,5 +450,5 @@ clean:
 distclean: clean
 	rm -f cscope.out cscope.files tags
 
-.PHONY: clean all install uninstall distclean \
+.PHONY: clean all install uninstall distclean jackapps \
         submodule_check submodules submodule_update submodule_pull
