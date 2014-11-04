@@ -418,7 +418,7 @@ COLLECTION_OBJS = \
 	$(APPBLD)x42-stereoscope.o \
 	$(APPBLD)x42-truepeakrms.o
 
-$(eval x42_meter_collection_JACKSRC = -DX42_MULTIPLUGIN src/meters.cc $(DSPSRC) $(value FFTW) $(COLLECTION_OBJS))
+$(eval x42_meter_collection_JACKSRC = -DX42_MULTIPLUGIN src/meters.cc $(DSPSRC) $(COLLECTION_OBJS) $(value FFTW))
 x42_meter_collection_LV2HTTL = lv2ttl/plugins.h
 $(APPBLD)x42-meter-collection$(EXE_EXT): src/meters.cc $(DSPSRC) $(DSPDEPS) $(COLLECTION_OBJS) \
 	lv2ttl/cor.h lv2ttl/dr14stereo.h lv2ttl/ebur128.h lv2ttl/goniometer.h \
