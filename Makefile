@@ -284,6 +284,7 @@ jackapps: \
 	$(APPBLD)x42-spectrum30 \
 	$(APPBLD)x42-stereoscope \
 	$(APPBLD)x42-truepeakrms \
+	$(APPBLD)x42-meter-collection \
 
 $(BUILDDIR)manifest.ttl: lv2ttl/manifest.gui.ttl.in lv2ttl/manifest.gtk.ttl.in lv2ttl/manifest.lv2.ttl.in lv2ttl/manifest.ttl.in Makefile
 	@mkdir -p $(BUILDDIR)
@@ -333,47 +334,96 @@ JACKCFLAGS=-I. $(CFLAGS) $(CXXFLAGS)
 JACKCFLAGS+=`pkg-config --cflags jack lv2 pango pangocairo $(PKG_GL_LIBS)`
 JACKLIBS=-lm `pkg-config $(PKG_UI_FLAGS) --libs jack` $(GLUILIBS)
 
-## JACK applications TODO: explicit dependencies
+## JACK applications
 
 $(eval x42_ebur128_JACKSRC = src/meters.cc $(DSPSRC))
 x42_ebur128_JACKGUI = gui/ebur.c
 x42_ebur128_LV2HTTL = lv2ttl/ebur128.h
+x42_ebur128_JACKDESC = lv2ui_ebur
+$(APPBLD)x42-ebur128$(EXE_EXT): src/meters.cc $(DSPSRC) $(DSPDEPS) \
+	$(x42_ebur128_JACKGUI) $(x42_ebur128_LV2HTTL)
 
 $(eval x42_phase_correlation_JACKSRC = src/meters.cc $(DSPSRC))
 x42_phase_correlation_JACKGUI = gui/needle.c
 x42_phase_correlation_LV2HTTL = lv2ttl/cor.h
+x42_phase_correlation_JACKDESC = lv2ui_cor
+$(APPBLD)x42-phase-correlation$(EXE_EXT): src/meters.cc $(DSPSRC) $(DSPDEPS) \
+	$(x42_phase_correlation_JACKGUI) $(x42_phase_correlation_LV2HTTL)
 
 $(eval x42_dr14_JACKSRC = src/meters.cc $(DSPSRC))
 x42_dr14_JACKGUI = gui/dr14meter.c
 x42_dr14_LV2HTTL = lv2ttl/dr14stereo.h
+x42_dr14_JACKDESC = lv2ui_dr14
+$(APPBLD)x42-dr14$(EXE_EXT): src/meters.cc $(DSPSRC) $(DSPDEPS) \
+	$(x42_dr14_JACKGUI) $(x42_dr14_LV2HTTL)
 
 $(eval x42_k20rms_JACKSRC = src/meters.cc $(DSPSRC))
 x42_k20rms_JACKGUI = gui/kmeter.c
 x42_k20rms_LV2HTTL = lv2ttl/k20stereo.h
+x42_k20rms_JACKDESC = lv2ui_k20stereo
+$(APPBLD)x42-k20rms$(EXE_EXT): src/meters.cc $(DSPSRC) $(DSPDEPS) \
+	$(x42_k20rms_JACKGUI) $(x42_k20rms_LV2HTTL)
 
 $(eval x42_goniometer_JACKSRC = src/meters.cc $(DSPSRC))
 x42_goniometer_JACKGUI = gui/goniometer.c
 x42_goniometer_LV2HTTL = lv2ttl/goniometer.h
+x42_goniometer_JACKDESC = lv2ui_goniometer
+$(APPBLD)x42-goniometer$(EXE_EXT): src/meters.cc $(DSPSRC) $(DSPDEPS) \
+	$(x42_goniometer_JACKGUI) $(x42_goniometer_LV2HTTL)
 
 $(eval x42_phasewheel_JACKSRC = src/meters.cc $(DSPSRC) $(value FFTW))
 x42_phasewheel_JACKGUI = gui/phasewheel.c
 x42_phasewheel_LV2HTTL = lv2ttl/phasewheel.h
+x42_phasewheel_JACKDESC = lv2ui_phasewheel
+$(APPBLD)x42-phasewheel$(EXE_EXT): src/meters.cc $(DSPSRC) $(DSPDEPS) \
+	$(x42_phasewheel_JACKGUI) $(x42_phasewheel_LV2HTTL)
 
 $(eval x42_histogram_JACKSRC = src/meters.cc $(DSPSRC))
 x42_histogram_JACKGUI = gui/sdhmeter.c
 x42_histogram_LV2HTTL = lv2ttl/sigdisthist.h
+x42_histogram_JACKDESC = lv2ui_sigdisthist
+$(APPBLD)x42-histogram$(EXE_EXT): src/meters.cc $(DSPSRC) $(DSPDEPS) \
+	$(x42_histogram_JACKGUI) $(x42_histogram_LV2HTTL)
 
 $(eval x42_spectrum30_JACKSRC = src/meters.cc $(DSPSRC))
 x42_spectrum30_JACKGUI = gui/dpm.c
 x42_spectrum30_LV2HTTL = lv2ttl/spectr30.h
+x42_spectrum30_JACKDESC = lv2ui_spectr30
+$(APPBLD)x42-spectrum30$(EXE_EXT): src/meters.cc $(DSPSRC) $(DSPDEPS) \
+	$(x42_spectrum30_JACKGUI) $(x42_spectrum30_LV2HTTL)
 
 $(eval x42_stereoscope_JACKSRC = src/meters.cc $(DSPSRC) $(value FFTW))
 x42_stereoscope_JACKGUI = gui/stereoscope.c
 x42_stereoscope_LV2HTTL = lv2ttl/stereoscope.h
+x42_stereoscope_JACKDESC = lv2ui_stereoscope
+$(APPBLD)x42-stereoscope$(EXE_EXT): src/meters.cc $(DSPSRC) $(DSPDEPS) \
+	$(x42_stereoscope_JACKGUI) $(x42_stereoscope_LV2HTTL)
 
 $(eval x42_truepeakrms_JACKSRC = src/meters.cc $(DSPSRC))
 x42_truepeakrms_JACKGUI = gui/dr14meter.c
 x42_truepeakrms_LV2HTTL = lv2ttl/tp_rms_stereo.h
+x42_truepeakrms_JACKDESC = lv2ui_tprms2
+$(APPBLD)x42-truepeakrms$(EXE_EXT): src/meters.cc $(DSPSRC) $(DSPDEPS) \
+	$(x42_truepeakrms_JACKGUI) $(x42_truepeakrms_LV2HTTL)
+
+COLLECTION_OBJS = \
+	$(APPBLD)x42-ebur128.o \
+	$(APPBLD)x42-phase-correlation.o \
+	$(APPBLD)x42-dr14.o \
+	$(APPBLD)x42-k20rms.o \
+	$(APPBLD)x42-goniometer.o \
+	$(APPBLD)x42-phasewheel.o \
+	$(APPBLD)x42-histogram.o \
+	$(APPBLD)x42-spectrum30.o \
+	$(APPBLD)x42-stereoscope.o \
+	$(APPBLD)x42-truepeakrms.o
+
+$(eval x42_meter_collection_JACKSRC = -DX42_MULTIPLUGIN src/meters.cc $(DSPSRC) $(value FFTW) $(COLLECTION_OBJS))
+x42_meter_collection_LV2HTTL = lv2ttl/plugins.h
+$(APPBLD)x42-meter-collection$(EXE_EXT): src/meters.cc $(DSPSRC) $(DSPDEPS) $(COLLECTION_OBJS) \
+	lv2ttl/cor.h lv2ttl/dr14stereo.h lv2ttl/ebur128.h lv2ttl/goniometer.h \
+	lv2ttl/k20stereo.h lv2ttl/phasewheel.h lv2ttl/sigdisthist.h lv2ttl/spectr30.h \
+	lv2ttl/stereoscope.h lv2ttl/tp_rms_stereo.h lv2ttl/plugins.h
 
 
 -include $(RW)robtk.mk
@@ -445,6 +495,8 @@ clean:
 	  $(BUILDDIR)$(LV2GUI8)$(LIB_EXT) $(BUILDDIR)$(LV2GTK8)$(LIB_EXT) \
 	  $(BUILDDIR)$(LV2GUI9)$(LIB_EXT) $(BUILDDIR)$(LV2GTK9)$(LIB_EXT)
 	rm -rf $(BUILDDIR)*.dSYM
+	rm -rf $(APPBLD)x42-*
+	-test -d $(APPBLD) && rmdir $(APPBLD) || true
 	-test -d $(BUILDDIR) && rmdir $(BUILDDIR) || true
 
 distclean: clean
