@@ -11,7 +11,7 @@ fi
 meter=$(/usr/bin/osascript << EOT
   tell application "Finder"
   activate
-  set x42meters to { "EBU R128", "K20/RMS", "True-Peak and RMS Meter", "DR14 - Dynamic Range", "Goniometer", "Phase-Correlation", "Phase/Frequency Wheel", "Stereo/Frequency Scope", "Signal Distribution Histogram", "1/3 Octave Spectrum Analyzer" }
+  set x42meters to { "EBU R128", "K20/RMS", "True-Peak and RMS Meter", "DR14 - Dynamic Range", "Goniometer", "Phase-Correlation", "Phase/Frequency Wheel", "Stereo/Frequency Scope", "Signal Distribution Histogram", "Spectrum Analyzer" }
   return (choose from list x42meters with title "x42-Meters" with prompt "Select Meter Type:")
   end
 EOT)
