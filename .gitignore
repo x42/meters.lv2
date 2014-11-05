@@ -5,6 +5,7 @@
 /doc/html
 /fftw-3.3.4/
 /x42/x42-*
+*.dSYM
 
 *.swp
 cscope.*
