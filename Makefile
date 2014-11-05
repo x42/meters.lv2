@@ -67,6 +67,7 @@ UNAME=$(shell uname)
 ifeq ($(UNAME),Darwin)
   LV2LDFLAGS=-dynamiclib
   LIB_EXT=.dylib
+  EXE_EXT=
   UI_TYPE=ui:CocoaUI
   PUGL_SRC=$(RW)pugl/pugl_osx.m
   PKG_LIBS=
@@ -75,6 +76,7 @@ ifeq ($(UNAME),Darwin)
 else
   LV2LDFLAGS=-Wl,-Bstatic -Wl,-Bdynamic -Wl,--as-needed -pthread
   LIB_EXT=.so
+  EXE_EXT=
   UI_TYPE=ui:X11UI
   PUGL_SRC=$(RW)pugl/pugl_x11.c
   PKG_LIBS=glu gl
@@ -87,6 +89,7 @@ ifneq ($(XWIN),)
   CXX=$(XWIN)-g++
   LV2LDFLAGS=-Wl,-Bstatic -Wl,-Bdynamic -Wl,--as-needed -lpthread
   LIB_EXT=.dll
+  EXE_EXT=.exe
   PUGL_SRC=$(RW)pugl/pugl_win.cpp
   PKG_LIBS=
   GLUILIBS=-lws2_32 -lwinmm -lopengl32 -lglu32 -lgdi32 -lcomdlg32 -lpthread
@@ -284,7 +287,7 @@ jackapps: \
 	$(APPBLD)x42-spectrum30 \
 	$(APPBLD)x42-stereoscope \
 	$(APPBLD)x42-truepeakrms \
-	$(APPBLD)x42-meter-collection \
+	$(APPBLD)x42-meter-collection
 
 $(BUILDDIR)manifest.ttl: lv2ttl/manifest.gui.ttl.in lv2ttl/manifest.gtk.ttl.in lv2ttl/manifest.lv2.ttl.in lv2ttl/manifest.ttl.in Makefile
 	@mkdir -p $(BUILDDIR)
@@ -330,9 +333,9 @@ $(BUILDDIR)$(LV2NAME)$(LIB_EXT): src/meters.cc $(DSPDEPS) src/ebulv2.cc src/uris
 	$(STRIP) -x $(BUILDDIR)$(LV2NAME)$(LIB_EXT)
 
 
-JACKCFLAGS=-I. $(CFLAGS) $(CXXFLAGS)
+JACKCFLAGS=-I. $(CFLAGS) $(CXXFLAGS) $(LIC_CFLAGS)
 JACKCFLAGS+=`pkg-config --cflags jack lv2 pango pangocairo $(PKG_GL_LIBS)`
-JACKLIBS=-lm `pkg-config $(PKG_UI_FLAGS) --libs jack` $(GLUILIBS)
+JACKLIBS=-lm $(GLUILIBS) $(LIC_LOADLIBES)
 
 ## JACK applications
 
