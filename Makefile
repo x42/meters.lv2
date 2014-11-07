@@ -152,6 +152,14 @@ ifeq ($(shell pkg-config --exists glib-2.0 pango cairo $(PKG_LIBS) || echo no), 
   $(error "These plugins requires $(PKG_LIBS) cairo pango glib-2.0")
 endif
 
+# TODO jack-wrapper (not enabled by default, yet
+# need jack and lv2 > =1.4.2 (idle API)
+#
+#ifeq ($(shell pkg-config --exists jack || echo no), no)
+#  $(warning *** libjack from http://jackaudio.org is required)
+#  $(error   Please install libjack-dev or libjack-jackd2-dev)
+#endif
+
 ifneq ($(shell test -f fftw-3.3.4/.libs/libfftw3f.a || echo no), no)
   FFTW=-Ifftw-3.3.4/api fftw-3.3.4/.libs/libfftw3f.a -lm
 else
