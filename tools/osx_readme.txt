@@ -18,7 +18,7 @@ Plugin Installation
 Place the contents of the meters.lv2 folder to
   $HOME/.lv2
 or
-  /Library/Audio/Plug-Ins/LV2//
+  /Library/Audio/Plug-Ins/LV2/
 
 see also:
 http://x42-plugins.com/
