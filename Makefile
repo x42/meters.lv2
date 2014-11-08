@@ -73,6 +73,7 @@ ifeq ($(UNAME),Darwin)
   PKG_LIBS=
   GLUILIBS=-framework Cocoa -framework OpenGL
   BUILDGTK=no
+  STRIPFLAGS=-u -r -arch all -s $(RW)lv2syms
 else
   LV2LDFLAGS=-Wl,-Bstatic -Wl,-Bdynamic -Wl,--as-needed -pthread
   LIB_EXT=.so
@@ -82,6 +83,7 @@ else
   PKG_LIBS=glu gl
   GLUILIBS=-lX11
   GLUICFLAGS+=`pkg-config --cflags glu` -pthread
+  STRIPFLAGS=-s
 endif
 
 ifneq ($(XWIN),)
@@ -338,7 +340,7 @@ $(BUILDDIR)$(LV2NAME)$(LIB_EXT): src/meters.cc $(DSPDEPS) src/ebulv2.cc src/uris
 	$(CXX) $(CPPFLAGS) $(CFLAGS) $(CXXFLAGS) \
 	  -o $(BUILDDIR)$(LV2NAME)$(LIB_EXT) src/$(LV2NAME).cc $(DSPSRC) \
 	  -shared $(LV2LDFLAGS) $(LDFLAGS) $(LOADLIBES)
-	$(STRIP) -x $(BUILDDIR)$(LV2NAME)$(LIB_EXT)
+	$(STRIP) $(STRIPFLAGS) $(BUILDDIR)$(LV2NAME)$(LIB_EXT)
 
 
 JACKCFLAGS=-I. $(CFLAGS) $(CXXFLAGS) $(LIC_CFLAGS)
