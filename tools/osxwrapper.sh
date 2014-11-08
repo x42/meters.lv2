@@ -3,7 +3,7 @@
 if test ! -x /usr/local/bin/jackd -a ! -x /usr/bin/jackd ; then
   /usr/bin/osascript -e '
     tell application "Finder"
-    display dialog "You do not have JACK installed. xjadeo will not run without it. See http://jackaudio.org/ for info." buttons["OK"]
+    display dialog "You do not have JACK installed. This application will not run without it. See http://jackaudio.org/ for further info." buttons["OK"]
     end tell'
   exit 1
 fi
