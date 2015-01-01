@@ -3117,7 +3117,7 @@ mtr:TPnRMSstereo@URI_SUFFIX@
 			lv2:InputPort ;
 		lv2:index 11 ;
 		lv2:symbol "in2" ;
-		lv2:name "InL" ;
+		lv2:name "InR" ;
 	  rdfs:comment "Audio input" ;
 		lv2:designation pg:right ;
 	] , [
