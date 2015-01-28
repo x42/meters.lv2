@@ -27,6 +27,7 @@
 #include "../jmeters/vumeterdsp.h"
 #include "../jmeters/iec1ppmdsp.h"
 #include "../jmeters/iec2ppmdsp.h"
+#include "../jmeters/msppmdsp.h"
 #include "../jmeters/stcorrdsp.h"
 #include "../jmeters/truepeakdsp.h"
 #include "../jmeters/kmeterdsp.h"
@@ -57,6 +58,7 @@ typedef struct {
 
 	JmeterDSP *mtr[2];
 	Stcorrdsp *cor;
+	Msppmdsp  *bms[2];
 	Ebu_r128_proc *ebu;
 
 	float* level[2];
@@ -137,6 +139,12 @@ instantiate(const LV2_Descriptor*     descriptor,
 	if (!strcmp(descriptor->URI, MTR_URI "COR") || !strcmp(descriptor->URI, MTR_URI "COR_gtk")) {
 		self->cor = new Stcorrdsp();
 		self->cor->init(rate, 2e3f, 0.3f);
+	}
+	else if (!strcmp(descriptor->URI, MTR_URI "BBCM6") || !strcmp(descriptor->URI, MTR_URI "BBCM6_gtk")) {
+		self->chn = 2; \
+		self->bms[0] = new Msppmdsp(-6);
+		self->bms[1] = new Msppmdsp(-6);
+		self->bms[0]->init(rate);
 	}
 	MTRDEF("VU", Vumeterdsp)
 	MTRDEF("BBC", Iec2ppmdsp)
@@ -228,7 +236,6 @@ run(LV2_Handle instance, uint32_t n_samples)
 		}
 	}
 }
-
 
 static void
 kmeter_run(LV2_Handle instance, uint32_t n_samples)
@@ -409,6 +416,39 @@ cor_cleanup(LV2_Handle instance)
 	free(instance);
 }
 
+static void
+bbcm_run(LV2_Handle instance, uint32_t n_samples)
+{
+	LV2meter* self = (LV2meter*)instance;
+
+	if (self->p_refl != *self->reflvl) {
+		self->p_refl = *self->reflvl;
+		self->rlgain = powf (10.0f, 0.05f * (self->p_refl + 18.0));
+	}
+
+	self->bms[0]->processM(self->input[0], self->input[1], n_samples);
+	*self->level[0] = self->rlgain * self->bms[0]->read();
+
+	self->bms[1]->processS(self->input[0], self->input[1], n_samples);
+	*self->level[1] = self->rlgain * self->bms[1]->read();
+
+	if (self->input[0] != self->output[0]) {
+		memcpy(self->output[0], self->input[0], sizeof(float) * n_samples);
+	}
+	if (self->input[1] != self->output[1]) {
+		memcpy(self->output[1], self->input[1], sizeof(float) * n_samples);
+	}
+
+}
+
+static void
+bbcm_cleanup(LV2_Handle instance)
+{
+	LV2meter* self = (LV2meter*)instance;
+	delete self->bms[0];
+	delete self->bms[2];
+	free(instance);
+}
 
 const void*
 extension_data(const char* uri)
@@ -502,6 +542,30 @@ static const LV2_Descriptor descriptorCorGtk = {
 	extension_data
 };
 
+static const LV2_Descriptor descriptorBBCMS = {
+	MTR_URI "BBCM6",
+	instantiate,
+	connect_port,
+	NULL,
+	bbcm_run,
+	NULL,
+	bbcm_cleanup,
+	extension_data
+};
+
+static const LV2_Descriptor descriptorBBCMSGtk = {
+	MTR_URI "BBCM6_gtk",
+	instantiate,
+	connect_port,
+	NULL,
+	bbcm_run,
+	NULL,
+	bbcm_cleanup,
+	extension_data
+};
+
+
+
 #undef LV2_SYMBOL_EXPORT
 #ifdef _WIN32
 #    define LV2_SYMBOL_EXPORT __declspec(dllexport)
@@ -573,6 +637,8 @@ lv2_descriptor(uint32_t index)
 	case 57: return &descriptorTPRMS_2Gtk;
 	case 58: return &descriptorSDH;
 	case 59: return &descriptorSDHGtk;
+	case 60: return &descriptorBBCMS;
+	case 61: return &descriptorBBCMSGtk;
 	default: return NULL;
 	}
 }

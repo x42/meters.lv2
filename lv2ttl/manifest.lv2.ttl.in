@@ -20,6 +20,11 @@ mtr:BBCstereo@URI_SUFFIX@
 	lv2:binary <@LV2NAME@@LIB_EXT@> ;
 	rdfs:seeAlso <@LV2NAME@.ttl> .
 
+mtr:BBCM6@URI_SUFFIX@
+	a lv2:Plugin ;
+	lv2:binary <@LV2NAME@@LIB_EXT@> ;
+	rdfs:seeAlso <@LV2NAME@.ttl> .
+
 mtr:EBUmono@URI_SUFFIX@
 	a lv2:Plugin ;
 	lv2:binary <@LV2NAME@@LIB_EXT@> ;

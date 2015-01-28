@@ -251,12 +251,12 @@ endif
 
 DSPSRC=jmeters/vumeterdsp.cc jmeters/iec1ppmdsp.cc \
   jmeters/iec2ppmdsp.cc jmeters/stcorrdsp.cc \
-  ebumeter/ebu_r128_proc.cc \
+  jmeters/msppmdsp.cc ebumeter/ebu_r128_proc.cc \
   jmeters/truepeakdsp.cc jmeters/kmeterdsp.cc \
   zita-resampler/resampler.cc zita-resampler/resampler-table.cc
 
 DSPDEPS=$(DSPSRC) jmeters/jmeterdsp.h jmeters/vumeterdsp.h \
-  jmeters/iec1ppmdsp.h jmeters/iec2ppmdsp.h \
+  jmeters/iec1ppmdsp.h jmeters/iec2ppmdsp.h jmeters/msppmdsp.h \
   jmeters/stcorrdsp.h ebumeter/ebu_r128_proc.h \
   jmeters/truepeakdsp.h jmeters/kmeterdsp.h \
   zita-resampler/resampler.h zita-resampler/resampler-table.h
