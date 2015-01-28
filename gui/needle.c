@@ -347,8 +347,8 @@ static bool expose_event(RobWidget* handle, cairo_t* cr, cairo_rectangle_t* ev) 
 		draw_background (ui, cr, 0, 0);
 		if (ui->naned[0]) { NANED(ui->m_width/2, ui->height*2/3 - 20 * ui->scale, c_red); }
 		if (ui->naned[1]) { NANED(ui->m_width/2, ui->height*2/3 +  2 * ui->scale, c_grn); }
-		draw_needle (ui, cr, ui->lvl[0], 0, c_red, 2.0);
 		draw_needle (ui, cr, ui->lvl[1], 0, c_grn, 2.0);
+		draw_needle (ui, cr, ui->lvl[0], 0, c_red, 2.0);
 	} else {
 		int c;
 		for (c=0; c < ui->chn; ++c) {
