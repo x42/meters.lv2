@@ -3215,7 +3215,7 @@ mtr:SigDistHist@URI_SUFFIX@
 mtr:BBCM6@URI_SUFFIX@
 	a lv2:Plugin, lv2:AnalyserPlugin, doap:Project ;
 	doap:license <http://usefulinc.com/doap/licenses/gpl> ;
-	doap:name "BBC M6@NAME_SUFFIX@";
+	doap:name "BBC M-6@NAME_SUFFIX@";
 	lv2:project <http://gareus.org/oss/lv2/meters> ;
 	lv2:optionalFeature lv2:hardRTCapable ;
 	ui:ui @MTRGUI@ ;
@@ -3270,5 +3270,5 @@ mtr:BBCM6@URI_SUFFIX@
 		lv2:minimum 0.0 ;
 		lv2:maximum 1.0 ;
 	] ;
-	rdfs:comment "BBC Mid/Side stereo audio level meter according to IEC 60268-10 / Type IIa. L/R -6dB."
+	rdfs:comment "BBC M-6, Mid/Side stereo audio level meter according to IEC 60268-10 / Type IIa. L/R -6dB."
 	.
