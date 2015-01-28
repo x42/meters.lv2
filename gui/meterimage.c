@@ -485,6 +485,7 @@ static cairo_surface_t* render_front_face(enum MtrType t, int w, int h) {
 			img_draw_ebu(cr, _sc);
 			break;
 		case MT_BBC:
+		case MT_BM6:
 			img_draw_bbc(cr, _sc);
 			break;
 		case MT_NOR:

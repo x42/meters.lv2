@@ -32,6 +32,7 @@
 /* meter types */
 enum MtrType {
 	MT_BBC = 1,
+	MT_BM6,
 	MT_EBU,
 	MT_DIN,
 	MT_NOR,
@@ -137,6 +138,7 @@ static void setup_images (MetersLV2UI* ui) {
 static int width_scale(MetersLV2UI* ui) {
 	switch (ui->type) {
 		case MT_BBC:
+		case MT_BM6:
 			return 1;
 			break;
 		default:
@@ -263,6 +265,7 @@ static float meter_deflect(int type, float v) {
 		case MT_VU:
 			return 5.6234149f * v;
 		case MT_BBC:
+		case MT_BM6:
 		case MT_EBU:
 			v *= 3.17f;
 			if (v < 0.1f) return v * 0.855f;
@@ -349,6 +352,13 @@ static bool expose_event(RobWidget* handle, cairo_t* cr, cairo_rectangle_t* ev) 
 		if (ui->naned[1]) { NANED(ui->m_width/2, ui->height*2/3 +  2 * ui->scale, c_grn); }
 		draw_needle (ui, cr, ui->lvl[1], 0, c_grn, 2.0);
 		draw_needle (ui, cr, ui->lvl[0], 0, c_red, 2.0);
+	}
+	else if (ui->type == MT_BM6 && ui->chn == 2) {
+		draw_background (ui, cr, 0, 0);
+		if (ui->naned[0]) { NANED(ui->m_width/2, ui->height*2/3 - 20 * ui->scale, c_red); }
+		if (ui->naned[1]) { NANED(ui->m_width/2, ui->height*2/3 +  2 * ui->scale, c_grn); }
+		draw_needle (ui, cr, ui->lvl[1], 0, c_nyl, 2.0); // XXX
+		draw_needle (ui, cr, ui->lvl[0], 0, c_wht, 2.0);
 	} else {
 		int c;
 		for (c=0; c < ui->chn; ++c) {
@@ -367,6 +377,7 @@ static bool expose_event(RobWidget* handle, cairo_t* cr, cairo_rectangle_t* ev) 
 				sprintf(buf, "0 VU = %.1f dBFS", -36 - ui->cal);
 				break;
 			case MT_BBC:
+			case MT_BM6:
 				sprintf(buf, " '4' = %.1f dBFS", -36 - ui->cal);
 				break;
 			case MT_DIN:
@@ -566,6 +577,7 @@ instantiate(
 	else if (!strcmp(plugin_uri, MTR_URI "VUstereo"))  { ui->chn = 2; ui->type = MT_VU; }
 	else if (!strcmp(plugin_uri, MTR_URI "BBCmono"))   { ui->chn = 1; ui->type = MT_BBC; }
 	else if (!strcmp(plugin_uri, MTR_URI "BBCstereo")) { ui->chn = 2; ui->type = MT_BBC; }
+	else if (!strcmp(plugin_uri, MTR_URI "BBCM6"))     { ui->chn = 2; ui->type = MT_BM6; }
 	else if (!strcmp(plugin_uri, MTR_URI "EBUmono"))   { ui->chn = 1; ui->type = MT_EBU; }
 	else if (!strcmp(plugin_uri, MTR_URI "EBUstereo")) { ui->chn = 2; ui->type = MT_EBU; }
 	else if (!strcmp(plugin_uri, MTR_URI "DINmono"))   { ui->chn = 1; ui->type = MT_DIN; }
@@ -578,6 +590,7 @@ instantiate(
 	else if (!strcmp(plugin_uri, MTR_URI "VUstereo_gtk"))  { ui->chn = 2; ui->type = MT_VU; }
 	else if (!strcmp(plugin_uri, MTR_URI "BBCmono_gtk"))   { ui->chn = 1; ui->type = MT_BBC; }
 	else if (!strcmp(plugin_uri, MTR_URI "BBCstereo_gtk")) { ui->chn = 2; ui->type = MT_BBC; }
+	else if (!strcmp(plugin_uri, MTR_URI "BBCM6_gtk"))     { ui->chn = 2; ui->type = MT_BM6; }
 	else if (!strcmp(plugin_uri, MTR_URI "EBUmono_gtk"))   { ui->chn = 1; ui->type = MT_EBU; }
 	else if (!strcmp(plugin_uri, MTR_URI "EBUstereo_gtk")) { ui->chn = 2; ui->type = MT_EBU; }
 	else if (!strcmp(plugin_uri, MTR_URI "DINmono_gtk"))   { ui->chn = 1; ui->type = MT_DIN; }
@@ -685,7 +698,7 @@ static void invalidate_area(MetersLV2UI* ui, int c, float oldval, float newval) 
 	}
 
 	float xoff = ui->m_width * c;
-	if (c == 1 && ui->type == MT_BBC) {
+	if (c == 1 && (ui->type == MT_BBC || ui->type == MT_BM6)) {
 		xoff = 0;
 	}
 	cairo_rectangle_t r1, r2;
