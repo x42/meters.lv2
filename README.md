@@ -23,6 +23,7 @@ and the following stereo plugins:
 
 *   EBU R128 Meter with Histogram and History
 *   Stereo Phase Correlation Meter (Needle Display)
+*   BBC Mid/Side M-6 (Needle Display)
 *   Goniometer (Stereo Phase Scope)
 *   Phase/Frequency Wheel
 *   Stereo/Frequency Monitor
