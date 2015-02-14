@@ -446,7 +446,7 @@ bbcm_cleanup(LV2_Handle instance)
 {
 	LV2meter* self = (LV2meter*)instance;
 	delete self->bms[0];
-	delete self->bms[2];
+	delete self->bms[1];
 	free(instance);
 }
 
