@@ -147,7 +147,7 @@ bandpass_setup(struct FilterBank *fb,
 		v += 4 * (c_b2 * (c_a2 - 1) + 1);
 		v = csqrt (v);
 
-		const complex_t u0 = ab_2 + creal(-v) + ab_2 * creal(c) + _I * (cimag(-v) + ab_2 * cimag(c));
+		const complex_t u0 = ab_2 + creal(v * -1) + ab_2 * creal(c) + _I * (cimag(v * -1) + ab_2 * cimag(c));
 		const complex_t u1 = ab_2 + creal( v) + ab_2 * creal(c) + _I * (cimag( v) + ab_2 * cimag(c));
 
 #define ASSIGN_BP(FLT, PC, odd) \
