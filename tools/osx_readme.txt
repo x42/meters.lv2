@@ -26,4 +26,4 @@ of the following for you:
 Place the contents of the meters.lv2 folder to
   $HOME/Library/Audio/Plug-Ins/LV2/
 or install system-wide for all users to
-	/Library/Audio/Plug-Ins/LV2/
+  /Library/Audio/Plug-Ins/LV2/
