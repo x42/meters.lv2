@@ -281,7 +281,7 @@ static void write_text(
 
 static void create_metrics(KMUI* ui) {
 	cairo_t* cr;
-	PangoFontDescription *font = pango_font_description_from_string("Sans 6");
+	PangoFontDescription *font = pango_font_description_from_string("Sans 8px");
 
 	INIT_ANN_LB(ui->lb[0], ui->width, 20);
 	char kstd[10];
@@ -642,7 +642,7 @@ instantiate(
 	ui->size_changed = true;
 	ui->metrics_changed = true;
 
-	ui->font = pango_font_description_from_string("Mono 7");
+	ui->font = pango_font_description_from_string("Mono 9px");
 
 	for (uint32_t i=0; i < ui->num_meters ; ++i) {
 		ui->val[i] = -90.0;

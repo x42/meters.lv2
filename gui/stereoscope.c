@@ -528,8 +528,8 @@ static RobWidget * toplevel(SFSUI* ui, void * const top)
 	rob_vbox_child_pack(ui->rw, robtk_sep_widget(ui->sep2), FALSE, FALSE);
 	rob_vbox_child_pack(ui->rw, ui->hbox2, FALSE, FALSE);
 
-	ui->font[0] = pango_font_description_from_string("Mono 7");
-	ui->font[1] = pango_font_description_from_string("Mono 8");
+	ui->font[0] = pango_font_description_from_string("Mono 9px");
+	ui->font[1] = pango_font_description_from_string("Mono 10px");
 	get_color_from_theme(0, ui->c_fg);
 	get_color_from_theme(1, ui->c_bg);
 	create_surfaces(ui);

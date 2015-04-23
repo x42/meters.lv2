@@ -205,9 +205,9 @@ static void write_text(
 }
 
 static void alloc_annotations(GMUI* ui) {
-#define FONT_GM "Mono 16"
-#define FONT_PC "Mono 10"
-#define FONT_LB "Sans 06"
+#define FONT_GM "Mono 22px"
+#define FONT_PC "Mono 12px"
+#define FONT_LB "Sans 8px"
 
 #define INIT_BLACK_BG(ID, WIDTH, HEIGHT) \
 	ui->an[ID] = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, WIDTH, HEIGHT); \
@@ -265,7 +265,7 @@ static void alloc_annotations(GMUI* ui) {
 	INIT_DIAL_SF(ui->dial[3], " 15%", "600%")
 
 	if (ui->nfo) {
-		PangoFontDescription *fd = pango_font_description_from_string("Sans 8");
+		PangoFontDescription *fd = pango_font_description_from_string("Sans 10px");
 		create_text_surface2(&ui->sf_nfo,
 				GM_BOUNDS, 12,
 				GM_BOUNDS -2, 0,

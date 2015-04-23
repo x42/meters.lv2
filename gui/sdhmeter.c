@@ -110,8 +110,8 @@ static void write_text(
 
 static void initialize_font_cache(SDHui* ui) {
 	ui->fontcache = true;
-	ui->font[FONT_M08] = pango_font_description_from_string("Mono 8");
-	ui->font[FONT_S08] = pango_font_description_from_string("Sans 8");
+	ui->font[FONT_M08] = pango_font_description_from_string("Mono 10px");
+	ui->font[FONT_S08] = pango_font_description_from_string("Sans 10px");
 	assert(ui->font[FONT_M08]);
 	assert(ui->font[FONT_S08]);
 }

@@ -709,7 +709,7 @@ static bool pc_expose_event(RobWidget* handle, cairo_t* cr, cairo_rectangle_t *e
 	MF2UI* ui = (MF2UI*)GET_HANDLE(handle);
 
 	if (!ui->sf_nfo && ui->nfo) {
-		PangoFontDescription *fd = pango_font_description_from_string("Sans 8");
+		PangoFontDescription *fd = pango_font_description_from_string("Sans 10px");
 		create_text_surface2(&ui->sf_nfo,
 				12, PC_BOUNDH,
 				0, PC_TOP,
@@ -1023,8 +1023,8 @@ static RobWidget * toplevel(MF2UI* ui, void * const top)
 	rob_vbox_child_pack(ui->rw, robtk_sep_widget(ui->sep2), FALSE, TRUE);
 	rob_vbox_child_pack(ui->rw, ui->hbox3, FALSE, TRUE);
 
-	ui->font[0] = pango_font_description_from_string("Mono 7");
-	ui->font[1] = pango_font_description_from_string("Mono 8");
+	ui->font[0] = pango_font_description_from_string("Mono 9px");
+	ui->font[1] = pango_font_description_from_string("Mono 10px");
 	get_color_from_theme(0, ui->c_fg);
 	get_color_from_theme(1, ui->c_bg);
 	m1_create_surfaces(ui);

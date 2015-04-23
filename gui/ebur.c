@@ -421,12 +421,12 @@ static void ring_leds(EBUrUI* ui, int *l, int *m) {
 
 static void initialize_font_cache(EBUrUI* ui) {
 	ui->fontcache = true;
-	ui->font[FONT_M14] = pango_font_description_from_string("Mono 14");
-	ui->font[FONT_M12] = pango_font_description_from_string("Mono 12");
-	ui->font[FONT_M09] = pango_font_description_from_string("Mono 9");
-	ui->font[FONT_M08] = pango_font_description_from_string("Mono 8");
-	ui->font[FONT_S09] = pango_font_description_from_string("Sans 9");
-	ui->font[FONT_S08] = pango_font_description_from_string("Sans 8");
+	ui->font[FONT_M14] = pango_font_description_from_string("Mono 18px");
+	ui->font[FONT_M12] = pango_font_description_from_string("Mono 14px");
+	ui->font[FONT_M09] = pango_font_description_from_string("Mono 12px");
+	ui->font[FONT_M08] = pango_font_description_from_string("Mono 10px");
+	ui->font[FONT_S09] = pango_font_description_from_string("Sans 12px");
+	ui->font[FONT_S08] = pango_font_description_from_string("Sans 10px");
 	assert(ui->font[FONT_M14]);
 	assert(ui->font[FONT_M12]);
 	assert(ui->font[FONT_M09]);

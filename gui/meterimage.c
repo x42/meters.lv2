@@ -27,11 +27,11 @@ static const float c_wsh[4] = {1.0, 1.0, 1.0, 0.5};
 	char img_fontname[48]; \
 	char img_fonthuge[48]; \
 	if (_sc <=1.0) { \
-		sprintf(img_fontname, "Sans Bold 9"); \
-		sprintf(img_fonthuge, "Sans Bold 12"); \
+		sprintf(img_fontname, "Sans Bold 11px"); \
+		sprintf(img_fonthuge, "Sans Bold 14px"); \
 	} else { \
-		sprintf(img_fontname, "Sans Bold %d", (int)rint(_rl/21)); \
-		sprintf(img_fonthuge, "Sans Bold %d", (int)rint(_rn/10)); \
+		sprintf(img_fontname, "Sans Bold %dpx", (int)rint(_rl/18.)); \
+		sprintf(img_fonthuge, "Sans Bold %dpx", (int)rint(_rn/9.)); \
 	}
 
 static float img_radi (float v) {
@@ -248,7 +248,7 @@ static void img_phase(cairo_t* cr, float scale) {
 	img_draw_needle(cr, 0.75, _rx, _rl-5, c_wht, 1.5);
 	img_draw_needle(cr, 1.0,  _rx, _rl-5, c_wht, 1.5);
 
-	sprintf(img_fontname, "Sans Bold %d", (int)rint(_rl/23));
+	sprintf(img_fontname, "Sans Bold %dpx", (int)rint(_rl/20));
 
 	img_needle_label(cr, "-1",     0, _rs-24*_sc);
 	img_needle_label(cr, "-0.5", .25, _rs-24*_sc);
@@ -358,7 +358,7 @@ void img_draw_din(cairo_t* cr, float scale) {
 	img_draw_needle(cr, img_deflect_din(-10.458), _rf, _rs, c_wht, 1.5); // 30 %
 	img_draw_needle(cr, img_deflect_din(-6.0205), _rf, _rl, c_red, 1.5); // 50 %
 
-	sprintf(img_fontname, "Sans %d", (int)rint(_rn / 21)); // XXX
+	sprintf(img_fontname, "Sans %dpx", (int)rint(_rn / 19.));
 
 	img_needle_label_col(cr,  "\n200", img_deflect_din(6.0205), _ri, c_wht);
 	img_needle_label_col(cr,  "\n100", img_deflect_din(0     ), _ri, c_red);
@@ -370,7 +370,7 @@ void img_draw_din(cairo_t* cr, float scale) {
 	img_needle_label(cr,       "\n1", img_deflect_din(    -40), _ri);
 	img_needle_label(cr,       "\n0", img_deflect_din(    -60), _ri);
 
-	sprintf(img_fontname, "Sans Bold %d", (int)rint(_rn / 21)); // XXX
+	sprintf(img_fontname, "Sans Bold %dpx", (int)rint(_rn / 19.)); // XXX
 
 	img_needle_label(cr, "-50\n", img_deflect_din(-50), _rd);
 	img_needle_label(cr, "-30\n", img_deflect_din(-30), _rd);

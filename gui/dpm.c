@@ -182,10 +182,10 @@ enum {
 };
 
 static void initialize_font_cache(SAUI* ui) {
-	ui->font[FONT_S08] = pango_font_description_from_string("Sans 8");
-	ui->font[FONT_S06] = pango_font_description_from_string("Sans 6");
-	ui->font[FONT_M07] = pango_font_description_from_string("Mono 7");
-	ui->font[FONT_M08] = pango_font_description_from_string("Mono 8");
+	ui->font[FONT_S08] = pango_font_description_from_string("Sans 10px");
+	ui->font[FONT_S06] = pango_font_description_from_string("Sans 8px");
+	ui->font[FONT_M07] = pango_font_description_from_string("Mono 9px");
+	ui->font[FONT_M08] = pango_font_description_from_string("Mono 10px");
 }
 
 

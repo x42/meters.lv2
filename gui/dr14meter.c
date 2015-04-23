@@ -799,12 +799,12 @@ instantiate(
 	ui->size_changed = true;
 
 	if (ui->dr_operation_mode) {
-		ui->font[0] = pango_font_description_from_string("Mono 7");
-		ui->font[1] = pango_font_description_from_string("Mono 11");
-		ui->font[2] = pango_font_description_from_string("Sans 8");
-		ui->font[3] = pango_font_description_from_string("Mono 28");
+		ui->font[0] = pango_font_description_from_string("Mono 9px");
+		ui->font[1] = pango_font_description_from_string("Mono 14px");
+		ui->font[2] = pango_font_description_from_string("Sans 10px");
+		ui->font[3] = pango_font_description_from_string("Mono 36px");
 	} else {
-		ui->font[0] = pango_font_description_from_string("Mono 7");
+		ui->font[0] = pango_font_description_from_string("Mono 9px");
 	}
 
 	*widget = toplevel(ui, ui_toplevel);

@@ -184,7 +184,7 @@ static void set_needle_sizes(MetersLV2UI* ui) {
 	ui->bg = render_front_face(ui->type, ui->m_width, ui->m_height);
 
 	char fontname[32];
-	sprintf(fontname, "Sans %d", (int)rint(8.0 * ui->scale));
+	sprintf(fontname, "Sans %dpx", (int)rint(10.0 * ui->scale));
 	ui->font = pango_font_description_from_string(fontname);
 
 	if (ui->sf_nfo) {
@@ -192,7 +192,7 @@ static void set_needle_sizes(MetersLV2UI* ui) {
 		ui->sf_nfo = NULL;
 	}
 	if (ui->nfo) {
-		PangoFontDescription *fd = pango_font_description_from_string("Sans 8");
+		PangoFontDescription *fd = pango_font_description_from_string("Sans 10px");
 		create_text_surface2(&ui->sf_nfo,
 				ui->width, 12,
 				ui->width - 2, 0,
