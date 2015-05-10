@@ -15,6 +15,7 @@ KXURI?=yes
 
 override CFLAGS += -g -fvisibility=hidden $(OPTIMIZATIONS)
 BUILDDIR=build/
+OBJDIR=obj/
 APPBLD=x42/
 RW?=robtk/
 meter_VERSION?=$(shell git describe --tags HEAD | sed 's/-g.*$$//;s/^v//' || echo "LV2")
@@ -119,15 +120,7 @@ endif
 targets=$(BUILDDIR)$(LV2NAME)$(LIB_EXT)
 
 ifneq ($(BUILDOPENGL), no)
-targets+=$(BUILDDIR)$(LV2GUI1)$(LIB_EXT)
-targets+=$(BUILDDIR)$(LV2GUI2)$(LIB_EXT)
-targets+=$(BUILDDIR)$(LV2GUI3)$(LIB_EXT)
-targets+=$(BUILDDIR)$(LV2GUI4)$(LIB_EXT)
-targets+=$(BUILDDIR)$(LV2GUI5)$(LIB_EXT)
-targets+=$(BUILDDIR)$(LV2GUI6)$(LIB_EXT)
-targets+=$(BUILDDIR)$(LV2GUI7)$(LIB_EXT)
-targets+=$(BUILDDIR)$(LV2GUI8)$(LIB_EXT)
-targets+=$(BUILDDIR)$(LV2GUI9)$(LIB_EXT)
+targets+=$(BUILDDIR)meters_glui.so
 endif
 
 ifneq ($(BUILDGTK), no)
@@ -267,6 +260,9 @@ goniometer_UISRC=zita-resampler/resampler.cc zita-resampler/resampler-table.cc
 $(eval phasewheel_UISRC=$(value FFTW))
 $(eval stereoscope_UISRC=$(value FFTW))
 
+$(eval meters_UISRC=$(value FFTW))
+meters_UISRC+=zita-resampler/resampler.cc zita-resampler/resampler-table.cc
+
 ###############################################################################
 # build target definitions
 default: all
@@ -306,7 +302,7 @@ $(BUILDDIR)manifest.ttl: lv2ttl/manifest.gui.ttl.in lv2ttl/manifest.gtk.ttl.in l
 ifneq ($(BUILDOPENGL), no)
 	sed "s/@LV2NAME@/$(LV2NAME)/g;s/@LIB_EXT@/$(LIB_EXT)/g;s/@URI_SUFFIX@//g" \
 	    lv2ttl/manifest.lv2.ttl.in >> $(BUILDDIR)manifest.ttl
-	sed "s/@LV2NAME@/$(LV2NAME)/g;s/@LIB_EXT@/$(LIB_EXT)/g;s/@UI_TYPE@/$(UI_TYPE)/;s/@LV2GUI1@/$(LV2GUI1)/g;s/@LV2GUI2@/$(LV2GUI2)/g;s/@LV2GUI3@/$(LV2GUI3)/g;s/@LV2GUI4@/$(LV2GUI4)/g;s/@LV2GUI5@/$(LV2GUI5)/g;s/@LV2GUI6@/$(LV2GUI6)/g;s/@LV2GUI7@/$(LV2GUI7)/g;s/@LV2GUI8@/$(LV2GUI8)/g;s/@LV2GUI9@/$(LV2GUI9)/g" \
+	sed "s/@LV2NAME@/$(LV2NAME)/g;s/@LIB_EXT@/$(LIB_EXT)/g;s/@UI_TYPE@/$(UI_TYPE)/;s/@LV2GUI1@/meters_glui/g;s/@LV2GUI2@/meters_glui/g;s/@LV2GUI3@/meters_glui/g;s/@LV2GUI4@/meters_glui/g;s/@LV2GUI5@/meters_glui/g;s/@LV2GUI6@/meters_glui/g;s/@LV2GUI7@/meters_glui/g;s/@LV2GUI8@/meters_glui/g;s/@LV2GUI9@/meters_glui/g" \
 	    lv2ttl/manifest.gui.ttl.in >> $(BUILDDIR)manifest.ttl
 endif
 ifneq ($(BUILDGTK), no)
@@ -419,6 +415,16 @@ x42_truepeakrms_JACKDESC = lv2ui_tprms2
 $(APPBLD)x42-truepeakrms$(EXE_EXT): src/meters.cc $(DSPSRC) $(DSPDEPS) \
 	$(x42_truepeakrms_JACKGUI) $(x42_truepeakrms_LV2HTTL)
 
+gl_kmeter_LV2DESC = lv2ui_kmeter
+gl_needle_LV2DESC = lv2ui_needle
+gl_phasewheel_LV2DESC = lv2ui_phasewheel
+gl_sdhmeter_LV2DESC = lv2ui_sdhmeter
+gl_goniometer_LV2DESC = lv2ui_goniometer
+gl_dr14meter_LV2DESC = lv2ui_dr14meter
+gl_stereoscope_LV2DESC = lv2ui_stereoscope
+gl_ebur_LV2DESC = lv2ui_ebur
+gl_dpm_LV2DESC = lv2ui_dpm
+
 COLLECTION_OBJS = \
 	$(APPBLD)x42-ebur128.o \
 	$(APPBLD)x42-phase-correlation.o \
@@ -452,16 +458,29 @@ $(BUILDDIR)$(LV2GTK7)$(LIB_EXT): gui/stereoscope.c src/uri2.h gui/fft.c
 $(BUILDDIR)$(LV2GTK8)$(LIB_EXT): gui/dr14meter.c
 $(BUILDDIR)$(LV2GTK9)$(LIB_EXT): gui/sdhmeter.c
 
-$(BUILDDIR)$(LV2GUI1)$(LIB_EXT): $(UIIMGS) src/uris.h gui/needle.c gui/meterimage.c
-$(BUILDDIR)$(LV2GUI2)$(LIB_EXT): gui/ebur.c src/uris.h
-$(BUILDDIR)$(LV2GUI3)$(LIB_EXT): gui/goniometer.c src/goniometer.h \
+$(OBJDIR)$(LV2GUI1).o: $(UIIMGS) src/uris.h gui/needle.c gui/meterimage.c
+$(OBJDIR)$(LV2GUI2).o: gui/ebur.c src/uris.h
+$(OBJDIR)$(LV2GUI3).o: gui/goniometer.c src/goniometer.h \
     $(goniometer_UIDEP) zita-resampler/resampler.h zita-resampler/resampler-table.h
-$(BUILDDIR)$(LV2GUI4)$(LIB_EXT): gui/dpm.c
-$(BUILDDIR)$(LV2GUI5)$(LIB_EXT): gui/kmeter.c
-$(BUILDDIR)$(LV2GUI6)$(LIB_EXT): gui/phasewheel.c src/uri2.h gui/fft.c
-$(BUILDDIR)$(LV2GUI7)$(LIB_EXT): gui/stereoscope.c src/uri2.h gui/fft.c
-$(BUILDDIR)$(LV2GUI8)$(LIB_EXT): gui/dr14meter.c
-$(BUILDDIR)$(LV2GUI9)$(LIB_EXT): gui/sdhmeter.c
+$(OBJDIR)$(LV2GUI4).o: gui/dpm.c
+$(OBJDIR)$(LV2GUI5).o: gui/kmeter.c
+$(OBJDIR)$(LV2GUI6).o: gui/phasewheel.c src/uri2.h gui/fft.c
+$(OBJDIR)$(LV2GUI7).o: gui/stereoscope.c src/uri2.h gui/fft.c
+$(OBJDIR)$(LV2GUI8).o: gui/dr14meter.c
+$(OBJDIR)$(LV2GUI9).o: gui/sdhmeter.c
+
+GLGUIOBJ = $(OBJDIR)pugl.o \
+					 $(OBJDIR)$(LV2GUI1).o \
+					 $(OBJDIR)$(LV2GUI2).o \
+					 $(OBJDIR)$(LV2GUI3).o \
+					 $(OBJDIR)$(LV2GUI4).o \
+					 $(OBJDIR)$(LV2GUI5).o \
+					 $(OBJDIR)$(LV2GUI6).o \
+					 $(OBJDIR)$(LV2GUI7).o \
+					 $(OBJDIR)$(LV2GUI8).o \
+					 $(OBJDIR)$(LV2GUI9).o
+
+$(BUILDDIR)meters_glui.so: gui/meters.c $(GLGUIOBJ) $(goniometer_UIDEP)
 
 ###############################################################################
 # install/uninstall/clean target definitions
@@ -475,15 +494,7 @@ uninstall:
 	rm -f $(DESTDIR)$(LV2DIR)/$(BUNDLE)/manifest.ttl
 	rm -f $(DESTDIR)$(LV2DIR)/$(BUNDLE)/$(LV2NAME).ttl
 	rm -f $(DESTDIR)$(LV2DIR)/$(BUNDLE)/$(LV2NAME)$(LIB_EXT)
-	rm -f $(DESTDIR)$(LV2DIR)/$(BUNDLE)/$(LV2GUI1)$(LIB_EXT)
-	rm -f $(DESTDIR)$(LV2DIR)/$(BUNDLE)/$(LV2GUI2)$(LIB_EXT)
-	rm -f $(DESTDIR)$(LV2DIR)/$(BUNDLE)/$(LV2GUI3)$(LIB_EXT)
-	rm -f $(DESTDIR)$(LV2DIR)/$(BUNDLE)/$(LV2GUI4)$(LIB_EXT)
-	rm -f $(DESTDIR)$(LV2DIR)/$(BUNDLE)/$(LV2GUI5)$(LIB_EXT)
-	rm -f $(DESTDIR)$(LV2DIR)/$(BUNDLE)/$(LV2GUI6)$(LIB_EXT)
-	rm -f $(DESTDIR)$(LV2DIR)/$(BUNDLE)/$(LV2GUI7)$(LIB_EXT)
-	rm -f $(DESTDIR)$(LV2DIR)/$(BUNDLE)/$(LV2GUI8)$(LIB_EXT)
-	rm -f $(DESTDIR)$(LV2DIR)/$(BUNDLE)/$(LV2GUI9)$(LIB_EXT)
+	rm -f $(DESTDIR)$(LV2DIR)/$(BUNDLE)/meters_glui$(LIB_EXT)
 	rm -f $(DESTDIR)$(LV2DIR)/$(BUNDLE)/$(LV2GTK1)$(LIB_EXT)
 	rm -f $(DESTDIR)$(LV2DIR)/$(BUNDLE)/$(LV2GTK2)$(LIB_EXT)
 	rm -f $(DESTDIR)$(LV2DIR)/$(BUNDLE)/$(LV2GTK3)$(LIB_EXT)
@@ -498,19 +509,22 @@ uninstall:
 clean:
 	rm -f $(BUILDDIR)manifest.ttl $(BUILDDIR)$(LV2NAME).ttl \
 	  $(BUILDDIR)$(LV2NAME)$(LIB_EXT) \
-	  $(BUILDDIR)$(LV2GUI1)$(LIB_EXT) $(BUILDDIR)$(LV2GUI2)$(LIB_EXT) \
-	  $(BUILDDIR)$(LV2GUI3)$(LIB_EXT) $(BUILDDIR)$(LV2GUI4)$(LIB_EXT) \
 	  $(BUILDDIR)$(LV2GTK1)$(LIB_EXT) $(BUILDDIR)$(LV2GTK2)$(LIB_EXT) \
 	  $(BUILDDIR)$(LV2GTK3)$(LIB_EXT) $(BUILDDIR)$(LV2GTK4)$(LIB_EXT) \
-	  $(BUILDDIR)$(LV2GUI5)$(LIB_EXT) $(BUILDDIR)$(LV2GTK5)$(LIB_EXT) \
-	  $(BUILDDIR)$(LV2GUI6)$(LIB_EXT) $(BUILDDIR)$(LV2GTK6)$(LIB_EXT) \
-	  $(BUILDDIR)$(LV2GUI7)$(LIB_EXT) $(BUILDDIR)$(LV2GTK7)$(LIB_EXT) \
-	  $(BUILDDIR)$(LV2GUI8)$(LIB_EXT) $(BUILDDIR)$(LV2GTK8)$(LIB_EXT) \
-	  $(BUILDDIR)$(LV2GUI9)$(LIB_EXT) $(BUILDDIR)$(LV2GTK9)$(LIB_EXT)
+	  $(BUILDDIR)$(LV2GTK5)$(LIB_EXT) $(BUILDDIR)$(LV2GTK6)$(LIB_EXT) \
+	  $(BUILDDIR)$(LV2GTK7)$(LIB_EXT) $(BUILDDIR)$(LV2GTK8)$(LIB_EXT) \
+	  $(BUILDDIR)$(LV2GTK9)$(LIB_EXT) $(BUILDDIR)meters_glui$(LIB_EXT)
+	rm -f $(OBJDIR)pugl.o \
+	  $(OBJDIR)$(LV2GUI1).o $(OBJDIR)$(LV2GUI2).o \
+	  $(OBJDIR)$(LV2GUI3).o $(OBJDIR)$(LV2GUI4).o \
+	  $(OBJDIR)$(LV2GUI5).o $(OBJDIR)$(LV2GUI6).o \
+	  $(OBJDIR)$(LV2GUI7).o $(OBJDIR)$(LV2GUI8).o \
+	  $(OBJDIR)$(LV2GUI9).o
 	rm -rf $(BUILDDIR)*.dSYM
 	rm -rf $(APPBLD)x42-*
 	-test -d $(APPBLD) && rmdir $(APPBLD) || true
 	-test -d $(BUILDDIR) && rmdir $(BUILDDIR) || true
+	-test -d $(OBJDIR) && rmdir $(OBJDIR) || true
 
 distclean: clean
 	rm -f cscope.out cscope.files tags
