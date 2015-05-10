@@ -1,4 +1,11 @@
 #include <stdio.h>
+
+#if (defined _WIN32 && defined RTK_STATIC_INIT)
+#include <pthread.h>
+#include <glib.h>
+#include <glib-object.h>
+#endif
+
 #include "lv2/lv2plug.in/ns/lv2core/lv2.h"
 #include "lv2/lv2plug.in/ns/extensions/ui/ui.h"
 
