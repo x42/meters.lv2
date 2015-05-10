@@ -120,7 +120,7 @@ endif
 targets=$(BUILDDIR)$(LV2NAME)$(LIB_EXT)
 
 ifneq ($(BUILDOPENGL), no)
-targets+=$(BUILDDIR)meters_glui.so
+targets+=$(BUILDDIR)meters_glui$(LIB_EXT)
 endif
 
 ifneq ($(BUILDGTK), no)
