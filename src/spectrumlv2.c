@@ -26,6 +26,10 @@
  * LV2 spec
  */
 
+#if defined __cplusplus && !defined isfinite
+#define isfinite std::isfinite
+#endif
+
 #define FILTER_COUNT (30)
 
 typedef enum {
