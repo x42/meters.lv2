@@ -228,11 +228,11 @@ spectrum_run(LV2_Handle instance, uint32_t n_samples)
 
 	/* copy back variables and assign value */
 	for(int i=0; i < FILTER_COUNT; ++i) {
-		if (!finite(val_f[i])) val_f[i] = 0;
-		if (!finite(max_f[i])) max_f[i] = 0;
+		if (!isfinite(val_f[i])) val_f[i] = 0;
+		if (!isfinite(max_f[i])) max_f[i] = 0;
 		for (uint32_t j=0; j < flt[i]->filter_stages; ++j) {
-			if (!finite(flt[i]->f[j].z[0])) flt[i]->f[j].z[0] = 0;
-			if (!finite(flt[i]->f[j].z[1])) flt[i]->f[j].z[1] = 0;
+			if (!isfinite(flt[i]->f[j].z[0])) flt[i]->f[j].z[0] = 0;
+			if (!isfinite(flt[i]->f[j].z[1])) flt[i]->f[j].z[1] = 0;
 		}
 		self->val_f[i] = val_f[i] + 1e-20f;
 		self->max_f[i] = max_f[i];

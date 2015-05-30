@@ -222,8 +222,8 @@ void Ebu_r128_proc::process (int nfram, float *input [])
 	    _wrind &= 63;
 	    _loudness_M = addfrags (8);
 	    _loudness_S = addfrags (60);
-	    if (!finite(_loudness_M) || _loudness_M < -200.f) _loudness_M = -200.0f;
-	    if (!finite(_loudness_S) || _loudness_S < -200.f) _loudness_S = -200.0f;
+	    if (!isfinite(_loudness_M) || _loudness_M < -200.f) _loudness_M = -200.0f;
+	    if (!isfinite(_loudness_S) || _loudness_S < -200.f) _loudness_S = -200.0f;
             if (_loudness_M > _maxloudn_M) _maxloudn_M = _loudness_M;
             if (_loudness_S > _maxloudn_S) _maxloudn_S = _loudness_S;
 	    if (_integr)
@@ -328,10 +328,10 @@ float Ebu_r128_proc::detect_process (int nfram)
 	}
 	if (_nchan == 1) si = 2 * sj;
 	else si += _chan_gain [i] * sj;
-	S->_z1 = !finite(z1) ? 0 : z1;
-	S->_z2 = !finite(z2) ? 0 : z2;
-	S->_z3 = !finite(z3) ? 0 : z3;
-	S->_z4 = !finite(z4) ? 0 : z4;
+	S->_z1 = !isfinite(z1) ? 0 : z1;
+	S->_z2 = !isfinite(z2) ? 0 : z2;
+	S->_z3 = !isfinite(z3) ? 0 : z3;
+	S->_z4 = !isfinite(z4) ? 0 : z4;
     }
     return si;
 }
