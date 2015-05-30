@@ -19,7 +19,7 @@ BUILDDIR=build/
 OBJDIR=obj/
 APPBLD=x42/
 RW?=robtk/
-meter_VERSION?=$(shell git describe --tags HEAD | sed 's/-g.*$$//;s/^v//' || echo "LV2")
+meters_VERSION?=$(shell git describe --tags HEAD | sed 's/-g.*$$//;s/^v//' || echo "LV2")
 ###############################################################################
 LIB_EXT=.so
 
@@ -213,8 +213,8 @@ else
 override CFLAGS += -DPTW32_STATIC_LIB
 override CXXFLAGS += -DPTW32_STATIC_LIB
 endif
-override CFLAGS += `pkg-config --cflags lv2` -DVERSION="\"$(meter_VERSION)\""
-override CXXFLAGS += -DVERSION="\"$(meter_VERSION)\""
+override CFLAGS += `pkg-config --cflags lv2` -DVERSION="\"$(meters_VERSION)\""
+override CXXFLAGS += -DVERSION="\"$(meters_VERSION)\""
 
 ###############################################################################
 
