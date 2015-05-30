@@ -73,11 +73,6 @@ static float * ft_hann_window(struct FFTAnalysis *ft) {
 }
 
 static void ft_analyze(struct FFTAnalysis *ft) {
-	float *window = ft_hann_window(ft);
-	for (uint32_t i = 0; i < ft->window_size; i++) {
-		ft->fft_in[i] *= window[i];
-	}
-
 	fftwf_execute(ft->fftplan);
 
 	memcpy(ft->phase_h, ft->phase, sizeof(float) * ft->data_size);
@@ -93,6 +88,15 @@ static void ft_analyze(struct FFTAnalysis *ft) {
 #undef FRe
 #undef FIm
 }
+
+static void ft_analyze_hann(struct FFTAnalysis *ft) {
+	float *window = ft_hann_window(ft);
+	for (uint32_t i = 0; i < ft->window_size; i++) {
+		ft->fft_in[i] *= window[i];
+	}
+	ft_analyze(ft);
+}
+
 
 /******************************************************************************
  * public API (static for direct source inclusion)
@@ -206,7 +210,7 @@ int _fftx_run(struct FFTAnalysis *ft,
 	}
 
 	/* ..and analyze */
-	ft_analyze(ft);
+	ft_analyze_hann(ft);
 	ft->phasediff_bin = ft->phasediff_step * (double)ft->step;
 	return 0;
 }
@@ -227,6 +231,33 @@ int fftx_run(struct FFTAnalysis *ft,
 		n += step;
 	}
 	return rv;
+}
+
+
+FFTX_FN_PREFIX
+void fa_analyze_dsp(struct FFTAnalysis *ft,
+		void (*run)(void *, uint32_t, float*), void *handle)
+{
+	float *buf = ft->fft_in;
+
+	/* pre-run 8K samples... (re-init/flush effect) */
+	uint32_t prerun_n_samples = 8192;
+	while (prerun_n_samples > 0) {
+		uint32_t n_samples = MIN (prerun_n_samples, ft->window_size);
+		memset(buf, 0, sizeof(float) * n_samples);
+		run (handle, n_samples, buf);
+		prerun_n_samples -= n_samples;
+	}
+
+	/* delta impulse */
+	memset(buf, 0, sizeof(float) * ft->window_size);
+	*buf = 1.0;
+	/* call plugin's run() function -- in-place processing */
+	run (handle, ft->window_size, buf);
+	ft->step = ft->window_size;
+
+	/* ..and analyze */
+	ft_analyze(ft);
 }
 
 
