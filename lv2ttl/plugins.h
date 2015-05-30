@@ -1,4 +1,6 @@
 #define MULTIPLUGIN 1
+#define X42_MULTIPLUGIN_NAME "Meter Collection"
+#define X42_MULTIPLUGIN_URI "http://gareus.org/oss/lv2/meters"
 
 #include "lv2ttl/cor.h"
 #include "lv2ttl/dr14stereo.h"
