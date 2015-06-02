@@ -933,10 +933,7 @@ instantiate(
 	ui->controller = controller;
 
 	get_color_from_theme(0, ui->c_txt);
-	ui->c_bgr[0] = 84/255.0;
-	ui->c_bgr[1] = 85/255.0;
-	ui->c_bgr[2] = 93/255.0;
-	ui->c_bgr[3] = 1.0;
+	get_color_from_theme(1, ui->c_bgr);
 
 	ui->gain = 0;
 	ui->cache_sf = -100;

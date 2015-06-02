@@ -766,19 +766,8 @@ instantiate(
 	map_eburlv2_uris(map, &ui->uris);
 	lv2_atom_forge_init(&ui->forge, map);
 
-	if (ui->dr_operation_mode) {
-		get_color_from_theme(0, ui->c_txt);
-		get_color_from_theme(1, ui->c_bgr);
-	} else {
-		ui->c_bgr[0] = 84/255.0;
-		ui->c_bgr[1] = 85/255.0;
-		ui->c_bgr[2] = 93/255.0;
-		ui->c_bgr[3] = 1.0;
-		ui->c_txt[0] = .9;
-		ui->c_txt[1] = .9;
-		ui->c_txt[2] = .9;
-		ui->c_txt[3] = 1.0;
-	}
+	get_color_from_theme(0, ui->c_txt);
+	get_color_from_theme(1, ui->c_bgr);
 
 	for (uint32_t i=0; i < ui->num_meters ; ++i) {
 		ui->rms_v[i][0]  = ui->rms_v[i][1]  = -81.0;
