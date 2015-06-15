@@ -439,7 +439,7 @@ static bool expose_event(RobWidget* handle, cairo_t* cr, cairo_rectangle_t *ev) 
 		sprintf(buf, "%.3f", stddev);
 		write_text(cr, buf, FONT(FONT_M08), LX_R, txty, 0, 7, c_wht);
 
-		txty = logscale_y ? da_height - 159 : rintf(da_height * .625f) - 24;
+		txty = logscale_y ? da_height - 150 : rintf(da_height * .625f) - 24;
 
 		write_text(cr, "Time:", FONT(FONT_S08), LX_L, txty, 0, 9, c_grn); txty += 12;
 		format_duration(buf, ui->integration_spl / ui->rate);
@@ -562,7 +562,7 @@ static bool cbx_logscale(RobWidget *w, void* handle) {
 static void
 size_request(RobWidget* handle, int *w, int *h) {
 	*w = BORDER_RIGHT + DIST_SIZE;
-	*h = BORDER_BOTTOM + DIST_SIZE ;
+	*h = BORDER_BOTTOM + 336;
 }
 
 static void
