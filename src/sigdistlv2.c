@@ -162,7 +162,7 @@ static void
 sdh_connect_port(LV2_Handle instance, uint32_t port, void* data)
 {
 	LV2meter* self = (LV2meter*)instance;
-	switch ((EBUPortIndex)port) {
+	switch ((SDHPortIndex)port) {
 	case SDH_INPUT0:
 		self->input[0] = (float*) data;
 		break;
@@ -323,7 +323,7 @@ sdh_run(LV2_Handle instance, uint32_t n_samples)
 	const int fps_limit = MAX(self->rate / 25.f, n_samples);
 	self->radar_resync += n_samples;
 
-	if (self->radar_resync >= fps_limit) {
+	if (self->radar_resync >= fps_limit || self->send_state_to_ui) {
 		self->radar_resync = self->radar_resync % fps_limit;
 
 		if (self->ui_active && (self->ebu_integrating || self->send_state_to_ui)) {
@@ -345,7 +345,7 @@ sdh_run(LV2_Handle instance, uint32_t n_samples)
 			lv2_atom_forge_int(&self->forge, self->hist_peakS);
 
 			lv2_atom_forge_property_head(&self->forge, self->uris.sdh_hist_data, 0);
-			lv2_atom_forge_vector(&self->forge, sizeof(float), self->uris.atom_Int, DIST_BIN, self->histS);
+			lv2_atom_forge_vector(&self->forge, sizeof(int32_t), self->uris.atom_Int, DIST_BIN, self->histS);
 			lv2_atom_forge_pop(&self->forge, &frame);
 		}
 

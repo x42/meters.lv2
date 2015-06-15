@@ -81,7 +81,7 @@ typedef struct {
 
 	/* current data */
 	uint64_t integration_spl;
-	int histS[HIST_LEN];
+	int32_t histS[HIST_LEN];
 	int hist_max;
 	int hist_peakbin;
 	double hist_avg;
@@ -821,8 +821,8 @@ port_event(LV2UI_Handle handle,
 
 					if (data->atom.type == uris->atom_Int) {
 						const size_t n_elem = (hd->size - sizeof(LV2_Atom_Vector_Body)) / data->atom.size;
-						const int *d = (int*) LV2_ATOM_BODY(&data->atom);
-						memcpy(ui->histS, d, sizeof(int) * n_elem);
+						const int32_t *d = (int*) LV2_ATOM_BODY(&data->atom);
+						memcpy(ui->histS, d, sizeof(int32_t) * n_elem);
 					}
 					invalidate_changed(ui, 0);
 				}

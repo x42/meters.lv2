@@ -99,7 +99,7 @@ typedef struct {
 	float tp_max;
 
 	int histM[HIST_LEN];
-	int histS[HIST_LEN];
+	int32_t histS[HIST_LEN];
 	int hist_maxM;
 	int hist_maxS;
 
