@@ -44,3 +44,8 @@ mtr:sdhmeterui_gtk
 	a ui:GtkUI ;
 	ui:binary <@LV2GTK9@@LIB_EXT@> ;
 	rdfs:seeAlso <@LV2NAME@.ttl> .
+
+mtr:bitmeterui_gtk
+	a ui:GtkUI ;
+	ui:binary <@LV2GTK10@@LIB_EXT@> ;
+	rdfs:seeAlso <@LV2NAME@.ttl> .

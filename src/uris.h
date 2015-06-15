@@ -41,6 +41,14 @@
 #define DIST_RANGE (150.f)
 #define DIST_ZERO  (180.f) // DIST_OFF + DIST_RANGE
 
+// offsets in histS for bitmeter
+#define BIM_DHIT 0
+#define BIM_NHIT 23
+#define BIM_DONE 280
+#define BIM_NONE 303
+#define BIM_DSET 560
+#define BIM_LAST 584
+
 #define MTR__ebulevels        MTR_URI "ebulevels"
 #define MTR_ebu_loudnessM     MTR_URI "ebu_loudnessM"
 #define MTR_ebu_maxloudnM     MTR_URI "ebu_maxloudnM"
@@ -69,6 +77,18 @@
 #define MTR__sdh_hist_peak    MTR_URI "sdh_hist_peak"
 #define MTR__sdh_hist_data    MTR_URI "sdh_hist_data"
 #define MTR__sdh_information  MTR_URI "sdh_information"
+
+#define MTR__bim_information  MTR_URI "bim_information"
+#define MTR__bim_averaging    MTR_URI "bim_averaging"
+#define MTR__bim_stats        MTR_URI "bim_stats"
+#define MTR__bim_data         MTR_URI "bim_data"
+#define MTR__bim_zero         MTR_URI "bim_zero"
+#define MTR__bim_pos          MTR_URI "bim_pos"
+#define MTR__bim_min          MTR_URI "bim_min"
+#define MTR__bim_max          MTR_URI "bim_max"
+#define MTR__bim_nan          MTR_URI "bim_nan"
+#define MTR__bim_inf          MTR_URI "bim_inf"
+#define MTR__bim_den          MTR_URI "bim_den"
 
 #define MTR__truepeak         MTR_URI "truepeak"
 #define MTR__dr14reset        MTR_URI "dr14reset"
@@ -133,6 +153,18 @@ typedef struct {
 	LV2_URID sdh_hist_data;
 	LV2_URID sdh_information;
 
+	LV2_URID bim_information;
+	LV2_URID bim_averaging;
+	LV2_URID bim_stats;
+	LV2_URID bim_data;
+	LV2_URID bim_zero;
+	LV2_URID bim_pos;
+	LV2_URID bim_min;
+	LV2_URID bim_max;
+	LV2_URID bim_nan;
+	LV2_URID bim_inf;
+	LV2_URID bim_den;
+
 	LV2_URID mtr_truepeak;
 	LV2_URID mtr_dr14reset;
 
@@ -153,7 +185,9 @@ enum {
 	CTL_LV2_FTM,
 	CTL_LV2_RESETRADAR,
 	CTL_LV2_RESYNCDONE,
-	CTL_SAMPLERATE
+	CTL_SAMPLERATE,
+	CTL_WINDOWED,
+	CTL_AVERAGE,
 };
 
 
@@ -203,6 +237,18 @@ map_eburlv2_uris(LV2_URID_Map* map, EBULV2URIs* uris)
 	uris->sdh_hist_peak       = map->map(map->handle, MTR__sdh_hist_peak);
 	uris->sdh_hist_data       = map->map(map->handle, MTR__sdh_hist_data);
 	uris->sdh_information     = map->map(map->handle, MTR__sdh_information);
+
+	uris->bim_information     = map->map(map->handle, MTR__bim_information);
+	uris->bim_averaging       = map->map(map->handle, MTR__bim_averaging);
+	uris->bim_stats           = map->map(map->handle, MTR__bim_stats);
+	uris->bim_data            = map->map(map->handle, MTR__bim_data);
+	uris->bim_zero            = map->map(map->handle, MTR__bim_zero);
+	uris->bim_pos             = map->map(map->handle, MTR__bim_pos);
+	uris->bim_min             = map->map(map->handle, MTR__bim_min);
+	uris->bim_max             = map->map(map->handle, MTR__bim_max);
+	uris->bim_nan             = map->map(map->handle, MTR__bim_nan);
+	uris->bim_inf             = map->map(map->handle, MTR__bim_inf);
+	uris->bim_den             = map->map(map->handle, MTR__bim_den);
 
 	uris->mtr_truepeak        = map->map(map->handle, MTR__truepeak);
 	uris->mtr_dr14reset       = map->map(map->handle, MTR__dr14reset);

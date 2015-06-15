@@ -3272,3 +3272,45 @@ mtr:BBCM6@URI_SUFFIX@
 	] ;
 	rdfs:comment "BBC M-6, Mid/Side stereo audio level meter according to IEC 60268-10 / Type IIa. L/R -6dB."
 	.
+
+mtr:bitmeter@URI_SUFFIX@
+	a lv2:Plugin, lv2:AnalyserPlugin, doap:Project ;
+	doap:license <http://usefulinc.com/doap/licenses/gpl> ;
+	doap:name "Bit Meter@NAME_SUFFIX@";
+	lv2:project <http://gareus.org/oss/lv2/meters> ;
+	lv2:optionalFeature lv2:hardRTCapable ;
+	lv2:requiredFeature urid:map ;
+	lv2:extensionData state:interface ;
+	ui:ui @BITGUI@ ;
+	lv2:port [
+		a atom:AtomPort ,
+			lv2:InputPort ;
+		atom:bufferType atom:Sequence ;
+		lv2:designation lv2:control ;
+		lv2:index 0 ;
+		lv2:symbol "control" ;
+		lv2:name "UI to plugin communication"
+	] , [
+		a atom:AtomPort ,
+			lv2:OutputPort ;
+		atom:bufferType atom:Sequence ;
+		lv2:designation lv2:control ;
+		lv2:index 1 ;
+		lv2:symbol "notify" ;
+		lv2:name "plugin to UI communication" ;
+		rsz:minimumSize 4096;
+	] , [
+		a lv2:AudioPort ,
+			lv2:InputPort ;
+		lv2:index 2 ;
+		lv2:symbol "in" ;
+		lv2:name "In" ;
+	] , [
+		a lv2:AudioPort ,
+			lv2:OutputPort ;
+		lv2:index 3 ;
+		lv2:symbol "out" ;
+		lv2:name "Out";
+	] ;
+	rdfs:comment "Floating Point Bit Debug Tool."
+	.

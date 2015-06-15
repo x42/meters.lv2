@@ -12,6 +12,7 @@
 #include "lv2ttl/spectr30.h"
 #include "lv2ttl/stereoscope.h"
 #include "lv2ttl/tp_rms_stereo.h"
+#include "lv2ttl/bitmeter.h"
 
 static const RtkLv2Description _plugins[] = {
 	_plugin_cor,
@@ -24,4 +25,5 @@ static const RtkLv2Description _plugins[] = {
 	_plugin_spectr30,
 	_plugin_stereoscope,
 	_plugin_tprms2,
+	_plugin_bitmeter,
 };

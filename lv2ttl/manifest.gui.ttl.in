@@ -44,3 +44,8 @@ mtr:sdhmeterui_gl
 	a @UI_TYPE@;
 	ui:binary <@LV2GUI9@@LIB_EXT@> ;
 	rdfs:seeAlso <@LV2NAME@.ttl> .
+
+mtr:bitmeterui_gl
+	a @UI_TYPE@;
+	ui:binary <@LV2GUI10@@LIB_EXT@> ;
+	rdfs:seeAlso <@LV2NAME@.ttl> .

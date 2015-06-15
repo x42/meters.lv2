@@ -62,3 +62,8 @@ mtr:sdhmeterui@UI_URI_SUFFIX@
 	a @UI_TYPE@;
 	@UI_REQ@
 	.
+
+mtr:bitmeterui@UI_URI_SUFFIX@
+	a @UI_TYPE@;
+	@UI_REQ@
+	.

@@ -18,6 +18,7 @@ extern const LV2UI_Descriptor* lv2ui_dr14meter (uint32_t index);
 extern const LV2UI_Descriptor* lv2ui_stereoscope (uint32_t index);
 extern const LV2UI_Descriptor* lv2ui_ebur (uint32_t index);
 extern const LV2UI_Descriptor* lv2ui_dpm (uint32_t index);
+extern const LV2UI_Descriptor* lv2ui_bitmeter (uint32_t index);
 
 #undef LV2_SYMBOL_EXPORT
 #ifdef _WIN32
@@ -43,6 +44,7 @@ lv2ui_descriptor(uint32_t index)
 	case 6: return lv2ui_stereoscope (index);
 	case 7: return lv2ui_ebur (index);
 	case 8: return lv2ui_dpm (index);
+	case 9: return lv2ui_bitmeter (index);
 	default:
 		return NULL;
 	}

@@ -38,6 +38,7 @@ LV2GTK6=phasewheelUI_gtk
 LV2GTK7=stereoscopeUI_gtk
 LV2GTK8=dr14meterUI_gtk
 LV2GTK9=sdhmeterUI_gtk
+LV2GTK10=bitmeterUI_gtk
 
 LV2GUI1=needleUI_gl
 LV2GUI2=eburUI_gl
@@ -48,6 +49,7 @@ LV2GUI6=phasewheelUI_gl
 LV2GUI7=stereoscopeUI_gl
 LV2GUI8=dr14meterUI_gl
 LV2GUI9=sdhmeterUI_gl
+LV2GUI10=bitmeterUI_gl
 
 MTRGUI=mtr:needle
 EBUGUI=mtr:eburui
@@ -58,6 +60,7 @@ MPWGUI=mtr:phasewheelui
 SFSGUI=mtr:stereoscopeui
 DRMGUI=mtr:dr14meterui
 SDHGUI=mtr:sdhmeterui
+BITGUI=mtr:bitmeterui
 
 ###############################################################################
 
@@ -134,6 +137,7 @@ targets+=$(BUILDDIR)$(LV2GTK6)$(LIB_EXT)
 targets+=$(BUILDDIR)$(LV2GTK7)$(LIB_EXT)
 targets+=$(BUILDDIR)$(LV2GTK8)$(LIB_EXT)
 targets+=$(BUILDDIR)$(LV2GTK9)$(LIB_EXT)
+targets+=$(BUILDDIR)$(LV2GTK10)$(LIB_EXT)
 PKG_LIBS+=gtk+-2.0
 endif
 
@@ -296,6 +300,7 @@ jackapps: \
 	$(APPBLD)x42-spectrum30 \
 	$(APPBLD)x42-stereoscope \
 	$(APPBLD)x42-truepeakrms \
+	$(APPBLD)x42-bitmeter \
 	$(APPBLD)x42-meter-collection
 
 $(BUILDDIR)manifest.ttl: lv2ttl/manifest.gui.ttl.in lv2ttl/manifest.gtk.ttl.in lv2ttl/manifest.lv2.ttl.in lv2ttl/manifest.ttl.in Makefile
@@ -305,13 +310,13 @@ $(BUILDDIR)manifest.ttl: lv2ttl/manifest.gui.ttl.in lv2ttl/manifest.gtk.ttl.in l
 ifneq ($(BUILDOPENGL), no)
 	sed "s/@LV2NAME@/$(LV2NAME)/g;s/@LIB_EXT@/$(LIB_EXT)/g;s/@URI_SUFFIX@//g" \
 	    lv2ttl/manifest.lv2.ttl.in >> $(BUILDDIR)manifest.ttl
-	sed "s/@LV2NAME@/$(LV2NAME)/g;s/@LIB_EXT@/$(LIB_EXT)/g;s/@UI_TYPE@/$(UI_TYPE)/;s/@LV2GUI1@/meters_glui/g;s/@LV2GUI2@/meters_glui/g;s/@LV2GUI3@/meters_glui/g;s/@LV2GUI4@/meters_glui/g;s/@LV2GUI5@/meters_glui/g;s/@LV2GUI6@/meters_glui/g;s/@LV2GUI7@/meters_glui/g;s/@LV2GUI8@/meters_glui/g;s/@LV2GUI9@/meters_glui/g" \
+	sed "s/@LV2NAME@/$(LV2NAME)/g;s/@LIB_EXT@/$(LIB_EXT)/g;s/@UI_TYPE@/$(UI_TYPE)/;s/@LV2GUI1@/meters_glui/g;s/@LV2GUI2@/meters_glui/g;s/@LV2GUI3@/meters_glui/g;s/@LV2GUI4@/meters_glui/g;s/@LV2GUI5@/meters_glui/g;s/@LV2GUI6@/meters_glui/g;s/@LV2GUI7@/meters_glui/g;s/@LV2GUI8@/meters_glui/g;s/@LV2GUI9@/meters_glui/g;s/@LV2GUI10@/meters_glui/g" \
 	    lv2ttl/manifest.gui.ttl.in >> $(BUILDDIR)manifest.ttl
 endif
 ifneq ($(BUILDGTK), no)
 	sed "s/@LV2NAME@/$(LV2NAME)/g;s/@LIB_EXT@/$(LIB_EXT)/g;s/@URI_SUFFIX@/_gtk/g" \
 	    lv2ttl/manifest.lv2.ttl.in >> $(BUILDDIR)manifest.ttl
-	sed "s/@LV2NAME@/$(LV2NAME)/g;s/@LIB_EXT@/$(LIB_EXT)/g;s/@LV2GTK1@/$(LV2GTK1)/g;s/@LV2GTK2@/$(LV2GTK2)/g;s/@LV2GTK3@/$(LV2GTK3)/g;s/@LV2GTK4@/$(LV2GTK4)/g;s/@LV2GTK5@/$(LV2GTK5)/g;s/@LV2GTK6@/$(LV2GTK6)/g;s/@LV2GTK7@/$(LV2GTK7)/g;s/@LV2GTK8@/$(LV2GTK8)/g;s/@LV2GTK9@/$(LV2GTK9)/g" \
+	sed "s/@LV2NAME@/$(LV2NAME)/g;s/@LIB_EXT@/$(LIB_EXT)/g;s/@LV2GTK1@/$(LV2GTK1)/g;s/@LV2GTK2@/$(LV2GTK2)/g;s/@LV2GTK3@/$(LV2GTK3)/g;s/@LV2GTK4@/$(LV2GTK4)/g;s/@LV2GTK5@/$(LV2GTK5)/g;s/@LV2GTK6@/$(LV2GTK6)/g;s/@LV2GTK7@/$(LV2GTK7)/g;s/@LV2GTK8@/$(LV2GTK8)/g;s/@LV2GTK9@/$(LV2GTK9)/g;s/@LV2GTK10@/$(LV2GTK10)/g" \
 	    lv2ttl/manifest.gtk.ttl.in >> $(BUILDDIR)manifest.ttl
 endif
 
@@ -326,15 +331,15 @@ endif
 ifneq ($(BUILDOPENGL), no)
 	sed "s/@UI_URI_SUFFIX@/_gl/;s/@UI_TYPE@/$(UI_TYPE)/;s/@UI_REQ@/$(LV2UIREQ)/" \
 	    lv2ttl/$(LV2NAME).gui.ttl.in >> $(BUILDDIR)$(LV2NAME).ttl
-	sed "s/@URI_SUFFIX@//g;s/@NAME_SUFFIX@//g;s/@DPMGUI@/$(DPMGUI)_gl/g;s/@EBUGUI@/$(EBUGUI)_gl/g;s/@GONGUI@/$(GONGUI)_gl/g;s/@MTRGUI@/$(MTRGUI)_gl/g;s/@KMRGUI@/$(KMRGUI)_gl/g;s/@MPWGUI@/$(MPWGUI)_gl/g;s/@SFSGUI@/$(SFSGUI)_gl/g;s/@DRMGUI@/$(DRMGUI)_gl/g;s/@SDHGUI@/$(SDHGUI)_gl/g" \
+	sed "s/@URI_SUFFIX@//g;s/@NAME_SUFFIX@//g;s/@DPMGUI@/$(DPMGUI)_gl/g;s/@EBUGUI@/$(EBUGUI)_gl/g;s/@GONGUI@/$(GONGUI)_gl/g;s/@MTRGUI@/$(MTRGUI)_gl/g;s/@KMRGUI@/$(KMRGUI)_gl/g;s/@MPWGUI@/$(MPWGUI)_gl/g;s/@SFSGUI@/$(SFSGUI)_gl/g;s/@DRMGUI@/$(DRMGUI)_gl/g;s/@SDHGUI@/$(SDHGUI)_gl/g;s/@BITGUI@/$(BITGUI)_gl/g" \
 	  lv2ttl/$(LV2NAME).lv2.ttl.in >> $(BUILDDIR)$(LV2NAME).ttl
 endif
 ifneq ($(BUILDGTK), no)
-	sed "s/@URI_SUFFIX@/_gtk/g;s/@NAME_SUFFIX@/ GTK/g;s/@DPMGUI@/$(DPMGUI)_gtk/g;s/@EBUGUI@/$(EBUGUI)_gtk/g;s/@GONGUI@/$(GONGUI)_gtk/g;s/@MTRGUI@/$(MTRGUI)_gtk/g;s/@KMRGUI@/$(KMRGUI)_gtk/g;s/@MPWGUI@/$(MPWGUI)_gtk/g;s/@SFSGUI@/$(SFSGUI)_gtk/g;s/@DRMGUI@/$(DRMGUI)_gtk/g;s/@SDHGUI@/$(SDHGUI)_gtk/g" \
+	sed "s/@URI_SUFFIX@/_gtk/g;s/@NAME_SUFFIX@/ GTK/g;s/@DPMGUI@/$(DPMGUI)_gtk/g;s/@EBUGUI@/$(EBUGUI)_gtk/g;s/@GONGUI@/$(GONGUI)_gtk/g;s/@MTRGUI@/$(MTRGUI)_gtk/g;s/@KMRGUI@/$(KMRGUI)_gtk/g;s/@MPWGUI@/$(MPWGUI)_gtk/g;s/@SFSGUI@/$(SFSGUI)_gtk/g;s/@DRMGUI@/$(DRMGUI)_gtk/g;s/@SDHGUI@/$(SDHGUI)_gtk/g;s/@BITGUI@/$(BITGUI)_gtk/g" \
 	  lv2ttl/$(LV2NAME).lv2.ttl.in >> $(BUILDDIR)$(LV2NAME).ttl
 endif
 
-$(BUILDDIR)$(LV2NAME)$(LIB_EXT): src/meters.cc $(DSPDEPS) src/ebulv2.cc src/uris.h src/goniometerlv2.c src/goniometer.h src/spectrumlv2.c src/spectr.c src/xfer.c src/dr14.c src/sigdistlv2.c Makefile
+$(BUILDDIR)$(LV2NAME)$(LIB_EXT): src/meters.cc $(DSPDEPS) src/ebulv2.cc src/uris.h src/goniometerlv2.c src/goniometer.h src/spectrumlv2.c src/spectr.c src/xfer.c src/dr14.c src/sigdistlv2.c src/bitmeter.c Makefile
 	@mkdir -p $(BUILDDIR)
 	$(CXX) $(CPPFLAGS) $(CFLAGS) $(CXXFLAGS) \
 	  -o $(BUILDDIR)$(LV2NAME)$(LIB_EXT) src/$(LV2NAME).cc $(DSPSRC) \
@@ -418,6 +423,14 @@ x42_truepeakrms_JACKDESC = lv2ui_tprms2
 $(APPBLD)x42-truepeakrms$(EXE_EXT): src/meters.cc $(DSPSRC) $(DSPDEPS) \
 	$(x42_truepeakrms_JACKGUI) $(x42_truepeakrms_LV2HTTL)
 
+$(eval x42_bitmeter_JACKSRC = src/meters.cc $(DSPSRC))
+x42_bitmeter_JACKGUI = gui/bitmeter.c
+x42_bitmeter_LV2HTTL = lv2ttl/bitmeter.h
+x42_bitmeter_JACKDESC = lv2ui_bitmeter
+$(APPBLD)x42-bitmeter$(EXE_EXT): src/meters.cc $(DSPSRC) $(DSPDEPS) \
+	$(x42_bitmeter_JACKGUI) $(x42_bitmeter_LV2HTTL)
+
+
 gl_kmeter_LV2DESC = lv2ui_kmeter
 gl_needle_LV2DESC = lv2ui_needle
 gl_phasewheel_LV2DESC = lv2ui_phasewheel
@@ -427,6 +440,7 @@ gl_dr14meter_LV2DESC = lv2ui_dr14meter
 gl_stereoscope_LV2DESC = lv2ui_stereoscope
 gl_ebur_LV2DESC = lv2ui_ebur
 gl_dpm_LV2DESC = lv2ui_dpm
+gl_bitmeter_LV2DESC = lv2ui_bitmeter
 
 COLLECTION_OBJS = \
 	$(APPBLD)x42-ebur128.o \
@@ -436,6 +450,7 @@ COLLECTION_OBJS = \
 	$(APPBLD)x42-goniometer.o \
 	$(APPBLD)x42-phasewheel.o \
 	$(APPBLD)x42-histogram.o \
+	$(APPBLD)x42-bitmeter.o \
 	$(APPBLD)x42-spectrum30.o \
 	$(APPBLD)x42-stereoscope.o \
 	$(APPBLD)x42-truepeakrms.o
@@ -460,6 +475,7 @@ $(BUILDDIR)$(LV2GTK6)$(LIB_EXT): gui/phasewheel.c src/uri2.h gui/fft.c
 $(BUILDDIR)$(LV2GTK7)$(LIB_EXT): gui/stereoscope.c src/uri2.h gui/fft.c
 $(BUILDDIR)$(LV2GTK8)$(LIB_EXT): gui/dr14meter.c
 $(BUILDDIR)$(LV2GTK9)$(LIB_EXT): gui/sdhmeter.c
+$(BUILDDIR)$(LV2GTK10)$(LIB_EXT): gui/bitmeter.c
 
 $(OBJDIR)$(LV2GUI1).o: $(UIIMGS) src/uris.h gui/needle.c gui/meterimage.c
 $(OBJDIR)$(LV2GUI2).o: gui/ebur.c src/uris.h
@@ -471,6 +487,7 @@ $(OBJDIR)$(LV2GUI6).o: gui/phasewheel.c src/uri2.h gui/fft.c
 $(OBJDIR)$(LV2GUI7).o: gui/stereoscope.c src/uri2.h gui/fft.c
 $(OBJDIR)$(LV2GUI8).o: gui/dr14meter.c
 $(OBJDIR)$(LV2GUI9).o: gui/sdhmeter.c
+$(OBJDIR)$(LV2GUI10).o: gui/bitmeter.c
 
 GLGUIOBJ = $(OBJDIR)pugl.o \
 					 $(OBJDIR)$(LV2GUI1).o \
@@ -481,7 +498,8 @@ GLGUIOBJ = $(OBJDIR)pugl.o \
 					 $(OBJDIR)$(LV2GUI6).o \
 					 $(OBJDIR)$(LV2GUI7).o \
 					 $(OBJDIR)$(LV2GUI8).o \
-					 $(OBJDIR)$(LV2GUI9).o
+					 $(OBJDIR)$(LV2GUI9).o \
+					 $(OBJDIR)$(LV2GUI10).o
 
 $(BUILDDIR)meters_glui.so: gui/meters.c $(GLGUIOBJ) $(goniometer_UIDEP)
 
@@ -507,6 +525,7 @@ uninstall:
 	rm -f $(DESTDIR)$(LV2DIR)/$(BUNDLE)/$(LV2GTK7)$(LIB_EXT)
 	rm -f $(DESTDIR)$(LV2DIR)/$(BUNDLE)/$(LV2GTK8)$(LIB_EXT)
 	rm -f $(DESTDIR)$(LV2DIR)/$(BUNDLE)/$(LV2GTK9)$(LIB_EXT)
+	rm -f $(DESTDIR)$(LV2DIR)/$(BUNDLE)/$(LV2GTK10)$(LIB_EXT)
 	-rmdir $(DESTDIR)$(LV2DIR)/$(BUNDLE)
 
 clean:
@@ -516,13 +535,14 @@ clean:
 	  $(BUILDDIR)$(LV2GTK3)$(LIB_EXT) $(BUILDDIR)$(LV2GTK4)$(LIB_EXT) \
 	  $(BUILDDIR)$(LV2GTK5)$(LIB_EXT) $(BUILDDIR)$(LV2GTK6)$(LIB_EXT) \
 	  $(BUILDDIR)$(LV2GTK7)$(LIB_EXT) $(BUILDDIR)$(LV2GTK8)$(LIB_EXT) \
-	  $(BUILDDIR)$(LV2GTK9)$(LIB_EXT) $(BUILDDIR)meters_glui$(LIB_EXT)
+	  $(BUILDDIR)$(LV2GTK9)$(LIB_EXT) $(BUILDDIR)$(LV2GTK10)$(LIB_EXT) \
+		$(BUILDDIR)meters_glui$(LIB_EXT)
 	rm -f $(OBJDIR)pugl.o \
 	  $(OBJDIR)$(LV2GUI1).o $(OBJDIR)$(LV2GUI2).o \
 	  $(OBJDIR)$(LV2GUI3).o $(OBJDIR)$(LV2GUI4).o \
 	  $(OBJDIR)$(LV2GUI5).o $(OBJDIR)$(LV2GUI6).o \
 	  $(OBJDIR)$(LV2GUI7).o $(OBJDIR)$(LV2GUI8).o \
-	  $(OBJDIR)$(LV2GUI9).o
+	  $(OBJDIR)$(LV2GUI9).o $(OBJDIR)$(LV2GUI10).o
 	rm -rf $(BUILDDIR)*.dSYM
 	rm -rf $(APPBLD)x42-*
 	-test -d $(APPBLD) && rmdir $(APPBLD) || true

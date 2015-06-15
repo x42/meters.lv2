@@ -87,6 +87,7 @@ typedef struct {
 	bool tranport_rolling;
 	bool ebu_integrating;
 	bool dbtp_enable;
+	bool bim_average;
 
 	float *radarS, radarSC;
 	float *radarM, radarMC;
@@ -108,6 +109,11 @@ typedef struct {
 	double hist_avgS;
 	double hist_tmpS; // helper var for variance
 	double hist_varS; // running variance
+
+	// bitmeter
+
+	float bim_min, bim_max;
+	int bim_zero, bim_pos, bim_nan, bim_inf, bim_den;
 
 } LV2meter;
 
@@ -210,7 +216,6 @@ connect_port(LV2_Handle instance,
 		break;
 	}
 }
-
 
 static void
 run(LV2_Handle instance, uint32_t n_samples)
@@ -465,6 +470,7 @@ extension_data(const char* uri)
 #include "xfer.c"
 #include "dr14.c"
 #include "sigdistlv2.c"
+#include "bitmeter.c"
 
 #define mkdesc(ID, NAME, RUN) \
 static const LV2_Descriptor descriptor ## ID = { \
@@ -639,6 +645,8 @@ lv2_descriptor(uint32_t index)
 	case 59: return &descriptorSDHGtk;
 	case 60: return &descriptorBBCMS;
 	case 61: return &descriptorBBCMSGtk;
+	case 62: return &descriptorBIM;
+	case 63: return &descriptorBIMGtk;
 	default: return NULL;
 	}
 }
