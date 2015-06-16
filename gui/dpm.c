@@ -29,9 +29,9 @@
 #define LVGL_RESIZEABLE
 
 #define GM_TOP    (ui->display_freq ?  4.5f : 23.5f)
-#define GM_LEFT   (ui->display_freq ?  1.5f :  8.5f)
-#define GM_GIRTH  (ui->display_freq ? 10.0f : 12.0f)
-#define GM_WIDTH  (ui->display_freq ? 13.0f : 28.0f)
+#define GM_LEFT   (ui->gm_left)
+#define GM_GIRTH  (ui->gm_girth)
+#define GM_WIDTH  (ui->gm_width)
 
 #define GM_MINH   (396.0f)
 
@@ -115,6 +115,12 @@ typedef struct {
 	float cache_sf;
 	float cache_ma;
 	int highlight;
+
+	float gm_width;
+	float gm_girth;
+	float gm_left;
+	int min_width;
+	int cur_width;
 
 	int width;
 	int height;
@@ -620,7 +626,7 @@ static bool expose_event(RobWidget* handle, cairo_t* cr, cairo_rectangle_t *ev) 
 		cairo_paint (cr);
 	}
 
-	if (ev->width >= ui->width && ev->width >= ui->height) {
+	if (ev->width >= ui->width && ev->height >= ui->height) {
 		/* full expose/redraw */
 		ui->show_peaks_changed = false;
 	}
@@ -672,7 +678,7 @@ static bool expose_event(RobWidget* handle, cairo_t* cr, cairo_rectangle_t *ev) 
 		cairo_set_operator (cr, CAIRO_OPERATOR_SCREEN);
 		for (uint32_t i = 0; i < ui->num_meters ; ++i) {
 			if (!rect_intersect_a(ev, MA_WIDTH + GM_WIDTH * i, GM_TXT, 24, 64)) continue;
-			cairo_set_source_surface(cr, ui->an[i], MA_WIDTH + GM_WIDTH * i, GM_TXT);
+			cairo_set_source_surface(cr, ui->an[i], MA_WIDTH + GM_WIDTH * i + rintf(.5 * (GM_WIDTH - 13)), GM_TXT);
 			cairo_paint (cr);
 		}
 	}
@@ -813,7 +819,7 @@ static RobWidget* mousemove(RobWidget* handle, RobTkBtnEvent *event) {
 static void
 size_request(RobWidget* handle, int *w, int *h) {
 	SAUI* ui = (SAUI*)GET_HANDLE(handle);
-	*w = ui->width;
+	*w = ui->min_width;
 	*h = GM_MINH;
 }
 
@@ -822,8 +828,27 @@ size_allocate(RobWidget* handle, int w, int h) {
 	SAUI* ui = (SAUI*)GET_HANDLE(handle);
 	ui->height = floor(h/2) * 2;
 	ui->size_changed = true;
-	robwidget_set_size(handle, ui->width, h);
+	if (ui->display_freq) {
+		ui->gm_width = floor ((w - 2.0 * MA_WIDTH) / ui->num_meters);
+		if (ui->gm_width > 40) ui->gm_width = 40; // TODO limit by aspect?!
+		ui->gm_girth = rintf (ui->gm_width * .75);
+		ui->gm_left = .5 + floor(.5 * (ui->gm_width - ui->gm_girth));
+		ui->cur_width = 2.0 * MA_WIDTH + ui->num_meters * GM_WIDTH;
+	} else {
+		ui->gm_width = floor ((w - 2.0 * MA_WIDTH) / ui->num_meters);
+		if (ui->gm_width > 60) ui->gm_width = 60;
+		ui->gm_girth = rintf (ui->gm_width * .42);
+		ui->gm_left = .5 + floor(.5 * (ui->gm_width - ui->gm_girth));
+		ui->cur_width = 2.0 * MA_WIDTH + ui->num_meters * GM_WIDTH;
+	}
+	robwidget_set_size(handle, w, h);
 	queue_draw(ui->m0);
+}
+
+static void position_set(RobWidget *rw, const int pw, const int ph) {
+	SAUI* ui = (SAUI*)GET_HANDLE(rw);
+	rw->area.x = rint((pw - ui->cur_width) * .5);
+	rw->area.y = rint((ph - rw->area.height) * .5);
 }
 
 static RobWidget * toplevel(SAUI* ui, void * const top)
@@ -840,6 +865,7 @@ static RobWidget * toplevel(SAUI* ui, void * const top)
 	robwidget_set_size_request(ui->m0, size_request);
 	robwidget_set_size_allocate(ui->m0, size_allocate);
 	robwidget_set_mousedown(ui->m0, cb_reset_peak);
+	ui->m0->position_set = position_set;
 	if (ui->display_freq) {
 		robwidget_set_mousemove(ui->m0, mousemove);
 	}
@@ -875,7 +901,8 @@ static RobWidget * toplevel(SAUI* ui, void * const top)
 
 	/* layout */
 
-	rob_hbox_child_pack(ui->rw, ui->m0, FALSE, TRUE);
+	rob_hbox_child_pack(ui->rw, ui->m0, TRUE, TRUE);
+
 	if (ui->display_freq) {
 		rob_hbox_child_pack(ui->rw, robtk_sep_widget(ui->sep_h0), FALSE, TRUE);
 		rob_hbox_child_pack(ui->rw, ui->c_box, FALSE, TRUE);
@@ -957,7 +984,17 @@ instantiate(
 	}
 	ui->disable_signals = false;
 
-	ui->width = 2.0 * MA_WIDTH + ui->num_meters * GM_WIDTH;
+	if (ui->display_freq) {
+		ui->gm_width = 13.f;
+		ui->gm_girth = 10.f;
+		ui->gm_left  = 1.5f;
+	} else {
+		ui->gm_width = 28.f;
+		ui->gm_girth = 12.f;
+		ui->gm_left  = 8.5f;
+	}
+	ui->min_width = 2.0 * MA_WIDTH + ui->num_meters * GM_WIDTH;
+	ui->width = ui->min_width;
 	ui->height = GM_MINH;
 
 	*widget = toplevel(ui, ui_toplevel);
