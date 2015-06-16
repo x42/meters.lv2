@@ -46,10 +46,10 @@ typedef void Stcorrdsp;
 #define PC_BLOCK  (  9.0f)
 #define PC_LEFT   ( 10.0f)
 #define PC_WIDTH  ( 20.0f)
-#define PC_HEIGHT (380.0f)
+#define PC_HEIGHT (348.0f)
 
-#define GM_BOUNDS (405.0f)
-#define GM_CENTER (202.5f)
+#define GM_BOUNDS (373.0f)
+#define GM_CENTER (186.5f)
 
 #define GM_RADIUS (200.0f)
 #define GM_RAD2   (100.0f)
@@ -769,7 +769,7 @@ static bool expose_event(RobWidget* handle, cairo_t* cr, cairo_rectangle_t *ev) 
 			CairoSetSouerceRGBA(c_warn);
 			rounded_rectangle (cr, PC_BOUNDS + GM_BOUNDS - 175, GM_BOUNDS - 33, 170, 28, 6);
 			cairo_fill(cr);
-			write_text(cr, "Buffer Overflow\nYour system is not fast enough.",
+			write_text(cr, "Display buffer overflow\nYour system is not fast enough.",
 					FONT_LB, GM_BOUNDS - 102, GM_BOUNDS - 27,
 					0, c_g90);
 
@@ -1106,7 +1106,7 @@ instantiate(
 	ui->cbn_autogain = robtk_cbtn_new("Auto Gain", GBT_LED_LEFT, false);
 
 
-	ui->cbn_preferences = robtk_cbtn_new((const char*) "Show Settings", /* GBT_LED_OFF */ GBT_LED_LEFT, false);
+	ui->cbn_preferences = robtk_cbtn_new((const char*) "Settings", /* GBT_LED_OFF */ GBT_LED_LEFT, false);
 	ui->c_tbl        = rob_table_new(/*rows*/6, /*cols*/ 5, FALSE);
 	ui->cbn_src      = robtk_cbtn_new("Oversample", GBT_LED_LEFT, false);
 	ui->spn_src_fact = robtk_spin_new(2, 32, 1);
