@@ -13,6 +13,12 @@
 #include "lv2ttl/stereoscope.h"
 #include "lv2ttl/tp_rms_stereo.h"
 #include "lv2ttl/bitmeter.h"
+#include "lv2ttl/bbc2c.h"
+#include "lv2ttl/din2c.h"
+#include "lv2ttl/ebu2c.h"
+#include "lv2ttl/nor2c.h"
+#include "lv2ttl/vu2c.h"
+#include "lv2ttl/bbcm6.h"
 
 static const RtkLv2Description _plugins[] = {
 	_plugin_cor,
@@ -26,4 +32,10 @@ static const RtkLv2Description _plugins[] = {
 	_plugin_stereoscope,
 	_plugin_tprms2,
 	_plugin_bitmeter,
+	_plugin_bbc2c,
+	_plugin_din2c,
+	_plugin_ebu2c,
+	_plugin_nor2c,
+	_plugin_vu2c,
+	_plugin_bbcm6,
 };

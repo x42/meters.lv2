@@ -363,7 +363,7 @@ $(APPBLD)x42-ebur128$(EXE_EXT): src/meters.cc $(DSPSRC) $(DSPDEPS) \
 $(eval x42_phase_correlation_JACKSRC = src/meters.cc $(DSPSRC))
 x42_phase_correlation_JACKGUI = gui/needle.c
 x42_phase_correlation_LV2HTTL = lv2ttl/cor.h
-x42_phase_correlation_JACKDESC = lv2ui_cor
+x42_phase_correlation_JACKDESC = lv2ui_needle
 $(APPBLD)x42-phase-correlation$(EXE_EXT): src/meters.cc $(DSPSRC) $(DSPDEPS) \
 	$(x42_phase_correlation_JACKGUI) $(x42_phase_correlation_LV2HTTL)
 
@@ -460,7 +460,8 @@ x42_meter_collection_LV2HTTL = lv2ttl/plugins.h
 $(APPBLD)x42-meter-collection$(EXE_EXT): src/meters.cc $(DSPSRC) $(DSPDEPS) $(COLLECTION_OBJS) \
 	lv2ttl/cor.h lv2ttl/dr14stereo.h lv2ttl/ebur128.h lv2ttl/goniometer.h \
 	lv2ttl/k20stereo.h lv2ttl/phasewheel.h lv2ttl/sigdisthist.h lv2ttl/spectr30.h \
-	lv2ttl/stereoscope.h lv2ttl/tp_rms_stereo.h lv2ttl/plugins.h
+	lv2ttl/bbc2c.h lv2ttl/din2c.h lv2ttl/ebu2c.h lv2ttl/nor2c.h lv2ttl/vu2c.h lv2ttl/bbcm6.h \
+	lv2ttl/stereoscope.h lv2ttl/tp_rms_stereo.h lv2ttl/bitmeter.h lv2ttl/plugins.h
 
 
 -include $(RW)robtk.mk
