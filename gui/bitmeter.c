@@ -143,6 +143,15 @@ static void update_oops (BITui* ui, int which, int32_t val) {
 	if (ui->stats[which] == val) {
 		return;
 	}
+
+	if (ui->stats[which] > 0 && val == 0) {
+		float col[4];
+		get_color_from_theme(0, col);
+		robtk_lbl_set_color (ui->lbl_data[which], col[0], col[1], col[2], col[3]);
+	} else if (ui->stats[which] == 0 && val > 0) {
+		robtk_lbl_set_color (ui->lbl_data[which], 1.0, .2, .2, 1.0);
+	}
+
 	ui->stats[which] = val;
 	char buf[32];
 	format_num (buf, val);
