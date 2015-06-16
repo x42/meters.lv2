@@ -319,9 +319,49 @@ bim_cleanup(LV2_Handle instance)
 	free(instance);
 }
 
+static LV2_State_Status
+bim_save(LV2_Handle        instance,
+     LV2_State_Store_Function  store,
+     LV2_State_Handle          handle,
+     uint32_t                  flags,
+     const LV2_Feature* const* features)
+{
+	LV2meter* self = (LV2meter*)instance;
+	uint32_t cfg = self->bim_average ? 1 : 0;
+	store(handle, self->uris.bim_state,
+			(void*) &cfg, sizeof(uint32_t),
+			self->uris.atom_Int,
+			LV2_STATE_IS_POD | LV2_STATE_IS_PORTABLE);
+  return LV2_STATE_SUCCESS;
+}
+
+static LV2_State_Status
+bim_restore(LV2_Handle              instance,
+        LV2_State_Retrieve_Function retrieve,
+        LV2_State_Handle            handle,
+        uint32_t                    flags,
+        const LV2_Feature* const*   features)
+{
+	LV2meter* self = (LV2meter*)instance;
+  size_t   size;
+  uint32_t type;
+  uint32_t valflags;
+  const void* value = retrieve(handle, self->uris.bim_state, &size, &type, &valflags);
+  if (value && size == sizeof(uint32_t) && type == self->uris.atom_Int) {
+		uint32_t cfg = *((const int*)value);
+		self->bim_average = (cfg & 0x1) ? true : false;
+		self->send_state_to_ui = true;
+	}
+  return LV2_STATE_SUCCESS;
+}
+
 static const void*
 extension_data_bim(const char* uri)
 {
+  static const LV2_State_Interface  state  = { bim_save, bim_restore };
+  if (!strcmp(uri, LV2_STATE__interface)) {
+    return &state;
+  }
   return NULL;
 }
 

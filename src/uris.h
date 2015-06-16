@@ -62,6 +62,7 @@
 
 #define MTR_ebu_state         MTR_URI "ebu_state"
 #define MTR_sdh_state         MTR_URI "sdh_state"
+#define MTR_bim_state         MTR_URI "bim_state"
 
 #define MTR__rdr_histogram    MTR_URI "rdr_histogram"
 #define MTR__rdr_histpoint    MTR_URI "rdr_histpoint"
@@ -137,6 +138,7 @@ typedef struct {
 
 	LV2_URID ebu_state;
 	LV2_URID sdh_state;
+	LV2_URID bim_state;
 
 	LV2_URID rdr_histogram;
 	LV2_URID rdr_histpoint;
@@ -222,6 +224,7 @@ map_eburlv2_uris(LV2_URID_Map* map, EBULV2URIs* uris)
 
 	uris->ebu_state           = map->map(map->handle, MTR_ebu_state);
 	uris->sdh_state           = map->map(map->handle, MTR_sdh_state);
+	uris->bim_state           = map->map(map->handle, MTR_bim_state);
 
 	uris->rdr_histogram       = map->map(map->handle, MTR__rdr_histogram);
 	uris->rdr_histpoint       = map->map(map->handle, MTR__rdr_histpoint);
