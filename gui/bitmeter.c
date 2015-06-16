@@ -282,7 +282,7 @@ static void gen_faceplate (BITui* ui, const int ww, const int hh) {
 
 	// sep
 	int ysep = .5 * (y0 + rad + y0_s);
-	CairoSetSouerceRGBA(c_gry);
+	CairoSetSouerceRGBA(c_g60);
 	cairo_move_to (cr, 15, ysep + .5);
 	cairo_line_to (cr, ww - 30 , ysep + .5);
 	cairo_stroke (cr);
@@ -500,6 +500,12 @@ size_request (RobWidget* handle, int *w, int *h) {
 }
 
 static void
+size_default(RobWidget* rw, int *w, int *h) {
+	*w = 480;
+	*h = 396;
+}
+
+static void
 m0_size_allocate (RobWidget* rw, int w, int h) {
 	BITui* ui = (BITui*)GET_HANDLE(rw);
 	robwidget_set_size (rw, w, h);
@@ -525,6 +531,7 @@ static RobWidget * toplevel (BITui* ui, void * const top) {
 	robwidget_set_expose_event (ui->m0, expose_event);
 	robwidget_set_size_request (ui->m0, size_request);
 	robwidget_set_size_allocate (ui->m0, m0_size_allocate);
+	robwidget_set_size_default (ui->vbox, size_default);
 
 	/* info - box */
 	ui->tbl_nfo = rob_table_new (/*rows*/3, /*cols*/5, FALSE);
