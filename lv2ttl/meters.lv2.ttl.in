@@ -2717,7 +2717,7 @@ mtr:dr14mono@URI_SUFFIX@
 		lv2:maximum 20;
 	  rdfs:comment "" ;
 	] ;
-	rdfs:comment ""
+	rdfs:comment "Pleasurize Music Foundation Dynamic Range Meter"
 	.
 
 
@@ -3000,7 +3000,7 @@ mtr:TPnRMSmono@URI_SUFFIX@
 		units:unit units:db;
 	  rdfs:comment "" ;
 	] ;
-	rdfs:comment ""
+	rdfs:comment "A combined True Peak (4x oversampling) and RMS meter display with additional numeric digital peak. Intended for mastering."
 	.
 
 
@@ -3165,7 +3165,7 @@ mtr:TPnRMSstereo@URI_SUFFIX@
 		units:unit units:db;
 	  rdfs:comment "" ;
 	] ;
-	rdfs:comment ""
+	rdfs:comment "A combined True Peak (4x oversampling) and RMS meter display with additional numeric digital peak. Intended for mastering."
 	.
 
 mtr:SigDistHist@URI_SUFFIX@
