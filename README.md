@@ -31,10 +31,7 @@ and the following stereo plugins:
 as well as a mono:
 
 *   Signal Distribution Histogram
-
-Currently all plugins come in both Gtk and openGL variants (both
-versions are installed in parallel).
-
+*   Bitmeter
 
 Usage
 -----
@@ -51,7 +48,7 @@ Install
 -------
 
 Compiling these plugin requires the LV2 SDK, gnu-make, a c-compiler,
-gtk+2.0, libpango, libcairo and openGL (sometimes called: glu, glx, mesa).
+libpango, libcairo and openGL (sometimes called: glu, glx, mesa).
 
 ```bash
   git clone git://github.com/x42/meters.lv2.git
@@ -59,13 +56,11 @@ gtk+2.0, libpango, libcairo and openGL (sometimes called: glu, glx, mesa).
   make submodules
   make
   sudo make install PREFIX=/usr
-  
-  # test run
-  jalv.gtk 'http://gareus.org/oss/lv2/meters#DINmono_gtk'
 ```
 
 Note to packagers: The Makefile honors `PREFIX` and `DESTDIR` variables as well
-as `CFLAGS`, `LDFLAGS` and `OPTIMIZATIONS` (additions to `CFLAGS`).
+as `CFLAGS`, `LDFLAGS` and `OPTIMIZATIONS` (additions to `CFLAGS`), but you
+really want to package the superset of [x42-plugins](https://github.com/x42/x42-plugins)
 
 
 Note on build-dependencies
@@ -99,4 +94,4 @@ Screenshots
 ![screenshot](https://raw.github.com/x42/meters.lv2/master/doc/dr14meter.png "DR14 Dynamic Range Meter (Pleasurize Music Foundation)")
 ![screenshot](https://raw.github.com/x42/meters.lv2/master/doc/stereoscope.png "Stereo/Frequency Scope")
 ![screenshot](https://raw.github.com/x42/meters.lv2/master/doc/sigdisthist.png "Signal Distribution Histogram")
-
+![screenshot](https://raw.github.com/x42/meters.lv2/master/doc/bitmeter.png "Bit Meter")
