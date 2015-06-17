@@ -2,7 +2,7 @@
   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
   <head>
-  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />  <title>True-Peak Meter (Mono) [LV2 Plugin Doc]</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />  <title>True-Peak and RMS Meter (Stereo) [LV2 Plugin Doc]</title>
   <link rel="shortcut icon" type="image/x-icon" href="data:image/x-icon;base64,AAABAAEAEBAAAAEACABoBQAAFgAAACgAAAAQAAAAIAAAAAEACAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQEBAAGxsbAB0dHQA5Kx4ANywhAD0wJABAMSIAQDEjAEEyJABDMyUAQDQmAEM0JQAyMjIAQzQmAEY2JgA0NDQASzclAEY3KQBHNyoASDgoAEk4KQBFOCwATDkoAE86JQBKOSsATTonAFA8KQBMPCwASDwwAFE+KwBUPyoAPT09AFJBMABTQTAAVkIuAFZCLwBWQy8AV0Y2AF1ILwBfTDIAXEs6AF9NNABeTDoAY040AGhPMABjTTkAbVE5AGhSPQBrVTsAalU/AGxbSQBzXUAAeWJEAF9fXwB1ZEsAc2RPAHpoTwB8aU8Agm9XAIFuXQB/b14AgXJeAIp1WQCHdl8AinhjAIt4ZgCPeWYAi3lqAI97YgCPfGwAkX1sAJB/aQCYgmYAmYFqAJOCcQCCgoIAmohyAJqHdgCXiXYAmIp3AJeKeACZi3YAn4xxAJmLeACZi3kAmox+AI2NjQCekIIAo5N/AKOUiACnl38AqpeGAK2bhQComo0AqpuJALCciwCsnpIAs6GLALKijgC0opIAsKKUALGklwCyppIAuKWWALCmnQC1p5kAtqiWALWnnACxp54AsKifALSrogC5rJ8AuK2fAL+uoQC+sqYAwrWjAMK1qAC1tbUAx7epAMe4rgDIvLEAy7ywAMi+rgDIvbIAzL2xAMzCsgDMwbYAzsOwAM3DuQDSxLcA08W5AMTExADSyLcA1Mm9ANbNvQDUzcUA2M7DAM3NzQDf1swA39fNANfX1wDi28oA5d3OAOfe1QDd3d0A5t7XAN/f3wDn4NkA4ODgAObk3gDr5t0A5ubmAO7n4ADv6toA8uvcAPLs3ADv6+QA9e7eAPPu3wDw7OcA9O3mAPfv4QD27uYA8O/qAPjw5QD48esA9/byAPT29AD39/cA+Pj4APz59AD5+vcA/vz3APz//gD///8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAr6mSkqivr6iXqa+pkpKpr6+MAQ+DqamDNYOokAIflK+viQBLH5KSH1YfklYMdamvr4kASx+Skh9WH5JWDHWpr6+MAQ+DqamDNYOokAIflK+vqZKSqK+vqJepr6mSkqmvrx0aFxgUEw4LDQkIBwYDrxsmVFFOTz89UDcQGRYSEQQgLZ6bmaFmjZ1/JyQjIh4FJTCgfTY4U5qFpECEho8pCiozpXosMXORRaJpcI5HKxU8NKZ+LkKfiEOKljlYiy8cbXesk2OArXJMeKpeRJw6IW55rphqo6diWmSre5WHPihogoF8dHZxZ2FcX1tSSUgyr2xva2VgXVlXVU1KRkE7r4YhAACAAQAAgAEAAIABAACAAQAAhiEAAIABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAIABAAA=" />
   <style type="text/css">
 body {font-size:12px; background:#aaa; min-width:82em;}
@@ -86,15 +86,15 @@ div.footer {margin:1em auto; font-size:80%; color:#444; text-align:center; width
   </head>
   <body>
 <p class="backlink"><a href="index.html">Back to Index</a></p>
-<h1 class="title"><a name="top"/>LV2 Doc &laquo;True-Peak Meter (Mono)&raquo;
+<h1 class="title"><a name="top"/>LV2 Doc &laquo;True-Peak and RMS Meter (Stereo)&raquo;
  [Analyser]
 </h1>
 <div id="pluginmeta">
 <p class="desc">Description</p>
-<p class="docs">Mono audio Level true-peak meter. Digital peak meter with 4 times oversampling, 13.3dB/s falloff.</p>
+<p class="docs">A combined True Peak (4x oversampling) and RMS meter display with additional numeric digital peak. Intended for mastering.</p>
 <dl>
- <dt>Title</dt><dd>True-Peak Meter (Mono)</dd>
- <dt>URI</dt><dd><a href="http://gareus.org/oss/lv2/meters#dBTPmono">http://gareus.org/oss/lv2/meters#dBTPmono</a></dd>
+ <dt>Title</dt><dd>True-Peak and RMS Meter (Stereo)</dd>
+ <dt>URI</dt><dd><a href="http://gareus.org/oss/lv2/meters#TPnRMSstereo">http://gareus.org/oss/lv2/meters#TPnRMSstereo</a></dd>
  <dt>Class</dt><dd>Analyser</dd>
  <dt>Author</dt><dd>Robin Gareus</dd>
  <dt>Author's Email</dt><dd>mailto:robin@gareus.org</dd>
@@ -106,20 +106,38 @@ div.footer {margin:1em auto; font-size:80%; color:#444; text-align:center; width
 <li>Hard Realtime Capable</li>
 </ul></dd>
 </dl>
-<div class="screenshot"><img alt="Screenshot" class="screenshot" src="http___gareus_org_oss_lv2_meters_dBTPmono.png" onclick="showimg();" /></div>
+<div class="screenshot"><img alt="Screenshot" class="screenshot" src="http___gareus_org_oss_lv2_meters_TPnRMSstereo.png" onclick="showimg();" /></div>
 </div>
 <div id="lightbox" style="display:none;" onclick="hideimg();">
-<div><img alt="Screenshot" src="http___gareus_org_oss_lv2_meters_dBTPmono.png"/></div>
+<div><img alt="Screenshot" src="http___gareus_org_oss_lv2_meters_TPnRMSstereo.png"/></div>
 </div>
 <div id="portwrapper">
 <script type="text/javascript">
-var num_ports=5;
+var num_ports=17;
 </script>
 <div id="plugintable"><table class="plugintable">
 <tr><td></td><td class="ptbl ptblTL">&nbsp;</td><td class="ptbl ptblTC">&nbsp;</td><td class="ptbl ptblTR">&nbsp;</td><td></td></tr>
-<tr><td class="bgL controlport" onmouseover="showdoc(0);" onmouseout="showdoc(-1);" onclick="jumpto(0);">0) ui notification</td><td class="pbody left ptbl ptblLL" onmouseover="showdoc(0);" onmouseout="showdoc(-1);" onclick="jumpto(0);"><div>(ref)<div class="portinfo" id="port0" style="display:none">
-<h3>0) ui notification</h3>
+<tr><td class="bgL atomport" onmouseover="showdoc(0);" onmouseout="showdoc(-1);" onclick="jumpto(0);">0) Control</td><td class="pbody left ptbl ptblLL" onmouseover="showdoc(0);" onmouseout="showdoc(-1);" onclick="jumpto(0);"><div>(control)<div class="portinfo" id="port0" style="display:none">
+<h3>0) Control</h3>
+<p class="port atomport">(<span>Atom</span> <span>Input</span>)</p>
+<p>
+</p>
+<p class="desc">Designation:</p><ul>
+<li>Control-port</li>
+</ul>
+</div>
+</div></td><td class="pbody"><div>&nbsp;</div></td><td class="pbody right ptbl ptblRR" onmouseover="showdoc(3);" onmouseout="showdoc(-1);" onclick="jumpto(3);"><div>(blkcnt)<div class="portinfo" id="port3" style="display:none">
+<h3>3) Integration Time</h3>
+<p class="port controlport">(<span>Control</span> <span>Output</span>)</p>
+<p class="docs"></p>
+<p>
+</p>
+</div>
+</div></td><td class="bgR controlport" onmouseover="showdoc(3);" onmouseout="showdoc(-1);" onclick="jumpto(3);">3) Integration Time</td></tr>
+<tr><td class="bgL controlport" onmouseover="showdoc(1);" onmouseout="showdoc(-1);" onclick="jumpto(1);">1) Unused</td><td class="pbody left ptbl ptblLL" onmouseover="showdoc(1);" onmouseout="showdoc(-1);" onclick="jumpto(1);"><div>(unused1)<div class="portinfo" id="port1" style="display:none">
+<h3>1) Unused</h3>
 <p class="port controlport">(<span>Control</span> <span>Input</span>)</p>
+<p class="docs">compat w/DR14</p>
 <p class="desc">Port Property:</p>
 <ul>
 <li class="portproperty">Not On GUI</li>
@@ -127,37 +145,137 @@ var num_ports=5;
 <p>
 </p>
 </div>
-</div></td><td class="pbody"><div>&nbsp;</div></td><td class="pbody right ptbl ptblRR" onmouseover="showdoc(2);" onmouseout="showdoc(-1);" onclick="jumpto(2);"><div>(out)<div class="portinfo" id="port2" style="display:none">
-<h3>2) Out</h3>
+</div></td><td class="pbody"><div>&nbsp;</div></td><td class="pbody right ptbl ptblRR" onmouseover="showdoc(5);" onmouseout="showdoc(-1);" onclick="jumpto(5);"><div>(out1)<div class="portinfo" id="port5" style="display:none">
+<h3>5) OutL</h3>
 <p class="port audioport">(<span>Audio</span> <span>Output</span>)</p>
+<p class="docs">signal pass-thru</p>
 <p>
 </p>
+<p class="desc">Designation:</p><ul>
+<li>Port-group: Left</li>
+</ul>
 </div>
-</div></td><td class="bgR audioport" onmouseover="showdoc(2);" onmouseout="showdoc(-1);" onclick="jumpto(2);">2) Out</td></tr>
-<tr><td class="bgL audioport" onmouseover="showdoc(1);" onmouseout="showdoc(-1);" onclick="jumpto(1);">1) In</td><td class="pbody left ptbl ptblLL" onmouseover="showdoc(1);" onmouseout="showdoc(-1);" onclick="jumpto(1);"><div>(in)<div class="portinfo" id="port1" style="display:none">
-<h3>1) In</h3>
-<p class="port audioport">(<span>Audio</span> <span>Input</span>)</p>
-<p>
-</p>
-</div>
-</div></td><td class="pbody"><div>&nbsp;</div></td><td class="pbody right ptbl ptblRR" onmouseover="showdoc(3);" onmouseout="showdoc(-1);" onclick="jumpto(3);"><div>(level1)<div class="portinfo" id="port3" style="display:none">
-<h3>3) Level1</h3>
-<p class="port controlport">(<span>Control</span> <span>Output</span>)</p>
-<p>
-</p>
-</div>
-</div></td><td class="bgR controlport" onmouseover="showdoc(3);" onmouseout="showdoc(-1);" onclick="jumpto(3);">3) Level1</td></tr>
-<tr><td></td><td class="pbody ptbl ptblLL"></td><td class="pbody"><div>&nbsp;</div></td><td class="pbody right ptbl ptblRR" onmouseover="showdoc(4);" onmouseout="showdoc(-1);" onclick="jumpto(4);"><div>(peak)<div class="portinfo" id="port4" style="display:none">
-<h3>4) peak</h3>
-<p class="port controlport">(<span>Control</span> <span>Output</span>)</p>
-<p class="desc">Port Property:</p>
+</div></td><td class="bgR audioport" onmouseover="showdoc(5);" onmouseout="showdoc(-1);" onclick="jumpto(5);">5) OutL</td></tr>
+<tr><td class="bgL controlport" onmouseover="showdoc(2);" onmouseout="showdoc(-1);" onclick="jumpto(2);">2) Reset</td><td class="pbody left ptbl ptblLL" onmouseover="showdoc(2);" onmouseout="showdoc(-1);" onclick="jumpto(2);"><div>(reset)<div class="portinfo" id="port2" style="display:none">
+<h3>2) Reset</h3>
+<p class="port controlport">(<span>Control</span> <span>Input</span>)</p>
+<p class="docs"></p>
+<p class="desc">Port Properties:</p>
 <ul>
-<li class="portproperty">Not On GUI</li>
+<li class="portproperty">lv2ext:/port-props#trigger</li>
+<li class="portproperty">Integer</li>
 </ul>
 <p>
 </p>
 </div>
-</div></td><td class="bgR controlport" onmouseover="showdoc(4);" onmouseout="showdoc(-1);" onclick="jumpto(4);">4) peak</td></tr>
+</div></td><td class="pbody"><div>&nbsp;</div></td><td class="pbody right ptbl ptblRR" onmouseover="showdoc(6);" onmouseout="showdoc(-1);" onclick="jumpto(6);"><div>(dBTP_m1)<div class="portinfo" id="port6" style="display:none">
+<h3>6) dBTP - momentaty</h3>
+<p class="port controlport">(<span>Control</span> <span>Output</span>)</p>
+<p class="docs"></p>
+<p>
+</p>
+</div>
+</div></td><td class="bgR controlport" onmouseover="showdoc(6);" onmouseout="showdoc(-1);" onclick="jumpto(6);">6) dBTP - momentaty</td></tr>
+<tr><td class="bgL audioport" onmouseover="showdoc(4);" onmouseout="showdoc(-1);" onclick="jumpto(4);">4) InL</td><td class="pbody left ptbl ptblLL" onmouseover="showdoc(4);" onmouseout="showdoc(-1);" onclick="jumpto(4);"><div>(in1)<div class="portinfo" id="port4" style="display:none">
+<h3>4) InL</h3>
+<p class="port audioport">(<span>Audio</span> <span>Input</span>)</p>
+<p class="docs">Audio input</p>
+<p>
+</p>
+<p class="desc">Designation:</p><ul>
+<li>Port-group: Left</li>
+</ul>
+</div>
+</div></td><td class="pbody"><div>&nbsp;</div></td><td class="pbody right ptbl ptblRR" onmouseover="showdoc(7);" onmouseout="showdoc(-1);" onclick="jumpto(7);"><div>(dBTP_p1)<div class="portinfo" id="port7" style="display:none">
+<h3>7) dBTP - peak</h3>
+<p class="port controlport">(<span>Control</span> <span>Output</span>)</p>
+<p class="docs"></p>
+<p>
+</p>
+</div>
+</div></td><td class="bgR controlport" onmouseover="showdoc(7);" onmouseout="showdoc(-1);" onclick="jumpto(7);">7) dBTP - peak</td></tr>
+<tr><td class="bgL audioport" onmouseover="showdoc(11);" onmouseout="showdoc(-1);" onclick="jumpto(11);">11) InR</td><td class="pbody left ptbl ptblLL" onmouseover="showdoc(11);" onmouseout="showdoc(-1);" onclick="jumpto(11);"><div>(in2)<div class="portinfo" id="port11" style="display:none">
+<h3>11) InR</h3>
+<p class="port audioport">(<span>Audio</span> <span>Input</span>)</p>
+<p class="docs">Audio input</p>
+<p>
+</p>
+<p class="desc">Designation:</p><ul>
+<li>Port-group: Right</li>
+</ul>
+</div>
+</div></td><td class="pbody"><div>&nbsp;</div></td><td class="pbody right ptbl ptblRR" onmouseover="showdoc(8);" onmouseout="showdoc(-1);" onclick="jumpto(8);"><div>(dBRMS_m1)<div class="portinfo" id="port8" style="display:none">
+<h3>8) dB RMS - momentaty</h3>
+<p class="port controlport">(<span>Control</span> <span>Output</span>)</p>
+<p class="docs"></p>
+<p>
+</p>
+</div>
+</div></td><td class="bgR controlport" onmouseover="showdoc(8);" onmouseout="showdoc(-1);" onclick="jumpto(8);">8) dB RMS - momentaty</td></tr>
+<tr><td></td><td class="pbody ptbl ptblLL"></td><td class="pbody"><div>&nbsp;</div></td><td class="pbody right ptbl ptblRR" onmouseover="showdoc(9);" onmouseout="showdoc(-1);" onclick="jumpto(9);"><div>(dBRMS_p1)<div class="portinfo" id="port9" style="display:none">
+<h3>9) dB RMS - peak</h3>
+<p class="port controlport">(<span>Control</span> <span>Output</span>)</p>
+<p class="docs"></p>
+<p>
+</p>
+</div>
+</div></td><td class="bgR controlport" onmouseover="showdoc(9);" onmouseout="showdoc(-1);" onclick="jumpto(9);">9) dB RMS - peak</td></tr>
+<tr><td></td><td class="pbody ptbl ptblLL"></td><td class="pbody"><div>&nbsp;</div></td><td class="pbody right ptbl ptblRR" onmouseover="showdoc(10);" onmouseout="showdoc(-1);" onclick="jumpto(10);"><div>(unused2)<div class="portinfo" id="port10" style="display:none">
+<h3>10) Unused</h3>
+<p class="port controlport">(<span>Control</span> <span>Output</span>)</p>
+<p class="docs">compat w/DR14</p>
+<p class="desc">Port Properties:</p>
+<ul>
+<li class="portproperty">Not On GUI</li>
+<li class="portproperty">Integer</li>
+</ul>
+<p>
+</p>
+</div>
+</div></td><td class="bgR controlport" onmouseover="showdoc(10);" onmouseout="showdoc(-1);" onclick="jumpto(10);">10) Unused</td></tr>
+<tr><td></td><td class="pbody ptbl ptblLL"></td><td class="pbody"><div>&nbsp;</div></td><td class="pbody right ptbl ptblRR" onmouseover="showdoc(12);" onmouseout="showdoc(-1);" onclick="jumpto(12);"><div>(out2)<div class="portinfo" id="port12" style="display:none">
+<h3>12) OutR</h3>
+<p class="port audioport">(<span>Audio</span> <span>Output</span>)</p>
+<p class="docs">signal pass-thru</p>
+<p>
+</p>
+<p class="desc">Designation:</p><ul>
+<li>Port-group: Right</li>
+</ul>
+</div>
+</div></td><td class="bgR audioport" onmouseover="showdoc(12);" onmouseout="showdoc(-1);" onclick="jumpto(12);">12) OutR</td></tr>
+<tr><td></td><td class="pbody ptbl ptblLL"></td><td class="pbody"><div>&nbsp;</div></td><td class="pbody right ptbl ptblRR" onmouseover="showdoc(13);" onmouseout="showdoc(-1);" onclick="jumpto(13);"><div>(dBTP_m2)<div class="portinfo" id="port13" style="display:none">
+<h3>13) dBTP - momentaty</h3>
+<p class="port controlport">(<span>Control</span> <span>Output</span>)</p>
+<p class="docs"></p>
+<p>
+</p>
+</div>
+</div></td><td class="bgR controlport" onmouseover="showdoc(13);" onmouseout="showdoc(-1);" onclick="jumpto(13);">13) dBTP - momentaty</td></tr>
+<tr><td></td><td class="pbody ptbl ptblLL"></td><td class="pbody"><div>&nbsp;</div></td><td class="pbody right ptbl ptblRR" onmouseover="showdoc(14);" onmouseout="showdoc(-1);" onclick="jumpto(14);"><div>(dBTP_p2)<div class="portinfo" id="port14" style="display:none">
+<h3>14) dBTP - peak</h3>
+<p class="port controlport">(<span>Control</span> <span>Output</span>)</p>
+<p class="docs"></p>
+<p>
+</p>
+</div>
+</div></td><td class="bgR controlport" onmouseover="showdoc(14);" onmouseout="showdoc(-1);" onclick="jumpto(14);">14) dBTP - peak</td></tr>
+<tr><td></td><td class="pbody ptbl ptblLL"></td><td class="pbody"><div>&nbsp;</div></td><td class="pbody right ptbl ptblRR" onmouseover="showdoc(15);" onmouseout="showdoc(-1);" onclick="jumpto(15);"><div>(dBRMS_m2)<div class="portinfo" id="port15" style="display:none">
+<h3>15) dB RMS - momentaty</h3>
+<p class="port controlport">(<span>Control</span> <span>Output</span>)</p>
+<p class="docs"></p>
+<p>
+</p>
+</div>
+</div></td><td class="bgR controlport" onmouseover="showdoc(15);" onmouseout="showdoc(-1);" onclick="jumpto(15);">15) dB RMS - momentaty</td></tr>
+<tr><td></td><td class="pbody ptbl ptblLL"></td><td class="pbody"><div>&nbsp;</div></td><td class="pbody right ptbl ptblRR" onmouseover="showdoc(16);" onmouseout="showdoc(-1);" onclick="jumpto(16);"><div>(dBFS_p2)<div class="portinfo" id="port16" style="display:none">
+<h3>16) dBFS [hold]</h3>
+<p class="port controlport">(<span>Control</span> <span>Output</span>)</p>
+<p class="docs"></p>
+<p>
+</p>
+</div>
+</div></td><td class="bgR controlport" onmouseover="showdoc(16);" onmouseout="showdoc(-1);" onclick="jumpto(16);">16) dBFS [hold]</td></tr>
 <tr><td></td><td class="ptbl ptblBL">&nbsp;</td><td class="ptbl ptblBC">&nbsp;</td><td class="ptbl ptblBR">&nbsp;</td><td></td></tr>
 </table></div>
 <div id="portlist">
@@ -165,8 +283,19 @@ var num_ports=5;
 <div id="inputportlist">
 <div class="port">
 <div class="toplink"><a href="#top">&nbsp;&uarr;&nbsp;</a></div>
-<h3><a name="portdoc0">0</a>) ui notification</h3>
+<h3><a name="portdoc0">0</a>) Control</h3>
+<p class="port atomport">(<span>Atom</span> <span>Input</span>)</p>
+<p>
+</p>
+<p class="desc">Designation:</p><ul>
+<li>Control-port</li>
+</ul>
+</div>
+<div class="port">
+<div class="toplink"><a href="#top">&nbsp;&uarr;&nbsp;</a></div>
+<h3><a name="portdoc1">1</a>) Unused</h3>
 <p class="port controlport">(<span>Control</span> <span>Input</span>)</p>
+<p class="docs">compat w/DR14</p>
 <p class="desc">Port Property:</p>
 <ul>
 <li class="portproperty">Not On GUI</li>
@@ -175,31 +304,140 @@ var num_ports=5;
 </p>
 <table class="portrange">
 <tr><th colspan="2">Range</th></tr>
-<tr><th>min</th><td>-4.000000</td></tr>
-<tr><th>max</th><td>4.000000</td></tr>
-<tr><th>default</th><td>-4.000000</td></tr>
+<tr><th>min</th><td>0.000000</td></tr>
+<tr><th>max</th><td>1.000000</td></tr>
+<tr><th>default</th><td>1.000000</td></tr>
 </table>
 </div>
 <div class="port">
 <div class="toplink"><a href="#top">&nbsp;&uarr;&nbsp;</a></div>
-<h3><a name="portdoc1">1</a>) In</h3>
-<p class="port audioport">(<span>Audio</span> <span>Input</span>)</p>
+<h3><a name="portdoc2">2</a>) Reset</h3>
+<p class="port controlport">(<span>Control</span> <span>Input</span>)</p>
+<p class="docs"></p>
+<p class="desc">Port Properties:</p>
+<ul>
+<li class="portproperty">lv2ext:/port-props#trigger</li>
+<li class="portproperty">Integer</li>
+</ul>
 <p>
 </p>
+<table class="portrange">
+<tr><th colspan="2">Range</th></tr>
+<tr><th>min</th><td>0.000000</td></tr>
+<tr><th>max</th><td>1.000000</td></tr>
+<tr><th>default</th><td>0.000000</td></tr>
+</table>
+</div>
+<div class="port">
+<div class="toplink"><a href="#top">&nbsp;&uarr;&nbsp;</a></div>
+<h3><a name="portdoc4">4</a>) InL</h3>
+<p class="port audioport">(<span>Audio</span> <span>Input</span>)</p>
+<p class="docs">Audio input</p>
+<p>
+</p>
+<p class="desc">Designation:</p><ul>
+<li>Port-group: Left</li>
+</ul>
+</div>
+<div class="port">
+<div class="toplink"><a href="#top">&nbsp;&uarr;&nbsp;</a></div>
+<h3><a name="portdoc11">11</a>) InR</h3>
+<p class="port audioport">(<span>Audio</span> <span>Input</span>)</p>
+<p class="docs">Audio input</p>
+<p>
+</p>
+<p class="desc">Designation:</p><ul>
+<li>Port-group: Right</li>
+</ul>
 </div>
 </div>
 <div id="outputportlist">
 <div class="port">
 <div class="toplink"><a href="#top">&nbsp;&uarr;&nbsp;</a></div>
-<h3><a name="portdoc2">2</a>) Out</h3>
-<p class="port audioport">(<span>Audio</span> <span>Output</span>)</p>
+<h3><a name="portdoc3">3</a>) Integration Time</h3>
+<p class="port controlport">(<span>Control</span> <span>Output</span>)</p>
+<p class="docs"></p>
 <p>
 </p>
+<table class="portrange">
+<tr><th colspan="2">Range</th></tr>
+<tr><th>min</th><td>0.000000</td></tr>
+<tr><th>max</th><td>3600.000000</td></tr>
+</table>
 </div>
 <div class="port">
 <div class="toplink"><a href="#top">&nbsp;&uarr;&nbsp;</a></div>
-<h3><a name="portdoc3">3</a>) Level1</h3>
+<h3><a name="portdoc5">5</a>) OutL</h3>
+<p class="port audioport">(<span>Audio</span> <span>Output</span>)</p>
+<p class="docs">signal pass-thru</p>
+<p>
+</p>
+<p class="desc">Designation:</p><ul>
+<li>Port-group: Left</li>
+</ul>
+</div>
+<div class="port">
+<div class="toplink"><a href="#top">&nbsp;&uarr;&nbsp;</a></div>
+<h3><a name="portdoc6">6</a>) dBTP - momentaty</h3>
 <p class="port controlport">(<span>Control</span> <span>Output</span>)</p>
+<p class="docs"></p>
+<p>
+</p>
+<table class="portrange">
+<tr><th colspan="2">Range</th></tr>
+<tr><th>min</th><td>-80.000000</td></tr>
+<tr><th>max</th><td>6.000000</td></tr>
+</table>
+</div>
+<div class="port">
+<div class="toplink"><a href="#top">&nbsp;&uarr;&nbsp;</a></div>
+<h3><a name="portdoc7">7</a>) dBTP - peak</h3>
+<p class="port controlport">(<span>Control</span> <span>Output</span>)</p>
+<p class="docs"></p>
+<p>
+</p>
+<table class="portrange">
+<tr><th colspan="2">Range</th></tr>
+<tr><th>min</th><td>-80.000000</td></tr>
+<tr><th>max</th><td>6.000000</td></tr>
+</table>
+</div>
+<div class="port">
+<div class="toplink"><a href="#top">&nbsp;&uarr;&nbsp;</a></div>
+<h3><a name="portdoc8">8</a>) dB RMS - momentaty</h3>
+<p class="port controlport">(<span>Control</span> <span>Output</span>)</p>
+<p class="docs"></p>
+<p>
+</p>
+<table class="portrange">
+<tr><th colspan="2">Range</th></tr>
+<tr><th>min</th><td>-80.000000</td></tr>
+<tr><th>max</th><td>0.000000</td></tr>
+</table>
+</div>
+<div class="port">
+<div class="toplink"><a href="#top">&nbsp;&uarr;&nbsp;</a></div>
+<h3><a name="portdoc9">9</a>) dB RMS - peak</h3>
+<p class="port controlport">(<span>Control</span> <span>Output</span>)</p>
+<p class="docs"></p>
+<p>
+</p>
+<table class="portrange">
+<tr><th colspan="2">Range</th></tr>
+<tr><th>min</th><td>-80.000000</td></tr>
+<tr><th>max</th><td>0.000000</td></tr>
+</table>
+</div>
+<div class="port">
+<div class="toplink"><a href="#top">&nbsp;&uarr;&nbsp;</a></div>
+<h3><a name="portdoc10">10</a>) Unused</h3>
+<p class="port controlport">(<span>Control</span> <span>Output</span>)</p>
+<p class="docs">compat w/DR14</p>
+<p class="desc">Port Properties:</p>
+<ul>
+<li class="portproperty">Not On GUI</li>
+<li class="portproperty">Integer</li>
+</ul>
 <p>
 </p>
 <table class="portrange">
@@ -210,18 +448,65 @@ var num_ports=5;
 </div>
 <div class="port">
 <div class="toplink"><a href="#top">&nbsp;&uarr;&nbsp;</a></div>
-<h3><a name="portdoc4">4</a>) peak</h3>
-<p class="port controlport">(<span>Control</span> <span>Output</span>)</p>
-<p class="desc">Port Property:</p>
-<ul>
-<li class="portproperty">Not On GUI</li>
+<h3><a name="portdoc12">12</a>) OutR</h3>
+<p class="port audioport">(<span>Audio</span> <span>Output</span>)</p>
+<p class="docs">signal pass-thru</p>
+<p>
+</p>
+<p class="desc">Designation:</p><ul>
+<li>Port-group: Right</li>
 </ul>
+</div>
+<div class="port">
+<div class="toplink"><a href="#top">&nbsp;&uarr;&nbsp;</a></div>
+<h3><a name="portdoc13">13</a>) dBTP - momentaty</h3>
+<p class="port controlport">(<span>Control</span> <span>Output</span>)</p>
+<p class="docs"></p>
 <p>
 </p>
 <table class="portrange">
 <tr><th colspan="2">Range</th></tr>
-<tr><th>min</th><td>0.000000</td></tr>
-<tr><th>max</th><td>1.000000</td></tr>
+<tr><th>min</th><td>-80.000000</td></tr>
+<tr><th>max</th><td>6.000000</td></tr>
+</table>
+</div>
+<div class="port">
+<div class="toplink"><a href="#top">&nbsp;&uarr;&nbsp;</a></div>
+<h3><a name="portdoc14">14</a>) dBTP - peak</h3>
+<p class="port controlport">(<span>Control</span> <span>Output</span>)</p>
+<p class="docs"></p>
+<p>
+</p>
+<table class="portrange">
+<tr><th colspan="2">Range</th></tr>
+<tr><th>min</th><td>-80.000000</td></tr>
+<tr><th>max</th><td>6.000000</td></tr>
+</table>
+</div>
+<div class="port">
+<div class="toplink"><a href="#top">&nbsp;&uarr;&nbsp;</a></div>
+<h3><a name="portdoc15">15</a>) dB RMS - momentaty</h3>
+<p class="port controlport">(<span>Control</span> <span>Output</span>)</p>
+<p class="docs"></p>
+<p>
+</p>
+<table class="portrange">
+<tr><th colspan="2">Range</th></tr>
+<tr><th>min</th><td>-80.000000</td></tr>
+<tr><th>max</th><td>0.000000</td></tr>
+</table>
+</div>
+<div class="port">
+<div class="toplink"><a href="#top">&nbsp;&uarr;&nbsp;</a></div>
+<h3><a name="portdoc16">16</a>) dBFS [hold]</h3>
+<p class="port controlport">(<span>Control</span> <span>Output</span>)</p>
+<p class="docs"></p>
+<p>
+</p>
+<table class="portrange">
+<tr><th colspan="2">Range</th></tr>
+<tr><th>min</th><td>-80.000000</td></tr>
+<tr><th>max</th><td>0.000000</td></tr>
 </table>
 </div>
 </div>
@@ -230,6 +515,6 @@ var num_ports=5;
 </div>
 <!-- end of page !-->
 <div style="clear:both;"></div>
-<div class="footer"><hr/>Created by <a href="https://github.com/x42/lv2toweb">lv2toweb</a>. Generated on 2015-06-17 17:52:35 GMT</div>
+<div class="footer"><hr/>Created by <a href="https://github.com/x42/lv2toweb">lv2toweb</a>. Generated on 2015-06-17 17:52:14 GMT</div>
  </body>
  </html>

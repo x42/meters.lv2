@@ -2,7 +2,7 @@
   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
   <head>
-  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />  <title>True-Peak Meter (Mono) [LV2 Plugin Doc]</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />  <title>Signal Distribution Histogram [LV2 Plugin Doc]</title>
   <link rel="shortcut icon" type="image/x-icon" href="data:image/x-icon;base64,AAABAAEAEBAAAAEACABoBQAAFgAAACgAAAAQAAAAIAAAAAEACAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQEBAAGxsbAB0dHQA5Kx4ANywhAD0wJABAMSIAQDEjAEEyJABDMyUAQDQmAEM0JQAyMjIAQzQmAEY2JgA0NDQASzclAEY3KQBHNyoASDgoAEk4KQBFOCwATDkoAE86JQBKOSsATTonAFA8KQBMPCwASDwwAFE+KwBUPyoAPT09AFJBMABTQTAAVkIuAFZCLwBWQy8AV0Y2AF1ILwBfTDIAXEs6AF9NNABeTDoAY040AGhPMABjTTkAbVE5AGhSPQBrVTsAalU/AGxbSQBzXUAAeWJEAF9fXwB1ZEsAc2RPAHpoTwB8aU8Agm9XAIFuXQB/b14AgXJeAIp1WQCHdl8AinhjAIt4ZgCPeWYAi3lqAI97YgCPfGwAkX1sAJB/aQCYgmYAmYFqAJOCcQCCgoIAmohyAJqHdgCXiXYAmIp3AJeKeACZi3YAn4xxAJmLeACZi3kAmox+AI2NjQCekIIAo5N/AKOUiACnl38AqpeGAK2bhQComo0AqpuJALCciwCsnpIAs6GLALKijgC0opIAsKKUALGklwCyppIAuKWWALCmnQC1p5kAtqiWALWnnACxp54AsKifALSrogC5rJ8AuK2fAL+uoQC+sqYAwrWjAMK1qAC1tbUAx7epAMe4rgDIvLEAy7ywAMi+rgDIvbIAzL2xAMzCsgDMwbYAzsOwAM3DuQDSxLcA08W5AMTExADSyLcA1Mm9ANbNvQDUzcUA2M7DAM3NzQDf1swA39fNANfX1wDi28oA5d3OAOfe1QDd3d0A5t7XAN/f3wDn4NkA4ODgAObk3gDr5t0A5ubmAO7n4ADv6toA8uvcAPLs3ADv6+QA9e7eAPPu3wDw7OcA9O3mAPfv4QD27uYA8O/qAPjw5QD48esA9/byAPT29AD39/cA+Pj4APz59AD5+vcA/vz3APz//gD///8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAr6mSkqivr6iXqa+pkpKpr6+MAQ+DqamDNYOokAIflK+viQBLH5KSH1YfklYMdamvr4kASx+Skh9WH5JWDHWpr6+MAQ+DqamDNYOokAIflK+vqZKSqK+vqJepr6mSkqmvrx0aFxgUEw4LDQkIBwYDrxsmVFFOTz89UDcQGRYSEQQgLZ6bmaFmjZ1/JyQjIh4FJTCgfTY4U5qFpECEho8pCiozpXosMXORRaJpcI5HKxU8NKZ+LkKfiEOKljlYiy8cbXesk2OArXJMeKpeRJw6IW55rphqo6diWmSre5WHPihogoF8dHZxZ2FcX1tSSUgyr2xva2VgXVlXVU1KRkE7r4YhAACAAQAAgAEAAIABAACAAQAAhiEAAIABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAIABAAA=" />
   <style type="text/css">
 body {font-size:12px; background:#aaa; min-width:82em;}
@@ -86,15 +86,15 @@ div.footer {margin:1em auto; font-size:80%; color:#444; text-align:center; width
   </head>
   <body>
 <p class="backlink"><a href="index.html">Back to Index</a></p>
-<h1 class="title"><a name="top"/>LV2 Doc &laquo;True-Peak Meter (Mono)&raquo;
+<h1 class="title"><a name="top"/>LV2 Doc &laquo;Signal Distribution Histogram&raquo;
  [Analyser]
 </h1>
 <div id="pluginmeta">
 <p class="desc">Description</p>
-<p class="docs">Mono audio Level true-peak meter. Digital peak meter with 4 times oversampling, 13.3dB/s falloff.</p>
+<p class="docs">Mono audio signal distribution histrogram display. Useful to plot noise-shapes.</p>
 <dl>
- <dt>Title</dt><dd>True-Peak Meter (Mono)</dd>
- <dt>URI</dt><dd><a href="http://gareus.org/oss/lv2/meters#dBTPmono">http://gareus.org/oss/lv2/meters#dBTPmono</a></dd>
+ <dt>Title</dt><dd>Signal Distribution Histogram</dd>
+ <dt>URI</dt><dd><a href="http://gareus.org/oss/lv2/meters#SigDistHist">http://gareus.org/oss/lv2/meters#SigDistHist</a></dd>
  <dt>Class</dt><dd>Analyser</dd>
  <dt>Author</dt><dd>Robin Gareus</dd>
  <dt>Author's Email</dt><dd>mailto:robin@gareus.org</dd>
@@ -102,62 +102,59 @@ div.footer {margin:1em auto; font-size:80%; color:#444; text-align:center; width
 <dt>User Interface</dt><dd><ul>
 <li>External UI (KXstudio)</li>
 </ul></dd>
+<dt>Required Feature</dt><dd><ul>
+<li>URID map</li>
+</ul></dd>
 <dt>Optional Feature</dt><dd><ul>
 <li>Hard Realtime Capable</li>
 </ul></dd>
+<dt>Extension Data</dt><dd><ul>
+<li>State Interface</li>
+</ul></dd>
 </dl>
-<div class="screenshot"><img alt="Screenshot" class="screenshot" src="http___gareus_org_oss_lv2_meters_dBTPmono.png" onclick="showimg();" /></div>
+<div class="screenshot"><img alt="Screenshot" class="screenshot" src="http___gareus_org_oss_lv2_meters_SigDistHist.png" onclick="showimg();" /></div>
 </div>
 <div id="lightbox" style="display:none;" onclick="hideimg();">
-<div><img alt="Screenshot" src="http___gareus_org_oss_lv2_meters_dBTPmono.png"/></div>
+<div><img alt="Screenshot" src="http___gareus_org_oss_lv2_meters_SigDistHist.png"/></div>
 </div>
 <div id="portwrapper">
 <script type="text/javascript">
-var num_ports=5;
+var num_ports=4;
 </script>
 <div id="plugintable"><table class="plugintable">
 <tr><td></td><td class="ptbl ptblTL">&nbsp;</td><td class="ptbl ptblTC">&nbsp;</td><td class="ptbl ptblTR">&nbsp;</td><td></td></tr>
-<tr><td class="bgL controlport" onmouseover="showdoc(0);" onmouseout="showdoc(-1);" onclick="jumpto(0);">0) ui notification</td><td class="pbody left ptbl ptblLL" onmouseover="showdoc(0);" onmouseout="showdoc(-1);" onclick="jumpto(0);"><div>(ref)<div class="portinfo" id="port0" style="display:none">
-<h3>0) ui notification</h3>
-<p class="port controlport">(<span>Control</span> <span>Input</span>)</p>
-<p class="desc">Port Property:</p>
-<ul>
-<li class="portproperty">Not On GUI</li>
+<tr><td class="bgL atomport" onmouseover="showdoc(0);" onmouseout="showdoc(-1);" onclick="jumpto(0);">0) UI to plugin communication</td><td class="pbody left ptbl ptblLL" onmouseover="showdoc(0);" onmouseout="showdoc(-1);" onclick="jumpto(0);"><div>(control)<div class="portinfo" id="port0" style="display:none">
+<h3>0) UI to plugin communication</h3>
+<p class="port atomport">(<span>Atom</span> <span>Input</span>)</p>
+<p>
+</p>
+<p class="desc">Designation:</p><ul>
+<li>Control-port</li>
 </ul>
+</div>
+</div></td><td class="pbody"><div>&nbsp;</div></td><td class="pbody right ptbl ptblRR" onmouseover="showdoc(1);" onmouseout="showdoc(-1);" onclick="jumpto(1);"><div>(notify)<div class="portinfo" id="port1" style="display:none">
+<h3>1) plugin to UI communication</h3>
+<p class="port atomport">(<span>Atom</span> <span>Output</span>)</p>
 <p>
 </p>
+<p class="desc">Designation:</p><ul>
+<li>Control-port</li>
+</ul>
 </div>
-</div></td><td class="pbody"><div>&nbsp;</div></td><td class="pbody right ptbl ptblRR" onmouseover="showdoc(2);" onmouseout="showdoc(-1);" onclick="jumpto(2);"><div>(out)<div class="portinfo" id="port2" style="display:none">
-<h3>2) Out</h3>
-<p class="port audioport">(<span>Audio</span> <span>Output</span>)</p>
-<p>
-</p>
-</div>
-</div></td><td class="bgR audioport" onmouseover="showdoc(2);" onmouseout="showdoc(-1);" onclick="jumpto(2);">2) Out</td></tr>
-<tr><td class="bgL audioport" onmouseover="showdoc(1);" onmouseout="showdoc(-1);" onclick="jumpto(1);">1) In</td><td class="pbody left ptbl ptblLL" onmouseover="showdoc(1);" onmouseout="showdoc(-1);" onclick="jumpto(1);"><div>(in)<div class="portinfo" id="port1" style="display:none">
-<h3>1) In</h3>
+</div></td><td class="bgR atomport" onmouseover="showdoc(1);" onmouseout="showdoc(-1);" onclick="jumpto(1);">1) plugin to UI communication</td></tr>
+<tr><td class="bgL audioport" onmouseover="showdoc(2);" onmouseout="showdoc(-1);" onclick="jumpto(2);">2) In</td><td class="pbody left ptbl ptblLL" onmouseover="showdoc(2);" onmouseout="showdoc(-1);" onclick="jumpto(2);"><div>(in)<div class="portinfo" id="port2" style="display:none">
+<h3>2) In</h3>
 <p class="port audioport">(<span>Audio</span> <span>Input</span>)</p>
 <p>
 </p>
 </div>
-</div></td><td class="pbody"><div>&nbsp;</div></td><td class="pbody right ptbl ptblRR" onmouseover="showdoc(3);" onmouseout="showdoc(-1);" onclick="jumpto(3);"><div>(level1)<div class="portinfo" id="port3" style="display:none">
-<h3>3) Level1</h3>
-<p class="port controlport">(<span>Control</span> <span>Output</span>)</p>
+</div></td><td class="pbody"><div>&nbsp;</div></td><td class="pbody right ptbl ptblRR" onmouseover="showdoc(3);" onmouseout="showdoc(-1);" onclick="jumpto(3);"><div>(out)<div class="portinfo" id="port3" style="display:none">
+<h3>3) Out</h3>
+<p class="port audioport">(<span>Audio</span> <span>Output</span>)</p>
 <p>
 </p>
 </div>
-</div></td><td class="bgR controlport" onmouseover="showdoc(3);" onmouseout="showdoc(-1);" onclick="jumpto(3);">3) Level1</td></tr>
-<tr><td></td><td class="pbody ptbl ptblLL"></td><td class="pbody"><div>&nbsp;</div></td><td class="pbody right ptbl ptblRR" onmouseover="showdoc(4);" onmouseout="showdoc(-1);" onclick="jumpto(4);"><div>(peak)<div class="portinfo" id="port4" style="display:none">
-<h3>4) peak</h3>
-<p class="port controlport">(<span>Control</span> <span>Output</span>)</p>
-<p class="desc">Port Property:</p>
-<ul>
-<li class="portproperty">Not On GUI</li>
-</ul>
-<p>
-</p>
-</div>
-</div></td><td class="bgR controlport" onmouseover="showdoc(4);" onmouseout="showdoc(-1);" onclick="jumpto(4);">4) peak</td></tr>
+</div></td><td class="bgR audioport" onmouseover="showdoc(3);" onmouseout="showdoc(-1);" onclick="jumpto(3);">3) Out</td></tr>
 <tr><td></td><td class="ptbl ptblBL">&nbsp;</td><td class="ptbl ptblBC">&nbsp;</td><td class="ptbl ptblBR">&nbsp;</td><td></td></tr>
 </table></div>
 <div id="portlist">
@@ -165,24 +162,17 @@ var num_ports=5;
 <div id="inputportlist">
 <div class="port">
 <div class="toplink"><a href="#top">&nbsp;&uarr;&nbsp;</a></div>
-<h3><a name="portdoc0">0</a>) ui notification</h3>
-<p class="port controlport">(<span>Control</span> <span>Input</span>)</p>
-<p class="desc">Port Property:</p>
-<ul>
-<li class="portproperty">Not On GUI</li>
-</ul>
+<h3><a name="portdoc0">0</a>) UI to plugin communication</h3>
+<p class="port atomport">(<span>Atom</span> <span>Input</span>)</p>
 <p>
 </p>
-<table class="portrange">
-<tr><th colspan="2">Range</th></tr>
-<tr><th>min</th><td>-4.000000</td></tr>
-<tr><th>max</th><td>4.000000</td></tr>
-<tr><th>default</th><td>-4.000000</td></tr>
-</table>
+<p class="desc">Designation:</p><ul>
+<li>Control-port</li>
+</ul>
 </div>
 <div class="port">
 <div class="toplink"><a href="#top">&nbsp;&uarr;&nbsp;</a></div>
-<h3><a name="portdoc1">1</a>) In</h3>
+<h3><a name="portdoc2">2</a>) In</h3>
 <p class="port audioport">(<span>Audio</span> <span>Input</span>)</p>
 <p>
 </p>
@@ -191,38 +181,20 @@ var num_ports=5;
 <div id="outputportlist">
 <div class="port">
 <div class="toplink"><a href="#top">&nbsp;&uarr;&nbsp;</a></div>
-<h3><a name="portdoc2">2</a>) Out</h3>
+<h3><a name="portdoc1">1</a>) plugin to UI communication</h3>
+<p class="port atomport">(<span>Atom</span> <span>Output</span>)</p>
+<p>
+</p>
+<p class="desc">Designation:</p><ul>
+<li>Control-port</li>
+</ul>
+</div>
+<div class="port">
+<div class="toplink"><a href="#top">&nbsp;&uarr;&nbsp;</a></div>
+<h3><a name="portdoc3">3</a>) Out</h3>
 <p class="port audioport">(<span>Audio</span> <span>Output</span>)</p>
 <p>
 </p>
-</div>
-<div class="port">
-<div class="toplink"><a href="#top">&nbsp;&uarr;&nbsp;</a></div>
-<h3><a name="portdoc3">3</a>) Level1</h3>
-<p class="port controlport">(<span>Control</span> <span>Output</span>)</p>
-<p>
-</p>
-<table class="portrange">
-<tr><th colspan="2">Range</th></tr>
-<tr><th>min</th><td>0.000000</td></tr>
-<tr><th>max</th><td>1.000000</td></tr>
-</table>
-</div>
-<div class="port">
-<div class="toplink"><a href="#top">&nbsp;&uarr;&nbsp;</a></div>
-<h3><a name="portdoc4">4</a>) peak</h3>
-<p class="port controlport">(<span>Control</span> <span>Output</span>)</p>
-<p class="desc">Port Property:</p>
-<ul>
-<li class="portproperty">Not On GUI</li>
-</ul>
-<p>
-</p>
-<table class="portrange">
-<tr><th colspan="2">Range</th></tr>
-<tr><th>min</th><td>0.000000</td></tr>
-<tr><th>max</th><td>1.000000</td></tr>
-</table>
 </div>
 </div>
 <div style="clear:both;"></div>
@@ -230,6 +202,6 @@ var num_ports=5;
 </div>
 <!-- end of page !-->
 <div style="clear:both;"></div>
-<div class="footer"><hr/>Created by <a href="https://github.com/x42/lv2toweb">lv2toweb</a>. Generated on 2015-06-17 17:52:35 GMT</div>
+<div class="footer"><hr/>Created by <a href="https://github.com/x42/lv2toweb">lv2toweb</a>. Generated on 2015-06-17 17:52:04 GMT</div>
  </body>
  </html>

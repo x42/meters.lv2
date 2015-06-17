@@ -113,7 +113,7 @@ div.footer {margin:1em auto; font-size:80%; color:#444; text-align:center; width
 </div>
 <div id="portwrapper">
 <script type="text/javascript">
-var num_ports=12;
+var num_ports=13;
 </script>
 <div id="plugintable"><table class="plugintable">
 <tr><td></td><td class="ptbl ptblTL">&nbsp;</td><td class="ptbl ptblTC">&nbsp;</td><td class="ptbl ptblTR">&nbsp;</td><td></td></tr>
@@ -194,7 +194,7 @@ var num_ports=12;
 <tr><td class="bgL controlport" onmouseover="showdoc(9);" onmouseout="showdoc(-1);" onclick="jumpto(9);">9) FFT Size</td><td class="pbody left ptbl ptblLL" onmouseover="showdoc(9);" onmouseout="showdoc(-1);" onclick="jumpto(9);"><div>(fftsize)<div class="portinfo" id="port9" style="display:none">
 <h3>9) FFT Size</h3>
 <p class="port controlport">(<span>Control</span> <span>Input</span>)</p>
-<p class="docs">Number of audio-samples to process. Large values increase accuracy, particular for low frequencies as well as latency.</p>
+<p class="docs">Number of audio-samples to process. Large values increase accuracy (particular for low frequencies) as well as latency.</p>
 <p class="desc">Port Properties:</p>
 <ul>
 <li class="portproperty">Enumeration
@@ -225,10 +225,18 @@ var num_ports=12;
 <p class="docs">Auto-gain. Normalize signal level, set gain to detected (per band) peak signal level.</p>
 <p class="desc">Port Properties:</p>
 <ul>
+<li class="portproperty">Integer</li>
 <li class="portproperty">Toggle
 </li>
-<li class="portproperty">Integer</li>
 </ul>
+<p>
+</p>
+</div>
+</div></td><td class="pbody"><div>&nbsp;</div></td><td class="pbody ptbl ptblRR"></td><td></td></tr>
+<tr><td class="bgL controlport" onmouseover="showdoc(12);" onmouseout="showdoc(-1);" onclick="jumpto(12);">12) Screen Persistence</td><td class="pbody left ptbl ptblLL" onmouseover="showdoc(12);" onmouseout="showdoc(-1);" onclick="jumpto(12);"><div>(persistence)<div class="portinfo" id="port12" style="display:none">
+<h3>12) Screen Persistence</h3>
+<p class="port controlport">(<span>Control</span> <span>Input</span>)</p>
+<p class="docs">Screen persistence (fade out speed). 0: no persistence, 100: permanent. Values above ~66 result in a permanent shadow.</p>
 <p>
 </p>
 </div>
@@ -288,16 +296,16 @@ var num_ports=12;
 </p>
 <table class="portrange">
 <tr><th colspan="2">Range</th></tr>
-<tr><th>min</th><td>-60.000000</td></tr>
+<tr><th>min</th><td>-80.000000</td></tr>
 <tr><th>max</th><td>-10.000000</td></tr>
-<tr><th>default</th><td>-45.000000</td></tr>
+<tr><th>default</th><td>-50.000000</td></tr>
 </table>
 </div>
 <div class="port">
 <div class="toplink"><a href="#top">&nbsp;&uarr;&nbsp;</a></div>
 <h3><a name="portdoc9">9</a>) FFT Size</h3>
 <p class="port controlport">(<span>Control</span> <span>Input</span>)</p>
-<p class="docs">Number of audio-samples to process. Large values increase accuracy, particular for low frequencies as well as latency.</p>
+<p class="docs">Number of audio-samples to process. Large values increase accuracy (particular for low frequencies) as well as latency.</p>
 <p class="desc">Port Properties:</p>
 <ul>
 <li class="portproperty">Enumeration
@@ -327,9 +335,9 @@ var num_ports=12;
 <p class="docs">Group data by frequency bands. Depending on FFT-size, 6 or 12 bands per octave are used. This allows for 1/frequency (pink noise) signal level normalization. It also speeds up visualization for large FFT sizes and decreases CPU/GPU usage due to visualization.</p>
 <p class="desc">Port Properties:</p>
 <ul>
+<li class="portproperty">Integer</li>
 <li class="portproperty">Toggle
 </li>
-<li class="portproperty">Integer</li>
 </ul>
 <p>
 </p>
@@ -358,6 +366,20 @@ var num_ports=12;
 <tr><th>min</th><td>0.000000</td></tr>
 <tr><th>max</th><td>1.000000</td></tr>
 <tr><th>default</th><td>0.000000</td></tr>
+</table>
+</div>
+<div class="port">
+<div class="toplink"><a href="#top">&nbsp;&uarr;&nbsp;</a></div>
+<h3><a name="portdoc12">12</a>) Screen Persistence</h3>
+<p class="port controlport">(<span>Control</span> <span>Input</span>)</p>
+<p class="docs">Screen persistence (fade out speed). 0: no persistence, 100: permanent. Values above ~66 result in a permanent shadow.</p>
+<p>
+</p>
+<table class="portrange">
+<tr><th colspan="2">Range</th></tr>
+<tr><th>min</th><td>0.000000</td></tr>
+<tr><th>max</th><td>100.000000</td></tr>
+<tr><th>default</th><td>33.000000</td></tr>
 </table>
 </div>
 </div>
@@ -408,6 +430,6 @@ var num_ports=12;
 </div>
 <!-- end of page !-->
 <div style="clear:both;"></div>
-<div class="footer"><hr/>Created by <a href="https://github.com/x42/lv2toweb">lv2toweb</a>. Generated on 2014-02-05 14:49:18 GMT</div>
+<div class="footer"><hr/>Created by <a href="https://github.com/x42/lv2toweb">lv2toweb</a>. Generated on 2015-06-17 17:53:01 GMT</div>
  </body>
  </html>
