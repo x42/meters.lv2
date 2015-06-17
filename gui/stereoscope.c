@@ -419,7 +419,7 @@ static void plot_data_oct(SFSUI* ui) {
 		hsl2rgb(clr, .70 - .72 * pk, .9, .3 + pk * .4);
 		cairo_set_source_rgba(cr, clr[0], clr[1], clr[2], 0.8);
 
-		if (fabsf(a_lr -.5) < .05) {
+		if (fabsf(a_lr -.5f) < .05f) {
 			cairo_set_line_width (cr, 3.0);
 		} else {
 			cairo_set_line_width (cr, 1.0);
