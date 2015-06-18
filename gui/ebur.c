@@ -1293,45 +1293,45 @@ instantiate(
 	robtk_spin_label_width(ui->spn_radartime, 32.0, -1);
 
 	int row = 0; // left side
-	rob_table_attach((ui->cbx_box), GLB_W(ui->lbl_ringinfo), 0, 2, row, row+1, 3, 0, RTK_EXANDF, RTK_SHRINK);
+	rob_table_attach((ui->cbx_box), GLB_W(ui->lbl_ringinfo), 0, 2, row, row+1, 0, 0, RTK_EXANDF, RTK_SHRINK);
 	row++;
 	rob_table_attach_defaults(ui->cbx_box, robtk_sep_widget(ui->sep_h0), 0, 2, row, row+1);
 	row++;
-	rob_table_attach(ui->cbx_box, GRB_W(ui->cbx_lu)   , 0, 1, row, row+1, 2, 0, RTK_EXANDF, RTK_SHRINK);
-	rob_table_attach(ui->cbx_box, GRB_W(ui->cbx_lufs) , 1, 2, row, row+1, 2, 0, RTK_EXANDF, RTK_SHRINK);
+	rob_table_attach(ui->cbx_box, GRB_W(ui->cbx_lu)   , 0, 1, row, row+1, 0, 0, RTK_EXANDF, RTK_SHRINK);
+	rob_table_attach(ui->cbx_box, GRB_W(ui->cbx_lufs) , 1, 2, row, row+1, 0, 0, RTK_EXANDF, RTK_SHRINK);
 	row++;
-	rob_table_attach(ui->cbx_box, GRB_W(ui->cbx_sc18) , 0, 1, row, row+1, 2, 0, RTK_EXANDF, RTK_SHRINK);
-	rob_table_attach(ui->cbx_box, GRB_W(ui->cbx_sc9)  , 1, 2, row, row+1, 2, 0, RTK_EXANDF, RTK_SHRINK);
+	rob_table_attach(ui->cbx_box, GRB_W(ui->cbx_sc18) , 0, 1, row, row+1, 0, 0, RTK_EXANDF, RTK_SHRINK);
+	rob_table_attach(ui->cbx_box, GRB_W(ui->cbx_sc9)  , 1, 2, row, row+1, 0, 0, RTK_EXANDF, RTK_SHRINK);
 	row++;
 #ifdef EASTER_EGG
-	rob_table_attach(ui->cbx_box, GRB_W(ui->cbx_sc24)      , 1, 2, row, row+1, 2, 0, RTK_EXANDF, RTK_SHRINK);
-	rob_table_attach(ui->cbx_box, GBT_W(ui->cbx_truepeak)  , 0, 1, row, row+1, 2, 0, RTK_EXANDF, RTK_SHRINK);
+	rob_table_attach(ui->cbx_box, GRB_W(ui->cbx_sc24)      , 1, 2, row, row+1, 0, 0, RTK_EXANDF, RTK_SHRINK);
+	rob_table_attach(ui->cbx_box, GBT_W(ui->cbx_truepeak)  , 0, 1, row, row+1, 0, 0, RTK_EXANDF, RTK_SHRINK);
 #else
-	rob_table_attach(ui->cbx_box, GBT_W(ui->cbx_truepeak)  , 0, 2, row, row+1, 2, 0, RTK_EXANDF, RTK_SHRINK);
+	rob_table_attach(ui->cbx_box, GBT_W(ui->cbx_truepeak)  , 0, 2, row, row+1, 0, 0, RTK_EXANDF, RTK_SHRINK);
 #endif
 	row++;
-	rob_table_attach(ui->cbx_box, GRB_W(ui->cbx_ring_mom)  , 0, 1, row, row+1, 2, 0, RTK_EXANDF, RTK_SHRINK);
-	rob_table_attach(ui->cbx_box, GRB_W(ui->cbx_ring_short), 1, 2, row, row+1, 2, 0, RTK_EXANDF, RTK_SHRINK);
+	rob_table_attach(ui->cbx_box, GRB_W(ui->cbx_ring_mom)  , 0, 1, row, row+1, 0, 0, RTK_EXANDF, RTK_SHRINK);
+	rob_table_attach(ui->cbx_box, GRB_W(ui->cbx_ring_short), 1, 2, row, row+1, 0, 0, RTK_EXANDF, RTK_SHRINK);
 
 	rob_table_attach_defaults(ui->cbx_box, robtk_sep_widget(ui->sep_v0), 2, 3, 0, 6);
 
 	row = 0; // right side
-	rob_table_attach(ui->cbx_box, GRB_W(ui->cbx_histogram) , 3, 4, row, row+1, 2, 0, RTK_EXANDF, RTK_SHRINK);
-	rob_table_attach(ui->cbx_box, GRB_W(ui->cbx_radar)     , 4, 5, row, row+1, 2, 0, RTK_EXANDF, RTK_SHRINK);
+	rob_table_attach(ui->cbx_box, GRB_W(ui->cbx_histogram) , 3, 4, row, row+1, 0, 0, RTK_EXANDF, RTK_SHRINK);
+	rob_table_attach(ui->cbx_box, GRB_W(ui->cbx_radar)     , 4, 5, row, row+1, 0, 0, RTK_EXANDF, RTK_SHRINK);
 	row++;
 	rob_table_attach_defaults(ui->cbx_box, robtk_sep_widget(ui->sep_h1), 3, 5, row, row+1);
 	row++;
-	rob_table_attach(ui->cbx_box, GLB_W(ui->lbl_radarinfo), 3, 4, row, row+1, 3, 0, RTK_EXANDF, RTK_SHRINK);
-	rob_table_attach(ui->cbx_box, GSP_W(ui->spn_radartime), 4, 5, row, row+1, 3, 0, RTK_EXANDF, RTK_SHRINK);
+	rob_table_attach(ui->cbx_box, GLB_W(ui->lbl_radarinfo), 3, 4, row, row+1, 0, 0, RTK_EXANDF, RTK_SHRINK);
+	rob_table_attach(ui->cbx_box, GSP_W(ui->spn_radartime), 4, 5, row, row+1, 0, 0, RTK_EXANDF, RTK_SHRINK);
 	row++;
-	rob_table_attach(ui->cbx_box, GBT_W(ui->cbx_autoreset), 3, 4, row, row+1, 2, 0, RTK_EXANDF, RTK_SHRINK);
-	rob_table_attach(ui->cbx_box, GPB_W(ui->btn_reset), 4, 5, row, row+1, 3, 1, RTK_FILL, RTK_SHRINK);
+	rob_table_attach(ui->cbx_box, GBT_W(ui->cbx_autoreset), 3, 4, row, row+1, 0, 0, RTK_EXANDF, RTK_SHRINK);
+	rob_table_attach(ui->cbx_box, GPB_W(ui->btn_reset), 4, 5, row, row+1, 0, 0, RTK_FILL, RTK_SHRINK);
 	row++;
-	rob_table_attach(ui->cbx_box, GBT_W(ui->cbx_transport), 3, 4, row, row+1, 2, 0, RTK_EXANDF, RTK_SHRINK);
-	rob_table_attach(ui->cbx_box, GBT_W(ui->btn_start), 4, 5, row, row+1, 3, 1, RTK_FILL, RTK_SHRINK);
+	rob_table_attach(ui->cbx_box, GBT_W(ui->cbx_transport), 3, 4, row, row+1, 0, 0, RTK_EXANDF, RTK_SHRINK);
+	rob_table_attach(ui->cbx_box, GBT_W(ui->btn_start), 4, 5, row, row+1, 0, 0, RTK_FILL, RTK_SHRINK);
 	row++;
-	rob_table_attach(ui->cbx_box, GRB_W(ui->cbx_hist_mom)  , 3, 4, row, row+1, 2, 0, RTK_EXANDF, RTK_SHRINK);
-	rob_table_attach(ui->cbx_box, GRB_W(ui->cbx_hist_short), 4, 5, row, row+1, 2, 0, RTK_EXANDF, RTK_SHRINK);
+	rob_table_attach(ui->cbx_box, GRB_W(ui->cbx_hist_mom)  , 3, 4, row, row+1, 0, 0, RTK_EXANDF, RTK_SHRINK);
+	rob_table_attach(ui->cbx_box, GRB_W(ui->cbx_hist_short), 4, 5, row, row+1, 0, 0, RTK_EXANDF, RTK_SHRINK);
 
 
 	/* global packing */
