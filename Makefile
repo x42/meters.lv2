@@ -4,26 +4,33 @@
 #   make CFLAGS=-O2
 #   make install DESTDIR=$(CURDIR)/debian/meters.lv2 PREFIX=/usr
 #
-OPTIMIZATIONS ?= -msse -msse2 -mfpmath=sse -fomit-frame-pointer -O3 -fno-finite-math-only -DNDEBUG
 PREFIX ?= /usr/local
+BINDIR ?= $(PREFIX)/bin
+MANDIR ?= $(PREFIX)/share/man/man1
+# see http://lv2plug.in/pages/filesystem-hierarchy-standard.html, don't use libdir
+LV2DIR ?= $(PREFIX)/lib/lv2
+
+OPTIMIZATIONS ?= -msse -msse2 -mfpmath=sse -fomit-frame-pointer -O3 -fno-finite-math-only -DNDEBUG
 CFLAGS ?= -Wall -Wno-unused-function
-LIBDIR ?= lib
 STRIP  ?= strip
 
 EXTERNALUI?=yes
 BUILDGTK?=no
 KXURI?=yes
 
-override CFLAGS += -g -fvisibility=hidden $(OPTIMIZATIONS)
-BUILDDIR=build/
-OBJDIR=obj/
-APPBLD=x42/
+meters_VERSION?=$(shell git describe --tags HEAD 2>/dev/null | sed 's/-g.*$$//;s/^v//' || echo "LV2")
 RW?=robtk/
-meters_VERSION?=$(shell git describe --tags HEAD | sed 's/-g.*$$//;s/^v//' || echo "LV2")
+
+###############################################################################
+override CFLAGS += -g -fvisibility=hidden $(OPTIMIZATIONS)
+
+BUILDDIR=build/
+APPBLD=x42/
+OBJDIR=obj/
+
 ###############################################################################
 LIB_EXT=.so
 
-LV2DIR ?= $(PREFIX)/$(LIBDIR)/lv2
 LOADLIBES=-lm
 
 LV2NAME=meters
@@ -214,7 +221,7 @@ ifneq ($(MAKECMDGOALS), submodules)
 endif
 
 ifeq ($(XWIN),)
-override CFLAGS += -fPIC
+override CFLAGS += -fPIC -fvisibility=hidden
 else
 override CFLAGS += -DPTW32_STATIC_LIB
 override CXXFLAGS += -DPTW32_STATIC_LIB
@@ -287,7 +294,7 @@ submodules:
 	-test -d .git -a .gitmodules -a -f Makefile.git && $(MAKE) -f Makefile.git submodules
 
 
-all: submodule_check $(BUILDDIR)manifest.ttl $(BUILDDIR)$(LV2NAME).ttl $(targets)
+all: submodule_check $(BUILDDIR)manifest.ttl $(BUILDDIR)$(LV2NAME).ttl $(targets) $(APPBLD)x42-meter-collection
 
 jackapps: \
 	$(APPBLD)x42-dr14 \
@@ -377,7 +384,7 @@ $(APPBLD)x42-dr14$(EXE_EXT): src/meters.cc $(DSPSRC) $(DSPDEPS) \
 $(eval x42_k20rms_JACKSRC = src/meters.cc $(DSPSRC))
 x42_k20rms_JACKGUI = gui/kmeter.c
 x42_k20rms_LV2HTTL = lv2ttl/k20stereo.h
-x42_k20rms_JACKDESC = lv2ui_k20stereo
+x42_k20rms_JACKDESC = lv2ui_kmeter
 $(APPBLD)x42-k20rms$(EXE_EXT): src/meters.cc $(DSPSRC) $(DSPDEPS) \
 	$(x42_k20rms_JACKGUI) $(x42_k20rms_LV2HTTL)
 
@@ -459,7 +466,8 @@ $(eval x42_meter_collection_JACKSRC = -DX42_MULTIPLUGIN src/meters.cc $(DSPSRC) 
 x42_meter_collection_LV2HTTL = lv2ttl/plugins.h
 $(APPBLD)x42-meter-collection$(EXE_EXT): src/meters.cc $(DSPSRC) $(DSPDEPS) $(COLLECTION_OBJS) \
 	lv2ttl/cor.h lv2ttl/dr14stereo.h lv2ttl/ebur128.h lv2ttl/goniometer.h \
-	lv2ttl/k20stereo.h lv2ttl/phasewheel.h lv2ttl/sigdisthist.h lv2ttl/spectr30.h \
+	lv2ttl/k12stereo.h lv2ttl/k14stereo.h lv2ttl/k20stereo.h \
+	lv2ttl/phasewheel.h lv2ttl/sigdisthist.h lv2ttl/spectr30.h \
 	lv2ttl/bbc2c.h lv2ttl/din2c.h lv2ttl/ebu2c.h lv2ttl/nor2c.h lv2ttl/vu2c.h lv2ttl/bbcm6.h \
 	lv2ttl/stereoscope.h lv2ttl/tp_rms_stereo.h lv2ttl/bitmeter.h lv2ttl/plugins.h
 
@@ -507,12 +515,18 @@ $(BUILDDIR)meters_glui.so: gui/meters.c $(GLGUIOBJ) $(goniometer_UIDEP)
 ###############################################################################
 # install/uninstall/clean target definitions
 
-install: all
+install: install-bin install-man
+
+uninstall: uninstall-bin uninstall-man
+
+install-bin: all
 	install -d $(DESTDIR)$(LV2DIR)/$(BUNDLE)
 	install -m755 $(targets) $(DESTDIR)$(LV2DIR)/$(BUNDLE)
 	install -m644 $(BUILDDIR)manifest.ttl $(BUILDDIR)$(LV2NAME).ttl $(DESTDIR)$(LV2DIR)/$(BUNDLE)
+	install -d $(DESTDIR)$(BINDIR)
+	install -T -m755 $(APPBLD)x42-meter-collection $(DESTDIR)$(BINDIR)/x42-meter
 
-uninstall:
+uninstall-bin:
 	rm -f $(DESTDIR)$(LV2DIR)/$(BUNDLE)/manifest.ttl
 	rm -f $(DESTDIR)$(LV2DIR)/$(BUNDLE)/$(LV2NAME).ttl
 	rm -f $(DESTDIR)$(LV2DIR)/$(BUNDLE)/$(LV2NAME)$(LIB_EXT)
@@ -527,7 +541,20 @@ uninstall:
 	rm -f $(DESTDIR)$(LV2DIR)/$(BUNDLE)/$(LV2GTK8)$(LIB_EXT)
 	rm -f $(DESTDIR)$(LV2DIR)/$(BUNDLE)/$(LV2GTK9)$(LIB_EXT)
 	rm -f $(DESTDIR)$(LV2DIR)/$(BUNDLE)/$(LV2GTK10)$(LIB_EXT)
+	rm -f $(DESTDIR)$(BINDIR)/x42-meter
 	-rmdir $(DESTDIR)$(LV2DIR)/$(BUNDLE)
+	-rmdir $(DESTDIR)$(BINDIR)
+
+install-man:
+	install -d $(DESTDIR)$(MANDIR)
+	install -m644 doc/x42-meter.1 $(DESTDIR)$(MANDIR)
+
+uninstall-man:
+	rm -f $(DESTDIR)$(MANDIR)/x42-meters.1
+	-rmdir $(DESTDIR)$(MANDIR)
+
+man: $(APPBLD)x42-meter-collection
+	help2man -N -n 'JACK Audio Meter Collection' -o doc/x42-meter.1 $(APPBLD)x42-meter-collection
 
 clean:
 	rm -f $(BUILDDIR)manifest.ttl $(BUILDDIR)$(LV2NAME).ttl \
@@ -553,5 +580,6 @@ clean:
 distclean: clean
 	rm -f cscope.out cscope.files tags
 
-.PHONY: clean all install uninstall distclean jackapps \
+.PHONY: clean all install uninstall distclean jackapps man \
+        install-bin uninstall-bin install-man uninstall-man \
         submodule_check submodules submodule_update submodule_pull
