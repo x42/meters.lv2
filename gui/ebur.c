@@ -687,11 +687,10 @@ static bool expose_event(RobWidget* handle, cairo_t* cr, cairo_rectangle_t *ev) 
 
 				cairo_move_to(cr, CX, CY);
 				cairo_arc (cr, CX, CY, rad,
-						(double) ang * astep + aoff, (ang+1.0) * astep + aoff);
+						(double) (ang-1.0) * astep + aoff, (ang+1.0) * astep + aoff);
 				cairo_close_path(cr);
-				cairo_stroke_preserve(cr);
-				cairo_fill(cr);
 			}
+			cairo_fill(cr);
 
 			cairo_set_line_cap(cr, CAIRO_LINE_CAP_BUTT);
 
@@ -754,14 +753,15 @@ static bool expose_event(RobWidget* handle, cairo_t* cr, cairo_rectangle_t *ev) 
 			float *rdr = hists ? ui->radarS : ui->radarM;
 			const double astep = 2.0 * M_PI / (double) ui->radar_pos_max;
 
+
+			// TODO minimize redraw..
 			for (int ang = 0; ang < ui->radar_pos_max; ++ang) {
 				cairo_move_to(cr, CX, CY);
 				cairo_arc (cr, CX, CY, radar_deflect(rdr[ang], RADIUS),
-						(double) ang * astep, (ang+1.0) * astep);
+						(double) ang * astep, (ang+1.5) * astep);
 				cairo_close_path(cr);
-				cairo_stroke_preserve(cr);
-				cairo_fill(cr);
 			}
+			cairo_fill(cr);
 
 			/* fade-out values */
 			for (int p = 0; p < 12; ++p) {
@@ -806,8 +806,8 @@ static bool expose_event(RobWidget* handle, cairo_t* cr, cairo_rectangle_t *ev) 
 			float sc = cosf(ang);
 			cairo_move_to(cr, CX + innercircle * sc, CY + innercircle * cc);
 			cairo_line_to(cr, CX + RADIUS * sc, CY + RADIUS * cc);
-			cairo_stroke (cr);
 		}
+		cairo_stroke (cr);
 	}
 #endif
 
