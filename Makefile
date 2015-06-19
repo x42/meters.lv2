@@ -294,21 +294,21 @@ submodules:
 	-test -d .git -a .gitmodules -a -f Makefile.git && $(MAKE) -f Makefile.git submodules
 
 
-all: submodule_check $(BUILDDIR)manifest.ttl $(BUILDDIR)$(LV2NAME).ttl $(targets) $(APPBLD)x42-meter-collection
+all: submodule_check $(BUILDDIR)manifest.ttl $(BUILDDIR)$(LV2NAME).ttl $(targets) $(APPBLD)x42-meter-collection$(EXE_EXT)
 
 jackapps: \
-	$(APPBLD)x42-dr14 \
-	$(APPBLD)x42-ebur128 \
-	$(APPBLD)x42-goniometer \
-	$(APPBLD)x42-histogram \
-	$(APPBLD)x42-k20rms \
-	$(APPBLD)x42-phase-correlation \
-	$(APPBLD)x42-phasewheel \
-	$(APPBLD)x42-spectrum30 \
-	$(APPBLD)x42-stereoscope \
-	$(APPBLD)x42-truepeakrms \
-	$(APPBLD)x42-bitmeter \
-	$(APPBLD)x42-meter-collection
+	$(APPBLD)x42-dr14$(EXE_EXT) \
+	$(APPBLD)x42-ebur128$(EXE_EXT) \
+	$(APPBLD)x42-goniometer$(EXE_EXT) \
+	$(APPBLD)x42-histogram$(EXE_EXT) \
+	$(APPBLD)x42-k20rms$(EXE_EXT) \
+	$(APPBLD)x42-phase-correlation$(EXE_EXT) \
+	$(APPBLD)x42-phasewheel$(EXE_EXT) \
+	$(APPBLD)x42-spectrum30$(EXE_EXT) \
+	$(APPBLD)x42-stereoscope$(EXE_EXT) \
+	$(APPBLD)x42-truepeakrms$(EXE_EXT) \
+	$(APPBLD)x42-bitmeter$(EXE_EXT) \
+	$(APPBLD)x42-meter-collection$(EXE_EXT)
 
 $(BUILDDIR)manifest.ttl: lv2ttl/manifest.gui.ttl.in lv2ttl/manifest.gtk.ttl.in lv2ttl/manifest.lv2.ttl.in lv2ttl/manifest.ttl.in Makefile
 	@mkdir -p $(BUILDDIR)
@@ -524,7 +524,7 @@ install-bin: all
 	install -m755 $(targets) $(DESTDIR)$(LV2DIR)/$(BUNDLE)
 	install -m644 $(BUILDDIR)manifest.ttl $(BUILDDIR)$(LV2NAME).ttl $(DESTDIR)$(LV2DIR)/$(BUNDLE)
 	install -d $(DESTDIR)$(BINDIR)
-	install -T -m755 $(APPBLD)x42-meter-collection $(DESTDIR)$(BINDIR)/x42-meter
+	install -T -m755 $(APPBLD)x42-meter-collection$(EXE_EXT) $(DESTDIR)$(BINDIR)/x42-meter$(EXE_EXT)
 
 uninstall-bin:
 	rm -f $(DESTDIR)$(LV2DIR)/$(BUNDLE)/manifest.ttl
@@ -541,7 +541,7 @@ uninstall-bin:
 	rm -f $(DESTDIR)$(LV2DIR)/$(BUNDLE)/$(LV2GTK8)$(LIB_EXT)
 	rm -f $(DESTDIR)$(LV2DIR)/$(BUNDLE)/$(LV2GTK9)$(LIB_EXT)
 	rm -f $(DESTDIR)$(LV2DIR)/$(BUNDLE)/$(LV2GTK10)$(LIB_EXT)
-	rm -f $(DESTDIR)$(BINDIR)/x42-meter
+	rm -f $(DESTDIR)$(BINDIR)/x42-meter$(EXE_EXT)
 	-rmdir $(DESTDIR)$(LV2DIR)/$(BUNDLE)
 	-rmdir $(DESTDIR)$(BINDIR)
 
