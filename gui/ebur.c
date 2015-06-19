@@ -34,6 +34,10 @@
 #include "lv2/lv2plug.in/ns/extensions/ui/ui.h"
 #include "src/uris.h"
 
+#ifndef MAX
+#define MAX(A,B) ( (A) > (B) ? (A) : (B) )
+#endif
+
 /*************************/
 #define CX  (178.5f)
 #define CY  (196.5f)
@@ -130,9 +134,13 @@ typedef struct {
 	RobWidget* m0;
 
 	cairo_pattern_t * cpattern;
+	cairo_pattern_t * lpattern9;
+	cairo_pattern_t * lpattern18;
 	cairo_pattern_t * hpattern9;
 	cairo_pattern_t * hpattern18;
 
+	cairo_surface_t * level_surf;
+	cairo_surface_t * radar_surf;
 	cairo_surface_t * lvl_label;
 	cairo_surface_t * hist_label;
 
@@ -159,7 +167,7 @@ typedef struct {
 	int radar_pos_disp;
 	int circ_max;
 	int circ_val;
-	bool fullradar;
+	bool fullhist;
 	int  fastradar;
 	bool fasthist;
 
@@ -230,7 +238,7 @@ static void radar_color(cairo_t* cr, const float v) {
 
 static cairo_pattern_t * radar_pattern(cairo_t* crx, float cx, float cy, float rad) {
 	cairo_pattern_t * pat = cairo_pattern_create_radial(cx, cy, 0, cx, cy, rad);
-	cairo_pattern_add_color_stop_rgba(pat, 0.0 ,  .0, .0, .0, 0.0);
+	cairo_pattern_add_color_stop_rgba(pat, 0.0 ,  .05, .05, .05, 1.0); // radar BG
 	cairo_pattern_add_color_stop_rgba(pat, 0.05,  .0, .0, .0, 1.0); // -57
 
 	cairo_pattern_add_color_stop_rgba(pat, radar_deflect(-53.0, 1.0),  .0, .0, .5, 1.0);
@@ -284,6 +292,7 @@ static cairo_pattern_t * histogram_pattern(cairo_t* crx, float cx, float cy, flo
 	cairo_set_source_rgba(cr, CR, CG, CB, CA); \
 	cairo_move_to(cr, rad, rad); \
 	cairo_arc (cr, rad, rad, rad, (.5+(START)) * M_PI, (.5 + (END)) * M_PI); \
+	cairo_close_path (cr); \
 	cairo_fill (cr);
 
 	if (plus9) {
@@ -310,6 +319,7 @@ static cairo_pattern_t * histogram_pattern(cairo_t* crx, float cx, float cy, flo
 	cairo_matrix_t m;
 	cairo_matrix_init_translate (&m, -(cx-rad), -(cy-rad));
 	cairo_pattern_set_matrix (pat, &m);
+	cairo_surface_destroy (sfx);
 
 	return pat;
 }
@@ -342,19 +352,18 @@ static void write_text(
 static cairo_surface_t * hlabel_surface(EBUrUI* ui) {
 	cairo_surface_t *sf = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, RADIUS*2, RADIUS*2);
 	cairo_t *cr = cairo_create (sf);
-	CairoSetSouerceRGBA(c_trs);
-	cairo_set_operator (cr, CAIRO_OPERATOR_SOURCE);
-	cairo_rectangle (cr, 0, 0, RADIUS*2, RADIUS*2);
-	cairo_fill (cr);
+	cairo_set_operator (cr, CAIRO_OPERATOR_CLEAR);
+	cairo_paint (cr);
+
 	cairo_set_operator (cr, CAIRO_OPERATOR_OVER);
 	CairoSetSouerceRGBA(c_gry);
 	cairo_set_line_width(cr, 1.0);
 
 #define CIRCLABEL(RDS,LBL) \
 	{ \
-	cairo_arc (cr, RADIUS + .5, RADIUS + .5, RADIUS * RDS, 0.5 * M_PI, 2.0 * M_PI); \
+	cairo_arc (cr, RADIUS, RADIUS, RADIUS * RDS, 0.5 * M_PI, 2.0 * M_PI); \
 	cairo_stroke (cr); \
-	write_text(cr, LBL, FONT(FONT_M08), RADIUS + .5 + RADIUS * RDS, RADIUS + 14.5, M_PI * -.5, 2, c_gry);\
+	write_text(cr, LBL, FONT(FONT_M08), RADIUS + RADIUS * RDS, RADIUS + 14.5, M_PI * -.5, 2, c_gry);\
 	}
 	CIRCLABEL(.301, "20%")
 	CIRCLABEL(.602, "40%")
@@ -366,12 +375,11 @@ static cairo_surface_t * hlabel_surface(EBUrUI* ui) {
 static cairo_surface_t * clabel_surface(EBUrUI* ui, bool plus9, bool plus24, bool lufs) {
 	char buf[128];
 	cairo_surface_t *sf = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, COORD_ALL_W, COORD_ALL_H);
-
 	cairo_t *cr = cairo_create (sf);
-	CairoSetSouerceRGBA(c_trs);
-	cairo_set_operator (cr, CAIRO_OPERATOR_SOURCE);
-	cairo_rectangle (cr, 0, 0, COORD_ALL_W, COORD_ALL_H);
-	cairo_fill (cr);
+
+	cairo_set_operator (cr, CAIRO_OPERATOR_CLEAR);
+	cairo_paint (cr);
+
 	cairo_set_operator (cr, CAIRO_OPERATOR_OVER);
 
 #define SIN60 0.866025404
@@ -488,6 +496,286 @@ const static cairo_rectangle_t rect_is_radar = {CX-RADIUS-9, CY-RADIUS-9, 2*RADI
 #define RDR_INV_W (2*RADIUS + 5)
 #define RDR_INV_H (2*RADIUS + 5)
 
+static cairo_pattern_t * level_pattern (const float cx, const float cy, const float rad, bool plus9) {
+	cairo_surface_t *sfx = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, rad * 2, rad * 2);
+	cairo_t *cr = cairo_create (sfx);
+
+#define COLORPIE(A0, A1, R, G, B) \
+	cairo_set_source_rgb (cr, R, G, B); \
+	cairo_move_to(cr, rad, rad); \
+	cairo_arc(cr, rad, rad, rad, M_PI * (.5 +(A0)) - .0218, M_PI * (.5 + (A1)) - 0.0218); \
+	cairo_close_path (cr); \
+	cairo_fill (cr);
+
+	if (plus9) {
+		COLORPIE(  0/6.0,   2/6.0,  .0,  .4, .0);
+		COLORPIE(  2/6.0,   6/6.0,  .0,  .8, .0);
+		COLORPIE(  6/6.0,   9/6.0, .75, .75, .0);
+	} else {
+		// -36..+18
+		COLORPIE(  0/6.0,   1/6.0,  .0,  .0, .4);
+		COLORPIE(  1/6.0,   2/6.0,  .0,  .0, .8);
+		COLORPIE(  2/6.0,   4/6.0,  .0,  .4, .0);
+		COLORPIE(  4/6.0,   6/6.0,  .0,  .8, .0);
+		COLORPIE(  6/6.0,   8/6.0, .75, .75, .0);
+		COLORPIE(  8/6.0, 8.5/6.0,  .8,  .4, .0);
+		COLORPIE(8.5/6.0,   9/6.0, 1.0,  .0, .0);
+		// and + 24
+		COLORPIE(  9/6.0,  11/6.0, 1.0,  .0, .0);
+	}
+
+	cairo_surface_flush(sfx);
+	cairo_destroy (cr);
+
+	cairo_pattern_t * pat =  cairo_pattern_create_for_surface (sfx);
+
+	cairo_matrix_t m;
+	cairo_matrix_init_translate (&m, -cx + rad, -cy + rad);
+	cairo_pattern_set_matrix (pat, &m);
+
+	cairo_surface_destroy (sfx);
+	return pat;
+}
+
+static void prepare_lvl_surface (EBUrUI* ui) {
+	cairo_t *cr;
+	assert (!ui->level_surf);
+	ui->level_surf = cairo_image_surface_create(CAIRO_FORMAT_A8, COORD_ALL_W, ceil(CY) + RADIUS22);
+
+	cr = cairo_create (ui->level_surf);
+	cairo_set_operator(cr, CAIRO_OPERATOR_CLEAR);
+	cairo_paint(cr);
+	cairo_set_operator(cr, CAIRO_OPERATOR_OVER);
+
+	cairo_set_line_width(cr, 2.5);
+	cairo_set_line_cap(cr, CAIRO_LINE_CAP_ROUND);
+	CairoSetSouerceRGBA(c_g30);
+
+  const int ulp = 120;
+	for (int rng = 0; rng <= ulp; ++rng) {
+			const float ang = 0.043633231 * rng + 1.570796327;
+			float cc = sinf(ang);
+			float sc = cosf(ang);
+			cairo_move_to(cr,   CX + RADIUS10 * sc, CY + RADIUS10 * cc);
+			cairo_line_to(cr, CX + RADIUS19 * sc, CY + RADIUS19 * cc);
+			cairo_stroke (cr);
+	}
+	cairo_destroy (cr);
+}
+
+static void render_radar (EBUrUI* ui) {
+	cairo_t *cr;
+	if (!ui->radar_surf) {
+		ui->radar_surf = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, RADIUS * 2, RADIUS * 2);
+		cr = cairo_create (ui->radar_surf);
+		cairo_set_operator(cr, CAIRO_OPERATOR_CLEAR);
+		cairo_paint(cr);
+	} else {
+		cr = cairo_create (ui->radar_surf);
+	}
+
+	cairo_set_operator(cr, CAIRO_OPERATOR_OVER);
+	cairo_translate (cr, RADIUS, RADIUS);
+
+	const bool hists = robtk_rbtn_get_active(ui->cbx_hist_short);
+	const bool plus9 = robtk_rbtn_get_active(ui->cbx_sc9);
+
+	if (robtk_rbtn_get_active(ui->cbx_histogram)) {
+		/* ----- Histogram ----- */
+		const int *rdr = hists ? ui->histS : ui->histM;
+		const int  len = hists ? ui->histLenS : ui->histLenM;
+
+		cairo_set_operator(cr, CAIRO_OPERATOR_CLEAR);
+		cairo_paint(cr);
+		cairo_set_operator(cr, CAIRO_OPERATOR_OVER);
+
+		/* histogram background */
+		if (len > 0) {
+			CairoSetSouerceRGBA(c_g05);
+		} else {
+			CairoSetSouerceRGBA(c_rd2);
+		}
+		cairo_arc (cr, 0, 0, RADIUS, 0, 2.0 * M_PI);
+		cairo_fill (cr);
+
+		if (len > 0) {
+			int amin, amax;
+			//  lvlFS = (0.1f * (ang - 700))
+			//  lvlFS =  .1 * ang - 70
+			if (plus9) { // -41 .. -14 LUFS
+				amin = 290; // -41LUFS
+				amax = 560; // -14LUFS
+			} else { // -59 .. -5 LUFS
+				amin = 110; // -59LUFS
+				amax = 650; // -5LUFS
+			}
+			const double astep = 1.5 * M_PI / (double) (amax - amin);
+			const double aoff = (M_PI / 2.0) - amin * astep;
+
+			cairo_set_line_cap(cr, CAIRO_LINE_CAP_ROUND);
+			cairo_set_line_width(cr, 0.75);
+			if (plus9) {
+				cairo_set_source (cr, ui->hpattern9);
+			} else {
+				cairo_set_source (cr, ui->hpattern18);
+			}
+
+			for (int ang = amin; ang < amax; ++ang) {
+				if (rdr[ang] <= 0) continue;
+				const float rad = (float) RADIUS * (1.0 + fast_log10(rdr[ang] / (float) len));
+				if (rad < 5) continue;
+
+				cairo_move_to(cr, 0, 0);
+				cairo_arc (cr, 0, 0, rad,
+						(double) (ang-1.0) * astep + aoff, (ang+1.0) * astep + aoff);
+				cairo_close_path(cr);
+			}
+			cairo_fill(cr);
+
+			cairo_set_line_cap(cr, CAIRO_LINE_CAP_BUTT);
+
+			/* outer circle */
+			cairo_set_line_width(cr, 1.0);
+			CairoSetSouerceRGBA(c_g20);
+			cairo_arc (cr, 0, 0, RADIUS, /*0.5 * M_PI */ 0, 2.0 * M_PI);
+			cairo_stroke (cr);
+
+			cairo_save(cr);
+			cairo_set_source_surface(cr, ui->hist_label, -RADIUS, -RADIUS);
+			cairo_paint(cr);
+			cairo_restore(cr);
+
+		} else {
+			write_text(cr, "No integration\ndata available.", FONT(FONT_S08), RADIUS * .5 , 5, 0, 8, c_g80);
+		}
+
+		/* center circle */
+		const float innercircle = 6;
+		cairo_set_line_width(cr, 1.0);
+		CairoSetSouerceRGBA(c_blk);
+		cairo_arc (cr, 0, 0, innercircle, 0, 2.0 * M_PI);
+		cairo_fill_preserve (cr);
+		CairoSetSouerceRGBA(c_gry);
+		cairo_stroke(cr);
+
+		cairo_arc (cr, 0, 0, innercircle + 3, .5 * M_PI, 2.0 * M_PI);
+		cairo_stroke(cr);
+
+		/* gain lines */
+		const double dashed[] = {3.0, 5.0};
+		cairo_save(cr);
+		cairo_set_dash(cr, dashed, 2, 4.0);
+		cairo_set_line_width(cr, 1.5);
+		cairo_set_line_cap(cr, CAIRO_LINE_CAP_ROUND);
+		for (int i = 3; i <= 12; ++i) {
+			const float ang = .5235994f * i;
+			float cc = sinf(ang);
+			float sc = cosf(ang);
+			cairo_move_to(cr, innercircle * sc, innercircle * cc);
+			cairo_line_to(cr, RADIUS5 * sc, RADIUS5 * cc);
+			cairo_stroke (cr);
+		}
+		cairo_restore(cr);
+
+	} else {
+		/* ----- History ----- */
+		ui->radar_pos_disp = ui->radar_pos_cur;
+
+		/* radar background */
+		if (ui->fastradar < 0) {
+			//printf("FAST RDR %d cur: %d / %d\n", ui->fastradar, ui->radar_pos_cur, ui->radar_pos_max);
+			CairoSetSouerceRGBA(c_g05);
+			cairo_arc (cr, 0, 0, RADIUS, 0, 2.0 * M_PI);
+			cairo_fill (cr);
+		}
+
+		cairo_set_line_width(cr, 1.0);
+
+		if (ui->radar_pos_max > 0) {
+			float *rdr = hists ? ui->radarS : ui->radarM;
+			const double astep = 2.0 * M_PI / (double) ui->radar_pos_max;
+
+			int a0 = 0;
+			int a1 = ui->radar_pos_max;
+
+			if (ui->fastradar >= 0) {
+				assert (ui->radar_pos_cur == ui->fastradar);
+				a0 = (ui->fastradar - 3 + ui->radar_pos_max) % ui->radar_pos_max;
+				a1 = a0 + 13;
+
+				cairo_move_to(cr, 0, 0);
+				cairo_arc (cr, 0, 0, RADIUS, (double) (a0 + 1.0) * astep, (a0 + 12.f) * astep);
+				cairo_close_path(cr);
+				CairoSetSouerceRGBA(c_g05);
+				cairo_fill (cr);
+			}
+
+			cairo_set_source (cr, ui->cpattern);
+
+			for (int ang = a0; ang < a1; ++ang) {
+				cairo_move_to(cr, 0, 0);
+				cairo_arc (cr, 0, 0, radar_deflect(rdr[ang % ui->radar_pos_max], RADIUS),
+						(double) ang * astep, (ang+1.5) * astep);
+				cairo_close_path(cr);
+			}
+			cairo_fill(cr);
+
+			/* fade-out values */
+			for (int p = 0; p < 10; ++p) {
+				float pos = ui->radar_pos_cur + 1 + p;
+				cairo_set_source_rgba (cr, .0, .0, .0, 1.0 - ((p+1.0)/12.0));
+				cairo_move_to(cr, 0, 0);
+				cairo_arc (cr, 0, 0, RADIUS, pos * astep, (pos + 1.0) * astep);
+				cairo_fill(cr);
+			}
+
+			/* current position */
+			CairoSetSouerceRGBA(c_g7X); // XXX
+			cairo_move_to(cr, 0, 0);
+			cairo_arc (cr, 0, 0, RADIUS,
+						(double) ui->radar_pos_cur * astep, ((double) ui->radar_pos_cur + 1.0) * astep);
+			cairo_line_to(cr, 0, 0);
+			cairo_fill (cr);
+		}
+	}
+	cairo_destroy (cr);
+}
+
+static void draw_radar_ann (cairo_t* cr) {
+	cairo_save (cr);
+	cairo_translate (cr, CX, CY);
+	/* radar lines */
+	cairo_set_line_width(cr, 1.5);
+	CairoSetSouerceRGBA(c_an0);
+	cairo_arc (cr, 0, 0, radar_deflect(-23, RADIUS), 0, 2.0 * M_PI);
+	cairo_stroke (cr);
+
+	cairo_set_line_width(cr, 1.0);
+	CairoSetSouerceRGBA(c_an1);
+	cairo_arc (cr, 0, 0, radar_deflect(-47, RADIUS), 0, 2.0 * M_PI);
+	cairo_stroke (cr);
+	cairo_arc (cr, 0, 0, radar_deflect(-35, RADIUS), 0, 2.0 * M_PI);
+	cairo_stroke (cr);
+	cairo_arc (cr, 0, 0, radar_deflect(-11, RADIUS), 0, 2.0 * M_PI);
+	cairo_stroke (cr);
+	cairo_arc (cr, 0, 0, radar_deflect( 0, RADIUS), 0, 2.0 * M_PI);
+	cairo_stroke (cr);
+
+	const float innercircle = radar_deflect(-47, RADIUS);
+	for (int i = 0; i < 12; ++i) {
+		const float ang = .5235994f * i;
+		float cc = sinf(ang);
+		float sc = cosf(ang);
+		cairo_move_to(cr, innercircle * sc, innercircle * cc);
+		cairo_line_to(cr, RADIUS * sc, RADIUS * cc);
+	}
+	cairo_stroke (cr);
+	cairo_restore (cr);
+}
+
+//#define DEBUG_DRAW(WHAT) printf("expose: %s\n", WHAT);
+#define DEBUG_DRAW(WHAT)
+
 /******************************************************************************
  * Main drawing function
  */
@@ -496,7 +784,6 @@ static bool expose_event(RobWidget* handle, cairo_t* cr, cairo_rectangle_t *ev) 
 	EBUrUI* ui = (EBUrUI*)GET_HANDLE(handle);
 	const bool lufs =  robtk_rbtn_get_active(ui->cbx_lufs);
 	const bool rings = robtk_rbtn_get_active(ui->cbx_ring_short);
-	const bool hists = robtk_rbtn_get_active(ui->cbx_hist_short);
 	const bool plus9 = robtk_rbtn_get_active(ui->cbx_sc9);
 	const bool plus24= robtk_rbtn_get_active(ui->cbx_sc24);
 	const bool dbtp  = robtk_cbtn_get_active(ui->cbx_truepeak);
@@ -506,14 +793,24 @@ static bool expose_event(RobWidget* handle, cairo_t* cr, cairo_rectangle_t *ev) 
 	int redraw_part = 0;
 	/* initialized */
 	if (!ui->cpattern) {
-		ui->cpattern = radar_pattern(cr, CX, CY, RADIUS);
+		ui->cpattern = radar_pattern(cr, 0, 0, RADIUS);
 	}
 	if (!ui->hpattern9) {
-		ui->hpattern9 = histogram_pattern(cr, CX, CY, RADIUS, TRUE);
+		ui->hpattern9 = histogram_pattern(cr, 0, 0, RADIUS, TRUE);
 	}
 	if (!ui->hpattern18) {
-		ui->hpattern18 = histogram_pattern(cr, CX, CY, RADIUS, FALSE);
+		ui->hpattern18 = histogram_pattern(cr, 0, 0, RADIUS, FALSE);
 	}
+	if (!ui->lpattern9) {
+		ui->lpattern9 = level_pattern(CX, CY, RADIUS23, TRUE);
+	}
+	if (!ui->lpattern18) {
+		ui->lpattern18 = level_pattern(CX, CY, RADIUS23, FALSE);
+	}
+	if (!ui->level_surf) {
+		prepare_lvl_surface (ui);
+	}
+
 	if (!ui->lvl_label || ui->redraw_labels) {
 		if (ui->lvl_label) cairo_surface_destroy(ui->lvl_label);
 		ui->lvl_label = clabel_surface(ui, plus9, plus24, lufs);
@@ -524,6 +821,7 @@ static bool expose_event(RobWidget* handle, cairo_t* cr, cairo_rectangle_t *ev) 
 	}
 	/* end initialization */
 
+	DEBUG_DRAW("->>>START----");
 #if 0 // DEBUG
 	printf("IS: %.1f+%.1f  %.1fx%.1f\n", ev->x, ev->y, ev->width, ev->height);
 #endif
@@ -541,8 +839,8 @@ static bool expose_event(RobWidget* handle, cairo_t* cr, cairo_rectangle_t *ev) 
 		redraw_part = 0;
 	} else if (ev->x == COORD_MTR_X && ev->y == COORD_MTR_Y) {
 		redraw_part = 1;
-		if (ui->fullradar) {
-			ui->fullradar = false;
+		if (ui->fullhist) {
+			ui->fullhist = false;
 			redraw_part |= 2;
 		} else {
 			leveldisplaypath(cr);
@@ -574,7 +872,6 @@ static bool expose_event(RobWidget* handle, cairo_t* cr, cairo_rectangle_t *ev) 
 
 	ui->fasttracked[0] = ui->fasttracked[1] = ui->fasttracked[2] = ui->fasttracked[3] = ui->fasttracked[4] = false;
 	ui->fasthist = false;
-	ui->fastradar = -1;
 
 	/* fill background */
 	rounded_rectangle (cr, 0, 4, COORD_ALL_W, COORD_ALL_H-6, 10);
@@ -585,12 +882,14 @@ static bool expose_event(RobWidget* handle, cairo_t* cr, cairo_rectangle_t *ev) 
 	cairo_stroke(cr);
 
 	if (rect_intersect_a(ev, 12, COORD_ML_Y, 10, 50)) {
+		DEBUG_DRAW("version");
 		write_text(cr,
 				ui->nfo ? ui->nfo : "x42 EBU R128 LV2",
 				FONT(FONT_S08), 1, 15, 1.5 * M_PI, 7, c_g30);
 	}
 
 	if (rect_intersect_a(ev, COORD_LEVEL_X, COORD_ML_Y, COORD_LEVEL_W, COORD_LEVEL_H)) {
+		DEBUG_DRAW("Big Level Num");
 		/* big level as text */
 		ui->prev_lvl[0] = rings ? ui->ls : ui->lm;
 		sprintf(buf, "%s %s", format_lufs(lufb0, LUFS(ui->prev_lvl[0])), lufs ? "LUFS" : "LU");
@@ -600,6 +899,7 @@ static bool expose_event(RobWidget* handle, cairo_t* cr, cairo_rectangle_t *ev) 
 	int trw = lufs ? 87 : 75;
 
 	if (rect_intersect_a(ev, COORD_MX_X, COORD_ML_Y+25, 40, 30)) {
+		DEBUG_DRAW("Max Legend");
 		/* max legend */
 		CairoSetSouerceRGBA(c_g20);
 		rounded_rectangle (cr, COORD_MX_X, COORD_ML_Y+25, 40, 30, 10);
@@ -608,6 +908,7 @@ static bool expose_event(RobWidget* handle, cairo_t* cr, cairo_rectangle_t *ev) 
 	}
 
 	if (rect_intersect_a(ev, COORD_MX_X+50-trw, COORD_ML_Y, trw, 38)) {
+		DEBUG_DRAW("Max Level");
 		/* max level background */
 		CairoSetSouerceRGBA(c_g30);
 		rounded_rectangle (cr, COORD_MX_X+50-trw, COORD_ML_Y, trw, 38, 10);
@@ -619,6 +920,7 @@ static bool expose_event(RobWidget* handle, cairo_t* cr, cairo_rectangle_t *ev) 
 	}
 
 	if (dbtp && rect_intersect_a(ev, COORD_TP_X+10, COORD_ML_Y+25, 40, 30)) {
+		DEBUG_DRAW("dBTP Legend");
 		/* true-peak legend */
 		CairoSetSouerceRGBA(c_g20);
 		rounded_rectangle (cr, COORD_TP_X+10, COORD_ML_Y+25, 40, 30, 10);
@@ -627,6 +929,7 @@ static bool expose_event(RobWidget* handle, cairo_t* cr, cairo_rectangle_t *ev) 
 	}
 
 	if (dbtp && rect_intersect_a(ev, COORD_TP_X, COORD_ML_Y, 75, 38)) {
+		DEBUG_DRAW("dBTP Level");
 		/* true peak level */
 		if (ui->tp >= 0.8912f) { // -1dBFS
 			CairoSetSouerceRGBA(c_prd);
@@ -643,221 +946,82 @@ static bool expose_event(RobWidget* handle, cairo_t* cr, cairo_rectangle_t *ev) 
 		write_text(cr, "dBTP", FONT(FONT_M09), COORD_TP_X+65, COORD_ML_Y+19, 0, 7, c_wht);
 	}
 
-#if 1 /* Radar */
+#if 1
+	if (!ui->radar_surf || (redraw_part & 2) == 2) {
+		DEBUG_DRAW("RADAR");
+		render_radar(ui);
+		ui->fastradar = -1;
+		cairo_set_source_surface (cr, ui->radar_surf, CX - RADIUS, CY - RADIUS);
+		cairo_paint(cr);
 
-	if (robtk_rbtn_get_active(ui->cbx_histogram) && (redraw_part & 2) == 2) {
-		/* ----- Histogram ----- */
-		const int *rdr = hists ? ui->histS : ui->histM;
-		const int  len = hists ? ui->histLenS : ui->histLenM;
-
-		/* histogram background */
-		if (len > 0) {
-			CairoSetSouerceRGBA(c_g05);
-		} else {
-			CairoSetSouerceRGBA(c_rd2);
+		if (!robtk_rbtn_get_active(ui->cbx_histogram)) {
+			draw_radar_ann (cr);
 		}
-		cairo_arc (cr, CX, CY, RADIUS, 0, 2.0 * M_PI);
-		cairo_fill (cr);
-
-		if (len > 0) {
-			int amin, amax;
-			//  lvlFS = (0.1f * (ang - 700))
-			//  lvlFS =  .1 * ang - 70
-			if (plus9) { // -41 .. -14 LUFS
-				amin = 290; // -41LUFS
-				amax = 560; // -14LUFS
-			} else { // -59 .. -5 LUFS
-				amin = 110; // -59LUFS
-				amax = 650; // -5LUFS
-			}
-			const double astep = 1.5 * M_PI / (double) (amax - amin);
-			const double aoff = (M_PI / 2.0) - amin * astep;
-
-			cairo_set_line_cap(cr, CAIRO_LINE_CAP_ROUND);
-			cairo_set_line_width(cr, 0.75);
-			if (plus9) {
-				cairo_set_source (cr, ui->hpattern9);
-			} else {
-				cairo_set_source (cr, ui->hpattern18);
-			}
-			for (int ang = amin; ang < amax; ++ang) {
-				if (rdr[ang] <= 0) continue;
-				const float rad = (float) RADIUS * (1.0 + fast_log10(rdr[ang] / (float) len));
-				if (rad < 5) continue;
-
-				cairo_move_to(cr, CX, CY);
-				cairo_arc (cr, CX, CY, rad,
-						(double) (ang-1.0) * astep + aoff, (ang+1.0) * astep + aoff);
-				cairo_close_path(cr);
-			}
-			cairo_fill(cr);
-
-			cairo_set_line_cap(cr, CAIRO_LINE_CAP_BUTT);
-
-			/* outer circle */
-			cairo_set_line_width(cr, 1.0);
-			CairoSetSouerceRGBA(c_g20);
-			cairo_arc (cr, CX, CY, RADIUS, /*0.5 * M_PI */ 0, 2.0 * M_PI);
-			cairo_stroke (cr);
-
-			cairo_save(cr);
-			cairo_translate(cr, CX-RADIUS-.5, CY-RADIUS-.5);
-			cairo_set_source_surface(cr, ui->hist_label, 0, 0);
-			cairo_paint(cr);
-			cairo_restore(cr);
-
-		} else {
-			write_text(cr, "No integration\ndata available.", FONT(FONT_S08), CX + RADIUS / 2, CY + 5, 0, 8, c_gry);
-		}
-
-		/* center circle */
-		const float innercircle = 6;
-		cairo_set_line_width(cr, 1.0);
-		CairoSetSouerceRGBA(c_blk);
-		cairo_arc (cr, CX, CY, innercircle, 0, 2.0 * M_PI);
-		cairo_fill_preserve (cr);
-		CairoSetSouerceRGBA(c_gry);
-		cairo_stroke(cr);
-
-		cairo_arc (cr, CX, CY, innercircle + 3, .5 * M_PI, 2.0 * M_PI);
-		cairo_stroke(cr);
-
-		/* gain lines */
-		const double dashed[] = {3.0, 5.0};
-		cairo_save(cr);
-		cairo_set_dash(cr, dashed, 2, 4.0);
-		cairo_set_line_width(cr, 1.5);
-		cairo_set_line_cap(cr, CAIRO_LINE_CAP_ROUND);
-		for (int i = 3; i <= 12; ++i) {
-			const float ang = .5235994f * i;
-			float cc = sinf(ang);
-			float sc = cosf(ang);
-			cairo_move_to(cr, CX + innercircle * sc, CY + innercircle * cc);
-			cairo_line_to(cr, CX + RADIUS5 * sc, CY + RADIUS5 * cc);
-			cairo_stroke (cr);
-		}
-		cairo_restore(cr);
-
-	} else if (redraw_part & 2) {
-		/* ----- History ----- */
-			ui->radar_pos_disp = ui->radar_pos_cur;
-
-		/* radar background */
-		CairoSetSouerceRGBA(c_g05);
-		cairo_arc (cr, CX, CY, RADIUS, 0, 2.0 * M_PI);
-		cairo_fill (cr);
-
-		cairo_set_line_width(cr, 1.0);
-		cairo_set_source (cr, ui->cpattern);
-		if (ui->radar_pos_max > 0) {
-			float *rdr = hists ? ui->radarS : ui->radarM;
-			const double astep = 2.0 * M_PI / (double) ui->radar_pos_max;
-
-
-			// TODO minimize redraw..
-			for (int ang = 0; ang < ui->radar_pos_max; ++ang) {
-				cairo_move_to(cr, CX, CY);
-				cairo_arc (cr, CX, CY, radar_deflect(rdr[ang], RADIUS),
-						(double) ang * astep, (ang+1.5) * astep);
-				cairo_close_path(cr);
-			}
-			cairo_fill(cr);
-
-			/* fade-out values */
-			for (int p = 0; p < 12; ++p) {
-				float pos = ui->radar_pos_cur + 1 + p;
-				cairo_set_source_rgba (cr, .0, .0, .0, 1.0 - ((p+1.0)/12.0));
-				cairo_move_to(cr, CX, CY);
-				cairo_arc (cr, CX, CY, RADIUS,
-							pos * astep, (pos + 1.0) * astep);
-				cairo_fill(cr);
-			}
-
-			/* current position */
-			CairoSetSouerceRGBA(c_g7X); // XXX
-			cairo_move_to(cr, CX, CY);
-			cairo_arc (cr, CX, CY, RADIUS,
-						(double) ui->radar_pos_cur * astep, ((double) ui->radar_pos_cur + 1.0) * astep);
-			cairo_line_to(cr, CX, CY);
-			cairo_stroke (cr);
-		}
-
-		/* radar lines */
-		cairo_set_line_width(cr, 1.5);
-		CairoSetSouerceRGBA(c_an0);
-		cairo_arc (cr, CX, CY, radar_deflect(-23, RADIUS), 0, 2.0 * M_PI);
-		cairo_stroke (cr);
-
-		cairo_set_line_width(cr, 1.0);
-		CairoSetSouerceRGBA(c_an1);
-		cairo_arc (cr, CX, CY, radar_deflect(-47, RADIUS), 0, 2.0 * M_PI);
-		cairo_stroke (cr);
-		cairo_arc (cr, CX, CY, radar_deflect(-35, RADIUS), 0, 2.0 * M_PI);
-		cairo_stroke (cr);
-		cairo_arc (cr, CX, CY, radar_deflect(-11, RADIUS), 0, 2.0 * M_PI);
-		cairo_stroke (cr);
-		cairo_arc (cr, CX, CY, radar_deflect( 0, RADIUS), 0, 2.0 * M_PI);
-		cairo_stroke (cr);
-
-		const float innercircle = radar_deflect(-47, RADIUS);
-		for (int i = 0; i < 12; ++i) {
-			const float ang = .5235994f * i;
-			float cc = sinf(ang);
-			float sc = cosf(ang);
-			cairo_move_to(cr, CX + innercircle * sc, CY + innercircle * cc);
-			cairo_line_to(cr, CX + RADIUS * sc, CY + RADIUS * cc);
-		}
-		cairo_stroke (cr);
 	}
 #endif
 
-#if 1 /* circular Level display */
+#define MPI108 1.599885148 // M_PI / 2 + M_PI / 108.0
+#define MPI72 0.043633231  // M_PI / 72
+#define MPI00 1.541707506  // M_PI / 2 - M_PI / 108.0
+
 	if (redraw_part & 1) {
+		DEBUG_DRAW("CIRC Level");
+
 		int cl, cm;
 		ring_leds(ui, &cl, &cm);
-
 		ui->circ_max = cm;
 		ui->circ_val = cl;
 
-		cairo_set_line_width(cr, 2.5);
-		cairo_set_line_cap(cr, CAIRO_LINE_CAP_ROUND);
+		const int ulp = plus24 ? 120 : 108;
+		if (cl > ulp) cl = ulp;
+		if (cm > ulp) cm = ulp;
 
-		bool maxed = false; // peak
-		int ulp = plus24 ? 120 : 108;
+		const float ang = MPI108 + MPI72 * (float) MAX(-1, cl);
 
-		for (int rng = 0; rng <= ulp; ++rng) {
-			const float ang = 0.043633231 * rng + 1.570796327;
-			float val;
+		if (cl >= 0) {
+			cairo_save (cr);
+			cairo_move_to(cr, CX, CY);
+			cairo_arc (cr, CX, CY, RADIUS22, MPI00, ang);
+			cairo_close_path (cr);
+			cairo_clip (cr);
 			if (plus9) {
-				val = (float) rng * .25 - 41.0f;
+				cairo_set_source (cr, ui->lpattern9);
 			} else {
-				val = (float) rng * .5 - 59.0f;
+				cairo_set_source (cr, ui->lpattern18);
 			}
-			if (rng <= cl) {
-				radar_color(cr, val);
-			} else {
-				CairoSetSouerceRGBA(c_g30);
-			}
+			cairo_mask_surface(cr, ui->level_surf, 0, 0);
+			cairo_fill (cr);
+			cairo_restore (cr);
+		}
 
-			float cc = sinf(ang);
-			float sc = cosf(ang);
+		if (cl < ulp) {
+			const float tang = MPI108 + MPI72 * (float) ulp; // TODO + 24
+			cairo_save (cr);
+			cairo_move_to(cr, CX, CY);
+			cairo_arc (cr, CX, CY, RADIUS22, ang, tang);
+			cairo_close_path (cr);
+			cairo_clip (cr);
+			CairoSetSouerceRGBA(c_g30);
+			cairo_mask_surface(cr, ui->level_surf, 0, 0);
+			cairo_fill (cr);
+			cairo_restore (cr);
+		}
+
+		if (cm > 0) {
+			cairo_set_line_width(cr, 2.5);
+			cairo_set_line_cap(cr, CAIRO_LINE_CAP_ROUND);
+			const float mang = M_PI * .5 + MPI72 * (float) cm;
+			float cc = sinf(mang);
+			float sc = cosf(mang);
 			cairo_move_to(cr,   CX + RADIUS10 * sc, CY + RADIUS10 * cc);
-
-			/* highligh peak */
-			if (!maxed && cm > 0 && (rng >= cm || (rng == ulp && cm >= ulp))) {
-				radar_color(cr, val);
-				cairo_line_to(cr, CX + RADIUS22 * sc, CY + RADIUS22 * cc);
-				maxed = true;
-			} else {
-				cairo_line_to(cr, CX + RADIUS19 * sc, CY + RADIUS19 * cc);
-			}
+			radar_color(cr, cm);
+			cairo_line_to(cr, CX + RADIUS22 * sc, CY + RADIUS22 * cc);
 			cairo_stroke (cr);
 		}
 
 		cairo_set_source_surface(cr, ui->lvl_label, 0, 0);
 		cairo_paint(cr);
 	}
-#endif
 
 	int bottom_max_offset = 50;
 
@@ -865,6 +1029,7 @@ static bool expose_event(RobWidget* handle, cairo_t* cr, cairo_rectangle_t *ev) 
 		bottom_max_offset = 3;
 	}
 	if (rect_intersect_a(ev, COORD_BI_X+10, COORD_BI_Y, 40, 30) && bottom_max_offset == 3) {
+		DEBUG_DRAW("Integ. 'Long' Legend");
 		CairoSetSouerceRGBA(c_g20);
 		rounded_rectangle (cr, COORD_BI_X+10, COORD_BI_Y, 40, 30, 10);
 		cairo_fill (cr);
@@ -872,6 +1037,7 @@ static bool expose_event(RobWidget* handle, cairo_t* cr, cairo_rectangle_t *ev) 
 	}
 	/* integrated level text display */
 	if (rect_intersect_a(ev, COORD_BI_X, COORD_BI_Y+20, COORD_BINTG_W, 40) && bottom_max_offset == 3) {
+		DEBUG_DRAW("Integrated Level");
 		CairoSetSouerceRGBA(c_g30);
 		rounded_rectangle (cr, COORD_BI_X, COORD_BI_Y+20, COORD_BINTG_W, 40, 10);
 		cairo_fill (cr);
@@ -915,6 +1081,7 @@ static bool expose_event(RobWidget* handle, cairo_t* cr, cairo_rectangle_t *ev) 
 	}
 
 	if (rect_intersect_a(ev, COORD_BR_X+115-trw, COORD_BI_Y-50+bottom_max_offset, trw, 40) && redraw_part != 1) {
+		DEBUG_DRAW("Bottom Level");
 		/* bottom level text display */
 		trw = lufs ? 117 : 105;
 		//printf("BOTTOM LVL @ %d+%d %dx%d\n", COORD_BR_X+115-trw, 305+bottom_max_offset, trw, 40);
@@ -934,6 +1101,21 @@ static bool expose_event(RobWidget* handle, cairo_t* cr, cairo_rectangle_t *ev) 
 		write_text(cr, buf, FONT(FONT_M09), COORD_BR_X+105, COORD_BI_Y-10+bottom_max_offset, 0, 7, c_wht);
 	}
 
+#if 0
+	{
+		cairo_rectangle (cr, 0, 0, COORD_ALL_W, COORD_ALL_H);
+		float c[3];
+		c[0] = rand() / (float)RAND_MAX;
+		c[1] = rand() / (float)RAND_MAX;
+		c[2] = rand() / (float)RAND_MAX;
+		cairo_set_source_rgba (cr, c[0], c[1], c[2], 0.1);
+		cairo_rectangle (cr, ev->x, ev->y, ev->width, ev->height);
+		cairo_fill (cr);
+	}
+#endif
+
+
+	DEBUG_DRAW("----END----");
 	return TRUE;
 }
 
@@ -1040,7 +1222,7 @@ static void invalidate_changed(EBUrUI* ui, int what) {
 			queue_tiny_area(ui->m0, floorf(rect.x), floorf(rect.y), ceilf(rect.width), ceilf(rect.height));
 		} else {
 			/// XXX may be ignored IFF coincides with ring-lvl, hence:
-			ui->fullradar = true;
+			ui->fullhist = true;
 			INVALIDATE_RECT(RDR_INV_X, RDR_INV_Y, RDR_INV_W, RDR_INV_H);
 		}
 	}
@@ -1093,8 +1275,8 @@ static void invalidate_histogram_line(EBUrUI* ui, int p) {
 	if (!ui->fasthist) {
 		queue_tiny_area(ui->m0, floorf(rect.x), floorf(rect.y), ceilf(rect.width), ceilf(rect.height));
 		ui->fasthist = true;
-	} else if (!ui->fullradar) {
-		ui->fullradar = true;
+	} else if (!ui->fullhist) {
+		ui->fullhist = true;
 		INVALIDATE_RECT(43, 68, 245, 245);
 		//queue_draw(ui->m0); // trigger radar to be included..
 		//queue_draw_area(ui->m0, rect.x, rect.y, rect.width, rect.height);
@@ -1272,7 +1454,11 @@ instantiate(
 	ui->spn_radartime  = robtk_spin_new(30, 600, 15);
 	ui->lbl_radarinfo  = robtk_lbl_new("History Length [s]:");
 	ui->lbl_ringinfo   = robtk_lbl_new("Level Display");
+#ifdef EASTER_EGG
+	ui->cbx_truepeak   = robtk_cbtn_new("True-Peak", GBT_LED_LEFT, true);
+#else
 	ui->cbx_truepeak   = robtk_cbtn_new("Compute True-Peak", GBT_LED_LEFT, true);
+#endif
 
 	ui->sep_h0         = robtk_sep_new(TRUE);
 	ui->sep_h1         = robtk_sep_new(TRUE);
@@ -1379,11 +1565,23 @@ cleanup(LV2UI_Handle handle)
 	if (ui->cpattern) {
 		cairo_pattern_destroy (ui->cpattern);
 	}
+	if (ui->lpattern9) {
+		cairo_pattern_destroy (ui->lpattern9);
+	}
+	if (ui->lpattern18) {
+		cairo_pattern_destroy (ui->lpattern18);
+	}
 	if (ui->hpattern9) {
 		cairo_pattern_destroy (ui->hpattern9);
 	}
 	if (ui->hpattern18) {
 		cairo_pattern_destroy (ui->hpattern18);
+	}
+	if (ui->level_surf) {
+		cairo_surface_destroy(ui->level_surf);
+	}
+	if (ui->radar_surf) {
+		cairo_surface_destroy(ui->radar_surf);
 	}
 	if (ui->lvl_label) {
 		cairo_surface_destroy(ui->lvl_label);
@@ -1442,7 +1640,11 @@ extension_data(const char* uri)
 
 #define PARSE_A_FLOAT(var, dest) \
 	if (var && var->type == uris->atom_Float) { \
-		dest = ((LV2_Atom_Float*)var)->body; \
+		float val = ((LV2_Atom_Float*)var)->body; \
+		if (val != dest) { \
+			dest = val; \
+			changed = true; \
+		} \
 	}
 
 #define PARSE_A_INT(var, dest) \
@@ -1450,8 +1652,9 @@ extension_data(const char* uri)
 		dest = ((LV2_Atom_Int*)var)->body; \
 	}
 
-static void parse_ebulevels(EBUrUI* ui, const LV2_Atom_Object* obj) {
+static bool parse_ebulevels(EBUrUI* ui, const LV2_Atom_Object* obj) {
 	const EBULV2URIs* uris = &ui->uris;
+	bool changed = false;
 	LV2_Atom *lm = NULL;
 	LV2_Atom *mm = NULL;
 	LV2_Atom *ls = NULL;
@@ -1477,6 +1680,15 @@ static void parse_ebulevels(EBUrUI* ui, const LV2_Atom_Object* obj) {
 			NULL
 			);
 
+
+	const float old_time = ui->it;
+	PARSE_A_FLOAT(it, ui->it)
+
+  if (old_time < ui->it && ui->it - old_time < .2) {
+		ui->it = old_time;
+		changed = false;
+	}
+
 	PARSE_A_FLOAT(lm, ui->lm)
 	PARSE_A_FLOAT(mm, ui->mm)
 	PARSE_A_FLOAT(ls, ui->ls)
@@ -1485,21 +1697,24 @@ static void parse_ebulevels(EBUrUI* ui, const LV2_Atom_Object* obj) {
 	PARSE_A_FLOAT(rn, ui->rn)
 	PARSE_A_FLOAT(rx, ui->rx)
 	PARSE_A_FLOAT(tp, ui->tp)
-	PARSE_A_FLOAT(it, ui->it)
 
 	if (ii && ii->type == uris->atom_Bool) {
 		bool ix = ((LV2_Atom_Bool*)ii)->body;
 	  bool bx = robtk_cbtn_get_active(ui->btn_start);
 		if (ix != bx) {
+			changed = true;
 			ui->disable_signals = true;
 			robtk_cbtn_set_active(ui->btn_start, ix);
 			ui->disable_signals = false;
 		}
 	}
+	return changed;
 }
 
 static void parse_radarinfo(EBUrUI* ui, const LV2_Atom_Object* obj) {
 	const EBULV2URIs* uris = &ui->uris;
+	bool changed = false;
+
 	LV2_Atom *lm = NULL;
 	LV2_Atom *ls = NULL;
 	LV2_Atom *pp = NULL;
@@ -1590,8 +1805,9 @@ port_event(LV2UI_Handle handle,
 		if (atom->type == uris->atom_Blank || atom->type == uris->atom_Object) {
 			LV2_Atom_Object* obj = (LV2_Atom_Object*)atom;
 			if (obj->body.otype == uris->mtr_ebulevels) {
-				parse_ebulevels(ui, obj);
-				invalidate_changed(ui, 0);
+				if (parse_ebulevels(ui, obj)) {
+					invalidate_changed(ui, 0);
+				}
 			} else if (obj->body.otype == uris->mtr_control) {
 				int k; float v;
 				get_cc_key_value(&ui->uris, obj, &k, &v);
