@@ -4,6 +4,7 @@ mtr:VUmono@URI_SUFFIX@
 	a lv2:Plugin, lv2:AnalyserPlugin, doap:Project ;
 	doap:license <http://usefulinc.com/doap/licenses/gpl> ;
 	doap:name "VU Meter (Mono)@NAME_SUFFIX@";
+	@VERSION@
 	lv2:project <http://gareus.org/oss/lv2/meters> ;
 	lv2:optionalFeature lv2:hardRTCapable ;
 	ui:ui @MTRGUI@ ;
@@ -45,6 +46,7 @@ mtr:VUstereo@URI_SUFFIX@
 	a lv2:Plugin, lv2:AnalyserPlugin, doap:Project ;
 	doap:license <http://usefulinc.com/doap/licenses/gpl> ;
 	doap:name "VU Meter (Stereo)@NAME_SUFFIX@";
+	@VERSION@
 	lv2:project <http://gareus.org/oss/lv2/meters> ;
 	lv2:optionalFeature lv2:hardRTCapable ;
 	ui:ui @MTRGUI@ ;
@@ -107,6 +109,7 @@ mtr:BBCmono@URI_SUFFIX@
 	a lv2:Plugin, lv2:AnalyserPlugin, doap:Project ;
 	doap:license <http://usefulinc.com/doap/licenses/gpl> ;
 	doap:name "BBC Meter (Mono)@NAME_SUFFIX@";
+	@VERSION@
 	lv2:project <http://gareus.org/oss/lv2/meters> ;
 	lv2:optionalFeature lv2:hardRTCapable ;
 	ui:ui @MTRGUI@ ;
@@ -148,6 +151,7 @@ mtr:BBCstereo@URI_SUFFIX@
 	a lv2:Plugin, lv2:AnalyserPlugin, doap:Project ;
 	doap:license <http://usefulinc.com/doap/licenses/gpl> ;
 	doap:name "BBC Meter (Stereo)@NAME_SUFFIX@";
+	@VERSION@
 	lv2:project <http://gareus.org/oss/lv2/meters> ;
 	lv2:optionalFeature lv2:hardRTCapable ;
 	ui:ui @MTRGUI@ ;
@@ -210,6 +214,7 @@ mtr:EBUmono@URI_SUFFIX@
 	a lv2:Plugin, lv2:AnalyserPlugin, doap:Project ;
 	doap:license <http://usefulinc.com/doap/licenses/gpl> ;
 	doap:name "EBU Meter (Mono)@NAME_SUFFIX@";
+	@VERSION@
 	lv2:project <http://gareus.org/oss/lv2/meters> ;
 	lv2:optionalFeature lv2:hardRTCapable ;
 	ui:ui @MTRGUI@ ;
@@ -251,6 +256,7 @@ mtr:EBUstereo@URI_SUFFIX@
 	a lv2:Plugin, lv2:AnalyserPlugin, doap:Project ;
 	doap:license <http://usefulinc.com/doap/licenses/gpl> ;
 	doap:name "EBU Meter (Stereo)@NAME_SUFFIX@";
+	@VERSION@
 	lv2:project <http://gareus.org/oss/lv2/meters> ;
 	lv2:optionalFeature lv2:hardRTCapable ;
 	ui:ui @MTRGUI@ ;
@@ -313,6 +319,7 @@ mtr:DINmono@URI_SUFFIX@
 	a lv2:Plugin, lv2:AnalyserPlugin, doap:Project ;
 	doap:license <http://usefulinc.com/doap/licenses/gpl> ;
 	doap:name "DIN Meter (Mono)@NAME_SUFFIX@";
+	@VERSION@
 	lv2:project <http://gareus.org/oss/lv2/meters> ;
 	lv2:optionalFeature lv2:hardRTCapable ;
 	ui:ui @MTRGUI@ ;
@@ -354,6 +361,7 @@ mtr:DINstereo@URI_SUFFIX@
 	a lv2:Plugin, lv2:AnalyserPlugin, doap:Project ;
 	doap:license <http://usefulinc.com/doap/licenses/gpl> ;
 	doap:name "DIN Meter (Stereo)@NAME_SUFFIX@";
+	@VERSION@
 	lv2:project <http://gareus.org/oss/lv2/meters> ;
 	lv2:optionalFeature lv2:hardRTCapable ;
 	ui:ui @MTRGUI@ ;
@@ -416,6 +424,7 @@ mtr:NORmono@URI_SUFFIX@
 	a lv2:Plugin, lv2:AnalyserPlugin, doap:Project ;
 	doap:license <http://usefulinc.com/doap/licenses/gpl> ;
 	doap:name "Nordic Meter (Mono)@NAME_SUFFIX@";
+	@VERSION@
 	lv2:project <http://gareus.org/oss/lv2/meters> ;
 	lv2:optionalFeature lv2:hardRTCapable ;
 	ui:ui @MTRGUI@ ;
@@ -457,6 +466,7 @@ mtr:NORstereo@URI_SUFFIX@
 	a lv2:Plugin, lv2:AnalyserPlugin, doap:Project ;
 	doap:license <http://usefulinc.com/doap/licenses/gpl> ;
 	doap:name "Nordic Meter (Stereo)@NAME_SUFFIX@";
+	@VERSION@
 	lv2:project <http://gareus.org/oss/lv2/meters> ;
 	lv2:optionalFeature lv2:hardRTCapable ;
 	ui:ui @MTRGUI@ ;
@@ -518,6 +528,7 @@ mtr:COR@URI_SUFFIX@
 	a lv2:Plugin, lv2:AnalyserPlugin, doap:Project ;
 	doap:license <http://usefulinc.com/doap/licenses/gpl> ;
 	doap:name "Stereo Phase-Correlation Meter@NAME_SUFFIX@";
+	@VERSION@
 	lv2:project <http://gareus.org/oss/lv2/meters> ;
 	lv2:optionalFeature lv2:hardRTCapable ;
 	ui:ui @MTRGUI@ ;
@@ -571,6 +582,7 @@ mtr:EBUr128@URI_SUFFIX@
 	a lv2:Plugin, lv2:AnalyserPlugin, doap:Project ;
 	doap:license <http://usefulinc.com/doap/licenses/gpl> ;
 	doap:name "EBU R128 Meter@NAME_SUFFIX@";
+	@VERSION@
 	lv2:project <http://gareus.org/oss/lv2/meters> ;
 	lv2:optionalFeature lv2:hardRTCapable ;
 	lv2:requiredFeature urid:map ;
@@ -631,6 +643,7 @@ mtr:goniometer@URI_SUFFIX@
 	a lv2:Plugin, lv2:AnalyserPlugin, doap:Project ;
 	doap:license <http://usefulinc.com/doap/licenses/gpl> ;
 	doap:name "Stereo Phase Scope@NAME_SUFFIX@";
+	@VERSION@
 	lv2:project <http://gareus.org/oss/lv2/meters> ;
 	lv2:optionalFeature lv2:hardRTCapable ;
 	lv2:extensionData state:interface ;
@@ -699,6 +712,7 @@ mtr:spectr30mono@URI_SUFFIX@
 	a lv2:Plugin, lv2:AnalyserPlugin, doap:Project ;
 	doap:license <http://usefulinc.com/doap/licenses/gpl> ;
 	doap:name "1/3 Octave Spectrum Display Mono@NAME_SUFFIX@";
+	@VERSION@
 	lv2:project <http://gareus.org/oss/lv2/meters> ;
 	lv2:optionalFeature lv2:hardRTCapable ;
 	ui:ui @DPMGUI@ ;
@@ -1243,6 +1257,7 @@ mtr:spectr30stereo@URI_SUFFIX@
 	a lv2:Plugin, lv2:AnalyserPlugin, doap:Project ;
 	doap:license <http://usefulinc.com/doap/licenses/gpl> ;
 	doap:name "1/3 Octave Spectrum Display Stereo@NAME_SUFFIX@";
+	@VERSION@
 	lv2:project <http://gareus.org/oss/lv2/meters> ;
 	lv2:optionalFeature lv2:hardRTCapable ;
 	ui:ui @DPMGUI@ ;
@@ -1802,6 +1817,7 @@ mtr:dBTPmono@URI_SUFFIX@
 	a lv2:Plugin, lv2:AnalyserPlugin, doap:Project ;
 	doap:license <http://usefulinc.com/doap/licenses/gpl> ;
 	doap:name "True-Peak Meter (Mono)@NAME_SUFFIX@";
+	@VERSION@
 	lv2:project <http://gareus.org/oss/lv2/meters> ;
 	lv2:optionalFeature lv2:hardRTCapable ;
 	ui:ui @DPMGUI@ ;
@@ -1852,6 +1868,7 @@ mtr:dBTPstereo@URI_SUFFIX@
 	a lv2:Plugin, lv2:AnalyserPlugin, doap:Project ;
 	doap:license <http://usefulinc.com/doap/licenses/gpl> ;
 	doap:name "True-Peak Meter (Stereo)@NAME_SUFFIX@";
+	@VERSION@
 	lv2:project <http://gareus.org/oss/lv2/meters> ;
 	lv2:optionalFeature lv2:hardRTCapable ;
 	ui:ui @DPMGUI@ ;
@@ -1932,6 +1949,7 @@ mtr:K12mono@URI_SUFFIX@
 	a lv2:Plugin, lv2:AnalyserPlugin, doap:Project ;
 	doap:license <http://usefulinc.com/doap/licenses/gpl> ;
 	doap:name "K12/RMS Meter (Mono)@NAME_SUFFIX@";
+	@VERSION@
 	lv2:project <http://gareus.org/oss/lv2/meters> ;
 	lv2:optionalFeature lv2:hardRTCapable ;
 	ui:ui @KMRGUI@ ;
@@ -1991,6 +2009,7 @@ mtr:K12stereo@URI_SUFFIX@
 	a lv2:Plugin, lv2:AnalyserPlugin, doap:Project ;
 	doap:license <http://usefulinc.com/doap/licenses/gpl> ;
 	doap:name "K12/RMS Meter (Stereo)@NAME_SUFFIX@";
+	@VERSION@
 	lv2:project <http://gareus.org/oss/lv2/meters> ;
 	lv2:optionalFeature lv2:hardRTCapable ;
 	ui:ui @KMRGUI@ ;
@@ -2080,6 +2099,7 @@ mtr:K14mono@URI_SUFFIX@
 	a lv2:Plugin, lv2:AnalyserPlugin, doap:Project ;
 	doap:license <http://usefulinc.com/doap/licenses/gpl> ;
 	doap:name "K14/RMS Meter (Mono)@NAME_SUFFIX@";
+	@VERSION@
 	lv2:project <http://gareus.org/oss/lv2/meters> ;
 	lv2:optionalFeature lv2:hardRTCapable ;
 	ui:ui @KMRGUI@ ;
@@ -2139,6 +2159,7 @@ mtr:K14stereo@URI_SUFFIX@
 	a lv2:Plugin, lv2:AnalyserPlugin, doap:Project ;
 	doap:license <http://usefulinc.com/doap/licenses/gpl> ;
 	doap:name "K14/RMS Meter (Stereo)@NAME_SUFFIX@";
+	@VERSION@
 	lv2:project <http://gareus.org/oss/lv2/meters> ;
 	lv2:optionalFeature lv2:hardRTCapable ;
 	ui:ui @KMRGUI@ ;
@@ -2228,6 +2249,7 @@ mtr:K20mono@URI_SUFFIX@
 	a lv2:Plugin, lv2:AnalyserPlugin, doap:Project ;
 	doap:license <http://usefulinc.com/doap/licenses/gpl> ;
 	doap:name "K20/RMS Meter (Mono)@NAME_SUFFIX@";
+	@VERSION@
 	lv2:project <http://gareus.org/oss/lv2/meters> ;
 	lv2:optionalFeature lv2:hardRTCapable ;
 	ui:ui @KMRGUI@ ;
@@ -2287,6 +2309,7 @@ mtr:K20stereo@URI_SUFFIX@
 	a lv2:Plugin, lv2:AnalyserPlugin, doap:Project ;
 	doap:license <http://usefulinc.com/doap/licenses/gpl> ;
 	doap:name "K20/RMS Meter (Stereo)@NAME_SUFFIX@";
+	@VERSION@
 	lv2:project <http://gareus.org/oss/lv2/meters> ;
 	lv2:optionalFeature lv2:hardRTCapable ;
 	ui:ui @KMRGUI@ ;
@@ -2375,6 +2398,7 @@ mtr:phasewheel@URI_SUFFIX@
 	a lv2:Plugin, lv2:AnalyserPlugin, doap:Project ;
 	doap:license <http://usefulinc.com/doap/licenses/gpl> ;
 	doap:name "Phase/Frequency Wheel@NAME_SUFFIX@";
+	@VERSION@
 	lv2:project <http://gareus.org/oss/lv2/meters> ;
 	lv2:optionalFeature lv2:hardRTCapable ;
 	ui:ui @MPWGUI@ ;
@@ -2515,6 +2539,7 @@ mtr:stereoscope@URI_SUFFIX@
 	a lv2:Plugin, lv2:AnalyserPlugin, doap:Project ;
 	doap:license <http://usefulinc.com/doap/licenses/gpl> ;
 	doap:name "Stereo/Frequency Scope@NAME_SUFFIX@";
+	@VERSION@
 	lv2:project <http://gareus.org/oss/lv2/meters> ;
 	lv2:optionalFeature lv2:hardRTCapable ;
 	ui:ui @SFSGUI@ ;
@@ -2614,6 +2639,7 @@ mtr:dr14mono@URI_SUFFIX@
 	a lv2:Plugin, lv2:AnalyserPlugin, doap:Project ;
 	doap:license <http://usefulinc.com/doap/licenses/gpl> ;
 	doap:name "DR14 - Dynamic Range Meter (Mono)@NAME_SUFFIX@";
+	@VERSION@
 	lv2:project <http://gareus.org/oss/lv2/meters> ;
 	lv2:optionalFeature lv2:hardRTCapable ;
 	ui:ui @DRMGUI@ ;
@@ -2725,6 +2751,7 @@ mtr:dr14stereo@URI_SUFFIX@
 	a lv2:Plugin, lv2:AnalyserPlugin, doap:Project ;
 	doap:license <http://usefulinc.com/doap/licenses/gpl> ;
 	doap:name "DR14 - Dynamic Range Meter (Stereo)@NAME_SUFFIX@";
+	@VERSION@
 	lv2:project <http://gareus.org/oss/lv2/meters> ;
 	lv2:optionalFeature lv2:hardRTCapable ;
 	ui:ui @DRMGUI@ ;
@@ -2907,6 +2934,7 @@ mtr:TPnRMSmono@URI_SUFFIX@
 	a lv2:Plugin, lv2:AnalyserPlugin, doap:Project ;
 	doap:license <http://usefulinc.com/doap/licenses/gpl> ;
 	doap:name "True-Peak and RMS Meter (Mono)@NAME_SUFFIX@";
+	@VERSION@
 	lv2:project <http://gareus.org/oss/lv2/meters> ;
 	lv2:optionalFeature lv2:hardRTCapable ;
 	ui:ui @DRMGUI@ ;
@@ -3008,6 +3036,7 @@ mtr:TPnRMSstereo@URI_SUFFIX@
 	a lv2:Plugin, lv2:AnalyserPlugin, doap:Project ;
 	doap:license <http://usefulinc.com/doap/licenses/gpl> ;
 	doap:name "True-Peak and RMS Meter (Stereo)@NAME_SUFFIX@";
+	@VERSION@
 	lv2:project <http://gareus.org/oss/lv2/meters> ;
 	lv2:optionalFeature lv2:hardRTCapable ;
 	ui:ui @DRMGUI@ ;
@@ -3172,6 +3201,7 @@ mtr:SigDistHist@URI_SUFFIX@
 	a lv2:Plugin, lv2:AnalyserPlugin, doap:Project ;
 	doap:license <http://usefulinc.com/doap/licenses/gpl> ;
 	doap:name "Signal Distribution Histogram@NAME_SUFFIX@";
+	@VERSION@
 	lv2:project <http://gareus.org/oss/lv2/meters> ;
 	lv2:optionalFeature lv2:hardRTCapable ;
 	lv2:requiredFeature urid:map ;
@@ -3216,6 +3246,7 @@ mtr:BBCM6@URI_SUFFIX@
 	a lv2:Plugin, lv2:AnalyserPlugin, doap:Project ;
 	doap:license <http://usefulinc.com/doap/licenses/gpl> ;
 	doap:name "BBC M-6@NAME_SUFFIX@";
+	@VERSION@
 	lv2:project <http://gareus.org/oss/lv2/meters> ;
 	lv2:optionalFeature lv2:hardRTCapable ;
 	ui:ui @MTRGUI@ ;
@@ -3277,6 +3308,7 @@ mtr:bitmeter@URI_SUFFIX@
 	a lv2:Plugin, lv2:AnalyserPlugin, doap:Project ;
 	doap:license <http://usefulinc.com/doap/licenses/gpl> ;
 	doap:name "Bit Meter@NAME_SUFFIX@";
+	@VERSION@
 	lv2:project <http://gareus.org/oss/lv2/meters> ;
 	lv2:optionalFeature lv2:hardRTCapable ;
 	lv2:requiredFeature urid:map ;
