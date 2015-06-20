@@ -763,7 +763,7 @@ static bool expose_event(RobWidget* handle, cairo_t* cr, cairo_rectangle_t *ev) 
 		draw_gm_labels(ui, cr);
 
 		if (ui->xrundisplay < 0) { ui->xrundisplay++; }
-		else if (self->rb_overrun) ui->xrundisplay = 36;
+		else if (self->rb_overrun) { if (!getenv("X42_GONIOMETER_NO_WARN")) ui->xrundisplay = 36; }
 		else if (ui->xrundisplay > 0) ui->xrundisplay--;
 		self->rb_overrun = false;
 
