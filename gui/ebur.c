@@ -1637,13 +1637,18 @@ extension_data(const char* uri)
  * handle data from backend
  */
 
-#define PARSE_A_FLOAT(var, dest) \
+#define PARSE_CHANGED_FLOAT(var, dest) \
 	if (var && var->type == uris->atom_Float) { \
 		float val = ((LV2_Atom_Float*)var)->body; \
 		if (val != dest) { \
 			dest = val; \
 			changed = true; \
 		} \
+	}
+
+#define PARSE_A_FLOAT(var, dest) \
+	if (var && var->type == uris->atom_Float) { \
+		dest = ((LV2_Atom_Float*)var)->body; \
 	}
 
 #define PARSE_A_INT(var, dest) \
@@ -1681,21 +1686,21 @@ static bool parse_ebulevels(EBUrUI* ui, const LV2_Atom_Object* obj) {
 
 
 	const float old_time = ui->it;
-	PARSE_A_FLOAT(it, ui->it)
+	PARSE_CHANGED_FLOAT(it, ui->it)
 
 	if (old_time < ui->it && ui->it - old_time < .2) {
 		ui->it = old_time;
 		changed = false;
 	}
 
-	PARSE_A_FLOAT(lm, ui->lm)
-	PARSE_A_FLOAT(mm, ui->mm)
-	PARSE_A_FLOAT(ls, ui->ls)
-	PARSE_A_FLOAT(ms, ui->ms)
-	PARSE_A_FLOAT(il, ui->il)
-	PARSE_A_FLOAT(rn, ui->rn)
-	PARSE_A_FLOAT(rx, ui->rx)
-	PARSE_A_FLOAT(tp, ui->tp)
+	PARSE_CHANGED_FLOAT(lm, ui->lm)
+	PARSE_CHANGED_FLOAT(mm, ui->mm)
+	PARSE_CHANGED_FLOAT(ls, ui->ls)
+	PARSE_CHANGED_FLOAT(ms, ui->ms)
+	PARSE_CHANGED_FLOAT(il, ui->il)
+	PARSE_CHANGED_FLOAT(rn, ui->rn)
+	PARSE_CHANGED_FLOAT(rx, ui->rx)
+	PARSE_CHANGED_FLOAT(tp, ui->tp)
 
 	if (ii && ii->type == uris->atom_Bool) {
 		bool ix = ((LV2_Atom_Bool*)ii)->body;
@@ -1712,7 +1717,6 @@ static bool parse_ebulevels(EBUrUI* ui, const LV2_Atom_Object* obj) {
 
 static void parse_radarinfo(EBUrUI* ui, const LV2_Atom_Object* obj) {
 	const EBULV2URIs* uris = &ui->uris;
-	bool changed = false;
 
 	LV2_Atom *lm = NULL;
 	LV2_Atom *ls = NULL;
