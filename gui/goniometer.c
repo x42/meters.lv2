@@ -54,7 +54,7 @@ typedef void Stcorrdsp;
 #define GM_RADIUS (200.0f)
 #define GM_RAD2   (100.0f)
 
-#define MAX_CAIRO_PATH 32
+#define MAX_CAIRO_PATH 256
 #define PC_BLOCKSIZE (PC_HEIGHT - PC_BLOCK - 2)
 
 #define GAINSCALE(x) (x > .01 ? ((20 * log10f(x) + 40) / 6.60206) : 0)
@@ -344,6 +344,7 @@ static void draw_rb(GMUI* ui, gmringbuf *rb) {
 		//cairo_set_tolerance(cr, 1.0); // default .1
 		cairo_set_line_width(cr, line_width);
 		cairo_move_to(cr, ui->last_x, ui->last_y);
+		cairo_set_line_cap(cr, CAIRO_LINE_CAP_BUTT);
 	} else {
 		CairoSetSouerceRGBA(c_gmp);
 		cairo_set_line_width(cr, line_width);
@@ -458,22 +459,29 @@ static void draw_rb(GMUI* ui, gmringbuf *rb) {
 			}
 #endif
 			cairo_line_to(cr, ui->last_x, ui->last_y);
-		} else {
 			cairo_move_to(cr, ui->last_x, ui->last_y);
-			cairo_close_path (cr);
+
+		} else {
+			cairo_rectangle(cr, rintf(ui->last_x - line_width * .5), rintf(ui->last_y - line_width * .5), line_width, line_width);
 		}
 
 		if (++cnt > MAX_CAIRO_PATH) {
 			cnt = 0;
-			cairo_stroke(cr);
 			if (lines) {
+				cairo_stroke(cr);
 				cairo_move_to(cr, ui->last_x, ui->last_y);
+			} else {
+				cairo_fill(cr);
 			}
 		}
 	}
 
 	if (cnt > 0) {
-		cairo_stroke(cr);
+		if (lines) {
+			cairo_stroke(cr);
+		} else {
+			cairo_fill(cr);
+		}
 	}
 
 	cairo_destroy(cr);
