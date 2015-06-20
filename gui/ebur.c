@@ -551,14 +551,14 @@ static void prepare_lvl_surface (EBUrUI* ui) {
 	cairo_set_line_cap(cr, CAIRO_LINE_CAP_ROUND);
 	CairoSetSouerceRGBA(c_g30);
 
-  const int ulp = 120;
+	const int ulp = 120;
 	for (int rng = 0; rng <= ulp; ++rng) {
-			const float ang = 0.043633231 * rng + 1.570796327;
-			float cc = sinf(ang);
-			float sc = cosf(ang);
-			cairo_move_to(cr,   CX + RADIUS10 * sc, CY + RADIUS10 * cc);
-			cairo_line_to(cr, CX + RADIUS19 * sc, CY + RADIUS19 * cc);
-			cairo_stroke (cr);
+		const float ang = 0.043633231 * rng + 1.570796327;
+		float cc = sinf(ang);
+		float sc = cosf(ang);
+		cairo_move_to(cr,   CX + RADIUS10 * sc, CY + RADIUS10 * cc);
+		cairo_line_to(cr, CX + RADIUS19 * sc, CY + RADIUS19 * cc);
+		cairo_stroke (cr);
 	}
 	cairo_destroy (cr);
 }
@@ -701,10 +701,10 @@ static void render_radar (EBUrUI* ui) {
 			if (ui->fastradar >= 0) {
 				assert (ui->radar_pos_cur == ui->fastradar);
 				a0 = (ui->fastradar - 3 + ui->radar_pos_max) % ui->radar_pos_max;
-				a1 = a0 + 13;
+				a1 = a0 + 10;
 
 				cairo_move_to(cr, 0, 0);
-				cairo_arc (cr, 0, 0, RADIUS, (double) (a0 + 1.0) * astep, (a0 + 12.f) * astep);
+				cairo_arc (cr, 0, 0, RADIUS, (double) (a0 + 1.0) * astep, (a0 + 9.f) * astep);
 				cairo_close_path(cr);
 				CairoSetSouerceRGBA(c_g05);
 				cairo_fill (cr);
@@ -721,9 +721,9 @@ static void render_radar (EBUrUI* ui) {
 			cairo_fill(cr);
 
 			/* fade-out values */
-			for (int p = 0; p < 10; ++p) {
+			for (int p = 0; p < 7; ++p) {
 				float pos = ui->radar_pos_cur + 1 + p;
-				cairo_set_source_rgba (cr, .0, .0, .0, 1.0 - ((p+1.0)/12.0));
+				cairo_set_source_rgba (cr, .0, .0, .0, 1.0 - ((p+1.0)/7.0));
 				cairo_move_to(cr, 0, 0);
 				cairo_arc (cr, 0, 0, RADIUS, pos * astep, (pos + 1.0) * astep);
 				cairo_fill(cr);
@@ -1113,7 +1113,6 @@ static bool expose_event(RobWidget* handle, cairo_t* cr, cairo_rectangle_t *ev) 
 		cairo_fill (cr);
 	}
 #endif
-
 
 	DEBUG_DRAW("----END----");
 	return TRUE;
@@ -1684,7 +1683,7 @@ static bool parse_ebulevels(EBUrUI* ui, const LV2_Atom_Object* obj) {
 	const float old_time = ui->it;
 	PARSE_A_FLOAT(it, ui->it)
 
-  if (old_time < ui->it && ui->it - old_time < .2) {
+	if (old_time < ui->it && ui->it - old_time < .2) {
 		ui->it = old_time;
 		changed = false;
 	}
