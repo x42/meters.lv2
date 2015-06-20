@@ -25,12 +25,12 @@ $(info Version: $(LV2VERSION) -> $(MAJOR) $(MINOR) $(MICRO) $(GITREV))
 # http://lv2plug.in/ns/lv2core/#microVersion
 ifeq ($(GITREV),)
 # even numbers for tagged releases
-  LV2MIN = $(shell expr $(MAJOR) \* 65536 + $(MINOR) \* 256 + $(MICRO) \* 2 )
-  LV2MIC = 0
+  override LV2MIN = $(shell expr $(MAJOR) \* 65536 + $(MINOR) \* 256 + $(MICRO) \* 2 )
+  override LV2MIC = 0
 else
 # odd-numbers for all non tagged git versions
-  LV2MIN = $(shell expr $(MAJOR) \* 65536 + $(MINOR) \* 256 + $(MICRO) \* 2 + 1 )
-  LV2MIC = $(shell expr $(GITREV) \* 2 + 1)
+  override LV2MIN = $(shell expr $(MAJOR) \* 65536 + $(MINOR) \* 256 + $(MICRO) \* 2 + 1 )
+  override LV2MIC = $(shell expr $(GITREV) \* 2 + 1)
 endif
 
 ifeq ($(LV2MIN),)
