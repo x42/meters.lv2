@@ -2489,15 +2489,15 @@ mtr:phasewheel@URI_SUFFIX@
 		lv2:default 2048 ;
 		lv2:minimum 128 ;
 		lv2:maximum 16384 ;
-		lv2:scalePoint [ rdfs:label  "128";  rdf:value  128.0 ; ] ;
-		lv2:scalePoint [ rdfs:label  "256";  rdf:value  256.0 ; ] ;
-		lv2:scalePoint [ rdfs:label  "512";  rdf:value  512.0 ; ] ;
-		lv2:scalePoint [ rdfs:label "1024";  rdf:value  1024.0 ; ] ;
-		lv2:scalePoint [ rdfs:label "2048";  rdf:value  2048.0 ; ] ;
-		lv2:scalePoint [ rdfs:label "4096";  rdf:value  4096.0 ; ] ;
-		lv2:scalePoint [ rdfs:label "8192";  rdf:value  8192.0 ; ] ;
-		lv2:scalePoint [ rdfs:label "12288"; rdf:value 12288.0 ; ] ;
-		lv2:scalePoint [ rdfs:label "16384"; rdf:value 16384.0 ; ] ;
+		lv2:scalePoint [ rdfs:label  "128";  rdf:value  128 ; ] ;
+		lv2:scalePoint [ rdfs:label  "256";  rdf:value  256 ; ] ;
+		lv2:scalePoint [ rdfs:label  "512";  rdf:value  512 ; ] ;
+		lv2:scalePoint [ rdfs:label "1024";  rdf:value  1024 ; ] ;
+		lv2:scalePoint [ rdfs:label "2048";  rdf:value  2048 ; ] ;
+		lv2:scalePoint [ rdfs:label "4096";  rdf:value  4096 ; ] ;
+		lv2:scalePoint [ rdfs:label "8192";  rdf:value  8192 ; ] ;
+		lv2:scalePoint [ rdfs:label "12288"; rdf:value 12288 ; ] ;
+		lv2:scalePoint [ rdfs:label "16384"; rdf:value 16384 ; ] ;
 	  rdfs:comment "Number of audio-samples to process. Large values increase accuracy (particular for low frequencies) as well as latency.";
 	] , [
 		a lv2:ControlPort, lv2:InputPort ;
@@ -2602,14 +2602,14 @@ mtr:stereoscope@URI_SUFFIX@
 		lv2:default 2048 ;
 		lv2:minimum 128 ;
 		lv2:maximum 16384 ;
-		lv2:scalePoint [ rdfs:label  "256";  rdf:value  256.0 ; ] ;
-		lv2:scalePoint [ rdfs:label  "512";  rdf:value  512.0 ; ] ;
-		lv2:scalePoint [ rdfs:label "1024";  rdf:value  1024.0 ; ] ;
-		lv2:scalePoint [ rdfs:label "2048";  rdf:value  2048.0 ; ] ;
-		lv2:scalePoint [ rdfs:label "4096";  rdf:value  4096.0 ; ] ;
-		lv2:scalePoint [ rdfs:label "8192";  rdf:value  8192.0 ; ] ;
-		lv2:scalePoint [ rdfs:label "12288"; rdf:value 12288.0 ; ] ;
-		lv2:scalePoint [ rdfs:label "16384"; rdf:value 16384.0 ; ] ;
+		lv2:scalePoint [ rdfs:label  "256";  rdf:value  256 ; ] ;
+		lv2:scalePoint [ rdfs:label  "512";  rdf:value  512 ; ] ;
+		lv2:scalePoint [ rdfs:label "1024";  rdf:value  1024 ; ] ;
+		lv2:scalePoint [ rdfs:label "2048";  rdf:value  2048 ; ] ;
+		lv2:scalePoint [ rdfs:label "4096";  rdf:value  4096 ; ] ;
+		lv2:scalePoint [ rdfs:label "8192";  rdf:value  8192 ; ] ;
+		lv2:scalePoint [ rdfs:label "12288"; rdf:value 12288 ; ] ;
+		lv2:scalePoint [ rdfs:label "16384"; rdf:value 16384 ; ] ;
 	  rdfs:comment "Number of audio-samples to process. Large values increase accuracy as well as latency.";
 	] , [
 		a lv2:ControlPort, lv2:InputPort ;
