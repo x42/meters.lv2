@@ -12,10 +12,10 @@ static const RtkLv2Description _plugin_bitmeter = {
 	, "Bit Meter" // const char *plugin_human_id
 	, (const struct LV2Port[4])
 	{
-		{ "control", ATOM_IN, nan},
-		{ "notify", ATOM_OUT, nan},
-		{ "in", AUDIO_IN, nan},
-		{ "out", AUDIO_OUT, nan},
+		{ "control", ATOM_IN, nan, nan, nan, "UI to plugin communication"},
+		{ "notify", ATOM_OUT, nan, nan, nan, "plugin to UI communication"},
+		{ "in", AUDIO_IN, nan, nan, nan, "In"},
+		{ "out", AUDIO_OUT, nan, nan, nan, "Out"},
 	}
 	, 4 // uint32_t nports_total
 	, 1 // uint32_t nports_audio_in

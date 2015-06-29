@@ -10,15 +10,15 @@ static const RtkLv2Description _plugin_goniometer = {
 	, 12 // uint32_t dsp_descriptor_id
 	, 0 // uint32_t gui_descriptor_id
 	, "Goniometer" // const char *plugin_human_id
-	, (struct LV2Port[])
+	, (const struct LV2Port[7])
 	{
-		{ "inL", AUDIO_IN, nan},
-		{ "outL", AUDIO_OUT, nan},
-		{ "inR", AUDIO_IN, nan},
-		{ "outR", AUDIO_OUT, nan},
-		{ "UIgain", CONTROL_IN, 1.000000},
-		{ "UIcorrelation", CONTROL_OUT, nan},
-		{ "UInotify", CONTROL_OUT, nan},
+		{ "inL", AUDIO_IN, nan, nan, nan, "InL"},
+		{ "outL", AUDIO_OUT, nan, nan, nan, "OutL"},
+		{ "inR", AUDIO_IN, nan, nan, nan, "InR"},
+		{ "outR", AUDIO_OUT, nan, nan, nan, "OutR"},
+		{ "UIgain", CONTROL_IN, 1.000000, 0.000000, 6.000000, "UI gain"},
+		{ "UIcorrelation", CONTROL_OUT, nan, 0.000000, 1.000000, "UI correlation"},
+		{ "UInotify", CONTROL_OUT, nan, 0.000000, 1.000000, "UI notify"},
 	}
 	, 7 // uint32_t nports_total
 	, 2 // uint32_t nports_audio_in

@@ -11,12 +11,12 @@ static const RtkLv2Description _plugin_cor = {
 	, "Stereo Phase-Correlation Meter" // const char *plugin_human_id
 	, (const struct LV2Port[6])
 	{
-		{ "unused", CONTROL_IN, 0.000000},
-		{ "inL", AUDIO_IN, nan},
-		{ "outL", AUDIO_OUT, nan},
-		{ "levelL", CONTROL_OUT, nan},
-		{ "inR", AUDIO_IN, nan},
-		{ "outR", AUDIO_OUT, nan},
+		{ "unused", CONTROL_IN, 0.000000, 0.000000, 1.000000, "unused"},
+		{ "inL", AUDIO_IN, nan, nan, nan, "InL"},
+		{ "outL", AUDIO_OUT, nan, nan, nan, "OutL"},
+		{ "levelL", CONTROL_OUT, nan, 0.000000, 1.000000, "LevelL"},
+		{ "inR", AUDIO_IN, nan, nan, nan, "InR"},
+		{ "outR", AUDIO_OUT, nan, nan, nan, "OutR"},
 	}
 	, 6 // uint32_t nports_total
 	, 2 // uint32_t nports_audio_in
@@ -28,7 +28,7 @@ static const RtkLv2Description _plugin_cor = {
 	, 2 // uint32_t nports_ctrl
 	, 1 // uint32_t nports_ctrl_in
 	, 1 // uint32_t nports_ctrl_out
-	, 1024 // uint32_t min_atom_bufsiz
+	, 8192 // uint32_t min_atom_bufsiz
 	, false // bool send_time_info
 };
 

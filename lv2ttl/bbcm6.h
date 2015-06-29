@@ -12,13 +12,13 @@ static const RtkLv2Description _plugin_bbcm6 = {
 	, "BBC M-6" // const char *plugin_human_id
 	, (const struct LV2Port[7])
 	{
-		{ "ref", CONTROL_IN, -18.000000},
-		{ "inL", AUDIO_IN, nan},
-		{ "outL", AUDIO_OUT, nan},
-		{ "levelM6", CONTROL_OUT, nan},
-		{ "inR", AUDIO_IN, nan},
-		{ "outR", AUDIO_OUT, nan},
-		{ "levelS6", CONTROL_OUT, nan},
+		{ "ref", CONTROL_IN, -18.000000, -30.000000, 0.000000, "Reference Level 0dBu"},
+		{ "inL", AUDIO_IN, nan, nan, nan, "InL"},
+		{ "outL", AUDIO_OUT, nan, nan, nan, "OutL"},
+		{ "levelM6", CONTROL_OUT, nan, 0.000000, 1.000000, "LevelM6"},
+		{ "inR", AUDIO_IN, nan, nan, nan, "InR"},
+		{ "outR", AUDIO_OUT, nan, nan, nan, "OutR"},
+		{ "levelS6", CONTROL_OUT, nan, 0.000000, 1.000000, "LevelS6"},
 	}
 	, 7 // uint32_t nports_total
 	, 2 // uint32_t nports_audio_in

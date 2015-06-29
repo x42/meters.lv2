@@ -10,21 +10,21 @@ static const RtkLv2Description _plugin_phasewheel = {
 	, 46 // uint32_t dsp_descriptor_id
 	, 0 // uint32_t gui_descriptor_id
 	, "Phase/Frequency Wheel" // const char *plugin_human_id
-	, (struct LV2Port[])
+	, (const struct LV2Port[13])
 	{
-		{ "control", ATOM_IN, nan},
-		{ "notify", ATOM_OUT, nan},
-		{ "in1", AUDIO_IN, nan},
-		{ "out1", AUDIO_OUT, nan},
-		{ "in2", AUDIO_IN, nan},
-		{ "out2", AUDIO_OUT, nan},
-		{ "phase", CONTROL_OUT, nan},
-		{ "gain", CONTROL_IN, 20.000000},
-		{ "cutoff", CONTROL_IN, -50.000000},
-		{ "fftsize", CONTROL_IN, 2048.000000},
-		{ "band", CONTROL_IN, 1.000000},
-		{ "normalize", CONTROL_IN, 0.000000},
-		{ "persistence", CONTROL_IN, 33.000000},
+		{ "control", ATOM_IN, nan, nan, nan, "GUI to plugin communication"},
+		{ "notify", ATOM_OUT, nan, nan, nan, "Plugin to GUI communication"},
+		{ "in1", AUDIO_IN, nan, nan, nan, "Channel 1 input"},
+		{ "out1", AUDIO_OUT, nan, nan, nan, "signal pass-thru"},
+		{ "in2", AUDIO_IN, nan, nan, nan, "Channel 2 input"},
+		{ "out2", AUDIO_OUT, nan, nan, nan, "signal pass-thru"},
+		{ "phase", CONTROL_OUT, nan, -1.000000, 1.000000, "Stereo Phase Correlation (all bands)"},
+		{ "gain", CONTROL_IN, 20.000000, -40.000000, 40.000000, "Display Signal Level Gain."},
+		{ "cutoff", CONTROL_IN, -50.000000, -80.000000, -10.000000, "Display Signal Cutoff Level (relative to 0dB). Signals below this level will not be visualized."},
+		{ "fftsize", CONTROL_IN, 2048.000000, 128.000000, 16384.000000, "Number of audio-samples to process. Large values increase accuracy (particular for low frequencies) as well as latency."},
+		{ "band", CONTROL_IN, 1.000000, 0.000000, 1.000000, "Group data by frequency bands. Depending on FFT-size, 6 or 12 bands per octave are used. This allows for 1/frequency (pink noise) signal level normalization. It also speeds up visualization for large FFT sizes and decreases CPU/GPU usage due to visualization."},
+		{ "normalize", CONTROL_IN, 0.000000, 0.000000, 1.000000, "Auto-gain. Normalize signal level, set gain to detected (per band) peak signal level."},
+		{ "persistence", CONTROL_IN, 33.000000, 0.000000, 100.000000, "Screen persistence (fade out speed). 0: no persistence, 100: permanent. Values above ~66 result in a permanent shadow."},
 	}
 	, 13 // uint32_t nports_total
 	, 2 // uint32_t nports_audio_in

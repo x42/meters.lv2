@@ -10,14 +10,14 @@ static const RtkLv2Description _plugin_ebur = {
 	, 11 // uint32_t dsp_descriptor_id
 	, 0 // uint32_t gui_descriptor_id
 	, "EBU R128 Meter" // const char *plugin_human_id
-	, (struct LV2Port[])
+	, (const struct LV2Port[6])
 	{
-		{ "control", ATOM_IN, nan},
-		{ "notify", ATOM_OUT, nan},
-		{ "inL", AUDIO_IN, nan},
-		{ "outL", AUDIO_OUT, nan},
-		{ "inR", AUDIO_IN, nan},
-		{ "outR", AUDIO_OUT, nan},
+		{ "control", ATOM_IN, nan, nan, nan, "UI to plugin communication"},
+		{ "notify", ATOM_OUT, nan, nan, nan, "plugin to UI communication"},
+		{ "inL", AUDIO_IN, nan, nan, nan, "InL"},
+		{ "outL", AUDIO_OUT, nan, nan, nan, "OutL"},
+		{ "inR", AUDIO_IN, nan, nan, nan, "InR"},
+		{ "outR", AUDIO_OUT, nan, nan, nan, "OutR"},
 	}
 	, 6 // uint32_t nports_total
 	, 2 // uint32_t nports_audio_in

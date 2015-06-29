@@ -12,13 +12,13 @@ static const RtkLv2Description _plugin_vu2c = {
 	, "VU Meter (Stereo)" // const char *plugin_human_id
 	, (const struct LV2Port[7])
 	{
-		{ "ref", CONTROL_IN, -22.000000},
-		{ "inL", AUDIO_IN, nan},
-		{ "outL", AUDIO_OUT, nan},
-		{ "levelL", CONTROL_OUT, nan},
-		{ "inR", AUDIO_IN, nan},
-		{ "outR", AUDIO_OUT, nan},
-		{ "levelR", CONTROL_OUT, nan},
+		{ "ref", CONTROL_IN, -22.000000, -30.000000, 0.000000, "Reference Level 0dBu"},
+		{ "inL", AUDIO_IN, nan, nan, nan, "InL"},
+		{ "outL", AUDIO_OUT, nan, nan, nan, "OutL"},
+		{ "levelL", CONTROL_OUT, nan, 0.000000, 1.000000, "LevelL"},
+		{ "inR", AUDIO_IN, nan, nan, nan, "InR"},
+		{ "outR", AUDIO_OUT, nan, nan, nan, "OutR"},
+		{ "levelR", CONTROL_OUT, nan, 0.000000, 1.000000, "LevelR"},
 	}
 	, 7 // uint32_t nports_total
 	, 2 // uint32_t nports_audio_in

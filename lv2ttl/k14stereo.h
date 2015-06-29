@@ -12,16 +12,16 @@ static const RtkLv2Description _plugin_k14stereo = {
 	, "K14/RMS Meter (Stereo)" // const char *plugin_human_id
 	, (const struct LV2Port[10])
 	{
-		{ "ref", CONTROL_IN, -4.000000},
-		{ "inL", AUDIO_IN, nan},
-		{ "outL", AUDIO_OUT, nan},
-		{ "levelL", CONTROL_OUT, nan},
-		{ "inR", AUDIO_IN, nan},
-		{ "outR", AUDIO_OUT, nan},
-		{ "levelR", CONTROL_OUT, nan},
-		{ "peakL", CONTROL_OUT, nan},
-		{ "peakR", CONTROL_OUT, nan},
-		{ "hold", CONTROL_OUT, nan},
+		{ "ref", CONTROL_IN, -4.000000, -4.000000, 4.000000, "ui notification"},
+		{ "inL", AUDIO_IN, nan, nan, nan, "InL"},
+		{ "outL", AUDIO_OUT, nan, nan, nan, "OutL"},
+		{ "levelL", CONTROL_OUT, nan, 0.000000, 1.000000, "LevelL"},
+		{ "inR", AUDIO_IN, nan, nan, nan, "InR"},
+		{ "outR", AUDIO_OUT, nan, nan, nan, "OutR"},
+		{ "levelR", CONTROL_OUT, nan, 0.000000, 1.000000, "LevelR"},
+		{ "peakL", CONTROL_OUT, nan, 0.000000, 1.000000, "peakL"},
+		{ "peakR", CONTROL_OUT, nan, 0.000000, 1.000000, "peakR"},
+		{ "hold", CONTROL_OUT, nan, 0.000000, 1.000000, "peak hold"},
 	}
 	, 10 // uint32_t nports_total
 	, 2 // uint32_t nports_audio_in

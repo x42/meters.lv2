@@ -10,27 +10,27 @@ static const RtkLv2Description _plugin_dr14 = {
 	, 52 // uint32_t dsp_descriptor_id
 	, 0 // uint32_t gui_descriptor_id
 	, "DR14 - Dynamic Range Meter" // const char *plugin_human_id
-	, (struct LV2Port[])
+	, (const struct LV2Port[19])
 	{
-		{ "control", ATOM_IN, nan},
-		{ "host_transport", CONTROL_IN, 1.000000},
-		{ "reset", CONTROL_IN, 0.000000},
-		{ "blkcnt", CONTROL_OUT, nan},
-		{ "in1", AUDIO_IN, nan},
-		{ "out1", AUDIO_OUT, nan},
-		{ "dBTP_m1", CONTROL_OUT, nan},
-		{ "dBTP_p1", CONTROL_OUT, nan},
-		{ "dBRMS_m1", CONTROL_OUT, nan},
-		{ "dBRMS_p1", CONTROL_OUT, nan},
-		{ "dr1", CONTROL_OUT, nan},
-		{ "in2", AUDIO_IN, nan},
-		{ "out2", AUDIO_OUT, nan},
-		{ "dBTP_m2", CONTROL_OUT, nan},
-		{ "dBTP_p2", CONTROL_OUT, nan},
-		{ "dBRMS_m2", CONTROL_OUT, nan},
-		{ "dBRMS_p2", CONTROL_OUT, nan},
-		{ "dr2", CONTROL_OUT, nan},
-		{ "dr", CONTROL_OUT, nan},
+		{ "control", ATOM_IN, nan, nan, nan, "Control"},
+		{ "host_transport", CONTROL_IN, 1.000000, 0.000000, 1.000000, ""},
+		{ "reset", CONTROL_IN, 0.000000, 0.000000, 1.000000, ""},
+		{ "blkcnt", CONTROL_OUT, nan, 0.000000, 3600.000000, ""},
+		{ "in1", AUDIO_IN, nan, nan, nan, "Audio input"},
+		{ "out1", AUDIO_OUT, nan, nan, nan, "signal pass-thru"},
+		{ "dBTP_m1", CONTROL_OUT, nan, -80.000000, 6.000000, ""},
+		{ "dBTP_p1", CONTROL_OUT, nan, -80.000000, 6.000000, ""},
+		{ "dBRMS_m1", CONTROL_OUT, nan, -80.000000, 0.000000, ""},
+		{ "dBRMS_p1", CONTROL_OUT, nan, -80.000000, 0.000000, ""},
+		{ "dr1", CONTROL_OUT, nan, 0.000000, 20.000000, ""},
+		{ "in2", AUDIO_IN, nan, nan, nan, "Audio input"},
+		{ "out2", AUDIO_OUT, nan, nan, nan, "signal pass-thru"},
+		{ "dBTP_m2", CONTROL_OUT, nan, -80.000000, 6.000000, ""},
+		{ "dBTP_p2", CONTROL_OUT, nan, -80.000000, 6.000000, ""},
+		{ "dBRMS_m2", CONTROL_OUT, nan, -80.000000, 0.000000, ""},
+		{ "dBRMS_p2", CONTROL_OUT, nan, -80.000000, 0.000000, ""},
+		{ "dr2", CONTROL_OUT, nan, 0.000000, 20.000000, ""},
+		{ "dr", CONTROL_OUT, nan, 0.000000, 20.000000, ""},
 	}
 	, 19 // uint32_t nports_total
 	, 2 // uint32_t nports_audio_in

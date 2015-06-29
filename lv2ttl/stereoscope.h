@@ -10,17 +10,17 @@ static const RtkLv2Description _plugin_stereoscope = {
 	, 48 // uint32_t dsp_descriptor_id
 	, 0 // uint32_t gui_descriptor_id
 	, "Stereo/Frequency Scope" // const char *plugin_human_id
-	, (struct LV2Port[])
+	, (const struct LV2Port[9])
 	{
-		{ "control", ATOM_IN, nan},
-		{ "notify", ATOM_OUT, nan},
-		{ "in1", AUDIO_IN, nan},
-		{ "out1", AUDIO_OUT, nan},
-		{ "in2", AUDIO_IN, nan},
-		{ "out2", AUDIO_OUT, nan},
-		{ "fftsize", CONTROL_IN, 2048.000000},
-		{ "band", CONTROL_IN, 1.000000},
-		{ "persistence", CONTROL_IN, 50.000000},
+		{ "control", ATOM_IN, nan, nan, nan, "GUI to plugin communication"},
+		{ "notify", ATOM_OUT, nan, nan, nan, "Plugin to GUI communication"},
+		{ "in1", AUDIO_IN, nan, nan, nan, "Channel 1 input"},
+		{ "out1", AUDIO_OUT, nan, nan, nan, "signal pass-thru"},
+		{ "in2", AUDIO_IN, nan, nan, nan, "Channel 2 input"},
+		{ "out2", AUDIO_OUT, nan, nan, nan, "signal pass-thru"},
+		{ "fftsize", CONTROL_IN, 2048.000000, 128.000000, 16384.000000, "Number of audio-samples to process. Large values increase accuracy as well as latency."},
+		{ "band", CONTROL_IN, 1.000000, 0.000000, 1.000000, "Group data by frequency bands. This allows for 1/frequency (pink noise) signal level normalization. It also speeds up visualization for large FFT sizes and decreases CPU/GPU usage due to visualization."},
+		{ "persistence", CONTROL_IN, 50.000000, 0.000000, 100.000000, "Screen persistence (fade out speed). 0: no persistence, 100: permanent. Values above ~66 result in a permanent shadow."},
 	}
 	, 9 // uint32_t nports_total
 	, 2 // uint32_t nports_audio_in

@@ -10,12 +10,12 @@ static const RtkLv2Description _plugin_sigdisthist = {
 	, 58 // uint32_t dsp_descriptor_id
 	, 0 // uint32_t gui_descriptor_id
 	, "Signal Distribution Histogram" // const char *plugin_human_id
-	, (struct LV2Port[])
+	, (const struct LV2Port[4])
 	{
-		{ "control", ATOM_IN, nan},
-		{ "notify", ATOM_OUT, nan},
-		{ "in", AUDIO_IN, nan},
-		{ "out", AUDIO_OUT, nan},
+		{ "control", ATOM_IN, nan, nan, nan, "UI to plugin communication"},
+		{ "notify", ATOM_OUT, nan, nan, nan, "plugin to UI communication"},
+		{ "in", AUDIO_IN, nan, nan, nan, "In"},
+		{ "out", AUDIO_OUT, nan, nan, nan, "Out"},
 	}
 	, 4 // uint32_t nports_total
 	, 1 // uint32_t nports_audio_in
