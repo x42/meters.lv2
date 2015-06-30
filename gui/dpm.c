@@ -77,8 +77,9 @@ typedef struct {
 	LV2UI_Write_Function write;
 	LV2UI_Controller     controller;
 
-  RobWidget* c_box;
-  RobWidget* m0;
+	RobWidget* m_box;
+	RobWidget* c_box;
+	RobWidget* m0;
 	RobTkScale* fader;
 	RobTkLbl* lbl_speed;
 	RobTkCBtn* btn_peaks;
@@ -841,14 +842,8 @@ size_allocate(RobWidget* handle, int w, int h) {
 		ui->gm_left = .5 + floor(.5 * (ui->gm_width - ui->gm_girth));
 		ui->cur_width = 2.0 * MA_WIDTH + ui->num_meters * GM_WIDTH;
 	}
-	robwidget_set_size(handle, w, h);
+	robwidget_set_size(handle, ui->cur_width, h);
 	queue_draw(ui->m0);
-}
-
-static void position_set(RobWidget *rw, const int pw, const int ph) {
-	SAUI* ui = (SAUI*)GET_HANDLE(rw);
-	rw->area.x = rint((pw - ui->cur_width) * .5);
-	rw->area.y = rint((ph - rw->area.height) * .5);
 }
 
 static RobWidget * toplevel(SAUI* ui, void * const top)
@@ -865,7 +860,6 @@ static RobWidget * toplevel(SAUI* ui, void * const top)
 	robwidget_set_size_request(ui->m0, size_request);
 	robwidget_set_size_allocate(ui->m0, size_allocate);
 	robwidget_set_mousedown(ui->m0, cb_reset_peak);
-	ui->m0->position_set = position_set;
 	if (ui->display_freq) {
 		robwidget_set_mousemove(ui->m0, mousemove);
 	}
@@ -901,7 +895,9 @@ static RobWidget * toplevel(SAUI* ui, void * const top)
 
 	/* layout */
 
-	rob_hbox_child_pack(ui->rw, ui->m0, TRUE, TRUE);
+	ui->m_box = rob_vbox_new(FALSE, 0);
+	rob_vbox_child_pack(ui->m_box, ui->m0, TRUE, TRUE);
+	rob_hbox_child_pack(ui->rw, ui->m_box, TRUE, TRUE);
 
 	if (ui->display_freq) {
 		rob_hbox_child_pack(ui->rw, robtk_sep_widget(ui->sep_h0), FALSE, TRUE);
@@ -1034,6 +1030,7 @@ cleanup(LV2UI_Handle handle)
 	rob_box_destroy(ui->c_box);
 
 	robwidget_destroy(ui->m0);
+	rob_box_destroy(ui->m_box);
 	rob_box_destroy(ui->rw);
 
 	free(ui);
