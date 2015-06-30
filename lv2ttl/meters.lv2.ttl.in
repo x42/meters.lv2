@@ -1223,7 +1223,7 @@ mtr:spectr30mono@URI_SUFFIX@
 		lv2:index 62 ;
 		lv2:symbol "UIgain" ;
 		lv2:name "UI gain" ;
-		lv2:default 0;
+		lv2:default 0.0;
 		lv2:minimum -12.0;
 		lv2:maximum 32.0 ;
 		lv2:portProperty pprop:notOnGUI ;
@@ -1237,6 +1237,7 @@ mtr:spectr30mono@URI_SUFFIX@
 		lv2:minimum 0;
 		lv2:maximum 256 ;
 		lv2:portProperty pprop:notOnGUI ;
+		lv2:portProperty lv2:integer;
 	] , [
 		a lv2:AudioPort ,
 			lv2:InputPort ;
@@ -1767,7 +1768,7 @@ mtr:spectr30stereo@URI_SUFFIX@
 		lv2:index 62 ;
 		lv2:symbol "UIgain" ;
 		lv2:name "UI gain" ;
-		lv2:default 0;
+		lv2:default 0.0;
 		lv2:minimum -12.0;
 		lv2:maximum 32.0 ;
 		lv2:portProperty pprop:notOnGUI ;
@@ -1781,6 +1782,7 @@ mtr:spectr30stereo@URI_SUFFIX@
 		lv2:minimum 0;
 		lv2:maximum 256 ;
 		lv2:portProperty pprop:notOnGUI ;
+		lv2:portProperty lv2:integer;
 	] , [
 		a lv2:AudioPort ,
 			lv2:InputPort ;
@@ -2526,9 +2528,9 @@ mtr:phasewheel@URI_SUFFIX@
 		lv2:index 12 ;
 		lv2:symbol "persistence" ;
 		lv2:name "Screen Persistence" ;
-		lv2:minimum 0 ;
-		lv2:maximum 100 ;
-		lv2:default 33 ;
+		lv2:minimum 0.0 ;
+		lv2:maximum 100.0 ;
+		lv2:default 33.0 ;
 	  rdfs:comment "Screen persistence (fade out speed). 0: no persistence, 100: permanent. Values above ~66 result in a permanent shadow.";
 	] ;
 	rdfs:comment "Phase/Frequency Wheel - display stereo-signal phase (angle) relative to frequency (radius)."
@@ -2627,9 +2629,9 @@ mtr:stereoscope@URI_SUFFIX@
 		lv2:index 8 ;
 		lv2:symbol "persistence" ;
 		lv2:name "Screen Persistence" ;
-		lv2:minimum 0 ;
-		lv2:maximum 100 ;
-		lv2:default 50 ;
+		lv2:minimum 0.0 ;
+		lv2:maximum 100.0 ;
+		lv2:default 50.0 ;
 	  rdfs:comment "Screen persistence (fade out speed). 0: no persistence, 100: permanent. Values above ~66 result in a permanent shadow.";
 	] ;
 	rdfs:comment "Stereo Scope display channel difference per frequency."
@@ -2679,8 +2681,8 @@ mtr:dr14mono@URI_SUFFIX@
 		lv2:index 3 ;
 		lv2:symbol "blkcnt" ;
 		lv2:name "Integration Time" ;
-		lv2:minimum 0 ;
-		lv2:maximum 3600;
+		lv2:minimum 0.0 ;
+		lv2:maximum 3600.0;
 		units:unit units:s;
 	  rdfs:comment "" ;
 	] , [
@@ -2702,8 +2704,8 @@ mtr:dr14mono@URI_SUFFIX@
 		lv2:index 6 ;
 		lv2:symbol "dBTP_m" ;
 		lv2:name "dBTP - momentaty" ;
-		lv2:minimum -80 ;
-		lv2:maximum 6;
+		lv2:minimum -80.0 ;
+		lv2:maximum 6.0;
 		units:unit units:db;
 	  rdfs:comment "" ;
 	] , [
@@ -2711,8 +2713,8 @@ mtr:dr14mono@URI_SUFFIX@
 		lv2:index 7 ;
 		lv2:symbol "dBTP_p" ;
 		lv2:name "dBTP - peak" ;
-		lv2:minimum -80 ;
-		lv2:maximum 6;
+		lv2:minimum -80.0 ;
+		lv2:maximum 6.0;
 		units:unit units:db;
 	  rdfs:comment "" ;
 	] , [
@@ -2720,8 +2722,8 @@ mtr:dr14mono@URI_SUFFIX@
 		lv2:index 8 ;
 		lv2:symbol "dBRMS_m" ;
 		lv2:name "dB RMS - momentaty" ;
-		lv2:minimum -80 ;
-		lv2:maximum 0;
+		lv2:minimum -80.0 ;
+		lv2:maximum 0.0;
 		units:unit units:db;
 	  rdfs:comment "" ;
 	] , [
@@ -2729,8 +2731,8 @@ mtr:dr14mono@URI_SUFFIX@
 		lv2:index 9 ;
 		lv2:symbol "dBRMS_p" ;
 		lv2:name "dB RMS - peak" ;
-		lv2:minimum -80 ;
-		lv2:maximum 0;
+		lv2:minimum -80.0 ;
+		lv2:maximum 0.0;
 		units:unit units:db;
 	  rdfs:comment "" ;
 	] , [
@@ -2952,9 +2954,9 @@ mtr:TPnRMSmono@URI_SUFFIX@
 		lv2:index 1 ;
 		lv2:symbol "unused1" ;
 		lv2:name "Unused" ;
-		lv2:minimum 0 ;
-		lv2:maximum 1 ;
-		lv2:default 1 ;
+		lv2:minimum 0.0 ;
+		lv2:maximum 1.0 ;
+		lv2:default 1.0 ;
 		lv2:portProperty pprop:notOnGUI ;
 	  rdfs:comment "compat w/DR14" ;
 	] , [
@@ -2972,9 +2974,9 @@ mtr:TPnRMSmono@URI_SUFFIX@
 		a lv2:ControlPort, lv2:OutputPort ;
 		lv2:index 3 ;
 		lv2:symbol "blkcnt" ;
-		lv2:name "Unused" ;
-		lv2:minimum 0;
-		lv2:maximum 1;
+		lv2:name "Unused Out" ;
+		lv2:minimum 0.0;
+		lv2:maximum 1.0;
 		lv2:portProperty pprop:notOnGUI ;
 	  rdfs:comment "compat w/DR14, reinit GUI" ;
 	] , [
@@ -2996,8 +2998,8 @@ mtr:TPnRMSmono@URI_SUFFIX@
 		lv2:index 6 ;
 		lv2:symbol "dBTP_m" ;
 		lv2:name "dBTP - momentaty" ;
-		lv2:minimum -80 ;
-		lv2:maximum 6;
+		lv2:minimum -80.0 ;
+		lv2:maximum 6.0;
 		units:unit units:db;
 	  rdfs:comment "" ;
 	] , [
@@ -3005,8 +3007,8 @@ mtr:TPnRMSmono@URI_SUFFIX@
 		lv2:index 7 ;
 		lv2:symbol "dBTP_p" ;
 		lv2:name "dBTP - peak" ;
-		lv2:minimum -80 ;
-		lv2:maximum 6;
+		lv2:minimum -80.0 ;
+		lv2:maximum 6.0;
 		units:unit units:db;
 	  rdfs:comment "" ;
 	] , [
@@ -3014,8 +3016,8 @@ mtr:TPnRMSmono@URI_SUFFIX@
 		lv2:index 8 ;
 		lv2:symbol "dBRMS_m" ;
 		lv2:name "dB RMS - momentaty" ;
-		lv2:minimum -80 ;
-		lv2:maximum 0;
+		lv2:minimum -80.0 ;
+		lv2:maximum 0.0;
 		units:unit units:db;
 	  rdfs:comment "" ;
 	] , [
@@ -3023,8 +3025,8 @@ mtr:TPnRMSmono@URI_SUFFIX@
 		lv2:index 9 ;
 		lv2:symbol "dBFS_p" ;
 		lv2:name "dBFS [hold]" ;
-		lv2:minimum -80 ;
-		lv2:maximum 0;
+		lv2:minimum -80.0 ;
+		lv2:maximum 0.0;
 		units:unit units:db;
 	  rdfs:comment "" ;
 	] ;
@@ -3054,9 +3056,9 @@ mtr:TPnRMSstereo@URI_SUFFIX@
 		lv2:index 1 ;
 		lv2:symbol "unused1" ;
 		lv2:name "Unused" ;
-		lv2:minimum 0 ;
-		lv2:maximum 1 ;
-		lv2:default 1 ;
+		lv2:minimum 0.0 ;
+		lv2:maximum 1.0 ;
+		lv2:default 1.0 ;
 		lv2:portProperty pprop:notOnGUI ;
 	  rdfs:comment "compat w/DR14" ;
 	] , [
@@ -3075,8 +3077,8 @@ mtr:TPnRMSstereo@URI_SUFFIX@
 		lv2:index 3 ;
 		lv2:symbol "blkcnt" ;
 		lv2:name "Integration Time" ;
-		lv2:minimum 0 ;
-		lv2:maximum 3600;
+		lv2:minimum 0.0 ;
+		lv2:maximum 3600.0;
 		units:unit units:s;
 	  rdfs:comment "" ;
 	] , [
@@ -3100,8 +3102,8 @@ mtr:TPnRMSstereo@URI_SUFFIX@
 		lv2:index 6 ;
 		lv2:symbol "dBTP_m1" ;
 		lv2:name "dBTP - momentaty" ;
-		lv2:minimum -80 ;
-		lv2:maximum 6;
+		lv2:minimum -80.0 ;
+		lv2:maximum 6.0;
 		units:unit units:db;
 	  rdfs:comment "" ;
 	] , [
@@ -3109,8 +3111,8 @@ mtr:TPnRMSstereo@URI_SUFFIX@
 		lv2:index 7 ;
 		lv2:symbol "dBTP_p1" ;
 		lv2:name "dBTP - peak" ;
-		lv2:minimum -80 ;
-		lv2:maximum 6;
+		lv2:minimum -80.0 ;
+		lv2:maximum 6.0;
 		units:unit units:db;
 	  rdfs:comment "" ;
 	] , [
@@ -3118,8 +3120,8 @@ mtr:TPnRMSstereo@URI_SUFFIX@
 		lv2:index 8 ;
 		lv2:symbol "dBRMS_m1" ;
 		lv2:name "dB RMS - momentaty" ;
-		lv2:minimum -80 ;
-		lv2:maximum 0;
+		lv2:minimum -80.0 ;
+		lv2:maximum 0.0;
 		units:unit units:db;
 	  rdfs:comment "" ;
 	] , [
@@ -3127,8 +3129,8 @@ mtr:TPnRMSstereo@URI_SUFFIX@
 		lv2:index 9 ;
 		lv2:symbol "dBRMS_p1" ;
 		lv2:name "dB RMS - peak" ;
-		lv2:minimum -80 ;
-		lv2:maximum 0;
+		lv2:minimum -80.0 ;
+		lv2:maximum 0.0;
 		units:unit units:db;
 	  rdfs:comment "" ;
 	] , [
@@ -3136,9 +3138,9 @@ mtr:TPnRMSstereo@URI_SUFFIX@
 		lv2:portProperty lv2:integer;
 		lv2:index 10 ;
 		lv2:symbol "unused2" ;
-		lv2:name "Unused" ;
-		lv2:minimum 0 ;
-		lv2:maximum 1;
+		lv2:name "Unused Out" ;
+		lv2:minimum 0.0 ;
+		lv2:maximum 1.0;
 		lv2:portProperty pprop:notOnGUI ;
 	  rdfs:comment "compat w/DR14" ;
 	] , [
@@ -3162,8 +3164,8 @@ mtr:TPnRMSstereo@URI_SUFFIX@
 		lv2:index 13 ;
 		lv2:symbol "dBTP_m2" ;
 		lv2:name "dBTP - momentaty" ;
-		lv2:minimum -80 ;
-		lv2:maximum 6;
+		lv2:minimum -80.0 ;
+		lv2:maximum 6.0;
 		units:unit units:db;
 	  rdfs:comment "" ;
 	] , [
@@ -3171,8 +3173,8 @@ mtr:TPnRMSstereo@URI_SUFFIX@
 		lv2:index 14 ;
 		lv2:symbol "dBTP_p2" ;
 		lv2:name "dBTP - peak" ;
-		lv2:minimum -80 ;
-		lv2:maximum 6;
+		lv2:minimum -80.0 ;
+		lv2:maximum 6.0;
 		units:unit units:db;
 	  rdfs:comment "" ;
 	] , [
@@ -3180,8 +3182,8 @@ mtr:TPnRMSstereo@URI_SUFFIX@
 		lv2:index 15 ;
 		lv2:symbol "dBRMS_m2" ;
 		lv2:name "dB RMS - momentaty" ;
-		lv2:minimum -80 ;
-		lv2:maximum 0;
+		lv2:minimum -80.0 ;
+		lv2:maximum 0.0;
 		units:unit units:db;
 	  rdfs:comment "" ;
 	] , [
@@ -3189,8 +3191,8 @@ mtr:TPnRMSstereo@URI_SUFFIX@
 		lv2:index 16 ;
 		lv2:symbol "dBFS_p2" ;
 		lv2:name "dBFS [hold]" ;
-		lv2:minimum -80 ;
-		lv2:maximum 0;
+		lv2:minimum -80.0 ;
+		lv2:maximum 0.0;
 		units:unit units:db;
 	  rdfs:comment "" ;
 	] ;
