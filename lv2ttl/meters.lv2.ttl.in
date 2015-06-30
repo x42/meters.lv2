@@ -2793,8 +2793,8 @@ mtr:dr14stereo@URI_SUFFIX@
 		lv2:index 3 ;
 		lv2:symbol "blkcnt" ;
 		lv2:name "Integration Time" ;
-		lv2:minimum 0 ;
-		lv2:maximum 3600;
+		lv2:minimum 0.0 ;
+		lv2:maximum 3600.0;
 		units:unit units:s;
 	  rdfs:comment "" ;
 	] , [
@@ -2818,8 +2818,8 @@ mtr:dr14stereo@URI_SUFFIX@
 		lv2:index 6 ;
 		lv2:symbol "dBTP_m1" ;
 		lv2:name "dBTP - momentaty" ;
-		lv2:minimum -80 ;
-		lv2:maximum 6;
+		lv2:minimum -80.0 ;
+		lv2:maximum 6.0;
 		units:unit units:db;
 	  rdfs:comment "" ;
 	] , [
@@ -2827,8 +2827,8 @@ mtr:dr14stereo@URI_SUFFIX@
 		lv2:index 7 ;
 		lv2:symbol "dBTP_p1" ;
 		lv2:name "dBTP - peak" ;
-		lv2:minimum -80 ;
-		lv2:maximum 6;
+		lv2:minimum -80.0 ;
+		lv2:maximum 6.0;
 		units:unit units:db;
 	  rdfs:comment "" ;
 	] , [
@@ -2836,8 +2836,8 @@ mtr:dr14stereo@URI_SUFFIX@
 		lv2:index 8 ;
 		lv2:symbol "dBRMS_m1" ;
 		lv2:name "dB RMS - momentaty" ;
-		lv2:minimum -80 ;
-		lv2:maximum 0;
+		lv2:minimum -80.0 ;
+		lv2:maximum 0.0;
 		units:unit units:db;
 	  rdfs:comment "" ;
 	] , [
@@ -2845,8 +2845,8 @@ mtr:dr14stereo@URI_SUFFIX@
 		lv2:index 9 ;
 		lv2:symbol "dBRMS_p1" ;
 		lv2:name "dB RMS - peak" ;
-		lv2:minimum -80 ;
-		lv2:maximum 0;
+		lv2:minimum -80.0 ;
+		lv2:maximum 0.0;
 		units:unit units:db;
 	  rdfs:comment "" ;
 	] , [
@@ -2879,8 +2879,8 @@ mtr:dr14stereo@URI_SUFFIX@
 		lv2:index 13 ;
 		lv2:symbol "dBTP_m2" ;
 		lv2:name "dBTP - momentaty" ;
-		lv2:minimum -80 ;
-		lv2:maximum 6;
+		lv2:minimum -80.0 ;
+		lv2:maximum 6.0;
 		units:unit units:db;
 	  rdfs:comment "" ;
 	] , [
@@ -2888,8 +2888,8 @@ mtr:dr14stereo@URI_SUFFIX@
 		lv2:index 14 ;
 		lv2:symbol "dBTP_p2" ;
 		lv2:name "dBTP - peak" ;
-		lv2:minimum -80 ;
-		lv2:maximum 6;
+		lv2:minimum -80.0 ;
+		lv2:maximum 6.0;
 		units:unit units:db;
 	  rdfs:comment "" ;
 	] , [
@@ -2897,8 +2897,8 @@ mtr:dr14stereo@URI_SUFFIX@
 		lv2:index 15 ;
 		lv2:symbol "dBRMS_m2" ;
 		lv2:name "dB RMS - momentaty" ;
-		lv2:minimum -80 ;
-		lv2:maximum 0;
+		lv2:minimum -80.0 ;
+		lv2:maximum 0.0;
 		units:unit units:db;
 	  rdfs:comment "" ;
 	] , [
@@ -2906,8 +2906,8 @@ mtr:dr14stereo@URI_SUFFIX@
 		lv2:index 16 ;
 		lv2:symbol "dBRMS_p2" ;
 		lv2:name "dB RMS - peak" ;
-		lv2:minimum -80 ;
-		lv2:maximum 0;
+		lv2:minimum -80.0 ;
+		lv2:maximum 0.0;
 		units:unit units:db;
 	  rdfs:comment "" ;
 	] , [
@@ -3139,8 +3139,8 @@ mtr:TPnRMSstereo@URI_SUFFIX@
 		lv2:index 10 ;
 		lv2:symbol "unused2" ;
 		lv2:name "Unused Out" ;
-		lv2:minimum 0.0 ;
-		lv2:maximum 1.0;
+		lv2:minimum 0 ;
+		lv2:maximum 1;
 		lv2:portProperty pprop:notOnGUI ;
 	  rdfs:comment "compat w/DR14" ;
 	] , [
