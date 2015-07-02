@@ -1,10 +1,12 @@
 .gitignore export-ignore
 .gitattributes export-ignore
 .gitmodules export-ignore
-/img/fix_trigraphs.sh export-ignore
 /tools export-ignore
-/doc/LV2ebur128.png export-ignore
-/doc/LV2meters.png export-ignore
+/doc/*.png export-ignore
 /makedoc.sh export-ignore
 /osxdeploy.sh export-ignore
 /Makefile.git export-ignore
+/gui/img/fix_trigraphs.sh export-ignore
+/static_fft.sh export-ignore
+/img/*ico export-ignore
+/img/*icns export-ignore
