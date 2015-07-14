@@ -276,6 +276,7 @@ static float meter_deflect(int type, float v) {
 			v = sqrtf (sqrtf (2.002353f * v)) - 0.1885f;
 			return (v < 0.0f) ? 0.0f : v;
 		case MT_NOR:
+			if (v < 1e-5) return 0;
 			return .4166666f * log10(v) + 1.125f; // (20.0/48.0) *log(v) + (54/48.0)  -> -54dBFS ^= 0, -12dB ^= 1.0
 		case MT_COR:
 			return 0.5f * (1.0f + v);
