@@ -115,8 +115,6 @@ static void img2surf (struct MyGimpImage const * img, cairo_surface_t **s, unsig
 			const int xs = x * img->bytes_per_pixel;
 			const int xd = x * 4;
 
-			assert (ys + xs < (img->width * img->height + img->bytes_per_pixel));
-
 			if (img->bytes_per_pixel == 3) {
 			(*d)[y0 + xd + 3] = 0xff;
 			} else {
