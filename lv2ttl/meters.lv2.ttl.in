@@ -1251,7 +1251,7 @@ mtr:spectr30mono@URI_SUFFIX@
 		lv2:symbol "out" ;
 		lv2:name "Out";
 	] ;
-	rdfs:comment "a 30-band (1/3 octave) spectrum analyzer, Implemented using 6th order butterworth biquad filters complying with performance requirements of class-0 IEC 61260. The frequency range is in powers-of-two centered around 1000Hz (see iec-61260 annex a). Reference level is 0dBFS, the time-conatant defaults to 1 second."
+	rdfs:comment "a 30-band (1/3 octave) spectrum analyzer, Implemented using 6th order butterworth biquad filters complying with performance requirements of class-0 IEC 61260. The frequency range is in powers-of-two centered around 1000Hz (see iec-61260 annex a). Reference level is 0dBFS, the time-constant defaults to 1 second."
 	.
 
 mtr:spectr30stereo@URI_SUFFIX@
@@ -1812,7 +1812,7 @@ mtr:spectr30stereo@URI_SUFFIX@
 		lv2:name "OutR" ;
 		lv2:designation pg:right ;
 	] ;
-	rdfs:comment "a 30-band (1/3 octave) spectrum analyzer, Implemented using 6th order butterworth biquad filters complying with performance requirements of class-0 IEC 61260. The frequency range is in powers-of-two centered around 1000Hz (see iec-61260 annex a). Reference level is 0dBFS, the time-conatant defaults to 1 second."
+	rdfs:comment "a 30-band (1/3 octave) spectrum analyzer, Implemented using 6th order butterworth biquad filters complying with performance requirements of class-0 IEC 61260. The frequency range is in powers-of-two centered around 1000Hz (see iec-61260 annex a). Reference level is 0dBFS, the time-constant defaults to 1 second."
 	.
 
 mtr:dBTPmono@URI_SUFFIX@
