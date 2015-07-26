@@ -127,10 +127,14 @@ ifeq ($(EXTERNALUI), yes)
 endif
 
 ifeq ($(BUILDOPENGL)$(BUILDGTK), nono)
-  $(error at least one of gtk or openGL needs to be enabled)
+  $(warning at least one of gtk or openGL needs to be enabled)
+  $(warning not building meters)
+else
+  targets=$(BUILDDIR)manifest.ttl $(BUILDDIR)$(LV2NAME).ttl
+  targets+=$(BUILDDIR)$(LV2NAME)$(LIB_EXT)
+  targets+=$(APPBLD)x42-meter-collection$(EXE_EXT)
 endif
 
-targets=$(BUILDDIR)$(LV2NAME)$(LIB_EXT)
 
 ifneq ($(BUILDOPENGL), no)
 targets+=$(BUILDDIR)meters_glui$(LIB_EXT)
@@ -300,7 +304,7 @@ submodules:
 	-test -d .git -a .gitmodules -a -f Makefile.git && $(MAKE) -f Makefile.git submodules
 
 
-all: submodule_check $(BUILDDIR)manifest.ttl $(BUILDDIR)$(LV2NAME).ttl $(targets) $(APPBLD)x42-meter-collection$(EXE_EXT)
+all: submodule_check $(targets)
 
 jackapps: \
 	$(APPBLD)x42-dr14$(EXE_EXT) \
@@ -526,11 +530,13 @@ install: install-bin install-man
 uninstall: uninstall-bin uninstall-man
 
 install-bin: all
+ifneq ($(targets),)
 	install -d $(DESTDIR)$(LV2DIR)/$(BUNDLE)
 	install -m755 $(targets) $(DESTDIR)$(LV2DIR)/$(BUNDLE)
 	install -m644 $(BUILDDIR)manifest.ttl $(BUILDDIR)$(LV2NAME).ttl $(DESTDIR)$(LV2DIR)/$(BUNDLE)
 	install -d $(DESTDIR)$(BINDIR)
 	install -T -m755 $(APPBLD)x42-meter-collection$(EXE_EXT) $(DESTDIR)$(BINDIR)/x42-meter$(EXE_EXT)
+endif
 
 uninstall-bin:
 	rm -f $(DESTDIR)$(LV2DIR)/$(BUNDLE)/manifest.ttl
@@ -552,8 +558,10 @@ uninstall-bin:
 	-rmdir $(DESTDIR)$(BINDIR)
 
 install-man:
+ifneq ($(targets),)
 	install -d $(DESTDIR)$(MANDIR)
 	install -m644 doc/x42-meter.1 $(DESTDIR)$(MANDIR)
+endif
 
 uninstall-man:
 	rm -f $(DESTDIR)$(MANDIR)/x42-meters.1
