@@ -699,7 +699,6 @@ static void render_radar (EBUrUI* ui) {
 			int a1 = ui->radar_pos_max;
 
 			if (ui->fastradar >= 0) {
-				assert (ui->radar_pos_cur == ui->fastradar);
 				a0 = (ui->fastradar - 3 + ui->radar_pos_max) % ui->radar_pos_max;
 				a1 = a0 + 10;
 
@@ -1402,6 +1401,7 @@ instantiate(
 	EBUrUI* ui = (EBUrUI*)calloc(1,sizeof(EBUrUI));
 	ui->write      = write_function;
 	ui->controller = controller;
+	ui->fastradar = -1;
 
 	*widget = NULL;
 
@@ -1826,6 +1826,7 @@ port_event(LV2UI_Handle handle,
 					ui->disable_signals = false;
 				} else if (k == CTL_LV2_RESETRADAR) {
 					ui->radar_pos_cur = 0;
+					ui->fastradar = -1;
 					ui->tp = 0;
 					for (int i=0; i < ui->radar_pos_max; ++i) {
 						ui->radarS[i] = -INFINITY;
