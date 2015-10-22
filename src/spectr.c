@@ -30,7 +30,8 @@
 # define csqrt(XX) std::sqrt(XX)
 # define creal(XX) std::real(XX)
 # define cimag(XX) std::imag(XX)
-# define _I ((complex_t)(1i))
+//# define _I ((complex_t)(1i)) // broken with Apple LLVM version 6.1.0 (clang-602.0.53)
+# define _I sqrt((complex_t)(-1)) // ridiculous ... whatever works
   typedef std::complex<double> complex_t;
 #else
 # include <complex.h>
@@ -185,6 +186,7 @@ bandpass_setup(struct FilterBank *fb,
 	fb->f[0].W[b2] *= creal(scale);
 
 #ifdef DEBUG_SPECTR
+	printf("CFG SR:%f FQ:%f BW:%f O:%d\n", rate, freq, band, order);
 	printf("SCALE (%g,  %g)\n", creal(scale), cimag(scale));
 	for (uint32_t i = 0; i < fb->filter_stages; ++i) {
 		struct Filter *flt = &fb->f[i];
