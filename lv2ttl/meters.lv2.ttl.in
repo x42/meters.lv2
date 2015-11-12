@@ -647,6 +647,7 @@ mtr:goniometer@URI_SUFFIX@
 	lv2:project <http://gareus.org/oss/lv2/meters> ;
 	lv2:optionalFeature lv2:hardRTCapable ;
 	lv2:extensionData state:interface ;
+	lv2:requiredFeature urid:map ;
 	ui:ui @GONGUI@ ;
 	lv2:port [
 		a lv2:AudioPort ,
