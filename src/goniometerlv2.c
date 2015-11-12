@@ -60,7 +60,7 @@ goniometer_instantiate(
 	}
 
 	if (!self->map) {
-		fprintf(stderr, "EBUrLV2 error: Host does not support urid:map\n");
+		fprintf(stderr, "Goniometer error: Host does not support urid:map\n");
 		free(self);
 		return NULL;
 	}
