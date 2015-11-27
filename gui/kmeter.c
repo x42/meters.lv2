@@ -28,15 +28,19 @@
 
 #define LVGL_RESIZEABLE
 
-#define GM_TOP    25.5f
-#define GM_BOTTOM  9.5f
-#define GM_LEFT    4.5f
-#define GM_GIRTH  10.0f
-#define GM_WIDTH  (GM_GIRTH + GM_LEFT + GM_LEFT)
-#define MA_WIDTH  21.0f
-#define PK_WIDTH  28.0f
-
 #define GM_HEIGHT (396.0f)
+
+// TODO cache those
+#define GM_TOP    (.5 + ceil (25. * ui->height / GM_HEIGHT))
+#define GM_BOTTOM (4.5 + floor(7.f * ui->height / GM_HEIGHT))
+#define GM_LEFT   (.5 + floor(4.5f * ui->height / GM_HEIGHT))
+#define GM_GIRTH  (ceil(10.0f * ui->height / GM_HEIGHT))
+#define GM_WIDTH  (GM_GIRTH + GM_LEFT + GM_LEFT)
+#define MA_WIDTH  (ceil(4.0f + 17 * ui->height / GM_HEIGHT))
+#define PK_WIDTH  (ceil (28.0f * ui->height / GM_HEIGHT))
+#define PK_HEIGHT (ceil (10 + (6. * ui->height / GM_HEIGHT)))
+#define PK_TOP    (floor((GM_TOP - PK_HEIGHT)/2))
+
 #define GM_SCALE  (ui->height - GM_TOP - GM_BOTTOM - 2.0)
 
 #define MAX_METERS 2
@@ -281,27 +285,35 @@ static void write_text(
 
 static void create_metrics(KMUI* ui) {
 	cairo_t* cr;
-	PangoFontDescription *font = pango_font_description_from_string("Sans 8px");
+	char fontname[24];
+	sprintf (fontname, "Mono %dpx", (int)ceil(3. + 6. * ui->height / GM_HEIGHT));
 
-	INIT_ANN_LB(ui->lb[0], ui->width, 20);
+	pango_font_description_free(ui->font);
+	ui->font = pango_font_description_from_string(fontname);
+
+	sprintf (fontname, "Sans %dpx", (int)ceil(2 + 6. * ui->height / GM_HEIGHT));
+
+	PangoFontDescription *font = pango_font_description_from_string(fontname);
+
+	INIT_ANN_LB(ui->lb[0], ui->width, GM_BOTTOM);
 	char kstd[10];
 	snprintf(kstd, 9, "K%d/RMS", ui->kstandard);
-	write_text(cr, kstd , font, ui->width - 3, 20, 4, c_blk);
+	write_text(cr, kstd , font, ui->width - 3, GM_BOTTOM - 1, 4, c_blk);
 	cairo_destroy (cr);
 
-	INIT_ANN_LB(ui->lb[1], ui->width, 20);
+	INIT_ANN_LB(ui->lb[1], ui->width, GM_TOP);
 	if (ui->num_meters < 2) {
-		write_text(cr, "pe\nak" , font, 3, 12, 3, c_g90);
+		write_text(cr, "pe\nak" , font, (ui->width - PK_WIDTH)/2.0f - 4, GM_TOP/2, 1, c_g90);
 		if (ui->dBFS)
-			write_text(cr, "dB\nFS" , font, ui->width - 3, 12, 1, c_g90);
+			write_text(cr, "dB\nFS" , font, (ui->width + PK_WIDTH)/2.0f + 3, GM_TOP/2, 3, c_g90);
 		else
-			write_text(cr, "dB" , font, ui->width - 3, 12, 1, c_g90);
+			write_text(cr, "dB" , font, (ui->width + PK_WIDTH)/2.0f + 3, GM_TOP/2, 3, c_g90);
 	} else {
-		write_text(cr, "peak" , font, 3, 12, 3, c_g90);
+		write_text(cr, "peak" , font, (ui->width - PK_WIDTH)/2.0f - 4, GM_TOP/2, 1, c_g90);
 		if (ui->dBFS)
-			write_text(cr, "dBFS" , font, ui->width - 3, 12, 1, c_g90);
+			write_text(cr, "dBFS" , font, (ui->width + PK_WIDTH)/2.0f + 3, GM_TOP/2, 3, c_g90);
 		else
-			write_text(cr, "dB " , font, ui->width - 3, 12, 1, c_g90);
+			write_text(cr, "dB " , font, (ui->width + PK_WIDTH)/2.0f + 3, GM_TOP/2, 3, c_g90);
 	}
 	cairo_destroy (cr);
 
@@ -494,10 +506,10 @@ static bool expose_event(RobWidget* handle, cairo_t* cr, cairo_rectangle_t *ev) 
 	}
 
 	/* numerical peak */
-	if (rect_intersect_a(ev, (ui->width - PK_WIDTH) / 2.0f, GM_TOP/2 - 8, PK_WIDTH, 16)) {
+	if (rect_intersect_a(ev, (ui->width - PK_WIDTH) / 2.0f, PK_TOP, PK_WIDTH, PK_HEIGHT)) {
 		cairo_set_operator (cr, CAIRO_OPERATOR_OVER);
 		cairo_save(cr);
-		rounded_rectangle (cr, (ui->width - PK_WIDTH)/2.0f, GM_TOP/2 - 8, PK_WIDTH, 16, 4);
+		rounded_rectangle (cr, (ui->width - PK_WIDTH) / 2.0f, PK_TOP, PK_WIDTH, PK_HEIGHT, 4);
 
 		if (ui->peak_max >= -1.0) {
 			CairoSetSouerceRGBA(c_ptr);
@@ -531,7 +543,7 @@ static bool expose_event(RobWidget* handle, cairo_t* cr, cairo_rectangle_t *ev) 
 	/* labels */
 	cairo_set_source_surface(cr, ui->lb[1], 0, 0);
 	cairo_paint (cr);
-	cairo_set_source_surface(cr, ui->lb[0], 0, ui->height-20);
+	cairo_set_source_surface(cr, ui->lb[0], 0, ui->height - GM_BOTTOM);
 	cairo_paint (cr);
 
 	return TRUE;
@@ -574,8 +586,9 @@ static void
 size_allocate(RobWidget* handle, int w, int h) {
 	KMUI* ui = (KMUI*)GET_HANDLE(handle);
 	ui->height = h;
+	ui->width = 2.0 * MA_WIDTH + ui->num_meters * GM_WIDTH;
 	ui->size_changed = true;
-	robwidget_set_size(handle, ui->width, h);
+	robwidget_set_size(handle, ui->width, ui->height);
 	queue_draw(ui->m0);
 }
 
@@ -649,8 +662,8 @@ instantiate(
 	}
 	ui->peak_max = -90.0;
 
-	ui->width = 2.0 * MA_WIDTH + ui->num_meters * GM_WIDTH;
 	ui->height = GM_HEIGHT;
+	ui->width = 2.0 * MA_WIDTH + ui->num_meters * GM_WIDTH;
 
 	*widget = toplevel(ui, ui_toplevel);
 
