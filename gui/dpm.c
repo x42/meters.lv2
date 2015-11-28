@@ -1,6 +1,6 @@
 /* spectrum analyzer LV2 GUI
  *
- * Copyright 2012-2013 Robin Gareus <robin@gareus.org>
+ * Copyright 2012-2015 Robin Gareus <robin@gareus.org>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -28,7 +28,7 @@
 
 #define LVGL_RESIZEABLE
 
-#define GM_TOP    (ui->display_freq ?  4.5f : 23.5f)
+#define GM_TOP    (ui->display_freq ?  4.5f : 12.5 + GM_PEAK)
 #define GM_LEFT   (ui->gm_left)
 #define GM_GIRTH  (ui->gm_girth)
 #define GM_WIDTH  (ui->gm_width)
@@ -37,11 +37,15 @@
 
 //#define GM_HEIGHT (ui->display_freq ? 400.0f:460.0f)
 #define GM_HEIGHT (ui->height)
-#define GM_TXT    (GM_HEIGHT - (ui->display_freq ? 51.0f : 11.0f))
 #define GM_SCALE  (GM_TXT - GM_TOP - (ui->display_freq ? 8.5f : 12.5))
-#define GM_PEAK   (12.f)
+#define GM_PEAK   ceil(8 + 9.f * ui->scale)
+#define FQ_ANN    ceil(51.f * ui->scale)
+#define FQ_WIDTH  (13 + FQ_ANN)
+#define AN_HEIGHT ceil(46.f * ui->scale)
+#define AN_WIDTH  ceil(32.f * ui->scale)
+#define GM_TXT    (GM_HEIGHT - (ui->display_freq ? FQ_ANN : GM_PEAK))
 
-#define MA_WIDTH  (30.0f)
+#define MA_WIDTH  ceil(30.0f * ui->scale)
 
 #define MAX_CAIRO_PATH 32
 #define MAX_METERS 31
@@ -128,6 +132,7 @@ typedef struct {
 
 	float c_txt[4];
 	float c_bgr[4];
+	float scale;
 
 } SAUI;
 
@@ -188,11 +193,22 @@ enum {
 	FONT_M08
 };
 
-static void initialize_font_cache(SAUI* ui) {
-	ui->font[FONT_S08] = pango_font_description_from_string("Sans 10px");
-	ui->font[FONT_S06] = pango_font_description_from_string("Sans 8px");
-	ui->font[FONT_M07] = pango_font_description_from_string("Mono 9px");
-	ui->font[FONT_M08] = pango_font_description_from_string("Mono 10px");
+static void reinitialize_font_cache(SAUI* ui) {
+	char fontname[24];
+	for (int i=0; i < 4; ++i) {
+		if (ui->font[i]) {
+			pango_font_description_free(ui->font[i]);
+		}
+	}
+
+	sprintf (fontname, "Sans %dpx", (int)floor(10 * ui->scale));
+	ui->font[FONT_S08] = pango_font_description_from_string(fontname);
+	sprintf (fontname, "Sans %dpx", (int)floor(8 * ui->scale));
+	ui->font[FONT_S06] = pango_font_description_from_string(fontname);
+	sprintf (fontname, "Mono %dpx", (int)floor(9 * ui->scale));
+	ui->font[FONT_M07] = pango_font_description_from_string(fontname);
+	sprintf (fontname, "Mono %dpx", (int)floor(10 * ui->scale));
+	ui->font[FONT_M08] = pango_font_description_from_string(fontname);
 }
 
 
@@ -362,12 +378,16 @@ static void alloc_annotations(SAUI* ui) {
 	if (ui->display_freq) {
 		/* frequecy table */
 		for (uint32_t i = 0; i < ui->num_meters; ++i) {
-			INIT_BLACK_BG(ui->an[i], 24, 64)
+			INIT_BLACK_BG(ui->an[i], 24, FQ_WIDTH)
 			write_text(cr, freq_table[i], FONT_LBL, 0, 0, -M_PI/2, 7, c_g90);
 			cairo_destroy (cr);
 		}
 	}
 
+	if (ui->dial) {
+		return; // XXX TODO widget scaling
+		cairo_surface_destroy(ui->dial);
+	}
 	ui->dial = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, GED_WIDTH, GED_HEIGHT+10);
 	cr = cairo_create (ui->dial);
 	CairoSetSouerceRGBA(c_trs);
@@ -452,7 +472,7 @@ static void realloc_metrics(SAUI* ui) {
 	if (ui->display_freq) {
 		write_text(cr,  "dBFS", FONT_MTR, MA_WIDTH - 5, GM_TXT - 5, 0, 1, c_g90);
 	} else {
-		write_text(cr,  "dBTP", FONT_MTR, MA_WIDTH - 5, GM_TXT, 0, 1, c_g90);
+		write_text(cr,  "dBTP", FONT_MTR, MA_WIDTH - 5, GM_TXT - 5 + ceil(GM_PEAK * .5), 0, 1, c_g90);
 	}
 	cairo_destroy (cr);
 }
@@ -586,6 +606,9 @@ static bool expose_event(RobWidget* handle, cairo_t* cr, cairo_rectangle_t *ev) 
 	SAUI* ui = (SAUI*)GET_HANDLE(handle);
 
 	if (ui->size_changed) {
+		reinitialize_font_cache(ui);
+		alloc_annotations(ui);
+		//robtk_dial_set_surface(ui->spn_speed, ui->dial); // XXX
 		create_meter_pattern(ui);
 	}
 	if (ui->metrics_changed || ui->size_changed) {
@@ -637,38 +660,38 @@ static bool expose_event(RobWidget* handle, cairo_t* cr, cairo_rectangle_t *ev) 
 		cairo_set_operator (cr, CAIRO_OPERATOR_OVER);
 		for (uint32_t i = 0; i < ui->num_meters ; ++i) {
 			char buf[8];
-			if (rect_intersect_a(ev, MA_WIDTH + GM_WIDTH * i + 2, GM_PEAK - 9, GM_WIDTH-4, 17)) {
+			if (rect_intersect_a(ev, MA_WIDTH + GM_WIDTH * i + 2, 5, GM_WIDTH-4, GM_PEAK)) {
 				cairo_save(cr);
-				rounded_rectangle (cr, MA_WIDTH + GM_WIDTH * i + 2, GM_PEAK - 9, GM_WIDTH-4, 17, 4);
+				rounded_rectangle (cr, MA_WIDTH + GM_WIDTH * i + 2, 5, GM_WIDTH-4, GM_PEAK, 4);
 				if (ui->peak_val[i] >= -1.0) {
 					CairoSetSouerceRGBA(c_ptr);
 				} else {
 					CairoSetSouerceRGBA(c_blk);
 				}
 				cairo_fill(cr);
-				rounded_rectangle (cr, MA_WIDTH + GM_WIDTH * i + 1.5, GM_PEAK - 8.5, GM_WIDTH-3, 16, 4);
+				rounded_rectangle (cr, MA_WIDTH + GM_WIDTH * i + 1.5, 5.5, GM_WIDTH-3, GM_PEAK - 1, 4);
 				cairo_set_line_width(cr, 1);
 				CairoSetSouerceRGBA(c_g60);
 				cairo_stroke_preserve (cr);
 				cairo_clip (cr);
 				format_db(buf, ui->peak_val[i]);
 
-				write_text(cr, buf, FONT_VAL, MA_WIDTH + GM_WIDTH * (i + 1) - 5, GM_PEAK, 0, 1, c_g90);
+				write_text(cr, buf, FONT_VAL, MA_WIDTH + GM_WIDTH * (i + 1) - 5, 5 + ceil(GM_PEAK * .5), 0, 1, c_g90);
 				cairo_restore(cr);
 			}
 
-			if (rect_intersect_a(ev, MA_WIDTH + GM_WIDTH * i + 2, GM_TXT - 9, GM_WIDTH-4, 17)) {
+			if (rect_intersect_a(ev, MA_WIDTH + GM_WIDTH * i + 2, GM_TXT - 5, GM_WIDTH-4, GM_PEAK)) {
 				cairo_save(cr);
-				rounded_rectangle (cr, MA_WIDTH + GM_WIDTH * i + 2, GM_TXT - 9, GM_WIDTH-4, 17, 4);
+				rounded_rectangle (cr, MA_WIDTH + GM_WIDTH * i + 2, GM_TXT - 5, GM_WIDTH-4, GM_PEAK, 4);
 				CairoSetSouerceRGBA(ui->c_bgr);
 				cairo_fill(cr);
-				rounded_rectangle (cr, MA_WIDTH + GM_WIDTH * i + 1.5, GM_TXT - 8.5, GM_WIDTH-3, 16, 4);
+				rounded_rectangle (cr, MA_WIDTH + GM_WIDTH * i + 1.5, GM_TXT - 4.5, GM_WIDTH-3, GM_PEAK - 1, 4);
 				cairo_set_line_width(cr, 1.0);
 				CairoSetSouerceRGBA(c_g60);
 				cairo_stroke_preserve (cr);
 				cairo_clip (cr);
 				format_db(buf, ui->val[i]);
-				write_text(cr, buf, FONT_VAL, MA_WIDTH + GM_WIDTH * (i + 1) - 5, GM_TXT, 0, 1, c_g90);
+				write_text(cr, buf, FONT_VAL, MA_WIDTH + GM_WIDTH * (i + 1) - 5, GM_TXT - 5 + ceil(GM_PEAK * .5), 0, 1, c_g90);
 				cairo_restore(cr);
 			}
 		}
@@ -686,7 +709,7 @@ static bool expose_event(RobWidget* handle, cairo_t* cr, cairo_rectangle_t *ev) 
 
 	/* highlight */
 	if (ui->highlight >= 0 && ui->highlight < (int) ui->num_meters &&
-			rect_intersect_a(ev, MA_WIDTH + GM_WIDTH * ui->highlight + GM_WIDTH/2 - 32, GM_TXT -4.5, 64, 46)) {
+			rect_intersect_a(ev, MA_WIDTH + GM_WIDTH * ui->highlight + GM_WIDTH/2 - AN_WIDTH, GM_TXT -4.5, 2 * AN_WIDTH, AN_HEIGHT)) {
 		cairo_set_operator (cr, CAIRO_OPERATOR_OVER);
 		const int i = ui->highlight;
 		char buf[32], bufv[8], bufp[8];
@@ -700,13 +723,13 @@ static bool expose_event(RobWidget* handle, cairo_t* cr, cairo_rectangle_t *ev) 
 		cairo_move_to(cr, MA_WIDTH + GM_WIDTH * i + GM_LEFT + GM_GIRTH/2, GM_TXT - 8.5);
 		cairo_line_to(cr, MA_WIDTH + GM_WIDTH * i + GM_LEFT + GM_GIRTH/2, GM_TXT - 4.5);
 		cairo_stroke(cr);
-		rounded_rectangle (cr, MA_WIDTH + GM_WIDTH * i + GM_WIDTH/2 - 32, GM_TXT -4.5, 64, 46, 3);
+		rounded_rectangle (cr, MA_WIDTH + GM_WIDTH * i + GM_WIDTH/2 - AN_WIDTH, GM_TXT -4.5, 2 * AN_WIDTH, AN_HEIGHT, 3);
 		CairoSetSouerceRGBA(c_xfb);
 		cairo_fill_preserve (cr);
 		CairoSetSouerceRGBA(c_g60);
 		cairo_stroke_preserve (cr);
 		cairo_clip (cr);
-		write_text(cr, buf, FONT_SPK, MA_WIDTH + GM_WIDTH * i + GM_WIDTH/2, GM_TXT + 18, 0, 2, c_g90);
+		write_text(cr, buf, FONT_SPK, MA_WIDTH + GM_WIDTH * i + GM_WIDTH/2, GM_TXT + 18 * ui->scale, 0, 2, c_g90);
 		cairo_restore(cr);
 	}
 
@@ -828,7 +851,13 @@ static void
 size_allocate(RobWidget* handle, int w, int h) {
 	SAUI* ui = (SAUI*)GET_HANDLE(handle);
 	ui->height = floor(h/2) * 2;
+	ui->width = w;
 	ui->size_changed = true;
+
+	float scale_y = ui->height / GM_MINH;
+	float scale_x = (float) ui->width / ui->min_width;
+	ui->scale = MAX(1.0, MIN(2.5, MIN(scale_y, scale_x)));
+
 	if (ui->display_freq) {
 		ui->gm_width = floor ((w - 2.0 * MA_WIDTH) / ui->num_meters);
 		if (ui->gm_width > 40) ui->gm_width = 40; // TODO limit by aspect?!
@@ -954,6 +983,7 @@ instantiate(
 	}
 	ui->write      = write_function;
 	ui->controller = controller;
+	ui->scale = 1.0;
 
 	get_color_from_theme(0, ui->c_txt);
 	get_color_from_theme(1, ui->c_bgr);
@@ -968,9 +998,6 @@ instantiate(
 	ui->show_peaks_changed = false;
 	ui->show_peaks = true;
 	ui->misc_state = 1;
-
-	initialize_font_cache(ui);
-	alloc_annotations(ui);
 
 	for (uint32_t i=0; i < ui->num_meters ; ++i) {
 		ui->val[i] = -100.0;
@@ -992,6 +1019,9 @@ instantiate(
 	ui->min_width = 2.0 * MA_WIDTH + ui->num_meters * GM_WIDTH;
 	ui->width = ui->min_width;
 	ui->height = GM_MINH;
+
+	reinitialize_font_cache(ui);
+	alloc_annotations(ui);
 
 	*widget = toplevel(ui, ui_toplevel);
 
@@ -1057,16 +1087,16 @@ static void invalidate_meter(SAUI* ui, int mtr, float val, float peak) {
 		queue_tiny_area(ui->m0, XX, YY, WW, HH);
 
 	if (rintf(ui->val[mtr] * 10.0f) != rintf(val * 10.0f) && !ui->display_freq) {
-		INVALIDATE_RECT(mtr * GM_WIDTH + MA_WIDTH, GM_TXT - 9, GM_WIDTH, 18);
+		INVALIDATE_RECT(mtr * GM_WIDTH + MA_WIDTH, GM_TXT - 5, GM_WIDTH, GM_PEAK + 1);
 	}
 
 	if (ui->highlight == mtr && ui->display_freq &&
 			(rintf(ui->val[mtr] * 10.0f) != rintf(val * 10.0f) || rintf(m_old * 10.0f) != rintf(m_new * 10.0f))) {
-		queue_tiny_area(ui->m0, mtr * GM_WIDTH + MA_WIDTH + GM_WIDTH/2 - 32.5, GM_TXT - 8, 64, 52);
+		queue_tiny_area(ui->m0, mtr * GM_WIDTH + MA_WIDTH + GM_WIDTH/2 - AN_WIDTH -.5, GM_TXT - 8, 1 + 2 * AN_WIDTH, FQ_ANN);
 	}
 
 	if (rintf(ui->peak_val[mtr] * 10.0f) != rintf(peak * 10.0f) && !ui->display_freq) {
-		INVALIDATE_RECT(mtr * GM_WIDTH + MA_WIDTH, GM_PEAK - 9, GM_WIDTH, 18);
+		INVALIDATE_RECT(mtr * GM_WIDTH + MA_WIDTH, 5, GM_WIDTH, GM_PEAK + 1);
 	}
 
 	ui->val[mtr] = val;
