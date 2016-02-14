@@ -131,8 +131,6 @@ dr14_instantiate(
 		dr_operation_mode = false;
 	}
 
-
-
 	else { return NULL; }
 
   LV2_URID_Map* map = NULL;
@@ -504,7 +502,6 @@ dr14_cleanup(LV2_Handle instance)
 			free(self->hist[c]);
 		}
 	}
-
 	free(instance);
 }
 

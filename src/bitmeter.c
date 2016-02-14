@@ -141,6 +141,10 @@ bim_instantiate(
 	self->ebu_integrating = true;
 	self->bim_average = false;
 
+	self->chn = 1;
+	self->input  = (float**) calloc (self->chn, sizeof (float*));
+	self->output = (float**) calloc (self->chn, sizeof (float*));
+
 	bim_reset (self);
 	return (LV2_Handle)self;
 }
@@ -164,6 +168,7 @@ bim_connect_port (LV2_Handle instance, uint32_t port, void* data)
 			break;
 	}
 }
+
 static void
 bim_run(LV2_Handle instance, uint32_t n_samples)
 {
@@ -316,6 +321,8 @@ bim_run(LV2_Handle instance, uint32_t n_samples)
 static void
 bim_cleanup(LV2_Handle instance)
 {
+	LV2meter* self = (LV2meter*)instance;
+	FREE_VARPORTS;
 	free(instance);
 }
 

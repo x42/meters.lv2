@@ -36,6 +36,12 @@
 #include "uris.h"
 #include "uri2.h"
 
+#define FREE_VARPORTS \
+	free (self->level); \
+	free (self->input); \
+	free (self->output); \
+	free (self->peak);
+
 using namespace LV2M;
 
 typedef enum {
@@ -56,15 +62,15 @@ typedef struct {
 	float  p_refl;
 	float* reflvl;
 
-	JmeterDSP *mtr[2];
+	JmeterDSP **mtr;
 	Stcorrdsp *cor;
 	Msppmdsp  *bms[2];
 	Ebu_r128_proc *ebu;
 
-	float* level[2];
-	float* input[2];
-	float* output[2];
-	float* peak[2];
+	float** level;
+	float** input;
+	float** output;
+	float** peak;
 	float* hold;
 
 	uint32_t chn;
@@ -121,11 +127,13 @@ typedef struct {
 #define MTRDEF(NAME, CLASS) \
 	else if (!strcmp(descriptor->URI, MTR_URI NAME "mono") || !strcmp(descriptor->URI, MTR_URI NAME "mono_gtk")) { \
 		self->chn = 1; \
+		self->mtr = (JmeterDSP **)malloc (self->chn * sizeof (JmeterDSP *)); \
 		self->mtr[0] = new CLASS(); \
 		static_cast<CLASS *>(self->mtr[0])->init(rate); \
 	} \
 	else if (!strcmp(descriptor->URI, MTR_URI NAME "stereo") || !strcmp(descriptor->URI, MTR_URI NAME "stereo_gtk")) { \
 		self->chn = 2; \
+		self->mtr = (JmeterDSP **)malloc (self->chn * sizeof (JmeterDSP *)); \
 		self->mtr[0] = new CLASS(); \
 		self->mtr[1] = new CLASS(); \
 		static_cast<CLASS *>(self->mtr[0])->init(rate); \
@@ -165,6 +173,11 @@ instantiate(const LV2_Descriptor*     descriptor,
 		free(self);
 		return NULL;
 	}
+
+	self->level  = (float**) calloc (self->chn, sizeof (float*));
+	self->input  = (float**) calloc (self->chn, sizeof (float*));
+	self->output = (float**) calloc (self->chn, sizeof (float*));
+	self->peak   = (float**) calloc (self->chn, sizeof (float*));
 
 	self->rlgain = 1.0;
 	self->p_refl = -9999;
@@ -321,6 +334,8 @@ cleanup(LV2_Handle instance)
 	for (uint32_t c = 0; c < self->chn; ++c) {
 		delete self->mtr[c];
 	}
+	FREE_VARPORTS;
+	free (self->mtr);
 	free(instance);
 }
 
@@ -418,6 +433,7 @@ cor_cleanup(LV2_Handle instance)
 {
 	LV2meter* self = (LV2meter*)instance;
 	delete self->cor;
+	FREE_VARPORTS;
 	free(instance);
 }
 
@@ -452,6 +468,7 @@ bbcm_cleanup(LV2_Handle instance)
 	LV2meter* self = (LV2meter*)instance;
 	delete self->bms[0];
 	delete self->bms[1];
+	FREE_VARPORTS;
 	free(instance);
 }
 

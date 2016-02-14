@@ -118,6 +118,8 @@ sdh_instantiate(
 	}
 
 	self->chn = 1;
+	self->input  = (float**) calloc (self->chn, sizeof (float*));
+	self->output = (float**) calloc (self->chn, sizeof (float*));
 
 	for (int i=0; features[i]; ++i) {
 		if (!strcmp(features[i]->URI, LV2_URID__map)) {
@@ -383,7 +385,8 @@ sdh_run(LV2_Handle instance, uint32_t n_samples)
 static void
 sdh_cleanup(LV2_Handle instance)
 {
-	//LV2meter* self = (LV2meter*)instance;
+	LV2meter* self = (LV2meter*)instance;
+	FREE_VARPORTS;
 	free(instance);
 }
 

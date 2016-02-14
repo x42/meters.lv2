@@ -142,6 +142,10 @@ ebur128_instantiate(
 	map_eburlv2_uris(self->map, &self->uris);
 	lv2_atom_forge_init(&self->forge, self->map);
 
+	self->chn = 2;
+	self->input  = (float**) calloc (self->chn, sizeof (float*));
+	self->output = (float**) calloc (self->chn, sizeof (float*));
+
 	self->rate = rate;
 	self->ui_active = false;
 	self->follow_transport_mode = 0; // 3
@@ -181,6 +185,7 @@ ebur128_instantiate(
 	self->ebu = new Ebu_r128_proc();
 	self->ebu->init (2, rate);
 
+	self->mtr = (JmeterDSP **)malloc (2 * sizeof (JmeterDSP *));
 	self->mtr[0] = new TruePeakdsp();
 	self->mtr[1] = new TruePeakdsp();
 	static_cast<TruePeakdsp *>(self->mtr[0])->init(rate);
@@ -497,6 +502,8 @@ ebur128_cleanup(LV2_Handle instance)
 	delete self->ebu;
 	delete self->mtr[0];
 	delete self->mtr[1];
+	free (self->mtr);
+	FREE_VARPORTS;
 	free(instance);
 }
 
