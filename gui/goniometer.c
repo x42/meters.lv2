@@ -1330,7 +1330,7 @@ instantiate(
 	self->ui_active = true;
 
 #if (!defined GTK_BACKEND && defined USE_GUI_THREAD && defined THREADSYNC)
-	GlMetersLV2UI *glui = (GlMetersLV2UI*) ui_toplevel;
+	GLrobtkLV2UI *glui = (GLrobtkLV2UI*) ui_toplevel;
 	self->msg_thread_lock = &glui->msg_thread_lock;
 	self->data_ready = &glui->data_ready;
 	self->queue_display = &expose_goniometer;
