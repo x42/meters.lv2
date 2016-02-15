@@ -21,6 +21,7 @@
 #include "lv2ttl/stereoscope.h"
 #include "lv2ttl/sigdisthist.h"
 #include "lv2ttl/bitmeter.h"
+#include "lv2ttl/surmeter.h"
 
 static const RtkLv2Description _plugins[] = {
 	_plugin_ebur,
@@ -47,4 +48,5 @@ static const RtkLv2Description _plugins[] = {
 	/* signal statistics */
 	_plugin_sigdisthist,
 	_plugin_bitmeter,
+	_plugin_surmeter,
 };

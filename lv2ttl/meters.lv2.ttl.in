@@ -3349,3 +3349,185 @@ mtr:bitmeter@URI_SUFFIX@
 	] ;
 	rdfs:comment "Floating Point Bit Debug Tool."
 	.
+
+mtr:surround8@URI_SUFFIX@
+	a lv2:Plugin, lv2:AnalyserPlugin, doap:Project ;
+	doap:license <http://usefulinc.com/doap/licenses/gpl> ;
+	doap:name "Surround Level 8 @NAME_SUFFIX@";
+	@VERSION@
+	lv2:project <http://gareus.org/oss/lv2/meters> ;
+	lv2:optionalFeature lv2:hardRTCapable ;
+	ui:ui @SURGUI@ ;
+	lv2:port [
+		a lv2:ControlPort ,
+			lv2:InputPort ;
+		lv2:index 0 ;
+		lv2:symbol "ref" ;
+		lv2:name "ui notification" ;
+		lv2:default -4.0 ;
+		lv2:minimum -4.0 ;
+		lv2:maximum  4.0 ;
+		lv2:portProperty pprop:notOnGUI ;
+	] , [
+		a lv2:AudioPort ,
+			lv2:InputPort ;
+		lv2:index 1 ;
+		lv2:symbol "in1" ;
+		lv2:name "In1"
+	] , [
+		a lv2:AudioPort ,
+			lv2:OutputPort ;
+		lv2:index 2 ;
+		lv2:symbol "out1" ;
+		lv2:name "Out1"
+	] , [
+		a lv2:ControlPort ,
+			lv2:OutputPort ;
+		lv2:index 3 ;
+		lv2:symbol "level1" ;
+		lv2:name "Level1" ;
+		lv2:minimum 0.0 ;
+		lv2:maximum 1.0 ;
+	] , [
+		a lv2:AudioPort ,
+			lv2:InputPort ;
+		lv2:index 4 ;
+		lv2:symbol "in2" ;
+		lv2:name "In2"
+	] , [
+		a lv2:AudioPort ,
+			lv2:OutputPort ;
+		lv2:index 5 ;
+		lv2:symbol "out2" ;
+		lv2:name "Out2"
+	] , [
+		a lv2:ControlPort ,
+			lv2:OutputPort ;
+		lv2:index 6 ;
+		lv2:symbol "level2" ;
+		lv2:name "Level2" ;
+		lv2:minimum 0.0 ;
+		lv2:maximum 1.0 ;
+	] , [
+		a lv2:AudioPort ,
+			lv2:InputPort ;
+		lv2:index 7 ;
+		lv2:symbol "in3" ;
+		lv2:name "In3"
+	] , [
+		a lv2:AudioPort ,
+			lv2:OutputPort ;
+		lv2:index 8 ;
+		lv2:symbol "out3" ;
+		lv2:name "Out3"
+	] , [
+		a lv2:ControlPort ,
+			lv2:OutputPort ;
+		lv2:index 9 ;
+		lv2:symbol "level3" ;
+		lv2:name "Level3" ;
+		lv2:minimum 0.0 ;
+		lv2:maximum 1.0 ;
+	] , [
+		a lv2:AudioPort ,
+			lv2:InputPort ;
+		lv2:index 10 ;
+		lv2:symbol "in4" ;
+		lv2:name "In4"
+	] , [
+		a lv2:AudioPort ,
+			lv2:OutputPort ;
+		lv2:index 11 ;
+		lv2:symbol "out4" ;
+		lv2:name "Out4"
+	] , [
+		a lv2:ControlPort ,
+			lv2:OutputPort ;
+		lv2:index 12 ;
+		lv2:symbol "level4" ;
+		lv2:name "Level4" ;
+		lv2:minimum 0.0 ;
+		lv2:maximum 1.0 ;
+	] , [
+		a lv2:AudioPort ,
+			lv2:InputPort ;
+		lv2:index 13 ;
+		lv2:symbol "in5" ;
+		lv2:name "In5"
+	] , [
+		a lv2:AudioPort ,
+			lv2:OutputPort ;
+		lv2:index 14 ;
+		lv2:symbol "out5" ;
+		lv2:name "Out5"
+	] , [
+		a lv2:ControlPort ,
+			lv2:OutputPort ;
+		lv2:index 15 ;
+		lv2:symbol "level5" ;
+		lv2:name "Level5" ;
+		lv2:minimum 0.0 ;
+		lv2:maximum 1.0 ;
+	] , [
+		a lv2:AudioPort ,
+			lv2:InputPort ;
+		lv2:index 16 ;
+		lv2:symbol "in6" ;
+		lv2:name "In6"
+	] , [
+		a lv2:AudioPort ,
+			lv2:OutputPort ;
+		lv2:index 17 ;
+		lv2:symbol "out6" ;
+		lv2:name "Out6"
+	] , [
+		a lv2:ControlPort ,
+			lv2:OutputPort ;
+		lv2:index 18 ;
+		lv2:symbol "level6" ;
+		lv2:name "Level6" ;
+		lv2:minimum 0.0 ;
+		lv2:maximum 1.0 ;
+	] , [
+		a lv2:AudioPort ,
+			lv2:InputPort ;
+		lv2:index 19 ;
+		lv2:symbol "in7" ;
+		lv2:name "In7"
+	] , [
+		a lv2:AudioPort ,
+			lv2:OutputPort ;
+		lv2:index 20 ;
+		lv2:symbol "out7" ;
+		lv2:name "Out7"
+	] , [
+		a lv2:ControlPort ,
+			lv2:OutputPort ;
+		lv2:index 21 ;
+		lv2:symbol "level7" ;
+		lv2:name "Level7" ;
+		lv2:minimum 0.0 ;
+		lv2:maximum 1.0 ;
+	] , [
+		a lv2:AudioPort ,
+			lv2:InputPort ;
+		lv2:index 22 ;
+		lv2:symbol "in8" ;
+		lv2:name "In8"
+	] , [
+		a lv2:AudioPort ,
+			lv2:OutputPort ;
+		lv2:index 23 ;
+		lv2:symbol "out8" ;
+		lv2:name "Out8"
+	] , [
+		a lv2:ControlPort ,
+			lv2:OutputPort ;
+		lv2:index 24 ;
+		lv2:symbol "level8" ;
+		lv2:name "Level8" ;
+		lv2:minimum 0.0 ;
+		lv2:maximum 1.0 ;
+	] ;
+	rdfs:comment "..."
+	.

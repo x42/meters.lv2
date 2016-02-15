@@ -488,6 +488,7 @@ extension_data(const char* uri)
 #include "dr14.c"
 #include "sigdistlv2.c"
 #include "bitmeter.c"
+#include "surmeter.c"
 
 #define mkdesc(ID, NAME, RUN) \
 static const LV2_Descriptor descriptor ## ID = { \
@@ -664,6 +665,8 @@ lv2_descriptor(uint32_t index)
 	case 61: return &descriptorBBCMSGtk;
 	case 62: return &descriptorBIM;
 	case 63: return &descriptorBIMGtk;
+	case 64: return &descriptorSUR8;
+	case 65: return &descriptorSUR8Gtk;
 	default: return NULL;
 	}
 }

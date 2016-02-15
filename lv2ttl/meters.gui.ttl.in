@@ -67,3 +67,8 @@ mtr:bitmeterui@UI_URI_SUFFIX@
 	a @UI_TYPE@;
 	@UI_REQ@
 	.
+
+mtr:surmeterui@UI_URI_SUFFIX@
+	a @UI_TYPE@;
+	@UI_REQ@
+	.
