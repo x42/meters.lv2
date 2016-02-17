@@ -573,18 +573,18 @@ uninstall-bin:
 	rm -f $(DESTDIR)$(LV2DIR)/$(BUNDLE)/$(LV2GTK9)$(LIB_EXT)
 	rm -f $(DESTDIR)$(LV2DIR)/$(BUNDLE)/$(LV2GTK10)$(LIB_EXT)
 	rm -f $(DESTDIR)$(LV2DIR)/$(BUNDLE)/$(LV2GTK11)$(LIB_EXT)
-	rm -f $(DESTDIR)$(BINDIR)/x42-meter-collection$(EXE_EXT)
+	rm -f $(DESTDIR)$(BINDIR)/x42-meter$(EXE_EXT)
 	-rmdir $(DESTDIR)$(LV2DIR)/$(BUNDLE)
 	-rmdir $(DESTDIR)$(BINDIR)
 
 install-man:
 ifneq ($(targets),)
 	install -d $(DESTDIR)$(MANDIR)
-	install -m644 doc/x42-meter.1 $(DESTDIR)$(MANDIR)/x42-meter-collection.1
+	install -m644 doc/x42-meter.1 $(DESTDIR)$(MANDIR)/
 endif
 
 uninstall-man:
-	rm -f $(DESTDIR)$(MANDIR)/x42-meter-collection.1
+	rm -f $(DESTDIR)$(MANDIR)/x42-meter.1
 	-rmdir $(DESTDIR)$(MANDIR)
 
 man: $(APPBLD)x42-meter-collection
