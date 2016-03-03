@@ -22,8 +22,8 @@
 #include <stdlib.h>
 #include <math.h>
 
-#define MTR_URI "http://gareus.org/oss/lv2/meters#"
-#define MTR_GUI "eburui"
+#define RTK_URI "http://gareus.org/oss/lv2/meters#"
+#define RTK_GUI "eburui"
 
 #define GBT_W(PTR) robtk_cbtn_widget(PTR)
 #define GRB_W(PTR) robtk_rbtn_widget(PTR)

@@ -24,8 +24,8 @@
 #include <assert.h>
 #include "src/uris.h"
 
-#define MTR_URI "http://gareus.org/oss/lv2/meters#"
-#define MTR_GUI "dr14meterui"
+#define RTK_URI "http://gareus.org/oss/lv2/meters#"
+#define RTK_GUI "dr14meterui"
 
 #define LVGL_RESIZEABLE
 

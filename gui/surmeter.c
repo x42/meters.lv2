@@ -23,8 +23,9 @@
 
 #define LVGL_RESIZEABLE
 
-#define MTR_URI "http://gareus.org/oss/lv2/meters#"
-#define MTR_GUI "surmeterui"
+#define RTK_URI "http://gareus.org/oss/lv2/meters#"
+#define RTK_GUI "surmeterui"
+#define MTR_URI RTK_URI
 
 #include "lv2/lv2plug.in/ns/extensions/ui/ui.h"
 

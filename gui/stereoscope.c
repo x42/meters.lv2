@@ -16,8 +16,8 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#define MTR_URI "http://gareus.org/oss/lv2/meters#"
-#define MTR_GUI "stereoscopeui"
+#define RTK_URI "http://gareus.org/oss/lv2/meters#"
+#define RTK_GUI "stereoscopeui"
 
 #define FFT_BINS_MAX 8192 // half of the FFT data-size
 

@@ -69,8 +69,8 @@ static const float c_grd[4] = {0.4, 0.4, 0.4, 1.0}; // grid color
 #define MAX(A,B) ( (A) > (B) ? (A) : (B) )
 #endif
 
-#define MTR_URI "http://gareus.org/oss/lv2/meters#"
-#define MTR_GUI "phasewheelui"
+#define RTK_URI "http://gareus.org/oss/lv2/meters#"
+#define RTK_GUI "phasewheelui"
 
 #define FFT_BINS_MAX 8192 // half of the FFT data-size
 

@@ -23,8 +23,8 @@
 #include <string.h>
 #include <assert.h>
 
-#define MTR_URI "http://gareus.org/oss/lv2/meters#"
-#define MTR_GUI "goniometerui"
+#define RTK_URI "http://gareus.org/oss/lv2/meters#"
+#define RTK_GUI "goniometerui"
 #define LVGL_RESIZEABLE
 
 #define CLIP_GM

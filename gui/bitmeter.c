@@ -23,8 +23,8 @@
 
 #define LVGL_RESIZEABLE
 
-#define MTR_URI "http://gareus.org/oss/lv2/meters#"
-#define MTR_GUI "bitmeterui"
+#define RTK_URI "http://gareus.org/oss/lv2/meters#"
+#define RTK_GUI "bitmeterui"
 
 #include "lv2/lv2plug.in/ns/extensions/ui/ui.h"
 #include "src/uris.h"

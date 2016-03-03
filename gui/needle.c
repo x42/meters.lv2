@@ -25,8 +25,9 @@
 
 #include "img/screw.c"
 
-#define MTR_URI "http://gareus.org/oss/lv2/meters#"
-#define MTR_GUI "needle"
+#define RTK_URI "http://gareus.org/oss/lv2/meters#"
+#define RTK_GUI "needle"
+#define MTR_URI RTK_URI
 #define LVGL_RESIZEABLE
 
 /* meter types */
