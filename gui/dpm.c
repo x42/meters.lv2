@@ -131,6 +131,9 @@ typedef struct {
 	int width;
 	int height;
 
+	float _min_w;
+	float _min_h;
+
 	float c_txt[4];
 	float c_bgr[4];
 	float scale;
@@ -386,11 +389,12 @@ static void alloc_annotations(SAUI* ui) {
 	}
 
 	if (ui->dial) {
-		return; // XXX TODO widget scaling
+		return; // XXX TODO *dynamic* widget scaling
 		cairo_surface_destroy(ui->dial);
 	}
-	ui->dial = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, GED_WIDTH, GED_HEIGHT+10);
+	ui->dial = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, 2 * (GED_WIDTH), 2 * (GED_HEIGHT+10));
 	cr = cairo_create (ui->dial);
+	cairo_scale (cr, 2.0, 2.0);
 	CairoSetSouerceRGBA(c_trs);
 	cairo_set_operator (cr, CAIRO_OPERATOR_SOURCE);
 	cairo_rectangle (cr, 0, 0, GED_WIDTH, GED_HEIGHT+10);
@@ -849,6 +853,35 @@ size_request(RobWidget* handle, int *w, int *h) {
 }
 
 static void
+top_size_allocate(RobWidget* rw, int w, int h) {
+	assert (rw->childcount == 3);
+	SAUI* ui = (SAUI*)GET_HANDLE(rw->children[0]->children[0]);
+	GLrobtkLV2UI * const self = (GLrobtkLV2UI*) robwidget_get_toplevel_handle(rw);
+
+	if (ui->_min_w == 0 && ui->_min_h == 0) {
+		if (rw->widget_scale == 1.0) {
+			ui->_min_w = rw->area.width;
+			ui->_min_h = rw->area.height;
+		} else {
+			rhbox_size_allocate (rw, w, h);
+			return;
+		}
+	}
+	assert (ui->_min_w > 1 && ui->_min_h > 1);
+
+	const float scale_x = w / ui->_min_w;
+	const float scale_y = h / ui->_min_h;
+	rw->widget_scale =  MAX(1.0, MIN(2.0, floor (MIN(scale_y, scale_x) * 10) / 10));
+
+	if (self->queue_widget_scale != rw->widget_scale) {
+		self->queue_widget_scale = rw->widget_scale;
+		puglPostResize(self->view);
+		queue_draw (rw);
+	}
+	rhbox_size_allocate (rw, w, h);
+}
+
+static void
 size_allocate(RobWidget* handle, int w, int h) {
 	SAUI* ui = (SAUI*)GET_HANDLE(handle);
 	ui->height = floor(h/2) * 2;
@@ -860,8 +893,7 @@ size_allocate(RobWidget* handle, int w, int h) {
 	ui->scale = MAX(1.0, MIN(2.5, MIN(scale_y, scale_x)));
 
 	if (ui->display_freq) {
-		ui->gm_width = floor ((w - 2.0 * MA_WIDTH) / ui->num_meters);
-		if (ui->gm_width > 40) ui->gm_width = 40; // TODO limit by aspect?!
+		ui->gm_width = MIN(40, floor ((w - 2.0 * MA_WIDTH) / ui->num_meters));
 		ui->gm_girth = rintf (ui->gm_width * .75);
 		ui->gm_left = .5 + floor(.5 * (ui->gm_width - ui->gm_girth));
 		ui->cur_width = 2.0 * MA_WIDTH + ui->num_meters * GM_WIDTH;
@@ -872,7 +904,7 @@ size_allocate(RobWidget* handle, int w, int h) {
 		ui->gm_left = .5 + floor(.5 * (ui->gm_width - ui->gm_girth));
 		ui->cur_width = 2.0 * MA_WIDTH + ui->num_meters * GM_WIDTH;
 	}
-	robwidget_set_size(handle, ui->cur_width, h);
+	robwidget_set_size(handle, MIN(ui->width, ui->cur_width), h);
 	queue_draw(ui->m0);
 }
 
@@ -881,6 +913,9 @@ static RobWidget * toplevel(SAUI* ui, void * const top)
 	/* main widget: layout */
 	ui->rw = rob_hbox_new(FALSE, 2);
 	robwidget_make_toplevel(ui->rw, top);
+	if (ui->display_freq) {
+		robwidget_toplevel_enable_scaling (ui->rw);
+	}
 
 	/* DPM main drawing area */
 	ui->m0 = robwidget_new(ui);
@@ -904,7 +939,7 @@ static RobWidget * toplevel(SAUI* ui, void * const top)
 	ui->btn_peaks = robtk_cbtn_new("Peak Hold", GBT_LED_LEFT, true);
 	robtk_cbtn_set_active(ui->btn_peaks, true);
 	robtk_dial_set_default(ui->spn_speed, RESPSCALE(1.0f));
-	robtk_dial_set_surface(ui->spn_speed, ui->dial);
+	robtk_dial_set_scaled_surface_scale (ui->spn_speed, ui->dial, 2.0);
 
 	robtk_scale_set_default(ui->fader, 0);
 	robtk_scale_set_value(ui->fader, 0);
@@ -945,6 +980,11 @@ static RobWidget * toplevel(SAUI* ui, void * const top)
 	robtk_scale_set_callback(ui->fader, set_gain, ui);
 	robtk_dial_set_callback(ui->spn_speed, set_speed, ui);
 	robtk_cbtn_set_callback(ui->btn_peaks, set_peakdisplay, ui);
+
+	/* change _after_ packing, (packing checks allocate fn ptr) */
+	if (ui->display_freq) {
+		ui->rw->size_allocate = top_size_allocate;
+	}
 
 	return ui->rw;
 }
@@ -995,6 +1035,9 @@ instantiate(
 	ui->highlight = -1;
 	ui->metrics_changed = true;
 	ui->size_changed = true;
+
+	ui->_min_w = 0;
+	ui->_min_h = 0;
 
 	ui->show_peaks_changed = false;
 	ui->show_peaks = true;
