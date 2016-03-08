@@ -133,7 +133,6 @@ static void update_grid (SURui* ui) {
 	CairoSetSouerceRGBA(ui->c_bg);
 	cairo_fill (cr);
 
-	//// FIXED BG -> TODO Surface
 	cairo_set_line_width (cr, 1.0);
 
 	cairo_arc (cr, ccx, ccy, rad, 0, 2.0 * M_PI);
@@ -142,54 +141,50 @@ static void update_grid (SURui* ui) {
 	CairoSetSouerceRGBA (c_g90);
 	cairo_stroke (cr);
 
+	cairo_translate (cr, ccx, ccy);
+
+#if 1 // alpha
+	PangoFontDescription *font = pango_font_description_from_string("Mono 32px");
+	write_text_full (cr, "alpha-version", font, 0, 0, -.23, 2, c_g20);
+	pango_font_description_free(font);
+#endif
+
+	float sc = mwh / 360.0;
 	for (uint32_t i = 0; i < ui->n_chn; ++i) {
-		float sc = mwh / 360.0;
 		cairo_save (cr);
-		cairo_translate (cr, ccx, ccy);
 		cairo_rotate (cr, (float) i * 2.0 * M_PI / (float) ui->n_chn);
 		cairo_translate (cr, 0, -rad);
 
 		cairo_scale (cr, sc, sc);
 		speaker (ui, cr, i + 1);
 		cairo_restore (cr);
+	}
 
-		cairo_save (cr);
-		cairo_arc (cr, ccx, ccy, rad, 0, 2.0 * M_PI);
-		cairo_clip (cr);
-		cairo_translate (cr, ccx, ccy);
-		cairo_rotate (cr, (float) i * 2.0 * M_PI / (float) ui->n_chn);
-		cairo_translate (cr, 0, -rad);
-		CairoSetSouerceRGBA (c_g60);
-
-		float clr[4];
-		hsl2rgb (clr, (float) i / ui->n_chn , .6, .6);
-		clr[3] = 1.0;
-		cairo_set_source_rgba(cr, clr[0], clr[1], clr[2], 1.0);
-
-		const double dash2[] = {1.0, 3.0};
-		cairo_set_dash(cr, dash2, 2, 2);
-		cairo_set_operator (cr, CAIRO_OPERATOR_ADD);
+	const double dash2[] = {1.0, 3.0};
+	cairo_set_dash(cr, dash2, 2, 2);
+	cairo_set_operator (cr, CAIRO_OPERATOR_ADD);
 
 #define ANNARC(dB) { \
 	char txt[16]; \
+	float clr[3]; \
+	float coeff = powf(10, .05 * dB); \
+	hsl2rgb(clr, .68 - .72 * coeff, .9, .3 + .4 * sqrt(coeff)); \
 	float ypos = powf (10, .05 * dB); \
 	snprintf (txt, sizeof(txt), "%d", dB); \
 	cairo_arc (cr, 0, 0, ypos * rad, 0, 2.0 * M_PI); \
+	cairo_set_source_rgba(cr, clr[0], clr[1], clr[2], 0.8); \
 	cairo_stroke (cr); \
 	cairo_save (cr); \
+	cairo_rotate (cr, M_PI / 4.0); \
 	cairo_scale (cr, sc, sc); \
-	write_text_full (cr, txt, FONT(FONT_S10), 0, ypos * rad / sc, M_PI, 2, clr); \
+	write_text_full (cr, txt, FONT(FONT_S10), 0, ypos * rad / sc, M_PI, 2, ui->c_fg); \
 	cairo_restore (cr); \
 }
 
-		ANNARC(-3);
-		ANNARC(-6);
-		ANNARC(-9);
-		ANNARC(-18);
-
-		cairo_restore (cr);
-
-	}
+	ANNARC(-3);
+	ANNARC(-6);
+	ANNARC(-9);
+	ANNARC(-18);
 
 	cairo_destroy (cr);
 }
@@ -222,22 +217,58 @@ static bool expose_event(RobWidget* handle, cairo_t* cr, cairo_rectangle_t *ev) 
 	cairo_arc (cr, ccx, ccy, rad, 0, 2.0 * M_PI);
 	cairo_clip (cr);
 
-	cairo_set_operator (cr, CAIRO_OPERATOR_SCREEN);
+	//cairo_set_operator (cr, CAIRO_OPERATOR_SCREEN);
+	cairo_set_operator (cr, CAIRO_OPERATOR_OVER);
 	cairo_translate (cr, ccx, ccy);
-	for (uint32_t i = 0; i < ui->n_chn; ++i) {
-		cairo_save (cr);
-		cairo_rotate (cr, (float) i * 2.0 * M_PI / (float) ui->n_chn);
-		cairo_translate (cr, 0, -rad);
 
+	cairo_set_line_width (cr, 2.0);
+
+	float x[8], y[8]; // todo ui->n_chn
+	for (uint32_t i = 0; i < ui->n_chn; ++i) {
 		const float pk = ui->lvl[i];
+		assert (pk >= 0 && pk <=1);
+
+		const float ang = (float) i * 2.f * M_PI / (float) ui->n_chn;
+		float _sa = rad * sin (ang);
+		float _ca = rad * cos (ang);
+
 		float clr[3];
 		hsl2rgb(clr, .68 - .72 * pk, .9, .3 + .4 * sqrt(pk));
 		cairo_set_source_rgba(cr, clr[0], clr[1], clr[2], 0.8);
 
-		cairo_arc (cr, 0, 0, pk * rad, 0, 2.0 * M_PI);
-		cairo_fill(cr);
-		cairo_restore (cr);
+		cairo_move_to (cr, 0, 0);
+		cairo_line_to (cr, pk * _sa, -pk * _ca);
+		cairo_stroke (cr);
+
+		x[i] =  pk * _sa;
+		y[i] = -pk * _ca;
 	}
+
+	cairo_set_line_width (cr, 1.0);
+	cairo_set_source_rgba(cr, .7, .7, .7, .7);
+#if 0
+	for (uint32_t i = 0; i < ui->n_chn; ++i) {
+		int p0 = (i - 1 + ui->n_chn) % ui->n_chn;
+		int p1 = (i + 1 + ui->n_chn) % ui->n_chn;
+		int p2 = (i + 2 + ui->n_chn) % ui->n_chn;
+
+		if (i == 0) {
+			cairo_move_to (cr, x[i], y[i]);
+		} else {
+			cairo_curve_to (cr,
+					0, 0, 0, 0,
+					//.5 * (x[i]  + x[p0]), .5 * (y[i]  + y[p0]),
+					//.5 * (x[p1] + x[p2]), .5 * (y[p1] + y[p2]),
+					//.3 * x[i] + .7 * x[pp], .3 * y[i] + .7 * y[pp],
+					//.7 * x[i] + .3 * x[pp], .7 * y[i] + .3 * y[pp],
+					x[p1], y[p1]);
+		}
+	}
+	//cairo_close_path (cr);
+	cairo_fill_preserve(cr);
+	cairo_set_source_rgba(cr, .3, .3, .3, .8);
+	cairo_stroke(cr);
+#endif
 
 	return TRUE;
 }
