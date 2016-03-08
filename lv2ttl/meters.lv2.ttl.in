@@ -3397,9 +3397,9 @@ mtr:surround8@URI_SUFFIX@
 		lv2:index 0 ;
 		lv2:symbol "ref" ;
 		lv2:name "ui notification" ;
-		lv2:default -4.0 ;
-		lv2:minimum -4.0 ;
-		lv2:maximum  4.0 ;
+		lv2:default -18.0 ;
+		lv2:minimum -21.0 ;
+		lv2:maximum -15.0 ;
 		lv2:portProperty pprop:notOnGUI ;
 	] , [
 		a lv2:AudioPort ,
