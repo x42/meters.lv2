@@ -7,6 +7,7 @@ mtr:VUmono@URI_SUFFIX@
 	@VERSION@
 	lv2:project <http://gareus.org/oss/lv2/meters> ;
 	lv2:optionalFeature lv2:hardRTCapable ;
+	@SIGNATURE@
 	ui:ui @MTRGUI@ ;
 	lv2:port [
 		a lv2:ControlPort ,
@@ -49,6 +50,7 @@ mtr:VUstereo@URI_SUFFIX@
 	@VERSION@
 	lv2:project <http://gareus.org/oss/lv2/meters> ;
 	lv2:optionalFeature lv2:hardRTCapable ;
+	@SIGNATURE@
 	ui:ui @MTRGUI@ ;
 	lv2:port [
 		a lv2:ControlPort ,
@@ -112,6 +114,7 @@ mtr:BBCmono@URI_SUFFIX@
 	@VERSION@
 	lv2:project <http://gareus.org/oss/lv2/meters> ;
 	lv2:optionalFeature lv2:hardRTCapable ;
+	@SIGNATURE@
 	ui:ui @MTRGUI@ ;
 	lv2:port [
 		a lv2:ControlPort ,
@@ -154,6 +157,7 @@ mtr:BBCstereo@URI_SUFFIX@
 	@VERSION@
 	lv2:project <http://gareus.org/oss/lv2/meters> ;
 	lv2:optionalFeature lv2:hardRTCapable ;
+	@SIGNATURE@
 	ui:ui @MTRGUI@ ;
 	lv2:port [
 		a lv2:ControlPort ,
@@ -217,6 +221,7 @@ mtr:EBUmono@URI_SUFFIX@
 	@VERSION@
 	lv2:project <http://gareus.org/oss/lv2/meters> ;
 	lv2:optionalFeature lv2:hardRTCapable ;
+	@SIGNATURE@
 	ui:ui @MTRGUI@ ;
 	lv2:port [
 		a lv2:ControlPort ,
@@ -259,6 +264,7 @@ mtr:EBUstereo@URI_SUFFIX@
 	@VERSION@
 	lv2:project <http://gareus.org/oss/lv2/meters> ;
 	lv2:optionalFeature lv2:hardRTCapable ;
+	@SIGNATURE@
 	ui:ui @MTRGUI@ ;
 	lv2:port [
 		a lv2:ControlPort ,
@@ -322,6 +328,7 @@ mtr:DINmono@URI_SUFFIX@
 	@VERSION@
 	lv2:project <http://gareus.org/oss/lv2/meters> ;
 	lv2:optionalFeature lv2:hardRTCapable ;
+	@SIGNATURE@
 	ui:ui @MTRGUI@ ;
 	lv2:port [
 		a lv2:ControlPort ,
@@ -364,6 +371,7 @@ mtr:DINstereo@URI_SUFFIX@
 	@VERSION@
 	lv2:project <http://gareus.org/oss/lv2/meters> ;
 	lv2:optionalFeature lv2:hardRTCapable ;
+	@SIGNATURE@
 	ui:ui @MTRGUI@ ;
 	lv2:port [
 		a lv2:ControlPort ,
@@ -427,6 +435,7 @@ mtr:NORmono@URI_SUFFIX@
 	@VERSION@
 	lv2:project <http://gareus.org/oss/lv2/meters> ;
 	lv2:optionalFeature lv2:hardRTCapable ;
+	@SIGNATURE@
 	ui:ui @MTRGUI@ ;
 	lv2:port [
 		a lv2:ControlPort ,
@@ -469,6 +478,7 @@ mtr:NORstereo@URI_SUFFIX@
 	@VERSION@
 	lv2:project <http://gareus.org/oss/lv2/meters> ;
 	lv2:optionalFeature lv2:hardRTCapable ;
+	@SIGNATURE@
 	ui:ui @MTRGUI@ ;
 	lv2:port [
 		a lv2:ControlPort ,
@@ -531,6 +541,7 @@ mtr:COR@URI_SUFFIX@
 	@VERSION@
 	lv2:project <http://gareus.org/oss/lv2/meters> ;
 	lv2:optionalFeature lv2:hardRTCapable ;
+	@SIGNATURE@
 	ui:ui @MTRGUI@ ;
 	lv2:port [
 		a lv2:ControlPort ,
@@ -587,6 +598,7 @@ mtr:EBUr128@URI_SUFFIX@
 	lv2:optionalFeature lv2:hardRTCapable ;
 	lv2:requiredFeature urid:map ;
 	lv2:extensionData state:interface ;
+	@SIGNATURE@
 	ui:ui @EBUGUI@ ;
 	lv2:port [
 		a atom:AtomPort ,
@@ -647,6 +659,7 @@ mtr:goniometer@URI_SUFFIX@
 	lv2:project <http://gareus.org/oss/lv2/meters> ;
 	lv2:optionalFeature lv2:hardRTCapable ;
 	lv2:extensionData state:interface ;
+	@SIGNATURE@
 	lv2:requiredFeature urid:map ;
 	ui:ui @GONGUI@ ;
 	lv2:port [
@@ -716,6 +729,7 @@ mtr:spectr30mono@URI_SUFFIX@
 	@VERSION@
 	lv2:project <http://gareus.org/oss/lv2/meters> ;
 	lv2:optionalFeature lv2:hardRTCapable ;
+	@SIGNATURE@
 	ui:ui @DPMGUI@ ;
 	lv2:port [
 		a lv2:OutputPort, lv2:ControlPort ;
@@ -1262,6 +1276,7 @@ mtr:spectr30stereo@URI_SUFFIX@
 	@VERSION@
 	lv2:project <http://gareus.org/oss/lv2/meters> ;
 	lv2:optionalFeature lv2:hardRTCapable ;
+	@SIGNATURE@
 	ui:ui @DPMGUI@ ;
 	lv2:port [
 		a lv2:OutputPort, lv2:ControlPort ;
@@ -1823,6 +1838,7 @@ mtr:dBTPmono@URI_SUFFIX@
 	@VERSION@
 	lv2:project <http://gareus.org/oss/lv2/meters> ;
 	lv2:optionalFeature lv2:hardRTCapable ;
+	@SIGNATURE@
 	ui:ui @DPMGUI@ ;
 	lv2:port [
 		a lv2:ControlPort ,
@@ -1874,6 +1890,7 @@ mtr:dBTPstereo@URI_SUFFIX@
 	@VERSION@
 	lv2:project <http://gareus.org/oss/lv2/meters> ;
 	lv2:optionalFeature lv2:hardRTCapable ;
+	@SIGNATURE@
 	ui:ui @DPMGUI@ ;
 	lv2:port [
 		a lv2:ControlPort ,
@@ -1955,6 +1972,7 @@ mtr:K12mono@URI_SUFFIX@
 	@VERSION@
 	lv2:project <http://gareus.org/oss/lv2/meters> ;
 	lv2:optionalFeature lv2:hardRTCapable ;
+	@SIGNATURE@
 	ui:ui @KMRGUI@ ;
 	lv2:port [
 		a lv2:ControlPort ,
@@ -2015,6 +2033,7 @@ mtr:K12stereo@URI_SUFFIX@
 	@VERSION@
 	lv2:project <http://gareus.org/oss/lv2/meters> ;
 	lv2:optionalFeature lv2:hardRTCapable ;
+	@SIGNATURE@
 	ui:ui @KMRGUI@ ;
 	lv2:port [
 		a lv2:ControlPort ,
@@ -2105,6 +2124,7 @@ mtr:K14mono@URI_SUFFIX@
 	@VERSION@
 	lv2:project <http://gareus.org/oss/lv2/meters> ;
 	lv2:optionalFeature lv2:hardRTCapable ;
+	@SIGNATURE@
 	ui:ui @KMRGUI@ ;
 	lv2:port [
 		a lv2:ControlPort ,
@@ -2165,6 +2185,7 @@ mtr:K14stereo@URI_SUFFIX@
 	@VERSION@
 	lv2:project <http://gareus.org/oss/lv2/meters> ;
 	lv2:optionalFeature lv2:hardRTCapable ;
+	@SIGNATURE@
 	ui:ui @KMRGUI@ ;
 	lv2:port [
 		a lv2:ControlPort ,
@@ -2255,6 +2276,7 @@ mtr:K20mono@URI_SUFFIX@
 	@VERSION@
 	lv2:project <http://gareus.org/oss/lv2/meters> ;
 	lv2:optionalFeature lv2:hardRTCapable ;
+	@SIGNATURE@
 	ui:ui @KMRGUI@ ;
 	lv2:port [
 		a lv2:ControlPort ,
@@ -2315,6 +2337,7 @@ mtr:K20stereo@URI_SUFFIX@
 	@VERSION@
 	lv2:project <http://gareus.org/oss/lv2/meters> ;
 	lv2:optionalFeature lv2:hardRTCapable ;
+	@SIGNATURE@
 	ui:ui @KMRGUI@ ;
 	lv2:port [
 		a lv2:ControlPort ,
@@ -2404,6 +2427,7 @@ mtr:phasewheel@URI_SUFFIX@
 	@VERSION@
 	lv2:project <http://gareus.org/oss/lv2/meters> ;
 	lv2:optionalFeature lv2:hardRTCapable ;
+	@SIGNATURE@
 	ui:ui @MPWGUI@ ;
 	lv2:port [
 		a atom:AtomPort ,
@@ -2545,6 +2569,7 @@ mtr:stereoscope@URI_SUFFIX@
 	@VERSION@
 	lv2:project <http://gareus.org/oss/lv2/meters> ;
 	lv2:optionalFeature lv2:hardRTCapable ;
+	@SIGNATURE@
 	ui:ui @SFSGUI@ ;
 	lv2:port [
 		a atom:AtomPort ,
@@ -2645,6 +2670,7 @@ mtr:dr14mono@URI_SUFFIX@
 	@VERSION@
 	lv2:project <http://gareus.org/oss/lv2/meters> ;
 	lv2:optionalFeature lv2:hardRTCapable ;
+	@SIGNATURE@
 	ui:ui @DRMGUI@ ;
 	lv2:port [
 		a atom:AtomPort ,
@@ -2757,6 +2783,7 @@ mtr:dr14stereo@URI_SUFFIX@
 	@VERSION@
 	lv2:project <http://gareus.org/oss/lv2/meters> ;
 	lv2:optionalFeature lv2:hardRTCapable ;
+	@SIGNATURE@
 	ui:ui @DRMGUI@ ;
 	lv2:port [
 		a atom:AtomPort ,
@@ -2940,6 +2967,7 @@ mtr:TPnRMSmono@URI_SUFFIX@
 	@VERSION@
 	lv2:project <http://gareus.org/oss/lv2/meters> ;
 	lv2:optionalFeature lv2:hardRTCapable ;
+	@SIGNATURE@
 	ui:ui @DRMGUI@ ;
 	lv2:port [
 		a atom:AtomPort ,
@@ -3042,6 +3070,7 @@ mtr:TPnRMSstereo@URI_SUFFIX@
 	@VERSION@
 	lv2:project <http://gareus.org/oss/lv2/meters> ;
 	lv2:optionalFeature lv2:hardRTCapable ;
+	@SIGNATURE@
 	ui:ui @DRMGUI@ ;
 	lv2:port [
 		a atom:AtomPort ,
@@ -3209,6 +3238,7 @@ mtr:SigDistHist@URI_SUFFIX@
 	lv2:optionalFeature lv2:hardRTCapable ;
 	lv2:requiredFeature urid:map ;
 	lv2:extensionData state:interface ;
+	@SIGNATURE@
 	ui:ui @SDHGUI@ ;
 	lv2:port [
 		a atom:AtomPort ,
@@ -3252,6 +3282,7 @@ mtr:BBCM6@URI_SUFFIX@
 	@VERSION@
 	lv2:project <http://gareus.org/oss/lv2/meters> ;
 	lv2:optionalFeature lv2:hardRTCapable ;
+	@SIGNATURE@
 	ui:ui @MTRGUI@ ;
 	lv2:port [
 		a lv2:ControlPort ,
@@ -3316,6 +3347,7 @@ mtr:bitmeter@URI_SUFFIX@
 	lv2:optionalFeature lv2:hardRTCapable ;
 	lv2:requiredFeature urid:map ;
 	lv2:extensionData state:interface ;
+	@SIGNATURE@
 	ui:ui @BITGUI@ ;
 	lv2:port [
 		a atom:AtomPort ,
@@ -3357,6 +3389,7 @@ mtr:surround8@URI_SUFFIX@
 	@VERSION@
 	lv2:project <http://gareus.org/oss/lv2/meters> ;
 	lv2:optionalFeature lv2:hardRTCapable ;
+	@SIGNATURE@
 	ui:ui @SURGUI@ ;
 	lv2:port [
 		a lv2:ControlPort ,

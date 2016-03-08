@@ -296,7 +296,7 @@ static const LV2_Descriptor descriptor ## ID = { \
   xfer_run,          \
   NULL,              \
   xfer_cleanup,      \
-  NULL               \
+  extension_data     \
 };
 
 MXFERDESC(MultiPhase2, "phasewheel");

@@ -472,10 +472,25 @@ bbcm_cleanup(LV2_Handle instance)
 	free(instance);
 }
 
+
+#ifdef WITH_SIGNATURE
+#define RTK_URI MTR_URI
+#include "gpg_init.c"
+#include WITH_SIGNATURE
+struct license_info license_infos = {
+	"x42-Meters",
+	"http://x42-plugins.com/x42/x42-meters"
+};
+#include "gpg_lv2ext.c"
+#endif
+
 const void*
 extension_data(const char* uri)
 {
-	return NULL;
+#ifdef WITH_SIGNATURE
+	LV2_LICENSE_EXT_C
+#endif
+		return NULL;
 }
 
 //#ifdef DEBUG_SPECTR

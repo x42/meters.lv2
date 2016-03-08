@@ -82,12 +82,6 @@ sur_connect_port (LV2_Handle instance, uint32_t port, void* data)
 	}
 }
 
-static const void*
-extension_data_sur(const char* uri)
-{
-  return NULL;
-}
-
 static const LV2_Descriptor descriptorSUR8 = {
 	MTR_URI "surround8",
 	sur_instantiate,
@@ -96,7 +90,7 @@ static const LV2_Descriptor descriptorSUR8 = {
 	run,
 	NULL,
 	cleanup,
-	extension_data_sur
+	extension_data
 };
 
 static const LV2_Descriptor descriptorSUR8Gtk = {
@@ -107,5 +101,5 @@ static const LV2_Descriptor descriptorSUR8Gtk = {
 	run,
 	NULL,
 	cleanup,
-	extension_data_sur
+	extension_data
 };

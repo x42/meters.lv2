@@ -369,6 +369,9 @@ extension_data_bim(const char* uri)
   if (!strcmp(uri, LV2_STATE__interface)) {
     return &state;
   }
+#ifdef WITH_SIGNATURE
+	LV2_LICENSE_EXT_C
+#endif
   return NULL;
 }
 
