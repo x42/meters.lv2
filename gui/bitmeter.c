@@ -29,6 +29,10 @@
 #include "lv2/lv2plug.in/ns/extensions/ui/ui.h"
 #include "src/uris.h"
 
+#ifdef _WIN32
+#define snprintf(s, l, ...) sprintf(s, __VA_ARGS__)
+#endif
+
 /*************************/
 enum {
 	FONT_M = 0,

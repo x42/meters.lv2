@@ -45,6 +45,10 @@
 
 #define MAX_METERS 2
 
+#ifdef _WIN32
+#define snprintf(s, l, ...) sprintf(s, __VA_ARGS__)
+#endif
+
 enum {
 	DR_CONTROL = 0,
 	DR_HOST_TRANSPORT,

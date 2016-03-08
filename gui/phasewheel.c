@@ -48,6 +48,9 @@ static const float c_ann[4] = {0.5, 0.5, 0.5, 1.0}; // text annotation color
 static const float c_ahz[4] = {0.6, 0.6, 0.6, 0.5}; // frequency annotation
 static const float c_grd[4] = {0.4, 0.4, 0.4, 1.0}; // grid color
 
+#ifdef _WIN32
+#define snprintf(s, l, ...) sprintf(s, __VA_ARGS__)
+#endif
 
 /******************************************************************************
  *
@@ -73,6 +76,10 @@ static const float c_grd[4] = {0.4, 0.4, 0.4, 1.0}; // grid color
 #define RTK_GUI "phasewheelui"
 
 #define FFT_BINS_MAX 8192 // half of the FFT data-size
+
+#ifdef _WIN32
+#define snprintf(s, l, ...) sprintf(s, __VA_ARGS__)
+#endif
 
 enum {
 	MF_PHASE = 6,
