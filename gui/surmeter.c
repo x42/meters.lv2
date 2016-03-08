@@ -107,8 +107,8 @@ static void speaker(SURui* ui, cairo_t* cr, uint32_t n) {
 	cairo_fill (cr);
 	cairo_restore (cr);
 
-	snprintf (txt, sizeof(txt), "%d", n);
-	write_text_full (cr, txt, FONT(FONT_S10), 1, -10, 0, 2, ui->c_bg);
+	sprintf (txt,"%d", n);
+	write_text_full (cr, txt, FONT(FONT_S10), 0, -10, 0, 2, ui->c_bg);
 }
 
 static void hsl2rgb(float c[3], const float hue, const float sat, const float lum) {
@@ -170,7 +170,7 @@ static void update_grid (SURui* ui) {
 	float coeff = powf(10, .05 * dB); \
 	hsl2rgb(clr, .68 - .72 * coeff, .9, .3 + .4 * sqrt(coeff)); \
 	float ypos = powf (10, .05 * dB); \
-	snprintf (txt, sizeof(txt), "%d", dB); \
+	sprintf (txt, "%d", dB); \
 	cairo_arc (cr, 0, 0, ypos * rad, 0, 2.0 * M_PI); \
 	cairo_set_source_rgba(cr, clr[0], clr[1], clr[2], 0.8); \
 	cairo_stroke (cr); \
@@ -223,14 +223,14 @@ static bool expose_event(RobWidget* handle, cairo_t* cr, cairo_rectangle_t *ev) 
 
 	cairo_set_line_width (cr, 2.0);
 
-	float x[8], y[8]; // todo ui->n_chn
+	float x[8], y[8];
 	for (uint32_t i = 0; i < ui->n_chn; ++i) {
 		const float pk = ui->lvl[i];
 		assert (pk >= 0 && pk <=1);
 
 		const float ang = (float) i * 2.f * M_PI / (float) ui->n_chn;
-		float _sa = rad * sin (ang);
-		float _ca = rad * cos (ang);
+		const float _sa = rad * sin (ang);
+		const float _ca = rad * cos (ang);
 
 		float clr[3];
 		hsl2rgb(clr, .68 - .72 * pk, .9, .3 + .4 * sqrt(pk));
@@ -246,29 +246,35 @@ static bool expose_event(RobWidget* handle, cairo_t* cr, cairo_rectangle_t *ev) 
 
 	cairo_set_line_width (cr, 1.0);
 	cairo_set_source_rgba(cr, .7, .7, .7, .7);
-#if 0
-	for (uint32_t i = 0; i < ui->n_chn; ++i) {
-		int p0 = (i - 1 + ui->n_chn) % ui->n_chn;
-		int p1 = (i + 1 + ui->n_chn) % ui->n_chn;
-		int p2 = (i + 2 + ui->n_chn) % ui->n_chn;
+#define DANG 0.35
 
-		if (i == 0) {
-			cairo_move_to (cr, x[i], y[i]);
-		} else {
+	const float _tn = 1.0 / cos (DANG);
+	for (uint32_t i = 0; i < ui->n_chn; ++i) {
+		const int n = (i + 1 + ui->n_chn) % ui->n_chn;
+
+		const float a0 =  DANG + (float)  i * 2.f * M_PI / (float) ui->n_chn;
+		const float a1 = -DANG + (float)  n * 2.f * M_PI / (float) ui->n_chn;
+		const float _sa0 = rad * sin (a0) * _tn;
+		const float _ca0 = rad * cos (a0) * _tn;
+		const float _sa1 = rad * sin (a1) * _tn;
+		const float _ca1 = rad * cos (a1) * _tn;
+
+		{
+			const float r0 = ui->lvl[i];
+			const float r1 = ui->lvl[n];
+			cairo_move_to (cr, 0, 0);
+			cairo_line_to (cr, x[i], y[i]);
 			cairo_curve_to (cr,
-					0, 0, 0, 0,
-					//.5 * (x[i]  + x[p0]), .5 * (y[i]  + y[p0]),
-					//.5 * (x[p1] + x[p2]), .5 * (y[p1] + y[p2]),
-					//.3 * x[i] + .7 * x[pp], .3 * y[i] + .7 * y[pp],
-					//.7 * x[i] + .3 * x[pp], .7 * y[i] + .3 * y[pp],
-					x[p1], y[p1]);
+					r0 * _sa0, -r0 * _ca0,
+					r1 * _sa1, -r1 * _ca1,
+					x[n], y[n]);
+			cairo_close_path (cr);
 		}
 	}
-	//cairo_close_path (cr);
-	cairo_fill_preserve(cr);
 	cairo_set_source_rgba(cr, .3, .3, .3, .8);
+	cairo_fill_preserve(cr);
+	cairo_set_source_rgba(cr, .6, .6, .6, .8);
 	cairo_stroke(cr);
-#endif
 
 	return TRUE;
 }
