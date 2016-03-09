@@ -175,10 +175,13 @@ instantiate(const LV2_Descriptor*     descriptor,
 		return NULL;
 	}
 
-	self->level  = (float**) calloc (self->chn, sizeof (float*));
-	self->input  = (float**) calloc (self->chn, sizeof (float*));
-	self->output = (float**) calloc (self->chn, sizeof (float*));
-	self->peak   = (float**) calloc (self->chn, sizeof (float*));
+	// some ports are re-used, e.g #5 aka output[1] for mono K-meters
+	uint32_t pca = self->chn > 2 ? self->chn : 2;
+
+	self->level  = (float**) calloc (pca, sizeof (float*));
+	self->input  = (float**) calloc (pca, sizeof (float*));
+	self->output = (float**) calloc (pca, sizeof (float*));
+	self->peak   = (float**) calloc (pca, sizeof (float*));
 
 	self->rlgain = 1.0;
 	self->p_refl = -9999;
