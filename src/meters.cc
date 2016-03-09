@@ -153,9 +153,10 @@ instantiate(const LV2_Descriptor*     descriptor,
 	if (!strcmp(descriptor->URI, MTR_URI "COR") || !strcmp(descriptor->URI, MTR_URI "COR_gtk")) {
 		self->cor = new Stcorrdsp();
 		self->cor->init(rate, 2e3f, 0.3f);
+		self->chn = 2;
 	}
 	else if (!strcmp(descriptor->URI, MTR_URI "BBCM6") || !strcmp(descriptor->URI, MTR_URI "BBCM6_gtk")) {
-		self->chn = 2; \
+		self->chn = 2;
 		self->bms[0] = new Msppmdsp(-6);
 		self->bms[1] = new Msppmdsp(-6);
 		self->bms[0]->init(rate);
