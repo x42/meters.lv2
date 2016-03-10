@@ -9,45 +9,65 @@ static const RtkLv2Description _plugin_surmeter = {
 	&lv2ui_surmeter
 	, 64 // uint32_t dsp_descriptor_id
 	, 0 // uint32_t gui_descriptor_id
-	, "Surround Level 8 " // const char *plugin_human_id
-	, (const struct LV2Port[25])
+	, "Surround Level 8" // const char *plugin_human_id
+	, (const struct LV2Port[45])
 	{
-		{ "ref", CONTROL_IN, -18.000000, -18.000000, -18.000000, "ui notification"},
+		{ "ref", CONTROL_IN, -18.000000, -21.000000, -15.000000, "ui notification"},
+		{ "cor1A", CONTROL_IN, 0.000000, 0.000000, 7.000000, "Correlation 1, Input A"},
+		{ "cor1B", CONTROL_IN, 1.000000, 0.000000, 7.000000, "Correlation 1, Input B"},
+		{ "cor1", CONTROL_OUT, nan, -1.000000, 1.000000, "Correlation 1"},
+		{ "cor2A", CONTROL_IN, 2.000000, 0.000000, 7.000000, "Correlation 2, Input A"},
+		{ "cor2B", CONTROL_IN, 3.000000, 0.000000, 7.000000, "Correlation 2, Input B"},
+		{ "cor2", CONTROL_OUT, nan, -1.000000, 1.000000, "Correlation 2"},
+		{ "cor3A", CONTROL_IN, 4.000000, 0.000000, 7.000000, "Correlation 3, Input A"},
+		{ "cor3B", CONTROL_IN, 5.000000, 0.000000, 7.000000, "Correlation 3, Input B"},
+		{ "cor3", CONTROL_OUT, nan, -1.000000, 1.000000, "Correlation 3"},
+		{ "cor4A", CONTROL_IN, 6.000000, 0.000000, 7.000000, "Correlation 4, Input A"},
+		{ "cor4B", CONTROL_IN, 7.000000, 0.000000, 7.000000, "Correlation 4, Input B"},
+		{ "cor4", CONTROL_OUT, nan, -1.000000, 1.000000, "Correlation 4"},
 		{ "in1", AUDIO_IN, nan, nan, nan, "In1"},
 		{ "out1", AUDIO_OUT, nan, nan, nan, "Out1"},
-		{ "level1", CONTROL_OUT, nan, 0.000000, 1.000000, "Level1"},
+		{ "rms1", CONTROL_OUT, nan, 0.000000, 1.000000, "RMS1"},
+		{ "peak1", CONTROL_OUT, nan, 0.000000, 1.000000, "Peak 1"},
 		{ "in2", AUDIO_IN, nan, nan, nan, "In2"},
 		{ "out2", AUDIO_OUT, nan, nan, nan, "Out2"},
-		{ "level2", CONTROL_OUT, nan, 0.000000, 1.000000, "Level2"},
+		{ "rms2", CONTROL_OUT, nan, 0.000000, 1.000000, "RMS 2"},
+		{ "peak1", CONTROL_OUT, nan, 0.000000, 1.000000, "Peak 1"},
 		{ "in3", AUDIO_IN, nan, nan, nan, "In3"},
 		{ "out3", AUDIO_OUT, nan, nan, nan, "Out3"},
-		{ "level3", CONTROL_OUT, nan, 0.000000, 1.000000, "Level3"},
+		{ "rms3", CONTROL_OUT, nan, 0.000000, 1.000000, "RMS 3"},
+		{ "peak4", CONTROL_OUT, nan, 0.000000, 1.000000, "Peak 4"},
 		{ "in4", AUDIO_IN, nan, nan, nan, "In4"},
 		{ "out4", AUDIO_OUT, nan, nan, nan, "Out4"},
-		{ "level4", CONTROL_OUT, nan, 0.000000, 1.000000, "Level4"},
+		{ "rms4", CONTROL_OUT, nan, 0.000000, 1.000000, "RMS 4"},
+		{ "peak4", CONTROL_OUT, nan, 0.000000, 1.000000, "Peak 4"},
 		{ "in5", AUDIO_IN, nan, nan, nan, "In5"},
 		{ "out5", AUDIO_OUT, nan, nan, nan, "Out5"},
-		{ "level5", CONTROL_OUT, nan, 0.000000, 1.000000, "Level5"},
+		{ "rms5", CONTROL_OUT, nan, 0.000000, 1.000000, "RMS 5"},
+		{ "peak5", CONTROL_OUT, nan, 0.000000, 1.000000, "Peak 5"},
 		{ "in6", AUDIO_IN, nan, nan, nan, "In6"},
 		{ "out6", AUDIO_OUT, nan, nan, nan, "Out6"},
-		{ "level6", CONTROL_OUT, nan, 0.000000, 1.000000, "Level6"},
+		{ "rms6", CONTROL_OUT, nan, 0.000000, 1.000000, "RMS 6"},
+		{ "peak6", CONTROL_OUT, nan, 0.000000, 1.000000, "Peak 6"},
 		{ "in7", AUDIO_IN, nan, nan, nan, "In7"},
 		{ "out7", AUDIO_OUT, nan, nan, nan, "Out7"},
-		{ "level7", CONTROL_OUT, nan, 0.000000, 1.000000, "Level7"},
+		{ "rms7", CONTROL_OUT, nan, 0.000000, 1.000000, "RMS 7"},
+		{ "peak7", CONTROL_OUT, nan, 0.000000, 1.000000, "Peak 7"},
 		{ "in8", AUDIO_IN, nan, nan, nan, "In8"},
 		{ "out8", AUDIO_OUT, nan, nan, nan, "Out8"},
-		{ "level8", CONTROL_OUT, nan, 0.000000, 1.000000, "Level8"},
+		{ "rms8", CONTROL_OUT, nan, 0.000000, 1.000000, "RMS 8"},
+		{ "peak8", CONTROL_OUT, nan, 0.000000, 1.000000, "Peak 8"},
 	}
-	, 25 // uint32_t nports_total
+	, 45 // uint32_t nports_total
 	, 8 // uint32_t nports_audio_in
 	, 8 // uint32_t nports_audio_out
 	, 0 // uint32_t nports_midi_in
 	, 0 // uint32_t nports_midi_out
 	, 0 // uint32_t nports_atom_in
 	, 0 // uint32_t nports_atom_out
-	, 9 // uint32_t nports_ctrl
-	, 1 // uint32_t nports_ctrl_in
-	, 8 // uint32_t nports_ctrl_out
+	, 29 // uint32_t nports_ctrl
+	, 9 // uint32_t nports_ctrl_in
+	, 20 // uint32_t nports_ctrl_out
 	, 8192 // uint32_t min_atom_bufsiz
 	, false // bool send_time_info
 };

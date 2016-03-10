@@ -67,6 +67,11 @@ typedef struct {
 	Msppmdsp  *bms[2];
 	Ebu_r128_proc *ebu;
 
+	Stcorrdsp *cor4[4];
+	float* surc_a[4];
+	float* surc_b[4];
+	float* surc_c[4];
+
 	float** level;
 	float** input;
 	float** output;

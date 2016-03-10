@@ -569,10 +569,10 @@ mtr:COR@URI_SUFFIX@
 		a lv2:ControlPort ,
 			lv2:OutputPort ;
 		lv2:index 3 ;
-		lv2:symbol "levelL" ;
-		lv2:name "LevelL" ;
-		lv2:minimum 0.0 ;
-		lv2:maximum 1.0 ;
+		lv2:symbol "correlation" ;
+		lv2:name "Stereo Correlation" ;
+		lv2:minimum -1.0 ;
+		lv2:maximum  1.0 ;
 	] , [
 		a lv2:AudioPort ,
 			lv2:InputPort ;
@@ -3385,7 +3385,7 @@ mtr:bitmeter@URI_SUFFIX@
 mtr:surround8@URI_SUFFIX@
 	a lv2:Plugin, lv2:AnalyserPlugin, doap:Project ;
 	doap:license <http://usefulinc.com/doap/licenses/gpl> ;
-	doap:name "Surround Level 8 @NAME_SUFFIX@";
+	doap:name "Surround Level 8@NAME_SUFFIX@";
 	@VERSION@
 	lv2:project <http://gareus.org/oss/lv2/meters> ;
 	lv2:optionalFeature lv2:hardRTCapable ;
@@ -3402,163 +3402,339 @@ mtr:surround8@URI_SUFFIX@
 		lv2:maximum -15.0 ;
 		lv2:portProperty pprop:notOnGUI ;
 	] , [
-		a lv2:AudioPort ,
+		a lv2:ControlPort ,
 			lv2:InputPort ;
 		lv2:index 1 ;
+		lv2:symbol "cor1A" ;
+		lv2:name "Correlation 1, Input A" ;
+		lv2:default 0 ;
+		lv2:minimum 0 ;
+		lv2:maximum 7 ;
+		lv2:portProperty lv2:integer;
+	] , [
+		a lv2:ControlPort ,
+			lv2:InputPort ;
+		lv2:index 2 ;
+		lv2:symbol "cor1B" ;
+		lv2:name "Correlation 1, Input B" ;
+		lv2:default 1 ;
+		lv2:minimum 0 ;
+		lv2:maximum 7 ;
+		lv2:portProperty lv2:integer;
+	] , [
+		a lv2:ControlPort ,
+			lv2:OutputPort ;
+		lv2:index 3 ;
+		lv2:symbol "cor1" ;
+		lv2:name "Correlation 1" ;
+		lv2:minimum -1.0 ;
+		lv2:maximum  1.0 ;
+	] , [
+		a lv2:ControlPort ,
+			lv2:InputPort ;
+		lv2:index 4 ;
+		lv2:symbol "cor2A" ;
+		lv2:name "Correlation 2, Input A" ;
+		lv2:default 2 ;
+		lv2:minimum 0 ;
+		lv2:maximum 7 ;
+		lv2:portProperty lv2:integer;
+	] , [
+		a lv2:ControlPort ,
+			lv2:InputPort ;
+		lv2:index 5 ;
+		lv2:symbol "cor2B" ;
+		lv2:name "Correlation 2, Input B" ;
+		lv2:default 3 ;
+		lv2:minimum 0 ;
+		lv2:maximum 7 ;
+		lv2:portProperty lv2:integer;
+	] , [
+		a lv2:ControlPort ,
+			lv2:OutputPort ;
+		lv2:index 6 ;
+		lv2:symbol "cor2" ;
+		lv2:name "Correlation 2" ;
+		lv2:minimum -1.0 ;
+		lv2:maximum  1.0 ;
+	] , [
+		a lv2:ControlPort ,
+			lv2:InputPort ;
+		lv2:index 7 ;
+		lv2:symbol "cor3A" ;
+		lv2:name "Correlation 3, Input A" ;
+		lv2:default 4 ;
+		lv2:minimum 0 ;
+		lv2:maximum 7 ;
+		lv2:portProperty lv2:integer;
+	] , [
+		a lv2:ControlPort ,
+			lv2:InputPort ;
+		lv2:index 8 ;
+		lv2:symbol "cor3B" ;
+		lv2:name "Correlation 3, Input B" ;
+		lv2:default 5 ;
+		lv2:minimum 0 ;
+		lv2:maximum 7 ;
+		lv2:portProperty lv2:integer;
+	] , [
+		a lv2:ControlPort ,
+			lv2:OutputPort ;
+		lv2:index 9 ;
+		lv2:symbol "cor3" ;
+		lv2:name "Correlation 3" ;
+		lv2:minimum -1.0 ;
+		lv2:maximum  1.0 ;
+	] , [
+		a lv2:ControlPort ,
+			lv2:InputPort ;
+		lv2:index 10 ;
+		lv2:symbol "cor4A" ;
+		lv2:name "Correlation 4, Input A" ;
+		lv2:default 6 ;
+		lv2:minimum 0 ;
+		lv2:maximum 7 ;
+		lv2:portProperty lv2:integer;
+	] , [
+		a lv2:ControlPort ,
+			lv2:InputPort ;
+		lv2:index 11 ;
+		lv2:symbol "cor4B" ;
+		lv2:name "Correlation 4, Input B" ;
+		lv2:default 7 ;
+		lv2:minimum 0 ;
+		lv2:maximum 7 ;
+		lv2:portProperty lv2:integer;
+	] , [
+		a lv2:ControlPort ,
+			lv2:OutputPort ;
+		lv2:index 12 ;
+		lv2:symbol "cor4" ;
+		lv2:name "Correlation 4" ;
+		lv2:minimum -1.0 ;
+		lv2:maximum  1.0 ;
+	] , [
+		a lv2:AudioPort ,
+			lv2:InputPort ;
+		lv2:index 13;
 		lv2:symbol "in1" ;
 		lv2:name "In1"
 	] , [
 		a lv2:AudioPort ,
 			lv2:OutputPort ;
-		lv2:index 2 ;
+		lv2:index 14 ;
 		lv2:symbol "out1" ;
 		lv2:name "Out1"
 	] , [
 		a lv2:ControlPort ,
 			lv2:OutputPort ;
-		lv2:index 3 ;
-		lv2:symbol "level1" ;
-		lv2:name "Level1" ;
+		lv2:index 15 ;
+		lv2:symbol "rms1" ;
+		lv2:name "RMS1" ;
+		lv2:minimum 0.0 ;
+		lv2:maximum 1.0 ;
+	] , [
+		a lv2:ControlPort ,
+			lv2:OutputPort ;
+		lv2:index 16 ;
+		lv2:symbol "peak1" ;
+		lv2:name "Peak 1" ;
 		lv2:minimum 0.0 ;
 		lv2:maximum 1.0 ;
 	] , [
 		a lv2:AudioPort ,
 			lv2:InputPort ;
-		lv2:index 4 ;
+		lv2:index 17 ;
 		lv2:symbol "in2" ;
 		lv2:name "In2"
 	] , [
 		a lv2:AudioPort ,
 			lv2:OutputPort ;
-		lv2:index 5 ;
+		lv2:index 18 ;
 		lv2:symbol "out2" ;
 		lv2:name "Out2"
 	] , [
 		a lv2:ControlPort ,
 			lv2:OutputPort ;
-		lv2:index 6 ;
-		lv2:symbol "level2" ;
-		lv2:name "Level2" ;
+		lv2:index 19 ;
+		lv2:symbol "rms2" ;
+		lv2:name "RMS 2" ;
+		lv2:minimum 0.0 ;
+		lv2:maximum 1.0 ;
+	] , [
+		a lv2:ControlPort ,
+			lv2:OutputPort ;
+		lv2:index 20 ;
+		lv2:symbol "peak1" ;
+		lv2:name "Peak 1" ;
 		lv2:minimum 0.0 ;
 		lv2:maximum 1.0 ;
 	] , [
 		a lv2:AudioPort ,
 			lv2:InputPort ;
-		lv2:index 7 ;
+		lv2:index 21 ;
 		lv2:symbol "in3" ;
 		lv2:name "In3"
 	] , [
 		a lv2:AudioPort ,
 			lv2:OutputPort ;
-		lv2:index 8 ;
+		lv2:index 22 ;
 		lv2:symbol "out3" ;
 		lv2:name "Out3"
 	] , [
 		a lv2:ControlPort ,
 			lv2:OutputPort ;
-		lv2:index 9 ;
-		lv2:symbol "level3" ;
-		lv2:name "Level3" ;
+		lv2:index 23 ;
+		lv2:symbol "rms3" ;
+		lv2:name "RMS 3" ;
+		lv2:minimum 0.0 ;
+		lv2:maximum 1.0 ;
+	] , [
+		a lv2:ControlPort ,
+			lv2:OutputPort ;
+		lv2:index 24 ;
+		lv2:symbol "peak4" ;
+		lv2:name "Peak 4" ;
 		lv2:minimum 0.0 ;
 		lv2:maximum 1.0 ;
 	] , [
 		a lv2:AudioPort ,
 			lv2:InputPort ;
-		lv2:index 10 ;
+		lv2:index 25 ;
 		lv2:symbol "in4" ;
 		lv2:name "In4"
 	] , [
 		a lv2:AudioPort ,
 			lv2:OutputPort ;
-		lv2:index 11 ;
+		lv2:index 26 ;
 		lv2:symbol "out4" ;
 		lv2:name "Out4"
 	] , [
 		a lv2:ControlPort ,
 			lv2:OutputPort ;
-		lv2:index 12 ;
-		lv2:symbol "level4" ;
-		lv2:name "Level4" ;
+		lv2:index 27 ;
+		lv2:symbol "rms4" ;
+		lv2:name "RMS 4" ;
+		lv2:minimum 0.0 ;
+		lv2:maximum 1.0 ;
+	] , [
+		a lv2:ControlPort ,
+			lv2:OutputPort ;
+		lv2:index 28 ;
+		lv2:symbol "peak4" ;
+		lv2:name "Peak 4" ;
 		lv2:minimum 0.0 ;
 		lv2:maximum 1.0 ;
 	] , [
 		a lv2:AudioPort ,
 			lv2:InputPort ;
-		lv2:index 13 ;
+		lv2:index 29 ;
 		lv2:symbol "in5" ;
 		lv2:name "In5"
 	] , [
 		a lv2:AudioPort ,
 			lv2:OutputPort ;
-		lv2:index 14 ;
+		lv2:index 30 ;
 		lv2:symbol "out5" ;
 		lv2:name "Out5"
 	] , [
 		a lv2:ControlPort ,
 			lv2:OutputPort ;
-		lv2:index 15 ;
-		lv2:symbol "level5" ;
-		lv2:name "Level5" ;
+		lv2:index 31 ;
+		lv2:symbol "rms5" ;
+		lv2:name "RMS 5" ;
+		lv2:minimum 0.0 ;
+		lv2:maximum 1.0 ;
+	] , [
+		a lv2:ControlPort ,
+			lv2:OutputPort ;
+		lv2:index 32 ;
+		lv2:symbol "peak5" ;
+		lv2:name "Peak 5" ;
 		lv2:minimum 0.0 ;
 		lv2:maximum 1.0 ;
 	] , [
 		a lv2:AudioPort ,
 			lv2:InputPort ;
-		lv2:index 16 ;
+		lv2:index 33 ;
 		lv2:symbol "in6" ;
 		lv2:name "In6"
 	] , [
 		a lv2:AudioPort ,
 			lv2:OutputPort ;
-		lv2:index 17 ;
+		lv2:index 34 ;
 		lv2:symbol "out6" ;
 		lv2:name "Out6"
 	] , [
 		a lv2:ControlPort ,
 			lv2:OutputPort ;
-		lv2:index 18 ;
-		lv2:symbol "level6" ;
-		lv2:name "Level6" ;
+		lv2:index 35 ;
+		lv2:symbol "rms6" ;
+		lv2:name "RMS 6" ;
+		lv2:minimum 0.0 ;
+		lv2:maximum 1.0 ;
+	] , [
+		a lv2:ControlPort ,
+			lv2:OutputPort ;
+		lv2:index 36 ;
+		lv2:symbol "peak6" ;
+		lv2:name "Peak 6" ;
 		lv2:minimum 0.0 ;
 		lv2:maximum 1.0 ;
 	] , [
 		a lv2:AudioPort ,
 			lv2:InputPort ;
-		lv2:index 19 ;
+		lv2:index 37 ;
 		lv2:symbol "in7" ;
 		lv2:name "In7"
 	] , [
 		a lv2:AudioPort ,
 			lv2:OutputPort ;
-		lv2:index 20 ;
+		lv2:index 38 ;
 		lv2:symbol "out7" ;
 		lv2:name "Out7"
 	] , [
 		a lv2:ControlPort ,
 			lv2:OutputPort ;
-		lv2:index 21 ;
-		lv2:symbol "level7" ;
-		lv2:name "Level7" ;
+		lv2:index 39 ;
+		lv2:symbol "rms7" ;
+		lv2:name "RMS 7" ;
+		lv2:minimum 0.0 ;
+		lv2:maximum 1.0 ;
+	] , [
+		a lv2:ControlPort ,
+			lv2:OutputPort ;
+		lv2:index 40 ;
+		lv2:symbol "peak7" ;
+		lv2:name "Peak 7" ;
 		lv2:minimum 0.0 ;
 		lv2:maximum 1.0 ;
 	] , [
 		a lv2:AudioPort ,
 			lv2:InputPort ;
-		lv2:index 22 ;
+		lv2:index 41 ;
 		lv2:symbol "in8" ;
 		lv2:name "In8"
 	] , [
 		a lv2:AudioPort ,
 			lv2:OutputPort ;
-		lv2:index 23 ;
+		lv2:index 42 ;
 		lv2:symbol "out8" ;
 		lv2:name "Out8"
 	] , [
 		a lv2:ControlPort ,
 			lv2:OutputPort ;
-		lv2:index 24 ;
-		lv2:symbol "level8" ;
-		lv2:name "Level8" ;
+		lv2:index 43 ;
+		lv2:symbol "rms8" ;
+		lv2:name "RMS 8" ;
+		lv2:minimum 0.0 ;
+		lv2:maximum 1.0 ;
+	] , [
+		a lv2:ControlPort ,
+			lv2:OutputPort ;
+		lv2:index 44 ;
+		lv2:symbol "peak8" ;
+		lv2:name "Peak 8" ;
 		lv2:minimum 0.0 ;
 		lv2:maximum 1.0 ;
 	] ;
