@@ -135,8 +135,12 @@ static void hsl2rgb(float c[3], const float hue, const float sat, const float lu
 	c[2] = rtk_hue2rgb(cp, cq, hue - 1.f/3.f);
 }
 
+static float meter_deflect (const float coeff) {
+	return sqrtf (coeff);
+}
+
 static float db_deflect (const float dB) {
-	return powf (10, .05 * dB);
+	return meter_deflect (powf (10, .05 * dB));
 }
 
 static void draw_grid (SURui* ui) {
@@ -189,7 +193,7 @@ static void draw_grid (SURui* ui) {
 	float clr[3]; \
 	float coeff = db_deflect (dB); \
 	hsl2rgb(clr, .68 - .72 * coeff, .9, .3 + .4 * sqrt(coeff)); \
-	float ypos = db_deflect (dB); \
+	float ypos = coeff; \
 	sprintf (txt, "%d", dB); \
 	cairo_arc (cr, 0, 0, ypos * rad, 0, 2.0 * M_PI); \
 	cairo_set_source_rgba(cr, clr[0], clr[1], clr[2], 1.0); \
@@ -204,28 +208,32 @@ static void draw_grid (SURui* ui) {
 	ANNARC(-3);
 	ANNARC(-6);
 	ANNARC(-9);
+	ANNARC(-13);
 	ANNARC(-18);
+	ANNARC(-24);
+	ANNARC(-36);
 
 	cairo_destroy (cr);
 
 	cairo_pattern_t* pat = cairo_pattern_create_radial (0, 0, 0, 0, 0, rad);
-	cairo_pattern_add_color_stop_rgba(pat, 0.0,             .05, .05, .05, 0.8);
 
-	cairo_pattern_add_color_stop_rgba(pat, db_deflect(-19.0),  .0, .0, .8, 0.8);
-	cairo_pattern_add_color_stop_rgba(pat, db_deflect(-17.0),  .0, .5, .4, 0.8);
+	cairo_pattern_add_color_stop_rgba(pat, 0.0,            .05, .05, .05, 0.7);
 
-	cairo_pattern_add_color_stop_rgba(pat, db_deflect( -9.5),  .0, .6, .0, 0.8);
-	cairo_pattern_add_color_stop_rgba(pat, db_deflect( -8.5),  .0, .8, .0, 0.8);
+	cairo_pattern_add_color_stop_rgba(pat, db_deflect(-24.5), .0, .0, .8, 0.7);
+	cairo_pattern_add_color_stop_rgba(pat, db_deflect(-23.5), .0, .5, .4, 0.7);
 
-	cairo_pattern_add_color_stop_rgba(pat, db_deflect( -6.5),  .1, .9, .1, 0.8);
-	cairo_pattern_add_color_stop_rgba(pat, db_deflect( -5.5),  .5, .9, .0, 0.8);
+	cairo_pattern_add_color_stop_rgba(pat, db_deflect( -9.5), .0, .6, .0, 0.7);
+	cairo_pattern_add_color_stop_rgba(pat, db_deflect( -8.5), .0, .8, .0, 0.7);
 
-	cairo_pattern_add_color_stop_rgba(pat, db_deflect( -3.5), .75,.75, .0, 0.8);
-	cairo_pattern_add_color_stop_rgba(pat, db_deflect( -2.5),  .8, .4, .1, 0.8);
+	cairo_pattern_add_color_stop_rgba(pat, db_deflect( -6.5), .1, .9, .1, 0.7);
+	cairo_pattern_add_color_stop_rgba(pat, db_deflect( -5.5), .5, .9, .0, 0.7);
 
-	cairo_pattern_add_color_stop_rgba(pat, db_deflect( -1.5),  .9, .0, .0, 0.8);
-	cairo_pattern_add_color_stop_rgba(pat, db_deflect( -0.5),   1, .1, .0, 0.8);
-	cairo_pattern_add_color_stop_rgba(pat, 1.0 ,                1, .1, .0, 0.8);
+	cairo_pattern_add_color_stop_rgba(pat, db_deflect( -3.5), 75,.75, .0, 0.7);
+	cairo_pattern_add_color_stop_rgba(pat, db_deflect( -2.5), .8, .4, .1, 0.7);
+
+	cairo_pattern_add_color_stop_rgba(pat, db_deflect( -1.5), .9, .0, .0, 0.7);
+	cairo_pattern_add_color_stop_rgba(pat, db_deflect( -0.5),  1, .1, .0, 0.7);
+	cairo_pattern_add_color_stop_rgba(pat, 1.0 ,               1, .1, .0, 0.7);
 
 	if (ui->pat) cairo_pattern_destroy(ui->pat);
 	ui->pat= pat;
@@ -249,11 +257,16 @@ static void draw_cor (SURui* ui) {
 
 	CairoSetSouerceRGBA(c_g60);
 	cairo_set_line_width (cr, 1.0);
-	for (uint32_t i = 1 ; i < 9; ++i) {
+
+	const double dash2[] = {1.0, 2.0};
+	cairo_set_dash(cr, dash2, 2, 2);
+
+	for (uint32_t i = 1; i < 10; ++i) {
 		if (i == 5) continue;
 		const float px = 10.5f + rint ((ui->cor_w - 20.f) * i / 10.f);
 		cairo_move_to (cr, px, 5);
 		cairo_line_to (cr, px, ui->cor_h - 5);
+		cairo_stroke (cr);
 	}
 
 	write_text_full (cr, "-1", FONT(FONT_S10), 8, ui->cor_h * .5, 0, 3, ui->c_fg);
@@ -331,13 +344,14 @@ m0_expose_event(RobWidget* handle, cairo_t* cr, cairo_rectangle_t *ev) {
 			cairo_close_path (cr);
 		}
 	}
+
 	cairo_set_source (cr, ui->pat);
 	cairo_fill_preserve(cr);
 	cairo_set_line_width (cr, 1.0);
 	cairo_set_source_rgba(cr, .6, .6, .6, .8);
 	cairo_stroke(cr);
 
-#if 1
+	float lw = ceilf (5.f * rad / 200.f);
 	cairo_set_line_cap (cr, CAIRO_LINE_CAP_ROUND);
 	for (uint32_t i = 0; i < ui->n_chn; ++i) {
 		float pk = ui->peak[i];
@@ -346,14 +360,13 @@ m0_expose_event(RobWidget* handle, cairo_t* cr, cairo_rectangle_t *ev) {
 		cairo_move_to (cr, 0, 0);
 		cairo_line_to (cr, pk * x[i], -pk * y[i]);
 
-		cairo_set_line_width (cr, 5.0);
+		cairo_set_line_width (cr, lw);
 		cairo_set_source_rgba(cr, .1, .1, .1, .8);
 		cairo_stroke_preserve (cr);
 		cairo_set_source (cr, ui->pat);
-		cairo_set_line_width (cr, 3.0);
+		cairo_set_line_width (cr, lw - 2.f);
 		cairo_stroke (cr);
 	}
-#endif
 
 	return TRUE;
 }
@@ -646,10 +659,10 @@ port_event(LV2UI_Handle handle,
 		robtk_select_set_value(ui->sel_cor_b[cc], pn);
 		ui->disable_signals = false;
 	} else if (port_index > 12 && port_index <= 12U + ui->n_chn * 4 && port_index % 4 == 3) {
-		ui->rms[(port_index - 13) / 4] = *(float *)buffer;
+		ui->rms[(port_index - 13) / 4] = meter_deflect(*(float *)buffer);
 		queue_draw (ui->m0);
 	} else if (port_index > 12 && port_index <= 12U + ui->n_chn * 4 && port_index % 4 == 0) {
-		ui->peak[(port_index - 13) / 4] = *(float *)buffer;
+		ui->peak[(port_index - 13) / 4] = meter_deflect(*(float *)buffer);
 		queue_draw (ui->m0);
 	}
 }
