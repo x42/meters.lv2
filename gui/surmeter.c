@@ -501,8 +501,8 @@ instantiate(
 
 	*widget = NULL;
 
-	if      (!strcmp(plugin_uri, MTR_URI "surround8"))     { ui->n_chn = 8; }
-	else if (!strcmp(plugin_uri, MTR_URI "surround8_gtk")) { ui->n_chn = 8; }
+	if      (!strcmp(plugin_uri, MTR_URI "surround8")) { ui->n_chn = 8; }
+	else if (!strcmp(plugin_uri, MTR_URI "surround5")) { ui->n_chn = 5; }
 	else {
 		free(ui);
 		return NULL;

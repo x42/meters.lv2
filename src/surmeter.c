@@ -32,19 +32,19 @@ sur_instantiate(
 	LV2meter* self = (LV2meter*)calloc (1, sizeof (LV2meter));
 	if (!self) return NULL;
 
-	if (   !strcmp (descriptor->URI, MTR_URI "surround8")
-			|| !strcmp (descriptor->URI, MTR_URI "surround8_gtk")
-		 )
-	{
+	if (       !strcmp (descriptor->URI, MTR_URI "surround8")) {
 		self->chn = 8;
-		self->mtr = (JmeterDSP **) malloc (self->chn * sizeof (JmeterDSP *));
-		for (uint32_t i = 0; i < self->chn; ++i) {
-			self->mtr[i] = new Kmeterdsp();
-			static_cast<Kmeterdsp *>(self->mtr[i])->init(rate);
-		}
+	} else if (!strcmp (descriptor->URI, MTR_URI "surround5")) {
+		self->chn = 5;
 	} else {
 		free(self);
 		return NULL;
+	}
+
+	self->mtr = (JmeterDSP **) malloc (self->chn * sizeof (JmeterDSP *));
+	for (uint32_t i = 0; i < self->chn; ++i) {
+		self->mtr[i] = new Kmeterdsp();
+		static_cast<Kmeterdsp *>(self->mtr[i])->init(rate);
 	}
 
 	self->level  = (float**) calloc (self->chn, sizeof (float*));
@@ -159,6 +159,17 @@ sur_cleanup(LV2_Handle instance)
 }
 static const LV2_Descriptor descriptorSUR8 = {
 	MTR_URI "surround8",
+	sur_instantiate,
+	sur_connect_port,
+	NULL,
+	sur_run,
+	NULL,
+	sur_cleanup,
+	extension_data
+};
+
+static const LV2_Descriptor descriptorSUR5 = {
+	MTR_URI "surround5",
 	sur_instantiate,
 	sur_connect_port,
 	NULL,

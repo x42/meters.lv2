@@ -690,7 +690,7 @@ lv2_descriptor(uint32_t index)
 	case 62: return &descriptorBIM;
 	case 63: return &descriptorBIMGtk;
 	case 64: return &descriptorSUR8;
-	case 65: return &descriptorSUR8Gtk;
+	case 65: return &descriptorSUR5;
 	default: return NULL;
 	}
 }
