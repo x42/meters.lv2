@@ -199,9 +199,9 @@ static void draw_grid (SURui* ui) {
 	cairo_set_source_rgba(cr, clr[0], clr[1], clr[2], 1.0); \
 	cairo_stroke (cr); \
 	cairo_save (cr); \
-	cairo_rotate (cr, M_PI / 4.0); \
+	cairo_rotate (cr, M_PI / 3.0); \
 	cairo_scale (cr, sc, sc); \
-	write_text_full (cr, txt, FONT(FONT_S10), 0, ypos * rad / sc, M_PI, 2, ui->c_fg); \
+	write_text_full (cr, txt, FONT(FONT_S10), 0, ypos * rad / sc, M_PI, -2, ui->c_fg); \
 	cairo_restore (cr); \
 }
 
