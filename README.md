@@ -82,8 +82,6 @@ this or a later version of the LV2 SDK to support the features.
 
 The plugin-host must also support http://lv2plug.in/ns/ext/resize-port/
 
-At the time of writing Ardour 3.4 and jalv.gtk do fulfill these criteria.
-
 
 Screenshots
 -----------

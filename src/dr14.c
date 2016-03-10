@@ -106,31 +106,22 @@ dr14_instantiate(
 {
 	uint32_t n_channels;
 	bool dr_operation_mode;
-	if (!strcmp(descriptor->URI, MTR_URI "dr14stereo")
-			|| !strcmp(descriptor->URI, MTR_URI "dr14stereo_gtk"))
-	{
+	if (!strcmp(descriptor->URI, MTR_URI "dr14stereo")) {
 		n_channels = 2;
 		dr_operation_mode = true;
 	}
-	else if (!strcmp(descriptor->URI, MTR_URI "dr14mono")
-			|| !strcmp(descriptor->URI, MTR_URI "dr14mono_gtk"))
-	{
+	else if (!strcmp(descriptor->URI, MTR_URI "dr14mono")) {
 		n_channels = 1;
 		dr_operation_mode = true;
 	}
-	else if (!strcmp(descriptor->URI, MTR_URI "TPnRMSstereo")
-			|| !strcmp(descriptor->URI, MTR_URI "TPnRMSstereo_gtk"))
-	{
+	else if (!strcmp(descriptor->URI, MTR_URI "TPnRMSstereo")) {
 		n_channels = 2;
 		dr_operation_mode = false;
 	}
-	else if (!strcmp(descriptor->URI, MTR_URI "TPnRMSmono")
-			|| !strcmp(descriptor->URI, MTR_URI "TPnRMSmono_gtk"))
-	{
+	else if (!strcmp(descriptor->URI, MTR_URI "TPnRMSmono")) {
 		n_channels = 1;
 		dr_operation_mode = false;
 	}
-
 	else { return NULL; }
 
   LV2_URID_Map* map = NULL;
@@ -519,10 +510,6 @@ static const LV2_Descriptor descriptor ## ID = { \
 
 DR14DESC(DR14_1, "dr14mono");
 DR14DESC(DR14_2, "dr14stereo");
-DR14DESC(DR14_1Gtk, "dr14mono_gtk");
-DR14DESC(DR14_2Gtk, "dr14stereo_gtk");
 
 DR14DESC(TPRMS_1, "TPnRMSmono");
 DR14DESC(TPRMS_2, "TPnRMSstereo");
-DR14DESC(TPRMS_1Gtk, "TPnRMSmono_gtk");
-DR14DESC(TPRMS_2Gtk, "TPnRMSstereo_gtk");

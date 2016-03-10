@@ -130,13 +130,13 @@ typedef struct {
 
 
 #define MTRDEF(NAME, CLASS) \
-	else if (!strcmp(descriptor->URI, MTR_URI NAME "mono") || !strcmp(descriptor->URI, MTR_URI NAME "mono_gtk")) { \
+	else if (!strcmp(descriptor->URI, MTR_URI NAME "mono")) { \
 		self->chn = 1; \
 		self->mtr = (JmeterDSP **)malloc (self->chn * sizeof (JmeterDSP *)); \
 		self->mtr[0] = new CLASS(); \
 		static_cast<CLASS *>(self->mtr[0])->init(rate); \
 	} \
-	else if (!strcmp(descriptor->URI, MTR_URI NAME "stereo") || !strcmp(descriptor->URI, MTR_URI NAME "stereo_gtk")) { \
+	else if (!strcmp(descriptor->URI, MTR_URI NAME "stereo")) { \
 		self->chn = 2; \
 		self->mtr = (JmeterDSP **)malloc (self->chn * sizeof (JmeterDSP *)); \
 		self->mtr[0] = new CLASS(); \
@@ -155,12 +155,12 @@ instantiate(const LV2_Descriptor*     descriptor,
 
 	if (!self) return NULL;
 
-	if (!strcmp(descriptor->URI, MTR_URI "COR") || !strcmp(descriptor->URI, MTR_URI "COR_gtk")) {
+	if (!strcmp(descriptor->URI, MTR_URI "COR")) {
 		self->cor = new Stcorrdsp();
 		self->cor->init(rate, 2e3f, 0.3f);
 		self->chn = 2;
 	}
-	else if (!strcmp(descriptor->URI, MTR_URI "BBCM6") || !strcmp(descriptor->URI, MTR_URI "BBCM6_gtk")) {
+	else if (!strcmp(descriptor->URI, MTR_URI "BBCM6")) {
 		self->chn = 2;
 		self->bms[0] = new Msppmdsp(-6);
 		self->bms[1] = new Msppmdsp(-6);
@@ -540,47 +540,15 @@ mkdesc(9, "NORstereo",run)
 mkdesc(14,"dBTPmono",   dbtp_run)
 mkdesc(15,"dBTPstereo", dbtp_run)
 
-mkdesc(16, "VUmono_gtk",   run)
-mkdesc(17, "VUstereo_gtk", run)
-mkdesc(18, "BBCmono_gtk",  run)
-mkdesc(19, "BBCstereo_gtk",run)
-mkdesc(20, "EBUmono_gtk",  run)
-mkdesc(21, "EBUstereo_gtk",run)
-mkdesc(22, "DINmono_gtk",  run)
-mkdesc(23, "DINstereo_gtk",run)
-mkdesc(24, "NORmono_gtk",  run)
-mkdesc(25, "NORstereo_gtk",run)
-
-mkdesc(29,"dBTPmono_gtk",   dbtp_run)
-mkdesc(30,"dBTPstereo_gtk", dbtp_run)
-
-mkdesc(32,"K12mono", kmeter_run)
-mkdesc(33,"K14mono", kmeter_run)
-mkdesc(34,"K20mono", kmeter_run)
-mkdesc(35,"K12stereo", kmeter_run)
-mkdesc(36,"K14stereo", kmeter_run)
-mkdesc(37,"K20stereo", kmeter_run)
-
-mkdesc(38,"K12mono_gtk", kmeter_run)
-mkdesc(39,"K14mono_gtk", kmeter_run)
-mkdesc(40,"K20mono_gtk", kmeter_run)
-mkdesc(41,"K12stereo_gtk", kmeter_run)
-mkdesc(42,"K14stereo_gtk", kmeter_run)
-mkdesc(43,"K20stereo_gtk", kmeter_run)
+mkdesc(K12M,"K12mono", kmeter_run)
+mkdesc(K14M,"K14mono", kmeter_run)
+mkdesc(K20M,"K20mono", kmeter_run)
+mkdesc(K12S,"K12stereo", kmeter_run)
+mkdesc(K14S,"K14stereo", kmeter_run)
+mkdesc(K20S,"K20stereo", kmeter_run)
 
 static const LV2_Descriptor descriptorCor = {
 	MTR_URI "COR",
-	instantiate,
-	connect_port,
-	NULL,
-	cor_run,
-	NULL,
-	cor_cleanup,
-	extension_data
-};
-
-static const LV2_Descriptor descriptorCorGtk = {
-	MTR_URI "COR_gtk",
 	instantiate,
 	connect_port,
 	NULL,
@@ -600,18 +568,6 @@ static const LV2_Descriptor descriptorBBCMS = {
 	bbcm_cleanup,
 	extension_data
 };
-
-static const LV2_Descriptor descriptorBBCMSGtk = {
-	MTR_URI "BBCM6_gtk",
-	instantiate,
-	connect_port,
-	NULL,
-	bbcm_run,
-	NULL,
-	bbcm_cleanup,
-	extension_data
-};
-
 
 
 #undef LV2_SYMBOL_EXPORT
@@ -641,56 +597,26 @@ lv2_descriptor(uint32_t index)
 	case 13: return &descriptorSpectrum1;
 	case 14: return &descriptor14;
 	case 15: return &descriptor15;
-	case 16: return &descriptor16;
-	case 17: return &descriptor17;
-	case 18: return &descriptor18;
-	case 19: return &descriptor19;
-	case 20: return &descriptor20;
-	case 21: return &descriptor21;
-	case 22: return &descriptor22;
-	case 23: return &descriptor23;
-	case 24: return &descriptor24;
-	case 25: return &descriptor25;
-	case 26: return &descriptorGoniometerGtk;
-	case 27: return &descriptorSpectrum1Gtk;
-	case 28: return &descriptorCorGtk;
-	case 29: return &descriptor29;
-	case 30: return &descriptor30;
-	case 31: return &descriptorEBUr128Gtk;
-	case 32: return &descriptor32;
-	case 33: return &descriptor33;
-	case 34: return &descriptor34;
-	case 35: return &descriptor35;
-	case 36: return &descriptor36;
-	case 37: return &descriptor37;
-	case 38: return &descriptor38;
-	case 39: return &descriptor39;
-	case 40: return &descriptor40;
-	case 41: return &descriptor41;
-	case 42: return &descriptor42;
-	case 43: return &descriptor43;
-	case 44: return &descriptorSpectrum2;
-	case 45: return &descriptorSpectrum2Gtk;
-	case 46: return &descriptorMultiPhase2;
-	case 47: return &descriptorMultiPhase2Gtk;
-	case 48: return &descriptorStereoScope;
-	case 49: return &descriptorStereoScopeGtk;
-	case 50: return &descriptorDR14_1;
-	case 51: return &descriptorDR14_1Gtk;
-	case 52: return &descriptorDR14_2;
-	case 53: return &descriptorDR14_2Gtk;
-	case 54: return &descriptorTPRMS_1;
-	case 55: return &descriptorTPRMS_1Gtk;
-	case 56: return &descriptorTPRMS_2;
-	case 57: return &descriptorTPRMS_2Gtk;
-	case 58: return &descriptorSDH;
-	case 59: return &descriptorSDHGtk;
-	case 60: return &descriptorBBCMS;
-	case 61: return &descriptorBBCMSGtk;
-	case 62: return &descriptorBIM;
-	case 63: return &descriptorBIMGtk;
-	case 64: return &descriptorSUR8;
-	case 65: return &descriptorSUR5;
+
+	case 16: return &descriptorK12M;
+	case 17: return &descriptorK14M;
+	case 18: return &descriptorK20M;
+	case 19: return &descriptorK12S;
+	case 20: return &descriptorK14S;
+	case 21: return &descriptorK20S;
+
+	case 22: return &descriptorSpectrum2;
+	case 23: return &descriptorMultiPhase2;
+	case 24: return &descriptorStereoScope;
+	case 25: return &descriptorDR14_1;
+	case 26: return &descriptorDR14_2;
+	case 27: return &descriptorTPRMS_1;
+	case 28: return &descriptorTPRMS_2;
+	case 29: return &descriptorSDH;
+	case 30: return &descriptorBBCMS;
+	case 31: return &descriptorBIM;
+	case 32: return &descriptorSUR8;
+	case 33: return &descriptorSUR5;
 	default: return NULL;
 	}
 }

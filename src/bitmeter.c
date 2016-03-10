@@ -115,7 +115,7 @@ bim_instantiate(
 	LV2meter* self = (LV2meter*)calloc (1, sizeof (LV2meter));
 	if (!self) return NULL;
 
-	if (strcmp (descriptor->URI, MTR_URI "bitmeter") && strcmp (descriptor->URI, MTR_URI "bitmeter_gtk")) {
+	if (strcmp (descriptor->URI, MTR_URI "bitmeter")) {
 		free(self);
 		return NULL;
 	}
@@ -385,16 +385,3 @@ static const LV2_Descriptor descriptorBIM = {
 	bim_cleanup,
 	extension_data_bim
 };
-
-
-static const LV2_Descriptor descriptorBIMGtk = {
-	MTR_URI "bitmeter_gtk",
-	bim_instantiate,
-	bim_connect_port,
-	NULL,
-	bim_run,
-	NULL,
-	bim_cleanup,
-	extension_data_bim
-};
-

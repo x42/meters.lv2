@@ -7,7 +7,7 @@ extern const LV2UI_Descriptor* lv2ui_needle(uint32_t index);
 static const RtkLv2Description _plugin_bbcm6 = {
 	&lv2_descriptor,
 	&lv2ui_needle
-	, 60 // uint32_t dsp_descriptor_id
+	, 30 // uint32_t dsp_descriptor_id
 	, 0 // uint32_t gui_descriptor_id
 	, "BBC M-6" // const char *plugin_human_id
 	, (const struct LV2Port[7])

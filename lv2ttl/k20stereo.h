@@ -7,7 +7,7 @@ extern const LV2UI_Descriptor* lv2ui_kmeter(uint32_t index);
 static const RtkLv2Description _plugin_k20stereo = {
 	&lv2_descriptor,
 	&lv2ui_kmeter
-	, 37 // uint32_t dsp_descriptor_id
+	, 21 // uint32_t dsp_descriptor_id
 	, 0 // uint32_t gui_descriptor_id
 	, "K20/RMS Meter (Stereo)" // const char *plugin_human_id
 	, (const struct LV2Port[10])

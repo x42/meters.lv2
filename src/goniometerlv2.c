@@ -47,7 +47,7 @@ goniometer_instantiate(
 		const char*               bundle_path,
 		const LV2_Feature* const* features)
 {
-	if (strcmp(descriptor->URI, MTR_URI "goniometer") && strcmp(descriptor->URI, MTR_URI "goniometer_gtk") ) {
+	if (strcmp(descriptor->URI, MTR_URI "goniometer")) {
 		return NULL;
 	}
 	LV2gm* self = (LV2gm*)calloc(1, sizeof(LV2gm));
@@ -315,15 +315,3 @@ static const LV2_Descriptor descriptorGoniometer = {
 	goniometer_cleanup,
 	goniometer_extension_data
 };
-
-static const LV2_Descriptor descriptorGoniometerGtk = {
-	MTR_URI "goniometer_gtk",
-	goniometer_instantiate,
-	goniometer_connect_port,
-	NULL,
-	goniometer_run,
-	NULL,
-	goniometer_cleanup,
-	goniometer_extension_data
-};
-

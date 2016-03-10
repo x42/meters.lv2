@@ -112,7 +112,7 @@ sdh_instantiate(
 	LV2meter* self = (LV2meter*)calloc(1, sizeof(LV2meter));
 	if (!self) return NULL;
 
-	if (strcmp(descriptor->URI, MTR_URI "SigDistHist") && strcmp(descriptor->URI, MTR_URI "SigDistHist_gtk")) {
+	if (strcmp(descriptor->URI, MTR_URI "SigDistHist")) {
 		free(self);
 		return NULL;
 	}
@@ -451,16 +451,3 @@ static const LV2_Descriptor descriptorSDH = {
 	sdh_cleanup,
 	extension_data_sdh
 };
-
-
-static const LV2_Descriptor descriptorSDHGtk = {
-	MTR_URI "SigDistHist_gtk",
-	sdh_instantiate,
-	sdh_connect_port,
-	NULL,
-	sdh_run,
-	NULL,
-	sdh_cleanup,
-	extension_data_sdh
-};
-

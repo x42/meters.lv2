@@ -7,7 +7,7 @@ extern const LV2UI_Descriptor* lv2ui_bitmeter(uint32_t index);
 static const RtkLv2Description _plugin_bitmeter = {
 	&lv2_descriptor,
 	&lv2ui_bitmeter
-	, 62 // uint32_t dsp_descriptor_id
+	, 31 // uint32_t dsp_descriptor_id
 	, 0 // uint32_t gui_descriptor_id
 	, "Bit Meter" // const char *plugin_human_id
 	, (const struct LV2Port[4])

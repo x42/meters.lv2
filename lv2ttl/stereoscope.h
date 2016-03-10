@@ -7,7 +7,7 @@ extern const LV2UI_Descriptor* lv2ui_stereoscope(uint32_t index);
 static const RtkLv2Description _plugin_stereoscope = {
 	&lv2_descriptor,
 	&lv2ui_stereoscope
-	, 48 // uint32_t dsp_descriptor_id
+	, 24 // uint32_t dsp_descriptor_id
 	, 0 // uint32_t gui_descriptor_id
 	, "Stereo/Frequency Scope" // const char *plugin_human_id
 	, (const struct LV2Port[9])

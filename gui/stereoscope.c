@@ -610,8 +610,7 @@ instantiate(
 	*widget = NULL;
 	ui->map = NULL;
 
-	if      (!strcmp(plugin_uri, MTR_URI "stereoscope")) { ; }
-	else if (!strcmp(plugin_uri, MTR_URI "stereoscope_gtk")) { ; }
+	if (!strcmp(plugin_uri, MTR_URI "stereoscope")) { ; }
 	else {
 		free(ui);
 		return NULL;

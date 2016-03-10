@@ -7,7 +7,7 @@ extern const LV2UI_Descriptor* lv2ui_tprms2(uint32_t index);
 static const RtkLv2Description _plugin_tprms2 = {
 	&lv2_descriptor,
 	&lv2ui_tprms2
-	, 56 // uint32_t dsp_descriptor_id
+	, 28 // uint32_t dsp_descriptor_id
 	, 0 // uint32_t gui_descriptor_id
 	, "True-Peak and RMS Meter (Stereo)" // const char *plugin_human_id
 	, (const struct LV2Port[17])

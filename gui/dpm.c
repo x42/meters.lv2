@@ -1014,10 +1014,6 @@ instantiate(
 	else if (!strcmp(plugin_uri, MTR_URI "spectr30stereo")) { ui->num_meters = 30; ui->display_freq = true; }
 	else if (!strcmp(plugin_uri, MTR_URI "dBTPmono")) { ui->num_meters = 1; ui->display_freq = false; }
 	else if (!strcmp(plugin_uri, MTR_URI "dBTPstereo")) { ui->num_meters = 2; ui->display_freq = false; }
-	else if (!strcmp(plugin_uri, MTR_URI "spectr30mono_gtk")) { ui->num_meters = 30; ui->display_freq = true; }
-	else if (!strcmp(plugin_uri, MTR_URI "spectr30stereo_gtk")) { ui->num_meters = 30; ui->display_freq = true; }
-	else if (!strcmp(plugin_uri, MTR_URI "dBTPmono_gtk")) { ui->num_meters = 1; ui->display_freq = false; }
-	else if (!strcmp(plugin_uri, MTR_URI "dBTPstereo_gtk")) { ui->num_meters = 2; ui->display_freq = false; }
 	else {
 		free(ui);
 		return NULL;

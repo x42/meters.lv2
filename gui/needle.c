@@ -533,7 +533,7 @@ size_limit(RobWidget* rw, int *w, int *h) {
 	if (scale > 3.5 ) scale = 3.5;
 	ui->scale  = scale;
 	set_needle_sizes(ui); // sets ui->width, ui->height
-	robwidget_set_size(rw, ui->width, ui->height); // single top-level gtk (!)
+	robwidget_set_size(rw, ui->width, ui->height); // single top-level
 	*w = ui->width;
 	*h = ui->height;
 	queue_draw(rw);
@@ -588,19 +588,6 @@ instantiate(
 	else if (!strcmp(plugin_uri, MTR_URI "NORstereo")) { ui->chn = 2; ui->type = MT_NOR; }
 	else if (!strcmp(plugin_uri, MTR_URI "COR"))       { ui->chn = 1; ui->type = MT_COR; }
 
-	else if (!strcmp(plugin_uri, MTR_URI "VUmono_gtk"))    { ui->chn = 1; ui->type = MT_VU; }
-	else if (!strcmp(plugin_uri, MTR_URI "VUstereo_gtk"))  { ui->chn = 2; ui->type = MT_VU; }
-	else if (!strcmp(plugin_uri, MTR_URI "BBCmono_gtk"))   { ui->chn = 1; ui->type = MT_BBC; }
-	else if (!strcmp(plugin_uri, MTR_URI "BBCstereo_gtk")) { ui->chn = 2; ui->type = MT_BBC; }
-	else if (!strcmp(plugin_uri, MTR_URI "BBCM6_gtk"))     { ui->chn = 2; ui->type = MT_BM6; }
-	else if (!strcmp(plugin_uri, MTR_URI "EBUmono_gtk"))   { ui->chn = 1; ui->type = MT_EBU; }
-	else if (!strcmp(plugin_uri, MTR_URI "EBUstereo_gtk")) { ui->chn = 2; ui->type = MT_EBU; }
-	else if (!strcmp(plugin_uri, MTR_URI "DINmono_gtk"))   { ui->chn = 1; ui->type = MT_DIN; }
-	else if (!strcmp(plugin_uri, MTR_URI "DINstereo_gtk")) { ui->chn = 2; ui->type = MT_DIN; }
-	else if (!strcmp(plugin_uri, MTR_URI "NORmono_gtk"))   { ui->chn = 1; ui->type = MT_NOR; }
-	else if (!strcmp(plugin_uri, MTR_URI "NORstereo_gtk")) { ui->chn = 2; ui->type = MT_NOR; }
-	else if (!strcmp(plugin_uri, MTR_URI "COR_gtk"))       { ui->chn = 1; ui->type = MT_COR; }
-
 	if (ui->type == 0) {
 		free(ui);
 		return NULL;
@@ -631,7 +618,7 @@ instantiate(
 
 	robwidget_set_expose_event(ui->rw, expose_event);
 	robwidget_set_size_request(ui->rw, size_request);
-	robwidget_set_size_allocate(ui->rw, size_allocate); // gtk
+	robwidget_set_size_allocate(ui->rw, size_allocate);
 	robwidget_set_size_limit(ui->rw, size_limit);
 	robwidget_set_size_default(ui->rw, size_default);
 

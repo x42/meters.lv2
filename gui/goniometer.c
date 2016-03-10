@@ -687,13 +687,6 @@ static bool expose_event(RobWidget* handle, cairo_t* cr, cairo_rectangle_t *ev) 
 	GMUI* ui = (GMUI*)GET_HANDLE(handle);
 	LV2gm* self = (LV2gm*) ui->instance;
 
-#ifdef GTK_BACKEND // GTK --due to show_all() in parent shows previously hidden table
-	if (!ui->initialized) {
-		ui->initialized = true;
-		cb_preferences(handle, ui);
-	}
-#endif
-
 	cairo_rectangle (cr, ev->x, ev->y, ev->width, ev->height);
 	cairo_clip (cr);
 
@@ -1022,7 +1015,7 @@ static void restore_state(GMUI* ui) {
 }
 
 /* instance connection */
-#if (!defined GTK_BACKEND && defined USE_GUI_THREAD && defined THREADSYNC)
+#if (defined USE_GUI_THREAD && defined THREADSYNC)
 static void expose_goniometer(void* ptr) {
 	GMUI* ui = (GMUI*) ptr;
 	ui->ntfy_b = (ui->ntfy_b + 1 )% 10000;
@@ -1209,7 +1202,6 @@ instantiate(
 	robtk_dial_set_surface(ui->spn_alpha,    ui->dial[2]);
 
 	/* fader init */
-	//gtk_scale_set_draw_value(GTK_SCALE(ui->fader), FALSE);
 	robtk_scale_set_default(ui->fader, GAINSCALE(1.0));
 	robtk_scale_set_value(ui->fader, GAINSCALE(1.0));
 
@@ -1293,11 +1285,9 @@ instantiate(
 	robtk_cbtn_set_active(ui->cbn_preferences, FALSE);
 	restore_state(ui);
 
-#ifndef GTK_BACKEND // GTK --due to show_all() in parent shows previously hidden table, see above
 	if (!robtk_cbtn_get_active(ui->cbn_preferences)) {
 		robwidget_hide(ui->c_tbl, true);
 	}
-#endif
 
 	robwidget_set_expose_event(ui->m0, expose_event);
 
@@ -1329,7 +1319,7 @@ instantiate(
 	ui->xrundisplay = -100;
 	self->ui_active = true;
 
-#if (!defined GTK_BACKEND && defined USE_GUI_THREAD && defined THREADSYNC)
+#if (defined USE_GUI_THREAD && defined THREADSYNC)
 	GLrobtkLV2UI *glui = (GLrobtkLV2UI*) ui_toplevel;
 	self->msg_thread_lock = &glui->msg_thread_lock;
 	self->data_ready = &glui->data_ready;
@@ -1346,9 +1336,7 @@ plugin_scale_mode(LV2UI_Handle handle)
 	if (robtk_cbtn_get_active(ui->cbn_preferences)) {
 		return LVGL_LAYOUT_TO_FIT;
 	} else {
-#ifndef GTK_BACKEND
 		ui->box->resized = TRUE;
-#endif
 		return LVGL_ZOOM_TO_ASPECT;
 	}
 }

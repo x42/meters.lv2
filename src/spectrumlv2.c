@@ -78,14 +78,10 @@ spectrum_instantiate(
 		const LV2_Feature* const* features)
 {
 	uint32_t nchannels;
-	if (!strcmp(descriptor->URI, MTR_URI "spectr30stereo")
-			|| !strcmp(descriptor->URI, MTR_URI "spectr30stereo_gtk"))
-	{
+	if (!strcmp(descriptor->URI, MTR_URI "spectr30stereo")) {
 		nchannels = 2;
 	}
-	else if (!strcmp(descriptor->URI, MTR_URI "spectr30mono")
-			|| !strcmp(descriptor->URI, MTR_URI "spectr30mono_gtk"))
-	{
+	else if (!strcmp(descriptor->URI, MTR_URI "spectr30mono")) {
 		nchannels = 1;
 	}
 	else { return NULL; }
@@ -280,5 +276,3 @@ static const LV2_Descriptor descriptor ## ID = { \
 
 SPECTRDESC(Spectrum1, "spectr30mono");
 SPECTRDESC(Spectrum2, "spectr30stereo");
-SPECTRDESC(Spectrum1Gtk, "spectr30mono_gtk");
-SPECTRDESC(Spectrum2Gtk, "spectr30stereo_gtk");

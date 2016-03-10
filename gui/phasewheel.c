@@ -1165,8 +1165,7 @@ instantiate(
 	*widget = NULL;
 	ui->map = NULL;
 
-	if      (!strcmp(plugin_uri, MTR_URI "phasewheel")) { ; }
-	else if (!strcmp(plugin_uri, MTR_URI "phasewheel_gtk")) { ; }
+	if (!strcmp(plugin_uri, MTR_URI "phasewheel")) { ; }
 	else {
 		free(ui);
 		return NULL;

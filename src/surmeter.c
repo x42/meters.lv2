@@ -178,14 +178,3 @@ static const LV2_Descriptor descriptorSUR5 = {
 	sur_cleanup,
 	extension_data
 };
-
-static const LV2_Descriptor descriptorSUR8Gtk = {
-	MTR_URI "surround8_gtk",
-	sur_instantiate,
-	sur_connect_port,
-	NULL,
-	run,
-	NULL,
-	cleanup,
-	extension_data
-};

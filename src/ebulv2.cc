@@ -122,7 +122,7 @@ ebur128_instantiate(
 	LV2meter* self = (LV2meter*)calloc(1, sizeof(LV2meter));
 	if (!self) return NULL;
 
-	if (strcmp(descriptor->URI, MTR_URI "EBUr128") && strcmp(descriptor->URI, MTR_URI "EBUr128_gtk")) {
+	if (strcmp(descriptor->URI, MTR_URI "EBUr128")) {
 		free(self);
 		return NULL;
 	}
@@ -571,16 +571,3 @@ static const LV2_Descriptor descriptorEBUr128 = {
 	ebur128_cleanup,
 	extension_data_ebur
 };
-
-
-static const LV2_Descriptor descriptorEBUr128Gtk = {
-	MTR_URI "EBUr128_gtk",
-	ebur128_instantiate,
-	ebur128_connect_port,
-	NULL,
-	ebur128_run,
-	NULL,
-	ebur128_cleanup,
-	extension_data_ebur
-};
-

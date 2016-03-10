@@ -15,7 +15,6 @@ CFLAGS ?= -Wall -Wno-unused-function
 STRIP  ?= strip
 
 EXTERNALUI?=yes
-BUILDGTK?=no
 KXURI?=yes
 
 meters_VERSION?=$(shell git describe --tags HEAD 2>/dev/null | sed 's/-g.*$$//;s/^v//' || echo "LV2")
@@ -35,18 +34,6 @@ LOADLIBES=-lm
 
 LV2NAME=meters
 BUNDLE=meters.lv2
-
-LV2GTK1=needleUI_gtk
-LV2GTK2=eburUI_gtk
-LV2GTK3=goniometerUI_gtk
-LV2GTK4=dpmUI_gtk
-LV2GTK5=kmeterUI_gtk
-LV2GTK6=phasewheelUI_gtk
-LV2GTK7=stereoscopeUI_gtk
-LV2GTK8=dr14meterUI_gtk
-LV2GTK9=sdhmeterUI_gtk
-LV2GTK10=bitmeterUI_gtk
-LV2GTK11=surmeterUI_gtk
 
 LV2GUI1=needleUI_gl
 LV2GUI2=eburUI_gl
@@ -76,7 +63,6 @@ SURGUI=mtr:surmeterui
 
 LV2UIREQ=
 GLUICFLAGS=-I.
-GTKUICFLAGS=-I.
 
 UNAME=$(shell uname)
 ifeq ($(UNAME),Darwin)
@@ -87,7 +73,6 @@ ifeq ($(UNAME),Darwin)
   PUGL_SRC=$(RW)pugl/pugl_osx.m
   PKG_LIBS=
   GLUILIBS=-framework Cocoa -framework OpenGL
-  BUILDGTK=no
   STRIPFLAGS=-u -r -arch all -s $(RW)lv2syms
   EXTENDED_RE=-E
 else
@@ -112,7 +97,6 @@ ifneq ($(XWIN),)
   PUGL_SRC=$(RW)pugl/pugl_win.cpp
   PKG_LIBS=
   GLUILIBS=-lws2_32 -lwinmm -lopengl32 -lglu32 -lgdi32 -lcomdlg32 -lpthread
-  BUILDGTK=no
   GLUICFLAGS=-I.
   override LDFLAGS += -static-libgcc -static-libstdc++
 endif
@@ -132,33 +116,10 @@ endif
 targets=
 apps=
 
-ifeq ($(BUILDOPENGL)$(BUILDGTK), nono)
-  $(warning at least one of gtk or openGL needs to be enabled)
-  $(warning not building meters)
-else
-  targets+=$(BUILDDIR)manifest.ttl $(BUILDDIR)$(LV2NAME).ttl
-  targets+=$(BUILDDIR)$(LV2NAME)$(LIB_EXT)
-  apps+=$(APPBLD)x42-meter-collection$(EXE_EXT)
-endif
-
-
-ifneq ($(BUILDOPENGL), no)
+targets+=$(BUILDDIR)manifest.ttl $(BUILDDIR)$(LV2NAME).ttl
+targets+=$(BUILDDIR)$(LV2NAME)$(LIB_EXT)
+apps+=$(APPBLD)x42-meter-collection$(EXE_EXT)
 targets+=$(BUILDDIR)meters_glui$(LIB_EXT)
-endif
-
-ifneq ($(BUILDGTK), no)
-targets+=$(BUILDDIR)$(LV2GTK1)$(LIB_EXT)
-targets+=$(BUILDDIR)$(LV2GTK2)$(LIB_EXT)
-targets+=$(BUILDDIR)$(LV2GTK3)$(LIB_EXT)
-targets+=$(BUILDDIR)$(LV2GTK4)$(LIB_EXT)
-targets+=$(BUILDDIR)$(LV2GTK5)$(LIB_EXT)
-targets+=$(BUILDDIR)$(LV2GTK6)$(LIB_EXT)
-targets+=$(BUILDDIR)$(LV2GTK7)$(LIB_EXT)
-targets+=$(BUILDDIR)$(LV2GTK8)$(LIB_EXT)
-targets+=$(BUILDDIR)$(LV2GTK9)$(LIB_EXT)
-targets+=$(BUILDDIR)$(LV2GTK10)$(LIB_EXT)
-PKG_LIBS+=gtk+-2.0
-endif
 
 ###############################################################################
 # extract versions
@@ -217,7 +178,6 @@ export FFTW
 
 # lv2 >= 1.6.0
 GLUICFLAGS+=-DHAVE_IDLE_IFACE
-GTKUICFLAGS+=-DHAVE_IDLE_IFACE
 LV2UIREQ+=lv2:requiredFeature ui:idleInterface; lv2:extensionData ui:idleInterface;
 
 # check for lv2_atom_forge_object  new in 1.8.1 deprecates lv2_atom_forge_blank
@@ -250,8 +210,6 @@ override CXXFLAGS += -DVERSION="\"$(meters_VERSION)\""
 IM=gui/img/
 
 UIIMGS=$(IM)meter-bright.c $(IM)meter-dark.c $(IM)screw.c
-GTKUICFLAGS+=`pkg-config --cflags gtk+-2.0 cairo pango`
-GTKUILIBS+=`pkg-config --libs gtk+-2.0 cairo pango`
 
 GLUICFLAGS+=`pkg-config --cflags cairo pango`
 GLUILIBS+=`pkg-config --libs $(PKG_UI_FLAGS) cairo pangocairo pango $(PKG_LIBS)`
@@ -265,11 +223,6 @@ GLUILIBS+=$(LIC_LOADLIBES)
 GLUICFLAGS+=-DUSE_GUI_THREAD
 ifeq ($(GLTHREADSYNC), yes)
   GLUICFLAGS+=-DTHREADSYNC
-endif
-ifeq ($(GTKRESIZEHACK), yes)
-  GLUICFLAGS+=-DUSE_GTK_RESIZE_HACK
-  GLUICFLAGS+=$(GTKUICFLAGS)
-  GLUILIBS+=$(GTKUILIBS)
 endif
 
 ifneq ($(LIC_CFLAGS),)
@@ -332,41 +285,23 @@ jackapps: \
 	$(APPBLD)x42-surmeter$(EXE_EXT) \
 	$(APPBLD)x42-meter-collection$(EXE_EXT)
 
-$(BUILDDIR)manifest.ttl: lv2ttl/manifest.gui.ttl.in lv2ttl/manifest.gtk.ttl.in lv2ttl/manifest.lv2.ttl.in lv2ttl/manifest.ttl.in Makefile
+$(BUILDDIR)manifest.ttl: lv2ttl/manifest.gui.ttl.in lv2ttl/manifest.lv2.ttl.in lv2ttl/manifest.ttl.in Makefile
 	@mkdir -p $(BUILDDIR)
 	sed "s/@LV2NAME@/$(LV2NAME)/g" \
 	    lv2ttl/manifest.ttl.in > $(BUILDDIR)manifest.ttl
-ifneq ($(BUILDOPENGL), no)
 	sed "s/@LV2NAME@/$(LV2NAME)/g;s/@LIB_EXT@/$(LIB_EXT)/g;s/@URI_SUFFIX@//g" \
 	    lv2ttl/manifest.lv2.ttl.in >> $(BUILDDIR)manifest.ttl
 	sed "s/@LV2NAME@/$(LV2NAME)/g;s/@LIB_EXT@/$(LIB_EXT)/g;s/@UI_TYPE@/$(UI_TYPE)/;s/@LV2GUI1@/meters_glui/g;s/@LV2GUI2@/meters_glui/g;s/@LV2GUI3@/meters_glui/g;s/@LV2GUI4@/meters_glui/g;s/@LV2GUI5@/meters_glui/g;s/@LV2GUI6@/meters_glui/g;s/@LV2GUI7@/meters_glui/g;s/@LV2GUI8@/meters_glui/g;s/@LV2GUI9@/meters_glui/g;s/@LV2GUI10@/meters_glui/g;s/@LV2GUI11@/meters_glui/g" \
 	    lv2ttl/manifest.gui.ttl.in >> $(BUILDDIR)manifest.ttl
-endif
-ifneq ($(BUILDGTK), no)
-	sed "s/@LV2NAME@/$(LV2NAME)/g;s/@LIB_EXT@/$(LIB_EXT)/g;s/@URI_SUFFIX@/_gtk/g" \
-	    lv2ttl/manifest.lv2.ttl.in >> $(BUILDDIR)manifest.ttl
-	sed "s/@LV2NAME@/$(LV2NAME)/g;s/@LIB_EXT@/$(LIB_EXT)/g;s/@LV2GTK1@/$(LV2GTK1)/g;s/@LV2GTK2@/$(LV2GTK2)/g;s/@LV2GTK3@/$(LV2GTK3)/g;s/@LV2GTK4@/$(LV2GTK4)/g;s/@LV2GTK5@/$(LV2GTK5)/g;s/@LV2GTK6@/$(LV2GTK6)/g;s/@LV2GTK7@/$(LV2GTK7)/g;s/@LV2GTK8@/$(LV2GTK8)/g;s/@LV2GTK9@/$(LV2GTK9)/g;s/@LV2GTK10@/$(LV2GTK10)/g;s/@LV2GTK11@/$(LV2GTK11)/g" \
-	    lv2ttl/manifest.gtk.ttl.in >> $(BUILDDIR)manifest.ttl
-endif
 
 $(BUILDDIR)$(LV2NAME).ttl: lv2ttl/$(LV2NAME).ttl.in lv2ttl/$(LV2NAME).lv2.ttl.in lv2ttl/$(LV2NAME).gui.ttl.in Makefile
 	@mkdir -p $(BUILDDIR)
 	sed "s/@LV2NAME@/$(LV2NAME)/g" \
 	    lv2ttl/$(LV2NAME).ttl.in > $(BUILDDIR)$(LV2NAME).ttl
-ifneq ($(BUILDGTK), no)
-	sed "s/@UI_URI_SUFFIX@/_gtk/;s/@UI_TYPE@/ui:GtkUI/;s/@UI_REQ@//" \
-	    lv2ttl/$(LV2NAME).gui.ttl.in >> $(BUILDDIR)$(LV2NAME).ttl
-endif
-ifneq ($(BUILDOPENGL), no)
 	sed "s/@UI_URI_SUFFIX@/_gl/;s/@UI_TYPE@/$(UI_TYPE)/;s/@UI_REQ@/$(LV2UIREQ)/" \
 	    lv2ttl/$(LV2NAME).gui.ttl.in >> $(BUILDDIR)$(LV2NAME).ttl
 	sed "s/@URI_SUFFIX@//g;s/@NAME_SUFFIX@//g;s/@DPMGUI@/$(DPMGUI)_gl/g;s/@EBUGUI@/$(EBUGUI)_gl/g;s/@GONGUI@/$(GONGUI)_gl/g;s/@MTRGUI@/$(MTRGUI)_gl/g;s/@KMRGUI@/$(KMRGUI)_gl/g;s/@MPWGUI@/$(MPWGUI)_gl/g;s/@SFSGUI@/$(SFSGUI)_gl/g;s/@DRMGUI@/$(DRMGUI)_gl/g;s/@SDHGUI@/$(SDHGUI)_gl/g;s/@BITGUI@/$(BITGUI)_gl/g;s/@SURGUI@/$(SURGUI)_gl/g;s/@SIGNATURE@/$(SIGNATURE)/;s/@VERSION@/lv2:microVersion $(LV2MIC) ;lv2:minorVersion $(LV2MIN) ;/g" \
 	  lv2ttl/$(LV2NAME).lv2.ttl.in >> $(BUILDDIR)$(LV2NAME).ttl
-endif
-ifneq ($(BUILDGTK), no)
-	sed "s/@URI_SUFFIX@/_gtk/g;s/@NAME_SUFFIX@/ GTK/g;s/@DPMGUI@/$(DPMGUI)_gtk/g;s/@EBUGUI@/$(EBUGUI)_gtk/g;s/@GONGUI@/$(GONGUI)_gtk/g;s/@MTRGUI@/$(MTRGUI)_gtk/g;s/@KMRGUI@/$(KMRGUI)_gtk/g;s/@MPWGUI@/$(MPWGUI)_gtk/g;s/@SFSGUI@/$(SFSGUI)_gtk/g;s/@DRMGUI@/$(DRMGUI)_gtk/g;s/@SDHGUI@/$(SDHGUI)_gtk/g;s/@BITGUI@/$(BITGUI)_gtk/g;s/@SURGUI@/$(SURGUI)_gtk/g;s/@SIGNATURE@/$(SIGNATURE)/;s/@VERSION@/lv2:microVersion $(LV2MIC) ;lv2:minorVersion $(LV2MIN) ;/g" \
-	  lv2ttl/$(LV2NAME).lv2.ttl.in >> $(BUILDDIR)$(LV2NAME).ttl
-endif
 
 $(BUILDDIR)$(LV2NAME)$(LIB_EXT): src/meters.cc $(DSPDEPS) src/ebulv2.cc src/uris.h src/goniometerlv2.c src/goniometer.h src/spectrumlv2.c src/spectr.c src/xfer.c src/dr14.c src/sigdistlv2.c src/bitmeter.c src/surmeter.c Makefile
 	@mkdir -p $(BUILDDIR)
@@ -505,19 +440,6 @@ $(APPBLD)x42-meter-collection$(EXE_EXT): src/meters.cc $(DSPSRC) $(DSPDEPS) $(CO
 
 -include $(RW)robtk.mk
 
-$(BUILDDIR)$(LV2GTK1)$(LIB_EXT): $(UIIMGS) src/uris.h gui/needle.c gui/meterimage.c
-$(BUILDDIR)$(LV2GTK2)$(LIB_EXT): gui/ebur.c src/uris.h
-$(BUILDDIR)$(LV2GTK3)$(LIB_EXT): gui/goniometer.c src/goniometer.h \
-    $(goniometer_UIDEP) zita-resampler/resampler.h zita-resampler/resampler-table.h
-$(BUILDDIR)$(LV2GTK4)$(LIB_EXT): gui/dpm.c
-$(BUILDDIR)$(LV2GTK5)$(LIB_EXT): gui/kmeter.c
-$(BUILDDIR)$(LV2GTK6)$(LIB_EXT): gui/phasewheel.c src/uri2.h gui/fft.c
-$(BUILDDIR)$(LV2GTK7)$(LIB_EXT): gui/stereoscope.c src/uri2.h gui/fft.c
-$(BUILDDIR)$(LV2GTK8)$(LIB_EXT): gui/dr14meter.c
-$(BUILDDIR)$(LV2GTK9)$(LIB_EXT): gui/sdhmeter.c
-$(BUILDDIR)$(LV2GTK10)$(LIB_EXT): gui/bitmeter.c
-$(BUILDDIR)$(LV2GTK11)$(LIB_EXT): gui/surmeter.c
-
 $(OBJDIR)$(LV2GUI1).o: $(UIIMGS) src/uris.h gui/needle.c gui/meterimage.c
 $(OBJDIR)$(LV2GUI2).o: gui/ebur.c src/uris.h
 $(OBJDIR)$(LV2GUI3).o: gui/goniometer.c src/goniometer.h \
@@ -567,17 +489,6 @@ uninstall-bin:
 	rm -f $(DESTDIR)$(LV2DIR)/$(BUNDLE)/$(LV2NAME).ttl
 	rm -f $(DESTDIR)$(LV2DIR)/$(BUNDLE)/$(LV2NAME)$(LIB_EXT)
 	rm -f $(DESTDIR)$(LV2DIR)/$(BUNDLE)/meters_glui$(LIB_EXT)
-	rm -f $(DESTDIR)$(LV2DIR)/$(BUNDLE)/$(LV2GTK1)$(LIB_EXT)
-	rm -f $(DESTDIR)$(LV2DIR)/$(BUNDLE)/$(LV2GTK2)$(LIB_EXT)
-	rm -f $(DESTDIR)$(LV2DIR)/$(BUNDLE)/$(LV2GTK3)$(LIB_EXT)
-	rm -f $(DESTDIR)$(LV2DIR)/$(BUNDLE)/$(LV2GTK4)$(LIB_EXT)
-	rm -f $(DESTDIR)$(LV2DIR)/$(BUNDLE)/$(LV2GTK5)$(LIB_EXT)
-	rm -f $(DESTDIR)$(LV2DIR)/$(BUNDLE)/$(LV2GTK6)$(LIB_EXT)
-	rm -f $(DESTDIR)$(LV2DIR)/$(BUNDLE)/$(LV2GTK7)$(LIB_EXT)
-	rm -f $(DESTDIR)$(LV2DIR)/$(BUNDLE)/$(LV2GTK8)$(LIB_EXT)
-	rm -f $(DESTDIR)$(LV2DIR)/$(BUNDLE)/$(LV2GTK9)$(LIB_EXT)
-	rm -f $(DESTDIR)$(LV2DIR)/$(BUNDLE)/$(LV2GTK10)$(LIB_EXT)
-	rm -f $(DESTDIR)$(LV2DIR)/$(BUNDLE)/$(LV2GTK11)$(LIB_EXT)
 	rm -f $(DESTDIR)$(BINDIR)/x42-meter$(EXE_EXT)
 	-rmdir $(DESTDIR)$(LV2DIR)/$(BUNDLE)
 	-rmdir $(DESTDIR)$(BINDIR)
@@ -598,12 +509,6 @@ man: $(APPBLD)x42-meter-collection
 clean:
 	rm -f $(BUILDDIR)manifest.ttl $(BUILDDIR)$(LV2NAME).ttl \
 	  $(BUILDDIR)$(LV2NAME)$(LIB_EXT) \
-	  $(BUILDDIR)$(LV2GTK1)$(LIB_EXT) $(BUILDDIR)$(LV2GTK2)$(LIB_EXT) \
-	  $(BUILDDIR)$(LV2GTK3)$(LIB_EXT) $(BUILDDIR)$(LV2GTK4)$(LIB_EXT) \
-	  $(BUILDDIR)$(LV2GTK5)$(LIB_EXT) $(BUILDDIR)$(LV2GTK6)$(LIB_EXT) \
-	  $(BUILDDIR)$(LV2GTK7)$(LIB_EXT) $(BUILDDIR)$(LV2GTK8)$(LIB_EXT) \
-	  $(BUILDDIR)$(LV2GTK9)$(LIB_EXT) $(BUILDDIR)$(LV2GTK10)$(LIB_EXT) \
-	  $(BUILDDIR)$(LV2GTK11)$(LIB_EXT) \
 		$(BUILDDIR)meters_glui$(LIB_EXT)
 	rm -f $(OBJDIR)pugl.o \
 	  $(OBJDIR)$(LV2GUI1).o $(OBJDIR)$(LV2GUI2).o \

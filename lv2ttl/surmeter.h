@@ -7,7 +7,7 @@ extern const LV2UI_Descriptor* lv2ui_surmeter(uint32_t index);
 static const RtkLv2Description _plugin_surmeter = {
 	&lv2_descriptor,
 	&lv2ui_surmeter
-	, 64 // uint32_t dsp_descriptor_id
+	, 32 // uint32_t dsp_descriptor_id
 	, 0 // uint32_t gui_descriptor_id
 	, "Surround Level 8" // const char *plugin_human_id
 	, (const struct LV2Port[45])
