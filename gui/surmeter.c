@@ -80,6 +80,9 @@ typedef struct {
 	float rms[8];
 	float cor[4];
 
+	/* prototyping */
+	RobTkDial* rms_gain;
+
 	/* settings */
 	uint8_t n_chn;
 	const char *nfo;
@@ -536,8 +539,15 @@ instantiate(
 	robwidget_set_size_allocate(ui->m0, m0_size_allocate);
 	rob_table_attach_defaults (ui->tbl, ui->m0, 1, 2, 0, 1);
 
+	int r = 1;
 	ui->sep_h0 = robtk_sep_new (TRUE);
-	rob_table_attach (ui->tbl, robtk_sep_widget(ui->sep_h0),     0, 3, 1, 2, 0, 8, RTK_EXANDF, RTK_SHRINK);
+	rob_table_attach (ui->tbl, robtk_sep_widget(ui->sep_h0),     0, 2, 1, 2, 0, 8, RTK_EXANDF, RTK_SHRINK);
+
+	/// XXX
+	ui->rms_gain = robtk_dial_new(-20.0, 20.0, .1);
+	robtk_dial_set_value(ui->rms_gain, 0);
+	robtk_dial_set_default(ui->rms_gain, 0.0);
+	rob_table_attach (ui->tbl, robtk_dial_widget(ui->rms_gain),  2, 3, 1, 2, 0, 8, RTK_SHRINK, RTK_SHRINK);
 
 	/* correlation headings */
 	ui->lbl_cor[0]  = robtk_lbl_new("Stereo Pair Correlation");
@@ -610,6 +620,7 @@ cleanup(LV2UI_Handle handle)
 	robtk_lbl_destroy(ui->lbl_cor[0]);
 	robtk_lbl_destroy(ui->lbl_cor[1]);
 	robtk_lbl_destroy(ui->lbl_cor[2]);
+	robtk_dial_destroy(ui->rms_gain);
 	robtk_sep_destroy(ui->sep_h0);
 	cairo_surface_destroy(ui->sf_ann);
 	cairo_surface_destroy(ui->sf_cor);
@@ -663,7 +674,8 @@ port_event(LV2UI_Handle handle,
 		robtk_select_set_value(ui->sel_cor_b[cc], pn);
 		ui->disable_signals = false;
 	} else if (port_index > 12 && port_index <= 12U + ui->n_chn * 4 && port_index % 4 == 3) {
-		ui->rms[(port_index - 13) / 4] = meter_deflect(*(float *)buffer);
+		const float gain = powf (10, .05 * robtk_dial_get_value(ui->rms_gain)); // XXX
+		ui->rms[(port_index - 13) / 4] = meter_deflect (gain * *(float *)buffer);
 		queue_draw (ui->m0);
 	} else if (port_index > 12 && port_index <= 12U + ui->n_chn * 4 && port_index % 4 == 0) {
 		ui->peak[(port_index - 13) / 4] = meter_deflect(*(float *)buffer);
