@@ -502,7 +502,11 @@ instantiate(
 	*widget = NULL;
 
 	if      (!strcmp(plugin_uri, MTR_URI "surround8")) { ui->n_chn = 8; }
+	else if (!strcmp(plugin_uri, MTR_URI "surround7")) { ui->n_chn = 7; }
+	else if (!strcmp(plugin_uri, MTR_URI "surround6")) { ui->n_chn = 6; }
 	else if (!strcmp(plugin_uri, MTR_URI "surround5")) { ui->n_chn = 5; }
+	else if (!strcmp(plugin_uri, MTR_URI "surround4")) { ui->n_chn = 4; }
+	else if (!strcmp(plugin_uri, MTR_URI "surround3")) { ui->n_chn = 3; }
 	else {
 		free(ui);
 		return NULL;

@@ -32,7 +32,7 @@ static const RtkLv2Description _plugin_surmeter = {
 		{ "in2", AUDIO_IN, nan, nan, nan, "In2"},
 		{ "out2", AUDIO_OUT, nan, nan, nan, "Out2"},
 		{ "rms2", CONTROL_OUT, nan, 0.000000, 1.000000, "RMS 2"},
-		{ "peak1", CONTROL_OUT, nan, 0.000000, 1.000000, "Peak 1"},
+		{ "peak2", CONTROL_OUT, nan, 0.000000, 1.000000, "Peak 2"},
 		{ "in3", AUDIO_IN, nan, nan, nan, "In3"},
 		{ "out3", AUDIO_OUT, nan, nan, nan, "Out3"},
 		{ "rms3", CONTROL_OUT, nan, 0.000000, 1.000000, "RMS 3"},

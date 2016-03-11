@@ -616,7 +616,11 @@ lv2_descriptor(uint32_t index)
 	case 30: return &descriptorBBCMS;
 	case 31: return &descriptorBIM;
 	case 32: return &descriptorSUR8;
-	case 33: return &descriptorSUR5;
+	case 33: return &descriptorSUR7;
+	case 34: return &descriptorSUR6;
+	case 35: return &descriptorSUR5;
+	case 36: return &descriptorSUR4;
+	case 37: return &descriptorSUR3;
 	default: return NULL;
 	}
 }

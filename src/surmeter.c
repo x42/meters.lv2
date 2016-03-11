@@ -34,8 +34,16 @@ sur_instantiate(
 
 	if (       !strcmp (descriptor->URI, MTR_URI "surround8")) {
 		self->chn = 8;
+	} else if (!strcmp (descriptor->URI, MTR_URI "surround7")) {
+		self->chn = 7;
+	} else if (!strcmp (descriptor->URI, MTR_URI "surround6")) {
+		self->chn = 6;
 	} else if (!strcmp (descriptor->URI, MTR_URI "surround5")) {
 		self->chn = 5;
+	} else if (!strcmp (descriptor->URI, MTR_URI "surround4")) {
+		self->chn = 4;
+	} else if (!strcmp (descriptor->URI, MTR_URI "surround3")) {
+		self->chn = 3;
 	} else {
 		free(self);
 		return NULL;
@@ -143,6 +151,7 @@ sur_run(LV2_Handle instance, uint32_t n_samples)
 		}
 	}
 }
+
 static void
 sur_cleanup(LV2_Handle instance)
 {
@@ -157,24 +166,22 @@ sur_cleanup(LV2_Handle instance)
 	free (self->mtr);
 	free(instance);
 }
-static const LV2_Descriptor descriptorSUR8 = {
-	MTR_URI "surround8",
-	sur_instantiate,
-	sur_connect_port,
-	NULL,
-	sur_run,
-	NULL,
-	sur_cleanup,
-	extension_data
+
+#define SurDesc(ID, NAME) \
+static const LV2_Descriptor descriptor ## ID = { \
+	MTR_URI NAME, \
+	sur_instantiate, \
+	sur_connect_port, \
+	NULL, \
+	sur_run, \
+	NULL, \
+	sur_cleanup, \
+	extension_data \
 };
 
-static const LV2_Descriptor descriptorSUR5 = {
-	MTR_URI "surround5",
-	sur_instantiate,
-	sur_connect_port,
-	NULL,
-	sur_run,
-	NULL,
-	sur_cleanup,
-	extension_data
-};
+SurDesc(SUR8, "surround8");
+SurDesc(SUR7, "surround7");
+SurDesc(SUR6, "surround6");
+SurDesc(SUR5, "surround5");
+SurDesc(SUR4, "surround4");
+SurDesc(SUR3, "surround3");
