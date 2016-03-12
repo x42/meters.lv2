@@ -84,13 +84,16 @@ typedef struct {
 	float rms[8];
 	float cor[4];
 
+	RobTkCBtn*       btn_peak;
 	/* RMS zoom/gain */
 	cairo_surface_t* sf_bg_rms;
 	RobTkDial*       spn_rms_gain;
 	float            rms_gain;
 #ifdef WITH_SPLINE_KNOB
 	RobTkDial*       spn_spline;
+	RobTkDial*       spn_bulb;
 	cairo_surface_t* sf_bg_spline;
+	cairo_surface_t* sf_bg_bulb;
 #endif
 
 	/* settings */
@@ -186,6 +189,12 @@ static void prepare_faceplates (SURui* ui) {
 	{ DIALDOTS(  1.5 / (1. + (ui->n_chn * .5) - .5), 5.5, 4.5) }
 	{ DIALDOTS(  1.0, 5.5, 4.5) }
 	write_text_full (cr, "Shape", ui->font[FONT_MS], GED_CX + 5, GED_HEIGHT + 12, 0, 5, c_dlf);
+
+	INIT_DIAL_SF(ui->sf_bg_bulb, GED_WIDTH + 10, GED_HEIGHT + 12);
+	{ DIALDOTS(  0.0, 5.5, 4.5) }
+	{ DIALDOTS(  .71, 5.5, 4.5) }
+	{ DIALDOTS(  1.0, 5.5, 4.5) }
+	write_text_full (cr, "Bulb", ui->font[FONT_MS], GED_CX + 5, GED_HEIGHT + 12, 0, 5, c_dlf);
 #endif
 
 	cairo_destroy (cr);
@@ -288,23 +297,29 @@ static void draw_grid (SURui* ui) {
 	cairo_set_operator (cr, CAIRO_OPERATOR_ADD);
 
 	if (ui->pat_peak) cairo_pattern_destroy(ui->pat_peak);
-	ui->pat_peak = color_pattern (rad, .98, 1.0);
+	ui->pat_peak = color_pattern (rad, .99 * ui->rms_gain, 1.0);
 	cairo_set_line_width (cr, 1.5);
 
 #define ANNARC(dB) { \
 	char txt[16]; \
-	float ypos = db_deflect (dB); \
-	sprintf (txt, "%d", dB); \
-	cairo_arc (cr, 0, 0, .5 + ypos * rad, 0, 2.0 * M_PI); \
-	cairo_set_source (cr, ui->pat_peak); \
-	cairo_stroke (cr); \
-	cairo_save (cr); \
-	cairo_rotate (cr, M_PI / 3.0); \
-	cairo_scale (cr, sc, sc); \
-	write_text_full (cr, txt, ui->font[FONT_S10], 0, .5 + ypos * rad / sc, M_PI, -2, ui->c_fg); \
-	cairo_restore (cr); \
+	float ypos = ui->rms_gain * db_deflect (dB); \
+	if (ypos > .2 && ypos < .95) { \
+		sprintf (txt, "%d", dB); \
+		cairo_arc (cr, 0, 0, .5 + ypos * rad, 0, 2.0 * M_PI); \
+		cairo_set_source (cr, ui->pat_peak); \
+		cairo_stroke (cr); \
+		cairo_save (cr); \
+		cairo_rotate (cr, M_PI / 3.0); \
+		cairo_scale (cr, sc, sc); \
+		write_text_full (cr, txt, ui->font[FONT_S10], 0, .5 + ypos * rad / sc, M_PI, -2, ui->c_fg); \
+		cairo_restore (cr); \
+	} \
 }
 
+	cairo_arc (cr, 0, 0, rad, 0, 2.0 * M_PI);
+	cairo_clip (cr);
+
+	ANNARC(0);
 	ANNARC(-3);
 	ANNARC(-6);
 	ANNARC(-9);
@@ -312,6 +327,7 @@ static void draw_grid (SURui* ui) {
 	ANNARC(-18);
 	ANNARC(-24);
 	ANNARC(-36);
+	ANNARC(-48);
 
 	cairo_destroy (cr);
 
@@ -415,10 +431,11 @@ m0_expose_event(RobWidget* handle, cairo_t* cr, cairo_rectangle_t *ev) {
 	// tangential (for splines)
 #ifdef WITH_SPLINE_KNOB
 	const float d_ang = robtk_dial_get_value(ui->spn_spline) / ui->n_chn;
+	const float _tn = robtk_dial_get_value(ui->spn_bulb) / cos (d_ang);
 #else
 	const float d_ang = 2.0 / ui->n_chn;
-#endif
 	const float _tn = 1.0 / cos (d_ang);
+#endif
 
 	for (uint32_t i = 0; i < ui->n_chn; ++i) {
 		const int n = (i + 1 + ui->n_chn) % ui->n_chn;
@@ -451,24 +468,25 @@ m0_expose_event(RobWidget* handle, cairo_t* cr, cairo_rectangle_t *ev) {
 	cairo_set_source (cr, ui->pat_rms);
 	cairo_fill (cr);
 
-	// peak-data
-	const float lw = ceilf (5.f * rad / 200.f);
-	const float lc =  (rad - .5 * lw) / rad;
-	cairo_set_line_cap (cr, CAIRO_LINE_CAP_ROUND);
-	for (uint32_t i = 0; i < ui->n_chn; ++i) {
-		float pk = ui->peak[i];
-		if (pk > 1) pk = 1.0;
-		pk *= lc; // rounded line overshoot
+	if (robtk_cbtn_get_active(ui->btn_peak)) {
+		const float lw = ceilf (5.f * rad / 200.f);
+		const float lc =  (rad - .5 * lw) / rad;
+		cairo_set_line_cap (cr, CAIRO_LINE_CAP_ROUND);
+		for (uint32_t i = 0; i < ui->n_chn; ++i) {
+			float pk = ui->peak[i];
+			if (pk > 1) pk = 1.0;
+			pk *= lc; // rounded line overshoot
 
-		cairo_move_to (cr, 0, 0);
-		cairo_line_to (cr, pk * x[i], -pk * y[i]);
+			cairo_move_to (cr, 0, 0);
+			cairo_line_to (cr, pk * x[i], -pk * y[i]);
 
-		cairo_set_line_width (cr, lw);
-		cairo_set_source_rgba(cr, .1, .1, .1, .8);
-		cairo_stroke_preserve (cr);
-		cairo_set_source (cr, ui->pat_peak);
-		cairo_set_line_width (cr, lw - 2.f);
-		cairo_stroke (cr);
+			cairo_set_line_width (cr, lw);
+			cairo_set_source_rgba(cr, .1, .1, .1, .8);
+			cairo_stroke_preserve (cr);
+			cairo_set_source (cr, ui->pat_peak);
+			cairo_set_line_width (cr, lw - 2.f);
+			cairo_stroke (cr);
+		}
 	}
 
 	return TRUE;
@@ -547,10 +565,17 @@ static bool cb_set_rms_gain (RobWidget* handle, void *data) {
 	SURui* ui = (SURui*)(data);
 	const float val = robtk_dial_get_value(ui->spn_rms_gain);
 	ui->rms_gain = db_deflect (val);
+	ui->update_grid = true;
 	ui->update_pat_rms = true;
 	queue_draw (ui->m0);
 	if (ui->disable_signals) return TRUE;
 	ui->write(ui->controller, 0, sizeof(float), 0, (const void*) &val);
+	return TRUE;
+}
+
+static bool cb_queue_draw (RobWidget* rw, void *data) {
+	SURui* ui = (SURui*)(data);
+	queue_draw (ui->m0);
 	return TRUE;
 }
 
@@ -664,12 +689,19 @@ instantiate(
 	robwidget_set_expose_event(ui->m0, m0_expose_event);
 	robwidget_set_size_request(ui->m0, m0_size_request);
 	robwidget_set_size_allocate(ui->m0, m0_size_allocate);
-	rob_table_attach_defaults (ui->tbl, ui->m0, 1, 2, row, row + 1);
+	rob_table_attach_defaults (ui->tbl, ui->m0, 0, 5, row, row + 1);
 
 	++row;
 
 	ui->sep_h0 = robtk_sep_new (TRUE);
-	rob_table_attach (ui->tbl, robtk_sep_widget(ui->sep_h0), 1, 2, row, row + 1, 0, 8, RTK_EXANDF, RTK_SHRINK);
+	//rob_table_attach (ui->tbl, robtk_sep_widget(ui->sep_h0), 2, 3, row, row + 1, 0, 8, RTK_EXANDF, RTK_SHRINK);
+
+	ui->btn_peak = robtk_cbtn_new("Peak", GBT_LED_LEFT, false);
+	robtk_cbtn_set_active (ui->btn_peak, false);
+	robtk_cbtn_set_callback (ui->btn_peak, cb_queue_draw, ui);
+	//robtk_cbtn_set_color_on(ui->btn_oct,  .2, .8, .1);
+	//robtk_cbtn_set_color_off(ui->btn_oct, .1, .3, .1);
+	rob_table_attach (ui->tbl, robtk_cbtn_widget(ui->btn_peak),  3, 4, row, row + 1, 0, 0, RTK_SHRINK, RTK_SHRINK);
 
 	ui->spn_rms_gain = robtk_dial_new_with_size (-3.0, 15.0, .1,
 			GED_WIDTH + 10, GED_HEIGHT + 12, GED_CX + 5, GED_CY + 4, GED_RADIUS);
@@ -682,7 +714,7 @@ instantiate(
 	robtk_dial_set_detent_default (ui->spn_rms_gain, true);
 	robtk_dial_set_scroll_mult (ui->spn_rms_gain, 2.f);
 
-	rob_table_attach (ui->tbl, robtk_dial_widget(ui->spn_rms_gain),  2, 3, row, row + 1, 0, 8, RTK_SHRINK, RTK_SHRINK);
+	rob_table_attach (ui->tbl, robtk_dial_widget(ui->spn_rms_gain),  4, 5, row, row + 1, 0, 8, RTK_SHRINK, RTK_SHRINK);
 
 #ifdef WITH_SPLINE_KNOB
 	ui->spn_spline = robtk_dial_new_with_size (0.5, 1. + (ui->n_chn * .5), .05,
@@ -692,6 +724,14 @@ instantiate(
 	robtk_dial_set_default(ui->spn_spline, 2.0);
 	robtk_dial_set_callback(ui->spn_spline, cb_set_spline, ui);
 	rob_table_attach (ui->tbl, robtk_dial_widget(ui->spn_spline),  0, 1, row, row + 1, 0, 8, RTK_SHRINK, RTK_SHRINK);
+
+	ui->spn_bulb = robtk_dial_new_with_size (0.5, 1.2, .05,
+			GED_WIDTH + 10, GED_HEIGHT + 12, GED_CX + 5, GED_CY + 4, GED_RADIUS);
+	robtk_dial_set_value(ui->spn_bulb, 1.0);
+	robtk_dial_set_scaled_surface_scale (ui->spn_bulb, ui->sf_bg_bulb, 2.0);
+	robtk_dial_set_default(ui->spn_bulb, 1.0);
+	robtk_dial_set_callback(ui->spn_bulb, cb_queue_draw, ui);
+	rob_table_attach (ui->tbl, robtk_dial_widget(ui->spn_bulb),  1, 2, row, row + 1, 0, 8, RTK_SHRINK, RTK_SHRINK);
 #endif
 
 	++row;
@@ -701,8 +741,8 @@ instantiate(
 	ui->lbl_cor[1]  = robtk_lbl_new("Chn");
 	ui->lbl_cor[2]  = robtk_lbl_new("Chn");
 	rob_table_attach (ui->tbl, robtk_lbl_widget(ui->lbl_cor[1]), 0, 1, row, row + 1, 0, 0, RTK_SHRINK, RTK_SHRINK);
-	rob_table_attach (ui->tbl, robtk_lbl_widget(ui->lbl_cor[0]), 1, 2, row, row + 1, 0, 0, RTK_EXANDF, RTK_SHRINK);
-	rob_table_attach (ui->tbl, robtk_lbl_widget(ui->lbl_cor[2]), 2, 3, row, row + 1, 0, 0, RTK_SHRINK, RTK_SHRINK);
+	rob_table_attach (ui->tbl, robtk_lbl_widget(ui->lbl_cor[0]), 2, 3, row, row + 1, 0, 0, RTK_EXANDF, RTK_SHRINK);
+	rob_table_attach (ui->tbl, robtk_lbl_widget(ui->lbl_cor[2]), 4, 5, row, row + 1, 0, 0, RTK_SHRINK, RTK_SHRINK);
 
 	++row;
 	/* correlation pairs */
@@ -729,8 +769,8 @@ instantiate(
 		robwidget_set_size_allocate(ui->m_cor[c], cor_size_allocate);
 
 		rob_table_attach (ui->tbl, robtk_select_widget(ui->sel_cor_a[c]), 0, 1, row, row + 1, 12, 0, RTK_SHRINK, RTK_SHRINK);
-		rob_table_attach (ui->tbl, ui->m_cor[c],                          1, 2, row, row + 1,  0, 2, RTK_EXANDF, RTK_EXANDF);
-		rob_table_attach (ui->tbl, robtk_select_widget(ui->sel_cor_b[c]), 2, 3, row, row + 1, 12, 0, RTK_SHRINK, RTK_SHRINK );
+		rob_table_attach (ui->tbl, ui->m_cor[c],                          1, 4, row, row + 1,  0, 2, RTK_EXANDF, RTK_EXANDF);
+		rob_table_attach (ui->tbl, robtk_select_widget(ui->sel_cor_b[c]), 4, 5, row, row + 1, 12, 0, RTK_SHRINK, RTK_SHRINK );
 		++row;
 	}
 
@@ -769,9 +809,12 @@ cleanup(LV2UI_Handle handle)
 	robtk_lbl_destroy(ui->lbl_cor[1]);
 	robtk_lbl_destroy(ui->lbl_cor[2]);
 	robtk_dial_destroy(ui->spn_rms_gain);
+	robtk_cbtn_destroy(ui->btn_peak);
 #ifdef WITH_SPLINE_KNOB
 	robtk_dial_destroy(ui->spn_spline);
+	robtk_dial_destroy(ui->spn_bulb);
 	cairo_surface_destroy(ui->sf_bg_spline);
+	cairo_surface_destroy(ui->sf_bg_bulb);
 #endif
 	robtk_sep_destroy(ui->sep_h0);
 	cairo_surface_destroy(ui->sf_ann);
