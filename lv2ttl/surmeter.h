@@ -12,7 +12,7 @@ static const RtkLv2Description _plugin_surmeter = {
 	, "Surround Level 8" // const char *plugin_human_id
 	, (const struct LV2Port[45])
 	{
-		{ "ref", CONTROL_IN, -18.000000, -21.000000, -15.000000, "ui notification"},
+		{ "rmsgain", CONTROL_IN, 0.000000, -20.000000, 20.000000, "gui rms gain"},
 		{ "cor1A", CONTROL_IN, 0.000000, 0.000000, 7.000000, "Correlation 1, Input A"},
 		{ "cor1B", CONTROL_IN, 1.000000, 0.000000, 7.000000, "Correlation 1, Input B"},
 		{ "cor1", CONTROL_OUT, nan, -1.000000, 1.000000, "Correlation 1"},
