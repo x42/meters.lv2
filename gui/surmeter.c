@@ -16,6 +16,7 @@
  * along with this program; if not, write to the Free Software Foundation,
  * Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
+#define WITH_SPLINE_KNOB
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -87,6 +88,10 @@ typedef struct {
 	cairo_surface_t* sf_bg_rms;
 	RobTkDial*       spn_rms_gain;
 	float            rms_gain;
+#ifdef WITH_SPLINE_KNOB
+	RobTkDial*       spn_spline;
+	cairo_surface_t* sf_bg_spline;
+#endif
 
 	/* settings */
 	uint8_t n_chn;
@@ -174,6 +179,14 @@ static void prepare_faceplates (SURui* ui) {
 	{ DIALDOTS(5/6.f, 5.5, 4.5) }
 	{ DIALDOTS(  1.0, 5.5, 4.5) }
 	write_text_full (cr, "RMS Zoom", ui->font[FONT_MS], GED_CX + 5, GED_HEIGHT + 12, 0, 5, c_dlf);
+
+#ifdef WITH_SPLINE_KNOB
+	INIT_DIAL_SF(ui->sf_bg_spline, GED_WIDTH + 10, GED_HEIGHT + 12);
+	{ DIALDOTS(  0.0, 5.5, 4.5) }
+	{ DIALDOTS(  1.5 / (1. + (ui->n_chn * .5) - .5), 5.5, 4.5) }
+	{ DIALDOTS(  1.0, 5.5, 4.5) }
+	write_text_full (cr, "Shape", ui->font[FONT_MS], GED_CX + 5, GED_HEIGHT + 12, 0, 5, c_dlf);
+#endif
 
 	cairo_destroy (cr);
 }
@@ -400,7 +413,11 @@ m0_expose_event(RobWidget* handle, cairo_t* cr, cairo_rectangle_t *ev) {
 	}
 
 	// tangential (for splines)
+#ifdef WITH_SPLINE_KNOB
+	const float d_ang = robtk_dial_get_value(ui->spn_spline) / ui->n_chn;
+#else
 	const float d_ang = 2.0 / ui->n_chn;
+#endif
 	const float _tn = 1.0 / cos (d_ang);
 
 	for (uint32_t i = 0; i < ui->n_chn; ++i) {
@@ -537,6 +554,14 @@ static bool cb_set_rms_gain (RobWidget* handle, void *data) {
 	return TRUE;
 }
 
+#ifdef WITH_SPLINE_KNOB
+static bool cb_set_spline (RobWidget* handle, void *data) {
+	SURui* ui = (SURui*)(data);
+	queue_draw (ui->m0);
+	return TRUE;
+}
+#endif
+
 /******************************************************************************
  * widget sizes
  */
@@ -646,7 +671,6 @@ instantiate(
 	ui->sep_h0 = robtk_sep_new (TRUE);
 	rob_table_attach (ui->tbl, robtk_sep_widget(ui->sep_h0), 1, 2, row, row + 1, 0, 8, RTK_EXANDF, RTK_SHRINK);
 
-	/// XXX needs to be saved.
 	ui->spn_rms_gain = robtk_dial_new_with_size (-3.0, 15.0, .1,
 			GED_WIDTH + 10, GED_HEIGHT + 12, GED_CX + 5, GED_CY + 4, GED_RADIUS);
 	robtk_dial_set_value(ui->spn_rms_gain, 0);
@@ -659,6 +683,16 @@ instantiate(
 	robtk_dial_set_scroll_mult (ui->spn_rms_gain, 2.f);
 
 	rob_table_attach (ui->tbl, robtk_dial_widget(ui->spn_rms_gain),  2, 3, row, row + 1, 0, 8, RTK_SHRINK, RTK_SHRINK);
+
+#ifdef WITH_SPLINE_KNOB
+	ui->spn_spline = robtk_dial_new_with_size (0.5, 1. + (ui->n_chn * .5), .05,
+			GED_WIDTH + 10, GED_HEIGHT + 12, GED_CX + 5, GED_CY + 4, GED_RADIUS);
+	robtk_dial_set_value(ui->spn_spline, 2.0);
+	robtk_dial_set_scaled_surface_scale (ui->spn_spline, ui->sf_bg_spline, 2.0);
+	robtk_dial_set_default(ui->spn_spline, 2.0);
+	robtk_dial_set_callback(ui->spn_spline, cb_set_spline, ui);
+	rob_table_attach (ui->tbl, robtk_dial_widget(ui->spn_spline),  0, 1, row, row + 1, 0, 8, RTK_SHRINK, RTK_SHRINK);
+#endif
 
 	++row;
 
@@ -735,6 +769,10 @@ cleanup(LV2UI_Handle handle)
 	robtk_lbl_destroy(ui->lbl_cor[1]);
 	robtk_lbl_destroy(ui->lbl_cor[2]);
 	robtk_dial_destroy(ui->spn_rms_gain);
+#ifdef WITH_SPLINE_KNOB
+	robtk_dial_destroy(ui->spn_spline);
+	cairo_surface_destroy(ui->sf_bg_spline);
+#endif
 	robtk_sep_destroy(ui->sep_h0);
 	cairo_surface_destroy(ui->sf_ann);
 	cairo_surface_destroy(ui->sf_bg_rms);
