@@ -528,12 +528,12 @@ static bool cb_set_port (RobWidget* rw, void *data) {
 
 static bool cb_set_rms_gain (RobWidget* handle, void *data) {
 	SURui* ui = (SURui*)(data);
-	const float gain = powf (10, .05 * robtk_dial_get_value(ui->spn_rms_gain));
-	ui->rms_gain = meter_deflect (gain);
+	const float val = robtk_dial_get_value(ui->spn_rms_gain);
+	ui->rms_gain = db_deflect (val);
 	ui->update_pat_rms = true;
 	queue_draw (ui->m0);
 	if (ui->disable_signals) return TRUE;
-	ui->write(ui->controller, 0, sizeof(float), 0, (const void*) &gain);
+	ui->write(ui->controller, 0, sizeof(float), 0, (const void*) &val);
 	return TRUE;
 }
 
