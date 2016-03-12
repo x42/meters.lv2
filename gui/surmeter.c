@@ -400,7 +400,7 @@ m0_expose_event(RobWidget* handle, cairo_t* cr, cairo_rectangle_t *ev) {
 	}
 
 	// tangential (for splines)
-	const float d_ang = MIN (.6, M_PI / (ui->n_chn * 1.5f));
+	const float d_ang = 2.0 / ui->n_chn;
 	const float _tn = 1.0 / cos (d_ang);
 
 	for (uint32_t i = 0; i < ui->n_chn; ++i) {
