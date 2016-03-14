@@ -62,7 +62,7 @@ static const float c_wsh[4] = {1.0, 1.0, 1.0, 0.5};
 	const float _yc = 209.5 * _sc; \
 	char img_fontname[48]; \
 	char img_fonthuge[48]; \
-	if (_sc <=1.0) { \
+	if (_sc <= /* 1.0 */ 0) { \
 		sprintf(img_fontname, "Sans Bold 11px"); \
 		sprintf(img_fonthuge, "Sans Bold 14px"); \
 	} else { \
@@ -427,7 +427,7 @@ static void img_draw_vu(cairo_t* cr, float scale) {
 	const float _rx = 155 * _sc;
 	const float	_yl = 95 * _sc;
 
-	sprintf(img_fontname, "Sans %d", (int)rint(_rn / 21)); // XXX
+	sprintf(img_fontname, "Sans %dpx", (int)rint(_rn / 21)); // XXX
 
 	const float percZ = img_deflect_vu(-60);
 	const float percS = (img_deflect_vu(0) - percZ)/10.0;
@@ -443,7 +443,7 @@ static void img_draw_vu(cairo_t* cr, float scale) {
 		}
 	}
 
-	sprintf(img_fontname, "Sans Bold %d", (int)rint(_rl/20));
+	sprintf(img_fontname, "Sans Bold %dpx", (int)rint(_rl/20));
 
 	CairoSetSouerceRGBA(c_blk);
 
@@ -493,14 +493,7 @@ static void img_draw_vu(cairo_t* cr, float scale) {
 }
 
 
-static cairo_surface_t* render_front_face(enum MtrType t, int w, int h) {
-	cairo_surface_t *bg = NULL;
-	unsigned char * img_tmp;
-	if (t==MT_VU) {
-		img2surf((struct MyGimpImage const *) &img_meter_bright, &bg, &img_tmp);
-	} else {
-		img2surf((struct MyGimpImage const *) &img_meter_dark, &bg, &img_tmp);
-	}
+static cairo_surface_t* render_front_face_sf (enum MtrType t, cairo_surface_t *bg, int w, int h) {
 	cairo_surface_t *sf = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, w, h);
 	cairo_t* cr = cairo_create(sf);
 
@@ -511,12 +504,14 @@ static cairo_surface_t* render_front_face(enum MtrType t, int w, int h) {
 		cairo_rectangle (cr, 0, 0, 300, 170);
 		cairo_fill(cr);
 		cairo_restore(cr);
-	} else {
-		cairo_save(cr);
-		cairo_set_operator (cr, CAIRO_OPERATOR_CLEAR);
+	} else if (t==MT_VU) {
 		cairo_rectangle (cr, 0, 0, w, h);
+		cairo_set_source_rgba (cr, .94, .94, .78, 1.0);
 		cairo_fill(cr);
-		cairo_restore(cr);
+	} else {
+		cairo_rectangle (cr, 0, 0, w, h);
+		cairo_set_source_rgba (cr, .15, .15, .15, 1.0);
+		cairo_fill(cr);
 	}
 
 	const float _sc = (float)w/300.0;
@@ -548,6 +543,18 @@ static cairo_surface_t* render_front_face(enum MtrType t, int w, int h) {
 			break;
 	}
 	cairo_destroy(cr);
+	return sf;
+}
+
+static cairo_surface_t* render_front_face(enum MtrType t, int w, int h) {
+	cairo_surface_t *bg = NULL;
+	unsigned char * img_tmp;
+	if (t==MT_VU) {
+		img2surf((struct MyGimpImage const *) &img_meter_bright, &bg, &img_tmp);
+	} else {
+		img2surf((struct MyGimpImage const *) &img_meter_dark, &bg, &img_tmp);
+	}
+	cairo_surface_t* sf = render_front_face_sf (t, bg, w, h);
 	free(img_tmp);
 	return sf;
 }

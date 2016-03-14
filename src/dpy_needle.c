@@ -53,7 +53,10 @@ static float meter_deflect (int type, float v) {
 static void *
 needle_render (LV2_Handle instance, uint32_t w, uint32_t max_h)
 {
-	uint32_t h = MIN (ceilf (w * 9.f/16.f), max_h);
+#ifdef WITH_SIGNATURE
+	if (!is_licensed (instance)) { return NULL; }
+#endif
+	uint32_t h = MIN (ceilf (w * 17.f/30.f), max_h);
 
 	LV2meter* self = (LV2meter*)instance;
 	if (!self->display || self->w != w || self->h != h) {
@@ -68,14 +71,17 @@ needle_render (LV2_Handle instance, uint32_t w, uint32_t max_h)
 	}
 
 	if (!self->face) {
-		self->face = render_front_face (self->type, w, h);
+		self->face = render_front_face_sf (self->type, NULL, w, h);
 	}
 
-	static const float *mcol[2];
+
+	int n_chn = self->chn;
+	const float *mcol[2];
 	switch (self->type) {
 		case MT_COR:
 			mcol[0] = c_wht;
 			mcol[1] = c_wht;
+			n_chn = 1;
 			break;
 		case MT_VU:
 			if (self->chn == 2) {
@@ -85,6 +91,10 @@ needle_render (LV2_Handle instance, uint32_t w, uint32_t max_h)
 				mcol[1] = c_blk;
 				mcol[0] = c_blk;
 			}
+			break;
+		case MT_BM6:
+				mcol[0] = c_wht;
+				mcol[1] = c_nyl;
 			break;
 		default:
 			if (self->chn == 2) {
@@ -103,9 +113,9 @@ needle_render (LV2_Handle instance, uint32_t w, uint32_t max_h)
 	cairo_set_source_rgba (cr, .2, .2, .2, 1.0);
 	cairo_fill (cr);
 
-	float x0 = w * .5;
-	float rad = MIN (w * .6, h * 1.4);
-	float y0 = MAX (h, rad * 1.2);
+	float x0 = floorf (w * .5f) + .5;
+	float rad = MIN (w * .6f, h * 1.4f);
+	float y0 = MAX (h, rad * 1.17f);
 
 	cairo_save(cr);
 	cairo_set_operator (cr, CAIRO_OPERATOR_SOURCE);
@@ -116,17 +126,17 @@ needle_render (LV2_Handle instance, uint32_t w, uint32_t max_h)
 	cairo_set_operator (cr, CAIRO_OPERATOR_OVER);
 
 	// needle area
-	cairo_rectangle (cr, 0, 0, w, h * .79); // XXX
+	cairo_rectangle (cr, 0, 0, w, h - 2); // XXX
 	cairo_clip (cr);
 
-	for (int c = self->chn; c > 0; --c) {
+	for (int c = n_chn; c > 0; --c) {
 		const float val = meter_deflect(self->type, self->mval[c - 1]);
 		float px, py;
 		calc_needle_pos(val, x0, y0, rad, 0, &px, &py);
 
 		cairo_set_line_cap(cr, CAIRO_LINE_CAP_ROUND);
 		CairoSetSouerceRGBA(mcol[c-1]);
-		cairo_set_line_width (cr, 2.0);
+		cairo_set_line_width (cr, 1.5);
 
 		cairo_move_to (cr, x0, y0);
 		cairo_line_to (cr, px, py);

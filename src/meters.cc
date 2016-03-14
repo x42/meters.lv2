@@ -190,12 +190,14 @@ instantiate(const LV2_Descriptor*     descriptor,
 	if (!self) return NULL;
 
 	if (!strcmp(descriptor->URI, MTR_URI "COR")) {
+		self->type = MT_COR; \
 		self->cor = new Stcorrdsp();
 		self->cor->init(rate, 2e3f, 0.3f);
 		self->chn = 2;
 	}
 	else if (!strcmp(descriptor->URI, MTR_URI "BBCM6")) {
 		self->chn = 2;
+		self->type = MT_BM6; \
 		self->bms[0] = new Msppmdsp(-6);
 		self->bms[1] = new Msppmdsp(-6);
 		self->bms[0]->init(rate);
@@ -485,7 +487,12 @@ cor_run(LV2_Handle instance, uint32_t n_samples)
 	LV2meter* self = (LV2meter*)instance;
 
 	self->cor->process(self->input[0], self->input[1] , n_samples);
-	*self->level[0] = self->cor->read();
+	self->mval[0] = *self->level[0] = self->cor->read();
+
+	if (self->mval[0] != self->mprev[0]) {
+		self->need_expose = true;
+		self->mprev[0] = self->mval[0];
+	}
 
 	if (self->input[0] != self->output[0]) {
 		memcpy(self->output[0], self->input[0], sizeof(float) * n_samples);
@@ -493,6 +500,12 @@ cor_run(LV2_Handle instance, uint32_t n_samples)
 	if (self->input[1] != self->output[1]) {
 		memcpy(self->output[1], self->input[1], sizeof(float) * n_samples);
 	}
+#ifdef DISPLAY_INTERFACE
+	if (self->need_expose && self->queue_draw) {
+		self->need_expose = false;
+		self->queue_draw->queue_draw (self->queue_draw->handle);
+	}
+#endif
 }
 
 static void
@@ -501,6 +514,10 @@ cor_cleanup(LV2_Handle instance)
 	LV2meter* self = (LV2meter*)instance;
 	delete self->cor;
 	FREE_VARPORTS;
+#ifdef DISPLAY_INTERFACE
+	if (self->display) cairo_surface_destroy(self->display);
+	if (self->face) cairo_surface_destroy(self->face);
+#endif
 	free(instance);
 }
 
@@ -515,10 +532,16 @@ bbcm_run(LV2_Handle instance, uint32_t n_samples)
 	}
 
 	self->bms[0]->processM(self->input[0], self->input[1], n_samples);
-	*self->level[0] = self->rlgain * self->bms[0]->read();
+	self->mval[0] = *self->level[0] = self->rlgain * self->bms[0]->read();
 
 	self->bms[1]->processS(self->input[0], self->input[1], n_samples);
-	*self->level[1] = self->rlgain * self->bms[1]->read();
+	self->mval[1] = *self->level[1] = self->rlgain * self->bms[1]->read();
+
+	if (self->mval[0] != self->mprev[0] || self->mval[1] != self->mprev[1]) {
+		self->need_expose = true;
+		self->mprev[0] = self->mval[1];
+		self->mprev[0] = self->mval[1];
+	}
 
 	if (self->input[0] != self->output[0]) {
 		memcpy(self->output[0], self->input[0], sizeof(float) * n_samples);
@@ -526,7 +549,12 @@ bbcm_run(LV2_Handle instance, uint32_t n_samples)
 	if (self->input[1] != self->output[1]) {
 		memcpy(self->output[1], self->input[1], sizeof(float) * n_samples);
 	}
-
+#ifdef DISPLAY_INTERFACE
+	if (self->need_expose && self->queue_draw) {
+		self->need_expose = false;
+		self->queue_draw->queue_draw (self->queue_draw->handle);
+	}
+#endif
 }
 
 static void
@@ -536,6 +564,10 @@ bbcm_cleanup(LV2_Handle instance)
 	delete self->bms[0];
 	delete self->bms[1];
 	FREE_VARPORTS;
+#ifdef DISPLAY_INTERFACE
+	if (self->display) cairo_surface_destroy(self->display);
+	if (self->face) cairo_surface_destroy(self->face);
+#endif
 	free(instance);
 }
 
@@ -627,7 +659,7 @@ static const LV2_Descriptor descriptorCor = {
 	cor_run,
 	NULL,
 	cor_cleanup,
-	extension_data
+	extension_data_needle
 };
 
 static const LV2_Descriptor descriptorBBCMS = {
@@ -638,7 +670,7 @@ static const LV2_Descriptor descriptorBBCMS = {
 	bbcm_run,
 	NULL,
 	bbcm_cleanup,
-	extension_data
+	extension_data_needle
 };
 
 
