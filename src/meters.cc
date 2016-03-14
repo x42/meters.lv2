@@ -152,6 +152,7 @@ typedef struct {
 
 	bool need_expose;
 #ifdef DISPLAY_INTERFACE
+	LV2_Inline_Display_Image_Surface surf;
 	cairo_surface_t*         display;
 	cairo_surface_t*         face;
 	LV2_Inline_Display*      queue_draw;

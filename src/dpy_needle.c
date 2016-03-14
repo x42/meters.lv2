@@ -50,7 +50,7 @@ static float meter_deflect (int type, float v) {
 #include "rtk/style.h"
 #include "gui/meterimage.c"
 
-static void *
+static LV2_Inline_Display_Image_Surface *
 needle_render (LV2_Handle instance, uint32_t w, uint32_t max_h)
 {
 #ifdef WITH_SIGNATURE
@@ -144,7 +144,13 @@ needle_render (LV2_Handle instance, uint32_t w, uint32_t max_h)
 	}
 
 	cairo_destroy (cr);
+
 	cairo_surface_flush (self->display);
-	return (void*) self->display;
+	self->surf.width = cairo_image_surface_get_width (self->display);
+	self->surf.height = cairo_image_surface_get_height (self->display);
+	self->surf.stride = cairo_image_surface_get_stride (self->display);
+	self->surf.data = cairo_image_surface_get_data  (self->display);
+
+	return &self->surf;
 }
 #endif
