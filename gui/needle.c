@@ -92,43 +92,6 @@ typedef struct {
 
 } MetersLV2UI;
 
-struct MyGimpImage {
-	unsigned int   width;
-	unsigned int   height;
-	unsigned int   bytes_per_pixel;
-	unsigned char  pixel_data[];
-};
-
-/* load gimp-exported .c image into cairo surface */
-static void img2surf (struct MyGimpImage const * img, cairo_surface_t **s, unsigned char **d) {
-	unsigned int x,y;
-	int stride = cairo_format_stride_for_width (CAIRO_FORMAT_ARGB32, img->width);
-
-	(*d) = (unsigned char *) malloc (stride * img->height);
-	(*s) = cairo_image_surface_create_for_data(*d,
-			CAIRO_FORMAT_ARGB32, img->width, img->height, stride);
-
-	cairo_surface_flush (*s);
-	for (y = 0; y < img->height; ++y) {
-		const int y0 = y * stride;
-		const int ys = y * img->width * img->bytes_per_pixel;
-		for (x = 0; x < img->width; ++x) {
-			const int xs = x * img->bytes_per_pixel;
-			const int xd = x * 4;
-
-			if (img->bytes_per_pixel == 3) {
-			(*d)[y0 + xd + 3] = 0xff;
-			} else {
-			(*d)[y0 + xd + 3] = img->pixel_data[ys + xs + 3]; // A
-			}
-			(*d)[y0 + xd + 2] = img->pixel_data[ys + xs];     // R
-			(*d)[y0 + xd + 1] = img->pixel_data[ys + xs + 1]; // G
-			(*d)[y0 + xd + 0] = img->pixel_data[ys + xs + 2]; // B
-		}
-	}
-	cairo_surface_mark_dirty (*s);
-}
-
 #include "gui/meterimage.c"
 
 static void setup_images (MetersLV2UI* ui) {
