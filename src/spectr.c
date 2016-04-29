@@ -59,11 +59,11 @@ struct FilterBank {
 static inline double
 proc_one(struct Filter * const f, const double in)
 {
-	const double w   = in - f->W[a1]*f->z[z1] - f->W[a2]*f->z[z2];
-	const double out =      f->W[b0]*w        + f->W[b1]*f->z[z1] + f->W[b2]*f->z[z2];
-	f->z[z2] = f->z[z1];
-	f->z[z1] = w;
-	return out;
+
+	const double y = f->W[b0] * in + f->z[z1];
+	f->z[z1]       = f->W[b1] * in - f->W[a1] * y + f->z[z2];
+	f->z[z2]       = f->W[b2] * in - f->W[a2] * y;
+	return y;
 }
 
 static inline float
