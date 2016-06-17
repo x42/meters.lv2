@@ -1314,6 +1314,8 @@ static void process_audio(MF2UI* ui, const size_t n_elem, float const * const le
 		}
 
 		ui->peak += .04 * (peak - ui->peak) + 1e-15;
+		if (isnan (ui->peak)) { ui->peak = 0; }
+		if (ui->peak > 1000) { ui->peak = 1000; }
 		if (robtk_cbtn_get_active(ui->btn_norm)) {
 			robtk_dial_set_value(ui->gain, - fftx_power_to_dB(ui->peak));
 		}
