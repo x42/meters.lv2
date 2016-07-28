@@ -34,6 +34,7 @@ static const RtkLv2Description _plugin_stereoscope = {
 	, 0 // uint32_t nports_ctrl_out
 	, 65888 // uint32_t min_atom_bufsiz
 	, false // bool send_time_info
+	, UINT32_MAX // uint32_t latency_ctrl_port
 };
 
 #ifdef X42_PLUGIN_STRUCT

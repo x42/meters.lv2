@@ -31,6 +31,7 @@ static const RtkLv2Description _plugin_ebur = {
 	, 0 // uint32_t nports_ctrl_out
 	, 8192 // uint32_t min_atom_bufsiz
 	, true // bool send_time_info
+	, UINT32_MAX // uint32_t latency_ctrl_port
 };
 
 #ifdef X42_PLUGIN_STRUCT
