@@ -676,7 +676,7 @@ static RobWidget * toplevel(DRUI* ui, void * const top)
 
 		ui->btn_reset = robtk_pbtn_new("Reset");
 		robtk_pbtn_set_alignment(ui->btn_reset, .5, .5);
-		robtk_pbtn_set_callback(ui->btn_reset, cb_reset, ui);
+		robtk_pbtn_set_callback_up(ui->btn_reset, cb_reset, ui);
 
 		ui->sep0 = robtk_sep_new(false);
 		robtk_sep_set_linewidth(ui->sep0, 0);

@@ -675,7 +675,7 @@ instantiate(
 
 	/* signals */
 	robtk_cbtn_set_callback(ui->btn_start, btn_start, ui);
-	robtk_pbtn_set_callback(ui->btn_reset, btn_reset, ui);
+	robtk_pbtn_set_callback_up(ui->btn_reset, btn_reset, ui);
 	robtk_cbtn_set_callback(ui->cbx_transport, cbx_transport, ui);
 	robtk_cbtn_set_callback(ui->cbx_autoreset, cbx_autoreset, ui);
 	robtk_cbtn_set_callback(ui->cbx_logscaley, cbx_logscale, ui);

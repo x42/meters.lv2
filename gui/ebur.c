@@ -1522,7 +1522,7 @@ instantiate(
 
 	/* signals */
 	robtk_cbtn_set_callback(ui->btn_start, btn_start, ui);
-	robtk_pbtn_set_callback(ui->btn_reset, btn_reset, ui);
+	robtk_pbtn_set_callback_up(ui->btn_reset, btn_reset, ui);
 
 	robtk_spin_set_callback(ui->spn_radartime, spn_radartime, ui);
 

@@ -600,7 +600,7 @@ static RobWidget * toplevel (BITui* ui, void * const top) {
 	/* signals */
 	robtk_cbtn_set_callback (ui->btn_freeze, cb_btn_freeze, ui);
 	robtk_cbtn_set_callback (ui->btn_avg, cb_btn_avg, ui);
-	robtk_pbtn_set_callback (ui->btn_reset, cb_btn_reset, ui);
+	robtk_pbtn_set_callback_up (ui->btn_reset, cb_btn_reset, ui);
 
 	initialize_font_cache (ui);
 
