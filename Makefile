@@ -146,34 +146,11 @@ ifeq ($(shell pkg-config --exists jack || echo no), no)
   $(error   Please install libjack-dev or libjack-jackd2-dev)
 endif
 
-ifneq ($(shell test -f fftw-3.3.4/.libs/libfftw3f.a || echo no), no)
-  FFTW=-Ifftw-3.3.4/api fftw-3.3.4/.libs/libfftw3f.a -lm
-else
-  ifeq ($(shell pkg-config --exists fftw3f || echo no), no)
-    $(error "fftw3f library was not found")
-  endif
-  FFTWA=`pkg-config --variable=libdir fftw3f`/libfftw3f.a
-  ifeq ($(shell test -f $(FFTWA) || echo no), no)
-    FFTWA=`pkg-config --libs fftw3f`
-  endif
-  $(warning "**********************************************************")
-  $(warning "           the fftw3 library is not thread-safe           ")
-  $(warning "**********************************************************")
-  $(info "These plugins may cause crashes when used in a plugin-host")
-  $(info "where libfftw3f symbols are mapped in the global namespace.")
-  $(info "Neither these plugins nor the host has control over possible")
-  $(info "other plugins calling the fftw planner simultaneously.")
-  $(info "Consider statically linking these plugins against a custom build")
-  $(info "of libfftw3f.a built with -fvisibility=hidden to avoid this issue.")
-  $(warning "")
-  ifneq ("$(wildcard static_fft.sh)","")
-  $(warning "**********************************************************")
-  $(warning "     run   ./static_fft.sh    prior to make to do so.     ")
-  endif
-  $(warning "**********************************************************")
-  $(warning "")
-  $(eval FFTW=`pkg-config --cflags fftw3f` $(FFTWA) -lm)
+ifeq ($(shell pkg-config --exists fftw3f || echo no), no)
+	$(error "fftw3f library was not found")
 endif
+
+FFTW=`pkg-config --cflags --libs fftw3f` -lm
 export FFTW
 
 # lv2 >= 1.6.0
