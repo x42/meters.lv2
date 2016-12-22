@@ -579,16 +579,17 @@ static RobWidget* cb_reset_peak (RobWidget* handle, RobTkBtnEvent *event) {
 static void
 size_request(RobWidget* handle, int *w, int *h) {
 	KMUI* ui = (KMUI*)GET_HANDLE(handle);
-	*w = ui->width;
 	*h = GM_HEIGHT;
+	*w = 2.0 * MA_WIDTH + ui->num_meters * GM_WIDTH; // recursive with allocted height
 }
 
 static void
 size_allocate(RobWidget* handle, int w, int h) {
 	KMUI* ui = (KMUI*)GET_HANDLE(handle);
 	ui->height = h;
-	ui->width = 2.0 * MA_WIDTH + ui->num_meters * GM_WIDTH;
+	ui->width = MIN(w, 2.0 * MA_WIDTH + ui->num_meters * GM_WIDTH);
 	ui->size_changed = true;
+	assert(ui->width <= w);
 	robwidget_set_size(handle, ui->width, ui->height);
 	queue_draw(ui->m0);
 }
