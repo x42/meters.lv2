@@ -531,12 +531,13 @@ instantiate(
 		RobWidget**               widget,
 		const LV2_Feature* const* features)
 {
-	MetersLV2UI* ui = (MetersLV2UI*)malloc(sizeof(MetersLV2UI));
+	MetersLV2UI* ui = (MetersLV2UI*)calloc(1, sizeof(MetersLV2UI));
+	*widget = NULL;
+
 	if (!ui) {
 		fprintf (stderr, "meters.lv2: out of memory.\n");
 		return NULL;
 	}
-	*widget = NULL;
 
 	if      (!strcmp(plugin_uri, MTR_URI "VUmono"))    { ui->chn = 1; ui->type = MT_VU; }
 	else if (!strcmp(plugin_uri, MTR_URI "VUstereo"))  { ui->chn = 2; ui->type = MT_VU; }
