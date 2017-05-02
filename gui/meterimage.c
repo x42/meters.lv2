@@ -125,15 +125,14 @@ static void img_write_text(cairo_t* cr,
 	PangoLayout * pl = pango_cairo_create_layout(cr);
 	PangoFontDescription *desc = pango_font_description_from_string(font);
 	pango_layout_set_font_description(pl, desc);
-	pango_font_description_free(desc);
 	pango_layout_set_text(pl, txt, -1);
 	pango_layout_get_pixel_size(pl, &tw, &th);
 	cairo_translate (cr, x, y);
 	cairo_rotate (cr, ang);
 	cairo_translate (cr, -tw/2.0, -th/2.0);
-	pango_cairo_layout_path(cr, pl);
-	cairo_fill(cr);
+	pango_cairo_show_layout(cr, pl);
 	g_object_unref(pl);
+	pango_font_description_free(desc);
 	cairo_restore(cr);
 	cairo_new_path (cr);
 }
@@ -436,7 +435,7 @@ static void img_draw_vu(cairo_t* cr, float scale) {
 		if ((pc%2) == 0) {
 			char buf[8];
 			if (pc==10)
-				sprintf(buf, "  100%%");
+				sprintf(buf, " 100%%");
 			else
 				sprintf(buf, "%d", pc*10);
 			img_needle_label_col(cr, buf, percZ + pc * percS, _rx, c_blk);
