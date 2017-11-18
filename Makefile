@@ -183,8 +183,9 @@ override CFLAGS += `pkg-config --cflags lv2` -DVERSION="\"$(meters_VERSION)\""
 override CXXFLAGS += -DVERSION="\"$(meters_VERSION)\""
 
 ifneq ($(INLINEDISPLAY),no)
-override CXXFLAGS += `pkg-config --cflags cairo pangocairo pango` -I$(RW) -DDISPLAY_INTERFACE -I.
-override LOADLIBES += `pkg-config $(PKG_UI_FLAGS) --libs cairo pangocairo pango`
+  override CXXFLAGS += `pkg-config --cflags cairo pangocairo pango` -I$(RW) -DDISPLAY_INTERFACE -I.
+  override LOADLIBES += `pkg-config $(PKG_UI_FLAGS) --libs cairo pangocairo pango`
+  INLINEDISPLAYTLL=lv2:optionalFeature <http:\\/\\/harrisonconsoles.com\\/lv2\\/inlinedisplay\#queue_draw>; lv2:extensionData <http:\\/\\/harrisonconsoles.com\\/lv2\\/inlinedisplay\#interface>;
   ifneq ($(XWIN),)
     override LOADLIBES += -lusp10
   endif
@@ -285,7 +286,7 @@ $(BUILDDIR)$(LV2NAME).ttl: lv2ttl/$(LV2NAME).ttl.in lv2ttl/$(LV2NAME).lv2.ttl.in
 	    lv2ttl/$(LV2NAME).ttl.in > $(BUILDDIR)$(LV2NAME).ttl
 	sed "s/@UI_URI_SUFFIX@/_gl/;s/@UI_TYPE@/$(UI_TYPE)/;s/@UI_REQ@/$(LV2UIREQ)/" \
 	    lv2ttl/$(LV2NAME).gui.ttl.in >> $(BUILDDIR)$(LV2NAME).ttl
-	sed "s/@URI_SUFFIX@//g;s/@NAME_SUFFIX@//g;s/@DPMGUI@/$(DPMGUI)_gl/g;s/@EBUGUI@/$(EBUGUI)_gl/g;s/@GONGUI@/$(GONGUI)_gl/g;s/@MTRGUI@/$(MTRGUI)_gl/g;s/@KMRGUI@/$(KMRGUI)_gl/g;s/@MPWGUI@/$(MPWGUI)_gl/g;s/@SFSGUI@/$(SFSGUI)_gl/g;s/@DRMGUI@/$(DRMGUI)_gl/g;s/@SDHGUI@/$(SDHGUI)_gl/g;s/@BITGUI@/$(BITGUI)_gl/g;s/@SURGUI@/$(SURGUI)_gl/g;s/@SIGNATURE@/$(SIGNATURE)/;s/@VERSION@/lv2:microVersion $(LV2MIC) ;lv2:minorVersion $(LV2MIN) ;/g" \
+	sed "s/@URI_SUFFIX@//g;s/@NAME_SUFFIX@//g;s/@DPMGUI@/$(DPMGUI)_gl/g;s/@EBUGUI@/$(EBUGUI)_gl/g;s/@GONGUI@/$(GONGUI)_gl/g;s/@MTRGUI@/$(MTRGUI)_gl/g;s/@KMRGUI@/$(KMRGUI)_gl/g;s/@MPWGUI@/$(MPWGUI)_gl/g;s/@SFSGUI@/$(SFSGUI)_gl/g;s/@DRMGUI@/$(DRMGUI)_gl/g;s/@SDHGUI@/$(SDHGUI)_gl/g;s/@BITGUI@/$(BITGUI)_gl/g;s/@SURGUI@/$(SURGUI)_gl/g;s/@INLINEDISPLAYTLL@/$(INLINEDISPLAYTLL)/;s/@SIGNATURE@/$(SIGNATURE)/;s/@VERSION@/lv2:microVersion $(LV2MIC) ;lv2:minorVersion $(LV2MIN) ;/g" \
 	  lv2ttl/$(LV2NAME).lv2.ttl.in >> $(BUILDDIR)$(LV2NAME).ttl
 
 $(BUILDDIR)$(LV2NAME)$(LIB_EXT): src/meters.cc $(DSPDEPS) src/ebulv2.cc src/uris.h src/goniometerlv2.c src/goniometer.h src/spectrumlv2.c src/spectr.c src/xfer.c src/dr14.c src/sigdistlv2.c src/bitmeter.c src/surmeter.c src/dpy_needle.c gui/meterimage.c Makefile
@@ -298,7 +299,7 @@ $(BUILDDIR)$(LV2NAME)$(LIB_EXT): src/meters.cc $(DSPDEPS) src/ebulv2.cc src/uris
 
 JACKCFLAGS=-I. $(CFLAGS) $(CXXFLAGS) $(LIC_CFLAGS)
 JACKCFLAGS+=`pkg-config --cflags jack lv2 pango pangocairo $(PKG_GL_LIBS)`
-JACKLIBS=-lm $(GLUILIBS) $(LIC_LOADLIBES)
+JACKLIBS=-lm $(GLUILIBS)
 
 ## JACK applications
 

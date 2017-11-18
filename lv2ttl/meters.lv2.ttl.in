@@ -7,6 +7,7 @@ mtr:VUmono@URI_SUFFIX@
 	@VERSION@
 	lv2:project <http://gareus.org/oss/lv2/meters> ;
 	lv2:optionalFeature lv2:hardRTCapable ;
+	@INLINEDISPLAYTLL@
 	@SIGNATURE@
 	ui:ui @MTRGUI@ ;
 	lv2:port [
@@ -50,6 +51,7 @@ mtr:VUstereo@URI_SUFFIX@
 	@VERSION@
 	lv2:project <http://gareus.org/oss/lv2/meters> ;
 	lv2:optionalFeature lv2:hardRTCapable ;
+	@INLINEDISPLAYTLL@
 	@SIGNATURE@
 	ui:ui @MTRGUI@ ;
 	lv2:port [
@@ -114,6 +116,7 @@ mtr:BBCmono@URI_SUFFIX@
 	@VERSION@
 	lv2:project <http://gareus.org/oss/lv2/meters> ;
 	lv2:optionalFeature lv2:hardRTCapable ;
+	@INLINEDISPLAYTLL@
 	@SIGNATURE@
 	ui:ui @MTRGUI@ ;
 	lv2:port [
@@ -157,6 +160,7 @@ mtr:BBCstereo@URI_SUFFIX@
 	@VERSION@
 	lv2:project <http://gareus.org/oss/lv2/meters> ;
 	lv2:optionalFeature lv2:hardRTCapable ;
+	@INLINEDISPLAYTLL@
 	@SIGNATURE@
 	ui:ui @MTRGUI@ ;
 	lv2:port [
@@ -221,6 +225,7 @@ mtr:EBUmono@URI_SUFFIX@
 	@VERSION@
 	lv2:project <http://gareus.org/oss/lv2/meters> ;
 	lv2:optionalFeature lv2:hardRTCapable ;
+	@INLINEDISPLAYTLL@
 	@SIGNATURE@
 	ui:ui @MTRGUI@ ;
 	lv2:port [
@@ -264,6 +269,7 @@ mtr:EBUstereo@URI_SUFFIX@
 	@VERSION@
 	lv2:project <http://gareus.org/oss/lv2/meters> ;
 	lv2:optionalFeature lv2:hardRTCapable ;
+	@INLINEDISPLAYTLL@
 	@SIGNATURE@
 	ui:ui @MTRGUI@ ;
 	lv2:port [
@@ -328,6 +334,7 @@ mtr:DINmono@URI_SUFFIX@
 	@VERSION@
 	lv2:project <http://gareus.org/oss/lv2/meters> ;
 	lv2:optionalFeature lv2:hardRTCapable ;
+	@INLINEDISPLAYTLL@
 	@SIGNATURE@
 	ui:ui @MTRGUI@ ;
 	lv2:port [
@@ -371,6 +378,7 @@ mtr:DINstereo@URI_SUFFIX@
 	@VERSION@
 	lv2:project <http://gareus.org/oss/lv2/meters> ;
 	lv2:optionalFeature lv2:hardRTCapable ;
+	@INLINEDISPLAYTLL@
 	@SIGNATURE@
 	ui:ui @MTRGUI@ ;
 	lv2:port [
@@ -435,6 +443,7 @@ mtr:NORmono@URI_SUFFIX@
 	@VERSION@
 	lv2:project <http://gareus.org/oss/lv2/meters> ;
 	lv2:optionalFeature lv2:hardRTCapable ;
+	@INLINEDISPLAYTLL@
 	@SIGNATURE@
 	ui:ui @MTRGUI@ ;
 	lv2:port [
@@ -478,6 +487,7 @@ mtr:NORstereo@URI_SUFFIX@
 	@VERSION@
 	lv2:project <http://gareus.org/oss/lv2/meters> ;
 	lv2:optionalFeature lv2:hardRTCapable ;
+	@INLINEDISPLAYTLL@
 	@SIGNATURE@
 	ui:ui @MTRGUI@ ;
 	lv2:port [
@@ -541,6 +551,7 @@ mtr:COR@URI_SUFFIX@
 	@VERSION@
 	lv2:project <http://gareus.org/oss/lv2/meters> ;
 	lv2:optionalFeature lv2:hardRTCapable ;
+	@INLINEDISPLAYTLL@
 	@SIGNATURE@
 	ui:ui @MTRGUI@ ;
 	lv2:port [
@@ -3282,6 +3293,7 @@ mtr:BBCM6@URI_SUFFIX@
 	@VERSION@
 	lv2:project <http://gareus.org/oss/lv2/meters> ;
 	lv2:optionalFeature lv2:hardRTCapable ;
+	@INLINEDISPLAYTLL@
 	@SIGNATURE@
 	ui:ui @MTRGUI@ ;
 	lv2:port [
