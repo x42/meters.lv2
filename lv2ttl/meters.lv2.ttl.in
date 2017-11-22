@@ -2437,6 +2437,7 @@ mtr:phasewheel@URI_SUFFIX@
 	doap:name "Phase/Frequency Wheel@NAME_SUFFIX@";
 	@VERSION@
 	lv2:project <http://gareus.org/oss/lv2/meters> ;
+	lv2:requiredFeature urid:map ;
 	lv2:optionalFeature lv2:hardRTCapable ;
 	@SIGNATURE@
 	ui:ui @MPWGUI@ ;
@@ -2579,6 +2580,7 @@ mtr:stereoscope@URI_SUFFIX@
 	doap:name "Stereo/Frequency Scope@NAME_SUFFIX@";
 	@VERSION@
 	lv2:project <http://gareus.org/oss/lv2/meters> ;
+	lv2:requiredFeature urid:map ;
 	lv2:optionalFeature lv2:hardRTCapable ;
 	@SIGNATURE@
 	ui:ui @SFSGUI@ ;
@@ -2680,6 +2682,7 @@ mtr:dr14mono@URI_SUFFIX@
 	doap:name "DR14 - Dynamic Range Meter (Mono)@NAME_SUFFIX@";
 	@VERSION@
 	lv2:project <http://gareus.org/oss/lv2/meters> ;
+	lv2:requiredFeature urid:map ;
 	lv2:optionalFeature lv2:hardRTCapable ;
 	@SIGNATURE@
 	ui:ui @DRMGUI@ ;
@@ -2793,6 +2796,7 @@ mtr:dr14stereo@URI_SUFFIX@
 	doap:name "DR14 - Dynamic Range Meter (Stereo)@NAME_SUFFIX@";
 	@VERSION@
 	lv2:project <http://gareus.org/oss/lv2/meters> ;
+	lv2:requiredFeature urid:map ;
 	lv2:optionalFeature lv2:hardRTCapable ;
 	@SIGNATURE@
 	ui:ui @DRMGUI@ ;
@@ -2977,6 +2981,7 @@ mtr:TPnRMSmono@URI_SUFFIX@
 	doap:name "True-Peak and RMS Meter (Mono)@NAME_SUFFIX@";
 	@VERSION@
 	lv2:project <http://gareus.org/oss/lv2/meters> ;
+	lv2:requiredFeature urid:map ;
 	lv2:optionalFeature lv2:hardRTCapable ;
 	@SIGNATURE@
 	ui:ui @DRMGUI@ ;
@@ -3080,6 +3085,7 @@ mtr:TPnRMSstereo@URI_SUFFIX@
 	doap:name "True-Peak and RMS Meter (Stereo)@NAME_SUFFIX@";
 	@VERSION@
 	lv2:project <http://gareus.org/oss/lv2/meters> ;
+	lv2:requiredFeature urid:map ;
 	lv2:optionalFeature lv2:hardRTCapable ;
 	@SIGNATURE@
 	ui:ui @DRMGUI@ ;
