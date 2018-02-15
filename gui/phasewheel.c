@@ -812,7 +812,7 @@ static bool cb_set_gain (RobWidget* handle, void *data) {
 		queue_draw(ui->m2);
 	}
 #ifdef __USE_GNU
-	const float thresh = pow10f(.05 * (MIN_CUTOFF - val));
+	const float thresh = exp10f(.05 * (MIN_CUTOFF - val));
 #else
 	const float thresh = powf(10, .05 * (MIN_CUTOFF - val));
 #endif
