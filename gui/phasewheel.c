@@ -45,7 +45,7 @@
 #define PC_BLOCKSIZE (PC_HEIGHT - PC_BLOCK)
 
 static const float c_ann[4] = {0.5, 0.5, 0.5, 1.0}; // text annotation color
-static const float c_ahz[4] = {0.6, 0.6, 0.6, 0.5}; // frequency annotation
+static const float c_ahz[4] = {0.6, 0.6, 0.6, 0.6}; // frequency annotation
 static const float c_grd[4] = {0.4, 0.4, 0.4, 1.0}; // grid color
 
 #ifdef _WIN32
@@ -285,7 +285,7 @@ static void hsl2rgb(float c[3], const float hue, const float sat, const float lu
 /** prepare drawing surfaces, render fixed background */
 static void m0_create_surfaces(MF2UI* ui) {
 	cairo_t* cr;
-	const double ccc = ui->width / 2.0 + .5;
+	const double ccc = floor (ui->width / 2.0) + .5;
 	const double rad = (ui->width - XOFF) * .5;
 
 	if (ui->sf_ann) cairo_surface_destroy(ui->sf_ann);
@@ -369,7 +369,7 @@ static void m2_create_surfaces(MF2UI* ui) {
  * and on screen annotations - sample-rate dependent
  */
 static void update_grid(MF2UI* ui) {
-	const double ccc = ui->width / 2.0 + .5;
+	const double ccc = floor (ui->width / 2.0) + .5;
 	const double rad = (ui->width - XOFF) * .5;
 	cairo_t *cr = cairo_create (ui->sf_ann);
 
@@ -378,17 +378,27 @@ static void update_grid(MF2UI* ui) {
 	cairo_fill (cr);
 
 	cairo_set_line_width (cr, 1.0);
-
 	cairo_arc (cr, ccc, ccc, rad, 0, 2.0 * M_PI);
 	cairo_set_source_rgba(cr, 0, 0, 0, 1.0);
 	cairo_fill_preserve(cr);
 	CairoSetSouerceRGBA(c_g90);
 	cairo_stroke(cr);
 
-	const double dash1[] = {1.0, 2.0};
+	cairo_set_line_cap(cr, CAIRO_LINE_CAP_ROUND);
+
+	double lw = round (10. * rad / (double)PH_RAD) / 10.;
+	cairo_set_line_width (cr, lw);
+	double dash1[2];
+	dash1[0] = 1;
+	dash1[1] = 2 * lw;
+
 	cairo_set_dash(cr, dash1, 2, 0);
 
 	CairoSetSouerceRGBA(c_grd);
+
+	char fn[32];
+	sprintf (fn, "Mono %.0fpx", round (9.f * rad / (double)PH_RAD));
+	PangoFontDescription *fd = pango_font_description_from_string(fn);
 
 	float freq = 62.5;
 	while (freq < ui->rate / 2) {
@@ -396,7 +406,7 @@ static void update_grid(MF2UI* ui) {
 		if (freq < 1000) {
 			snprintf(txt, 16, "%d Hz", (int)ceil(freq));
 		} else {
-			snprintf(txt, 16, "%d KHz", (int)ceil(freq/1000.f));
+			snprintf(txt, 16, "%d kHz", (int)ceil(freq/1000.f));
 		}
 
 		{
@@ -405,36 +415,43 @@ static void update_grid(MF2UI* ui) {
 			cairo_stroke(cr);
 			const float px = ccc + dr * sinf(M_PI * -.75);
 			const float py = ccc - dr * cosf(M_PI * -.75);
-			write_text_full(cr, txt, ui->font[0], px, py, M_PI * -.75, -2, c_ahz);
+			write_text_full(cr, txt, fd, px, py, M_PI * -.75, -2, c_ahz);
 		}
 
 		freq *= 2.0;
 	}
 
-	const double dash2[] = {1.0, 3.0};
-	cairo_set_line_width(cr, 3.5);
-	cairo_set_dash(cr, dash2, 2, 2);
+	cairo_set_line_cap(cr, CAIRO_LINE_CAP_BUTT);
 
-	cairo_set_line_width(cr, 1.5);
-	cairo_move_to(cr, ccc - rad, ccc);
+	/* horiz line */
+	cairo_set_line_width(cr, lw * 1.5);
+	cairo_move_to(cr, ccc, ccc);
+	cairo_line_to(cr, ccc - rad, ccc);
+	cairo_move_to(cr, ccc, ccc);
 	cairo_line_to(cr, ccc + rad, ccc);
 	cairo_stroke(cr);
 
-	cairo_set_line_width(cr, 3.5);
-	cairo_move_to(cr, ccc, ccc - rad);
+	/* vert thicker line */
+	cairo_set_line_width(cr, lw * 2.5);
+	cairo_move_to(cr, ccc, ccc);
+	cairo_line_to(cr, ccc, ccc - rad);
+	cairo_move_to(cr, ccc, ccc);
 	cairo_line_to(cr, ccc, ccc + rad);
 	cairo_stroke(cr);
+
 	cairo_set_dash(cr, NULL, 0, 0);
 
-	write_text_full(cr, "+L",  ui->font[0], ccc, ccc - rad * .92, 0, -2, c_ann);
-	write_text_full(cr, "-L",  ui->font[0], ccc, ccc + rad * .92, 0, -2, c_ann);
-	write_text_full(cr, "0\u00B0",  ui->font[0], ccc, ccc - rad * .80, 0, -2, c_ann);
-	write_text_full(cr, "180\u00B0",  ui->font[0], ccc, ccc + rad * .80, 0, -2, c_ann);
+	write_text_full(cr, "+L",  fd, ccc, ccc - rad * .92, 0, -2, c_ann);
+	write_text_full(cr, "-L",  fd, ccc, ccc + rad * .92, 0, -2, c_ann);
+	write_text_full(cr, "0\u00B0",  fd, ccc, ccc - rad * .80, 0, -2, c_ann);
+	write_text_full(cr, "180\u00B0",  fd, ccc, ccc + rad * .80, 0, -2, c_ann);
 
-	write_text_full(cr, "-R",  ui->font[0], ccc - rad * .92, ccc, 0, -2, c_ann);
-	write_text_full(cr, "+R",  ui->font[0], ccc + rad * .92, ccc, 0, -2, c_ann);
-	write_text_full(cr, "-90\u00B0",  ui->font[0], ccc - rad * .80, ccc, 0, -2, c_ann);
-	write_text_full(cr, "+90\u00B0",  ui->font[0], ccc + rad * .80, ccc, 0, -2, c_ann);
+	write_text_full(cr, "-R",  fd, ccc - rad * .92, ccc, 0, -2, c_ann);
+	write_text_full(cr, "+R",  fd, ccc + rad * .92, ccc, 0, -2, c_ann);
+	write_text_full(cr, "-90\u00B0",  fd, ccc - rad * .80, ccc, 0, -2, c_ann);
+	write_text_full(cr, "+90\u00B0",  fd, ccc + rad * .80, ccc, 0, -2, c_ann);
+
+	pango_font_description_free(fd);
 	cairo_destroy (cr);
 }
 
@@ -553,7 +570,7 @@ static inline void draw_point(MF2UI* ui, cairo_t *cr,
 /* linear FFT data display */
 static void plot_data_fft(MF2UI* ui) {
 	cairo_t* cr;
-	const double ccc = ui->width / 2.0 + .5;
+	const double ccc = floor (ui->width / 2.0) + .5;
 	const double rad = (ui->width - XOFF) * .5;
 	const float gain = robtk_dial_get_value(ui->gain);
 	const float persistence = robtk_dial_get_value(ui->screen);
@@ -591,7 +608,7 @@ static void plot_data_fft(MF2UI* ui) {
 /* 1/Octave data display */
 static void plot_data_oct(MF2UI* ui) {
 	cairo_t* cr;
-	const double ccc = ui->width / 2.0 + .5;
+	const double ccc = floor (ui->width / 2.0) + .5;
 	const double rad = (ui->width - XOFF) * .5;
 	const float gain = robtk_dial_get_value(ui->gain);
 	const float persistence = robtk_dial_get_value(ui->screen);
@@ -668,8 +685,8 @@ static bool expose_event(RobWidget* handle, cairo_t* cr, cairo_rectangle_t *ev) 
 	}
 
 	cairo_translate(cr,
-			rint((ui->m0_width - ui->width) * .5),
-			rint((ui->m0_height - ui->height) * .5));
+			floor((ui->m0_width - ui->width) * .5),
+			floor((ui->m0_height - ui->height) * .5));
 
 	if (pthread_mutex_trylock (&ui->fft_lock) == 0 ) {
 		if (robtk_cbtn_get_active(ui->btn_oct)) {
