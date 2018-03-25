@@ -103,6 +103,7 @@ typedef struct {
 	float* mprev;
 
 	uint32_t chn;
+	int      kstandard;
 	float peak_max[2];
 	float peak_hold;
 
@@ -155,6 +156,7 @@ typedef struct {
 	LV2_Inline_Display_Image_Surface surf;
 	cairo_surface_t*         display;
 	cairo_surface_t*         face;
+	cairo_pattern_t*         mpat;
 	LV2_Inline_Display*      queue_draw;
 	uint32_t                 w, h;
 #endif
@@ -162,9 +164,10 @@ typedef struct {
 } LV2meter;
 
 
-#define MTRDEF(NAME, CLASS, TYPE) \
+#define MTRDEF(NAME, CLASS, TYPE, KM) \
 	else if (!strcmp(descriptor->URI, MTR_URI NAME "mono")) { \
 		self->chn = 1; \
+		self->kstandard = KM; \
 		self->type = TYPE; \
 		self->mtr = (JmeterDSP **)malloc (self->chn * sizeof (JmeterDSP *)); \
 		self->mtr[0] = new CLASS(); \
@@ -172,6 +175,7 @@ typedef struct {
 	} \
 	else if (!strcmp(descriptor->URI, MTR_URI NAME "stereo")) { \
 		self->chn = 2; \
+		self->kstandard = KM; \
 		self->type = TYPE; \
 		self->mtr = (JmeterDSP **)malloc (self->chn * sizeof (JmeterDSP *)); \
 		self->mtr[0] = new CLASS(); \
@@ -203,15 +207,15 @@ instantiate(const LV2_Descriptor*     descriptor,
 		self->bms[1] = new Msppmdsp(-6);
 		self->bms[0]->init(rate);
 	}
-	MTRDEF("VU",   Vumeterdsp,  MT_VU)
-	MTRDEF("BBC",  Iec2ppmdsp,  MT_BBC)
-	MTRDEF("EBU",  Iec2ppmdsp,  MT_EBU)
-	MTRDEF("DIN",  Iec1ppmdsp,  MT_DIN)
-	MTRDEF("NOR",  Iec1ppmdsp,  MT_NOR)
-	MTRDEF("dBTP", TruePeakdsp, MT_NONE)
-	MTRDEF("K12",  Kmeterdsp,   MT_NONE)
-	MTRDEF("K14",  Kmeterdsp,   MT_NONE)
-	MTRDEF("K20",  Kmeterdsp,   MT_NONE)
+	MTRDEF("VU",   Vumeterdsp,  MT_VU,   0)
+	MTRDEF("BBC",  Iec2ppmdsp,  MT_BBC,  0)
+	MTRDEF("EBU",  Iec2ppmdsp,  MT_EBU,  0)
+	MTRDEF("DIN",  Iec1ppmdsp,  MT_DIN,  0)
+	MTRDEF("NOR",  Iec1ppmdsp,  MT_NOR,  0)
+	MTRDEF("dBTP", TruePeakdsp, MT_NONE, 0)
+	MTRDEF("K12",  Kmeterdsp,   MT_NONE, 12)
+	MTRDEF("K14",  Kmeterdsp,   MT_NONE, 14)
+	MTRDEF("K20",  Kmeterdsp,   MT_NONE, 20)
 	else {
 		free(self);
 		return NULL;
@@ -390,6 +394,22 @@ kmeter_run(LV2_Handle instance, uint32_t n_samples)
 
 		*self->hold = self->peak_hold;
 	}
+
+#ifdef DISPLAY_INTERFACE
+	for (uint32_t c = 0; c < self->chn; ++c) {
+		self->mval[c] = *self->level[c];
+		// TODO: IFF difference >= 1/2 px at given self->w
+		if (self->mval[c] != self->mprev[c]) {
+			self->need_expose = true;
+			self->mprev[c] = self->mval[c];
+		}
+	}
+
+	if (self->need_expose && self->queue_draw) {
+		self->need_expose = false;
+		self->queue_draw->queue_draw (self->queue_draw->handle);
+	}
+#endif
 }
 
 
@@ -404,6 +424,7 @@ cleanup(LV2_Handle instance)
 #ifdef DISPLAY_INTERFACE
 	if (self->display) cairo_surface_destroy(self->display);
 	if (self->face) cairo_surface_destroy(self->face);
+	if (self->mpat) cairo_pattern_destroy(self->mpat);
 #endif
 	free (self->mtr);
 	free(instance);
@@ -518,6 +539,7 @@ cor_cleanup(LV2_Handle instance)
 #ifdef DISPLAY_INTERFACE
 	if (self->display) cairo_surface_destroy(self->display);
 	if (self->face) cairo_surface_destroy(self->face);
+	if (self->mpat) cairo_pattern_destroy(self->mpat);
 #endif
 	free(instance);
 }
@@ -568,6 +590,7 @@ bbcm_cleanup(LV2_Handle instance)
 #ifdef DISPLAY_INTERFACE
 	if (self->display) cairo_surface_destroy(self->display);
 	if (self->face) cairo_surface_destroy(self->face);
+	if (self->mpat) cairo_pattern_destroy(self->mpat);
 #endif
 	free(instance);
 }
@@ -594,7 +617,11 @@ extension_data(const char* uri)
 	return NULL;
 }
 
+#ifdef DISPLAY_INTERFACE
 #include "dpy_needle.c"
+#include "dpy_bargraph.c"
+#endif
+
 const void*
 extension_data_needle(const char* uri)
 {
@@ -610,6 +637,23 @@ extension_data_needle(const char* uri)
 #endif
 	return extension_data (uri);
 }
+
+const void*
+extension_data_kmeter(const char* uri)
+{
+#ifdef DISPLAY_INTERFACE
+	static const LV2_Inline_Display_Interface display  = { bargraph_render };
+	if (!strcmp(uri, LV2_INLINEDISPLAY__interface)) {
+#if (defined _WIN32 && defined RTK_STATIC_INIT)
+		static int once = 0;
+		if (!once) {once = 1; gobject_init_ctor();}
+#endif
+		return &display;
+	}
+#endif
+	return extension_data (uri);
+}
+
 
 //#ifdef DEBUG_SPECTR
 #include "spectr.c"
@@ -649,12 +693,12 @@ mkdesc(9, "NORstereo",run, extension_data_needle)
 mkdesc(14,"dBTPmono",   dbtp_run, extension_data)
 mkdesc(15,"dBTPstereo", dbtp_run, extension_data)
 
-mkdesc(K12M,"K12mono", kmeter_run, extension_data)
-mkdesc(K14M,"K14mono", kmeter_run, extension_data)
-mkdesc(K20M,"K20mono", kmeter_run, extension_data)
-mkdesc(K12S,"K12stereo", kmeter_run, extension_data)
-mkdesc(K14S,"K14stereo", kmeter_run, extension_data)
-mkdesc(K20S,"K20stereo", kmeter_run, extension_data)
+mkdesc(K12M,"K12mono", kmeter_run, extension_data_kmeter)
+mkdesc(K14M,"K14mono", kmeter_run, extension_data_kmeter)
+mkdesc(K20M,"K20mono", kmeter_run, extension_data_kmeter)
+mkdesc(K12S,"K12stereo", kmeter_run, extension_data_kmeter)
+mkdesc(K14S,"K14stereo", kmeter_run, extension_data_kmeter)
+mkdesc(K20S,"K20stereo", kmeter_run, extension_data_kmeter)
 
 static const LV2_Descriptor descriptorCor = {
 	MTR_URI "COR",
