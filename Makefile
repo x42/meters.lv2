@@ -147,7 +147,7 @@ ifeq ($(shell pkg-config --exists jack || echo no), no)
 endif
 
 ifeq ($(shell pkg-config --exists fftw3f || echo no), no)
-	$(error "fftw3f library was not found")
+  $(error "fftw3f library was not found")
 endif
 
 FFTW=`pkg-config --cflags --libs fftw3f` -lm
