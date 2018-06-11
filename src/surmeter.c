@@ -121,8 +121,6 @@ sur_run(LV2_Handle instance, uint32_t n_samples)
 	for (uint32_t c = 0; c < cors; ++c) {
 		uint32_t in_a = rintf (*self->surc_a[c]);
 		uint32_t in_b = rintf (*self->surc_b[c]);
-		if (in_a < 0) in_a = 0;
-		if (in_b < 0) in_b = 0;
 		if (in_a >= self->chn) in_a = self->chn - 1;
 		if (in_b >= self->chn) in_b = self->chn - 1;
 		self->cor4[c]->process (self->input[in_a], self->input[in_b], n_samples);
