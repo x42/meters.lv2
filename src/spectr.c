@@ -25,13 +25,15 @@
 #include <stdbool.h>
 #include <assert.h>
 
-#if __cplusplus >= 201103L || defined __APPLE__ || defined __FreeBSD__
+#if __cplusplus >= 201103L || ((defined __APPLE__ || defined __FreeBSD__) && defined __cplusplus)
 # include <complex>
 # define csqrt(XX) std::sqrt(XX)
 # define creal(XX) std::real(XX)
 # define cimag(XX) std::imag(XX)
-//# define _I ((complex_t)(1i)) // broken with Apple LLVM version 6.1.0 (clang-602.0.53)
-# define _I sqrt((complex_t)(-1)) // ridiculous ... whatever works
+# define _I ((complex_t)(1i))
+  #ifdef __cpp_lib_complex_udls
+    using namespace std::literals::complex_literals;
+  #endif
   typedef std::complex<double> complex_t;
 #else
 # include <complex.h>
@@ -112,7 +114,6 @@ bandpass_setup(struct FilterBank *fb,
 				rate * wu * .5 / M_PI);
 	}
 	if (wl < 1e-9) {
-		/* this is just for completeness, it cannot happen with spectr.lv2 */
 		wl = 1e-9;
 		fprintf(stderr, "spectr.lv2: band f:%9.2fHz (%.2fHz -> %.2fHz) contains sub-bass frequencies\n",
 				freq, freq-band/2, freq+band/2);
