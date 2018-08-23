@@ -26,6 +26,7 @@
 #endif
 
 static pthread_mutex_t fftw_planner_lock = PTHREAD_MUTEX_INITIALIZER;
+static unsigned int instance_count = 0;
 
 /******************************************************************************
  * internal FFT abstraction
@@ -146,6 +147,7 @@ void fftx_init(struct FFTAnalysis *ft, uint32_t window_size, double rate, double
 
 	pthread_mutex_lock(&fftw_planner_lock);
 	ft->fftplan = fftwf_plan_r2r_1d(window_size, ft->fft_in, ft->fft_out, FFTW_R2HC, FFTW_MEASURE);
+	++instance_count;
 	pthread_mutex_unlock(&fftw_planner_lock);
 }
 
@@ -154,6 +156,23 @@ void fftx_free(struct FFTAnalysis *ft) {
 	if (!ft) return;
 	pthread_mutex_lock(&fftw_planner_lock);
 	fftwf_destroy_plan(ft->fftplan);
+	if (instance_count > 0) {
+		--instance_count;
+	}
+#ifdef WITH_STATIC_FFTW_CLEANUP
+	/* use this only when statically linking to a local fftw!
+	 *
+	 * "After calling fftw_cleanup, all existing plans become undefined,
+	 *  and you should not attempt to execute them nor to destroy them."
+	 * [http://www.fftw.org/fftw3_doc/Using-Plans.html]
+	 *
+	 * If libfftwf is shared with other plugins or the host this can
+	 * cause undefined behavior.
+	 */
+	if (instance_count == 0) {
+		fftwf_cleanup ();
+	}
+#endif
 	pthread_mutex_unlock(&fftw_planner_lock);
 	free(ft->hann_window);
 	free(ft->ringbuf);
