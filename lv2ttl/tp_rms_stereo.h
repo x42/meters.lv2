@@ -13,7 +13,7 @@ static const RtkLv2Description _plugin_tprms2 = {
 	, (const struct LV2Port[17])
 	{
 		{ "control", ATOM_IN, nan, nan, nan, "Control"},
-		{ "unused1", CONTROL_IN, 1.000000, 0.000000, 1.000000, "compat w/DR14"},
+		{ "unused1", CONTROL_IN, 1.000000, 0.000000, 1.000000, ""},
 		{ "reset", CONTROL_IN, 0.000000, 0.000000, 1.000000, ""},
 		{ "blkcnt", CONTROL_OUT, nan, 0.000000, 3600.000000, ""},
 		{ "in1", AUDIO_IN, nan, nan, nan, "Audio input"},
@@ -22,7 +22,7 @@ static const RtkLv2Description _plugin_tprms2 = {
 		{ "dBTP_p1", CONTROL_OUT, nan, -80.000000, 6.000000, ""},
 		{ "dBRMS_m1", CONTROL_OUT, nan, -80.000000, 0.000000, ""},
 		{ "dBRMS_p1", CONTROL_OUT, nan, -80.000000, 0.000000, ""},
-		{ "unused2", CONTROL_OUT, nan, 0.000000, 1.000000, "compat w/DR14"},
+		{ "unused2", CONTROL_OUT, nan, 0.000000, 1.000000, ""},
 		{ "in2", AUDIO_IN, nan, nan, nan, "Audio input"},
 		{ "out2", AUDIO_OUT, nan, nan, nan, "signal pass-thru"},
 		{ "dBTP_m2", CONTROL_OUT, nan, -80.000000, 6.000000, ""},

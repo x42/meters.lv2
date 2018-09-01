@@ -9,7 +9,7 @@ static const RtkLv2Description _plugin_dr14 = {
 	&lv2ui_dr14
 	, 26 // uint32_t dsp_descriptor_id
 	, 0 // uint32_t gui_descriptor_id
-	, "DR14 - Dynamic Range Meter" // const char *plugin_human_id
+	, "DR-14 - Crest Factor Loudness Range Meter" // const char *plugin_human_id
 	, (const struct LV2Port[19])
 	{
 		{ "control", ATOM_IN, nan, nan, nan, "Control"},

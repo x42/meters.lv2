@@ -2679,7 +2679,7 @@ mtr:stereoscope@URI_SUFFIX@
 mtr:dr14mono@URI_SUFFIX@
 	a lv2:Plugin, lv2:AnalyserPlugin, doap:Project ;
 	doap:license <http://usefulinc.com/doap/licenses/gpl> ;
-	doap:name "DR14 - Dynamic Range Meter (Mono)@NAME_SUFFIX@";
+	doap:name "DR-14 - Crest Factor Loudness Range Meter (Mono)@NAME_SUFFIX@";
 	@VERSION@
 	lv2:project <http://gareus.org/oss/lv2/meters> ;
 	lv2:requiredFeature urid:map ;
@@ -2786,14 +2786,14 @@ mtr:dr14mono@URI_SUFFIX@
 		lv2:maximum 20;
 	  rdfs:comment "" ;
 	] ;
-	rdfs:comment "Pleasurize Music Foundation Dynamic Range Meter"
+	rdfs:comment "This meter establishes a single loudness value by measuring the crest factor of a chunked subset of the input signal."
 	.
 
 
 mtr:dr14stereo@URI_SUFFIX@
 	a lv2:Plugin, lv2:AnalyserPlugin, doap:Project ;
 	doap:license <http://usefulinc.com/doap/licenses/gpl> ;
-	doap:name "DR14 - Dynamic Range Meter (Stereo)@NAME_SUFFIX@";
+	doap:name "DR-14 - Crest Factor Loudness Range Meter (Stereo)@NAME_SUFFIX@";
 	@VERSION@
 	lv2:project <http://gareus.org/oss/lv2/meters> ;
 	lv2:requiredFeature urid:map ;
@@ -2972,7 +2972,7 @@ mtr:dr14stereo@URI_SUFFIX@
 		lv2:maximum 20;
 	  rdfs:comment "" ;
 	] ;
-	rdfs:comment "Pleasurize Music Foundation Dynamic Range Meter"
+	rdfs:comment "This meter establishes a single loudness value by measuring the crest factor of a chunked subset of the input signal."
 	.
 
 mtr:TPnRMSmono@URI_SUFFIX@
@@ -3003,7 +3003,7 @@ mtr:TPnRMSmono@URI_SUFFIX@
 		lv2:maximum 1.0 ;
 		lv2:default 1.0 ;
 		lv2:portProperty pprop:notOnGUI ;
-	  rdfs:comment "compat w/DR14" ;
+	  rdfs:comment "unused - port compatibility" ;
 	] , [
 		a lv2:ControlPort, lv2:InputPort ;
 		lv2:index 2 ;
@@ -3023,7 +3023,7 @@ mtr:TPnRMSmono@URI_SUFFIX@
 		lv2:minimum 0.0;
 		lv2:maximum 1.0;
 		lv2:portProperty pprop:notOnGUI ;
-	  rdfs:comment "compat w/DR14, reinit GUI" ;
+	  rdfs:comment "unused - port compatibility, reinit GUI" ;
 	] , [
 		a lv2:AudioPort ,
 			lv2:InputPort ;
@@ -3107,7 +3107,7 @@ mtr:TPnRMSstereo@URI_SUFFIX@
 		lv2:maximum 1.0 ;
 		lv2:default 1.0 ;
 		lv2:portProperty pprop:notOnGUI ;
-	  rdfs:comment "compat w/DR14" ;
+	  rdfs:comment "unused - port compatibility" ;
 	] , [
 		a lv2:ControlPort, lv2:InputPort ;
 		lv2:index 2 ;
@@ -3189,7 +3189,7 @@ mtr:TPnRMSstereo@URI_SUFFIX@
 		lv2:minimum 0 ;
 		lv2:maximum 1;
 		lv2:portProperty pprop:notOnGUI ;
-	  rdfs:comment "compat w/DR14" ;
+	  rdfs:comment "unused - port compatibility" ;
 	] , [
 		a lv2:AudioPort ,
 			lv2:InputPort ;

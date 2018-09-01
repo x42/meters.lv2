@@ -17,7 +17,7 @@ Stereo & Mono variants of bar-graph meters:
 *   Digital True-Peak Meter (4x Oversampling), Type II rise-time, 13.3dB/s falloff.
 *   True-Peak (4x Oversampling) + RMS (600ms integration time) combined with numeric readout
 *   K-12, K-14, K-20 / RMS type K-Meters according to the K-system introduced by Bob Katz
-*   DR14 (dynamic range, crest-factor / loudness)
+*   DR-14 (crest factor / loudness range measurement method)
 
 and the following stereo plugins:
 
@@ -90,7 +90,7 @@ Screenshots
 ![screenshot](https://raw.github.com/x42/meters.lv2/master/doc/LV2meters.png "Various Needle Meters in Ardour")
 ![screenshot](https://raw.github.com/x42/meters.lv2/master/doc/spectr_and_goni.png "Spectrum Analyzer and Stereo Phase Scope")
 ![screenshot](https://raw.github.com/x42/meters.lv2/master/doc/phasewheel.png "Phase/Frequency Wheel")
-![screenshot](https://raw.github.com/x42/meters.lv2/master/doc/dr14meter.png "DR14 Crest Factor Meter")
+![screenshot](https://raw.github.com/x42/meters.lv2/master/doc/dr14meter.png "DR-14 Crest Factor Meter")
 ![screenshot](https://raw.github.com/x42/meters.lv2/master/doc/stereoscope.png "Stereo/Frequency Scope")
 ![screenshot](https://raw.github.com/x42/meters.lv2/master/doc/sigdisthist.png "Signal Distribution Histogram")
 ![screenshot](https://raw.github.com/x42/meters.lv2/master/doc/bitmeter.png "Bit Meter")
