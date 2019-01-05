@@ -12,6 +12,7 @@ LV2DIR ?= $(PREFIX)/lib/lv2
 
 OPTIMIZATIONS ?= -msse -msse2 -mfpmath=sse -fomit-frame-pointer -O3 -fno-finite-math-only -DNDEBUG
 CFLAGS ?= -Wall -Wno-unused-function
+PKG_CONFIG ?= pkg-config
 STRIP  ?= strip
 
 EXTERNALUI?=yes
@@ -83,7 +84,7 @@ else
   PUGL_SRC=$(RW)pugl/pugl_x11.c
   PKG_LIBS=glu gl
   GLUILIBS=-lX11
-  GLUICFLAGS+=`pkg-config --cflags glu` -pthread
+  GLUICFLAGS+=`$(PKG_CONFIG) --cflags glu` -pthread
   STRIPFLAGS=-s
   EXTENDED_RE=-r
 endif
@@ -129,28 +130,28 @@ include git2lv2.mk
 ###############################################################################
 # check for build-dependencies
 
-ifeq ($(shell pkg-config --exists lv2 || echo no), no)
+ifeq ($(shell $(PKG_CONFIG) --exists lv2 || echo no), no)
   $(error "LV2 SDK was not found")
 endif
 
-ifeq ($(shell pkg-config --atleast-version=1.6.0 lv2 || echo no), no)
+ifeq ($(shell $(PKG_CONFIG) --atleast-version=1.6.0 lv2 || echo no), no)
   $(error "LV2 SDK needs to be at least version 1.6.0 (idle interface)")
 endif
 
-ifeq ($(shell pkg-config --exists glib-2.0 pango cairo $(PKG_LIBS) || echo no), no)
+ifeq ($(shell $(PKG_CONFIG) --exists glib-2.0 pango cairo $(PKG_LIBS) || echo no), no)
   $(error "These plugins requires $(PKG_LIBS) cairo pango glib-2.0")
 endif
 
-ifeq ($(shell pkg-config --exists jack || echo no), no)
+ifeq ($(shell $(PKG_CONFIG) --exists jack || echo no), no)
   $(warning *** libjack from http://jackaudio.org is required)
   $(error   Please install libjack-dev or libjack-jackd2-dev)
 endif
 
-ifeq ($(shell pkg-config --exists fftw3f || echo no), no)
+ifeq ($(shell $(PKG_CONFIG) --exists fftw3f || echo no), no)
   $(error "fftw3f library was not found")
 endif
 
-FFTW=`pkg-config --cflags --libs fftw3f` -lm
+FFTW=`$(PKG_CONFIG) --cflags --libs fftw3f` -lm
 export FFTW
 
 # lv2 >= 1.6.0
@@ -158,7 +159,7 @@ GLUICFLAGS+=-DHAVE_IDLE_IFACE
 LV2UIREQ+=lv2:requiredFeature ui:idleInterface; lv2:extensionData ui:idleInterface;
 
 # check for lv2_atom_forge_object  new in 1.8.1 deprecates lv2_atom_forge_blank
-ifeq ($(shell pkg-config --atleast-version=1.8.1 lv2 && echo yes), yes)
+ifeq ($(shell $(PKG_CONFIG) --atleast-version=1.8.1 lv2 && echo yes), yes)
   override CFLAGS += -DHAVE_LV2_1_8
 endif
 
@@ -179,12 +180,12 @@ else
 override CFLAGS += -DPTW32_STATIC_LIB
 override CXXFLAGS += -DPTW32_STATIC_LIB
 endif
-override CFLAGS += `pkg-config --cflags lv2` -DVERSION="\"$(meters_VERSION)\""
+override CFLAGS += `$(PKG_CONFIG) --cflags lv2` -DVERSION="\"$(meters_VERSION)\""
 override CXXFLAGS += -DVERSION="\"$(meters_VERSION)\""
 
 ifneq ($(INLINEDISPLAY),no)
-  override CXXFLAGS += `pkg-config --cflags cairo pangocairo pango` -I$(RW) -DDISPLAY_INTERFACE -I.
-  override LOADLIBES += `pkg-config $(PKG_UI_FLAGS) --libs cairo pangocairo pango`
+  override CXXFLAGS += `$(PKG_CONFIG) --cflags cairo pangocairo pango` -I$(RW) -DDISPLAY_INTERFACE -I.
+  override LOADLIBES += `$(PKG_CONFIG) $(PKG_UI_FLAGS) --libs cairo pangocairo pango`
   INLINEDISPLAYTLL=lv2:optionalFeature <http:\\/\\/harrisonconsoles.com\\/lv2\\/inlinedisplay\#queue_draw>; lv2:extensionData <http:\\/\\/harrisonconsoles.com\\/lv2\\/inlinedisplay\#interface>;
   ifneq ($(XWIN),)
     override LOADLIBES += -lusp10
@@ -197,8 +198,8 @@ IM=gui/img/
 
 UIIMGS=$(IM)meter-bright.c $(IM)meter-dark.c $(IM)screw.c
 
-GLUICFLAGS+=`pkg-config --cflags cairo pango`
-GLUILIBS+=`pkg-config --libs $(PKG_UI_FLAGS) cairo pangocairo pango $(PKG_LIBS)`
+GLUICFLAGS+=`$(PKG_CONFIG) --cflags cairo pango`
+GLUILIBS+=`$(PKG_CONFIG) --libs $(PKG_UI_FLAGS) cairo pangocairo pango $(PKG_LIBS)`
 ifneq ($(XWIN),)
 GLUILIBS+=-lpthread -lusp10
 endif
@@ -231,10 +232,10 @@ DSPDEPS=$(DSPSRC) jmeters/jmeterdsp.h jmeters/vumeterdsp.h \
 goniometer_UIDEP=zita-resampler/resampler.cc zita-resampler/resampler-table.cc
 goniometer_UISRC=zita-resampler/resampler.cc zita-resampler/resampler-table.cc
 
-$(eval phasewheel_UISRC=$(value FFTW))
-$(eval stereoscope_UISRC=$(value FFTW))
+$(eval phasewheel_UISRC=$(FFTW))
+$(eval stereoscope_UISRC=$(FFTW))
 
-$(eval meters_UISRC=$(value FFTW))
+$(eval meters_UISRC=$(FFTW))
 meters_UISRC+=zita-resampler/resampler.cc zita-resampler/resampler-table.cc
 
 ###############################################################################
@@ -298,7 +299,7 @@ $(BUILDDIR)$(LV2NAME)$(LIB_EXT): src/meters.cc $(DSPDEPS) src/ebulv2.cc src/uris
 
 
 JACKCFLAGS=-I. $(CFLAGS) $(CXXFLAGS) $(LIC_CFLAGS)
-JACKCFLAGS+=`pkg-config --cflags jack lv2 pango pangocairo $(PKG_GL_LIBS)`
+JACKCFLAGS+=`$(PKG_CONFIG) --cflags jack lv2 pango pangocairo $(PKG_GL_LIBS)`
 JACKLIBS=-lm $(GLUILIBS)
 
 ## JACK applications
@@ -338,7 +339,7 @@ x42_goniometer_JACKDESC = lv2ui_goniometer
 $(APPBLD)x42-goniometer$(EXE_EXT): src/meters.cc $(DSPSRC) $(DSPDEPS) \
 	$(x42_goniometer_JACKGUI) $(x42_goniometer_LV2HTTL)
 
-$(eval x42_phasewheel_JACKSRC = src/meters.cc $(DSPSRC) $(value FFTW))
+$(eval x42_phasewheel_JACKSRC = src/meters.cc $(DSPSRC) $(FFTW))
 x42_phasewheel_JACKGUI = gui/phasewheel.c
 x42_phasewheel_LV2HTTL = lv2ttl/phasewheel.h
 x42_phasewheel_JACKDESC = lv2ui_phasewheel
@@ -359,7 +360,7 @@ x42_spectrum30_JACKDESC = lv2ui_spectr30
 $(APPBLD)x42-spectrum30$(EXE_EXT): src/meters.cc $(DSPSRC) $(DSPDEPS) \
 	$(x42_spectrum30_JACKGUI) $(x42_spectrum30_LV2HTTL)
 
-$(eval x42_stereoscope_JACKSRC = src/meters.cc $(DSPSRC) $(value FFTW))
+$(eval x42_stereoscope_JACKSRC = src/meters.cc $(DSPSRC) $(FFTW))
 x42_stereoscope_JACKGUI = gui/stereoscope.c
 x42_stereoscope_LV2HTTL = lv2ttl/stereoscope.h
 x42_stereoscope_JACKDESC = lv2ui_stereoscope
@@ -414,7 +415,7 @@ COLLECTION_OBJS = \
 	$(APPBLD)x42-stereoscope.o \
 	$(APPBLD)x42-truepeakrms.o
 
-$(eval x42_meter_collection_JACKSRC = -DX42_MULTIPLUGIN src/meters.cc $(DSPSRC) $(COLLECTION_OBJS) $(value FFTW))
+$(eval x42_meter_collection_JACKSRC = -DX42_MULTIPLUGIN src/meters.cc $(DSPSRC) $(COLLECTION_OBJS) $(FFTW))
 x42_meter_collection_LV2HTTL = lv2ttl/plugins.h
 $(APPBLD)x42-meter-collection$(EXE_EXT): src/meters.cc $(DSPSRC) $(DSPDEPS) $(COLLECTION_OBJS) \
 	lv2ttl/cor.h lv2ttl/dr14stereo.h lv2ttl/ebur128.h lv2ttl/goniometer.h \
