@@ -28,16 +28,26 @@
 static pthread_mutex_t fftw_planner_lock = PTHREAD_MUTEX_INITIALIZER;
 static unsigned int    instance_count    = 0;
 
+typedef enum {
+	W_HANN = 0,
+	W_HAMMMIN,
+	W_NUTTALL,
+	W_BLACKMAN_NUTTALL,
+	W_BLACKMAN_HARRIS,
+	W_FLAT_TOP
+} window_t;
+
 /******************************************************************************
  * internal FFT abstraction
  */
 struct FFTAnalysis {
 	uint32_t   window_size;
+	window_t   window_type;
 	uint32_t   data_size;
 	double     rate;
 	double     freq_per_bin;
 	double     phasediff_step;
-	float*     hann_window;
+	float*     window;
 	float*     fft_in;
 	float*     fft_out;
 	float*     power;
@@ -53,29 +63,101 @@ struct FFTAnalysis {
 	double   phasediff_bin;
 };
 
-/******************************************************************************
+/* ****************************************************************************
+ * windows
+ */
+static double
+ft_hannhamm (float* window, uint32_t n, double a, double b)
+{
+	double sum = 0.0;
+	const double c = 2.0 * M_PI / (n - 1.0);
+	for (uint32_t i = 0; i < n; ++i) {
+		window[i] = a - b * cos (c * i);
+		sum += window[i];
+	}
+	return sum;
+}
+
+static double
+ft_bnh (float* window, uint32_t n, double a0, double a1, double a2, double a3)
+{
+	double sum = 0.0;
+	const double c  = 2.0 * M_PI / (n - 1.0);
+	const double c2 = 2.0 * c;
+	const double c3 = 3.0 * c;
+
+	for (uint32_t i = 0; i < n; ++i) {
+		window[i] = a0 - a1 * cos(c * i) + a2 * cos(c2 * i) - a3 * cos(c3 * i);
+		sum += window[i];
+	}
+	return sum;
+}
+
+static double
+ft_flattop (float* window, uint32_t n)
+{
+	double sum = 0.0;
+	const double c  = 2.0 * M_PI / (n - 1.0);
+	const double c2 = 2.0 * c;
+	const double c3 = 3.0 * c;
+	const double c4 = 4.0 * c;
+
+	const double a0 = 1.0;
+	const double a1 = 1.93;
+	const double a2 = 1.29;
+	const double a3 = 0.388;
+	const double a4 = 0.028;
+
+	for (uint32_t i = 0; i < n; ++i) {
+		window[i] = a0 - a1 * cos(c * i) + a2 * cos(c2 * i) - a3 * cos(c3 * i) + a4 * cos(c4 * i);
+		sum += window[i];
+	}
+	return sum;
+}
+
+
+/* ****************************************************************************
  * internal private functions
  */
 static float*
-ft_hann_window (struct FFTAnalysis* ft)
+ft_gen_window (struct FFTAnalysis* ft)
 {
-	if (ft->hann_window) {
-		return ft->hann_window;
+	if (ft->window) {
+		return ft->window;
 	}
 
-	ft->hann_window = (float*)malloc (sizeof (float) * ft->window_size);
-	double sum      = 0.0;
+	ft->window = (float*)malloc (sizeof (float) * ft->window_size);
+	double sum = .0;
 
-	for (uint32_t i = 0; i < ft->window_size; i++) {
-		ft->hann_window[i] = 0.5f - (0.5f * (float)cos (2.0f * M_PI * (float)i / (float)(ft->window_size)));
-		sum += ft->hann_window[i];
+	/* https://en.wikipedia.org/wiki/Window_function */
+	switch (ft->window_type) {
+		default:
+		case W_HANN:
+			sum = ft_hannhamm (ft->window, ft->window_size, .5, .5);
+			break;
+		case W_HAMMMIN:
+			sum = ft_hannhamm (ft->window, ft->window_size, .54, .46);
+			break;
+		case W_NUTTALL:
+			sum = ft_bnh (ft->window, ft->window_size, .355768, .487396, .144232, .012604);
+			break;
+		case W_BLACKMAN_NUTTALL:
+			sum = ft_bnh (ft->window, ft->window_size, .3635819, .4891775, .1365995, .0106411);
+			break;
+		case W_BLACKMAN_HARRIS:
+			sum = ft_bnh (ft->window, ft->window_size, .35875, .48829, .14128, .01168);
+			break;
+		case W_FLAT_TOP:
+			sum = ft_flattop (ft->window, ft->window_size);
+			break;
 	}
+
 	const double isum = 2.0 / sum;
 	for (uint32_t i = 0; i < ft->window_size; i++) {
-		ft->hann_window[i] *= isum;
+		ft->window[i] *= isum;
 	}
 
-	return ft->hann_window;
+	return ft->window;
 }
 
 static void
@@ -95,16 +177,6 @@ ft_analyze (struct FFTAnalysis* ft)
 	}
 #undef FRe
 #undef FIm
-}
-
-static void
-ft_analyze_hann (struct FFTAnalysis* ft)
-{
-	float* window = ft_hann_window (ft);
-	for (uint32_t i = 0; i < ft->window_size; i++) {
-		ft->fft_in[i] *= window[i];
-	}
-	ft_analyze (ft);
 }
 
 /******************************************************************************
@@ -138,8 +210,9 @@ fftx_init (struct FFTAnalysis* ft, uint32_t window_size, double rate, double fps
 {
 	ft->rate           = rate;
 	ft->window_size    = window_size;
+	ft->window_type    = W_HANN;
 	ft->data_size      = window_size / 2;
-	ft->hann_window    = NULL;
+	ft->window         = NULL;
 	ft->rboff          = 0;
 	ft->smps           = 0;
 	ft->step           = 0;
@@ -161,6 +234,18 @@ fftx_init (struct FFTAnalysis* ft, uint32_t window_size, double rate, double fps
 	ft->fftplan = fftwf_plan_r2r_1d (window_size, ft->fft_in, ft->fft_out, FFTW_R2HC, FFTW_MEASURE);
 	++instance_count;
 	pthread_mutex_unlock (&fftw_planner_lock);
+}
+
+FFTX_FN_PREFIX
+void
+fftx_set_window (struct FFTAnalysis* ft, window_t type)
+{
+	if (ft->window_type == type) {
+		return;
+	}
+	ft->window_type = type;
+	free (ft->window);
+	ft->window = NULL;
 }
 
 FFTX_FN_PREFIX
@@ -190,7 +275,7 @@ fftx_free (struct FFTAnalysis* ft)
 	}
 #endif
 	pthread_mutex_unlock (&fftw_planner_lock);
-	free (ft->hann_window);
+	free (ft->window);
 	free (ft->ringbuf);
 	fftwf_free (ft->fft_in);
 	fftwf_free (ft->fft_out);
@@ -241,8 +326,15 @@ _fftx_run (struct FFTAnalysis* ft,
 		memcpy (&f_buf[0], &r_buf[p0s], sizeof (float) * n_old);
 	}
 
+	/* apply window function */
+	float const* const window = ft_gen_window (ft);
+	for (uint32_t i = 0; i < ft->window_size; i++) {
+		ft->fft_in[i] *= window[i];
+	}
+
 	/* ..and analyze */
-	ft_analyze_hann (ft);
+	ft_analyze (ft);
+
 	ft->phasediff_bin = ft->phasediff_step * (double)ft->step;
 	return 0;
 }
