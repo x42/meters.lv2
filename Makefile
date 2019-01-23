@@ -12,6 +12,7 @@ LV2DIR ?= $(PREFIX)/lib/lv2
 
 OPTIMIZATIONS ?= -msse -msse2 -mfpmath=sse -fomit-frame-pointer -O3 -fno-finite-math-only -DNDEBUG
 CFLAGS ?= -Wall -Wno-unused-function
+
 PKG_CONFIG ?= pkg-config
 STRIP  ?= strip
 
@@ -22,7 +23,7 @@ meters_VERSION?=$(shell git describe --tags HEAD 2>/dev/null | sed 's/-g.*$$//;s
 RW?=robtk/
 
 ###############################################################################
-override CFLAGS += -g -fvisibility=hidden $(OPTIMIZATIONS)
+override CFLAGS += -g $(OPTIMIZATIONS)
 
 BUILDDIR=build/
 APPBLD=x42/
