@@ -187,7 +187,7 @@ override CXXFLAGS += -DVERSION="\"$(meters_VERSION)\""
 ifneq ($(INLINEDISPLAY),no)
   override CXXFLAGS += `$(PKG_CONFIG) --cflags cairo pangocairo pango` -I$(RW) -DDISPLAY_INTERFACE -I.
   override LOADLIBES += `$(PKG_CONFIG) $(PKG_UI_FLAGS) --libs cairo pangocairo pango`
-  INLINEDISPLAYTLL=lv2:optionalFeature <http:\\/\\/harrisonconsoles.com\\/lv2\\/inlinedisplay\#queue_draw>; lv2:extensionData <http:\\/\\/harrisonconsoles.com\\/lv2\\/inlinedisplay\#interface>;
+  INLINEDISPLAYTLL=lv2:optionalFeature idpy:queue_draw; lv2:extensionData idpy:interface;
   ifneq ($(XWIN),)
     override LOADLIBES += -lusp10
   endif
