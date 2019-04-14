@@ -15,6 +15,9 @@
 @prefix units: <http://lv2plug.in/ns/extensions/units#> .
 @prefix urid:  <http://lv2plug.in/ns/ext/urid#> .
 
+idpy:queue_draw a lv2:Feature .
+idpy:interface a lv2:ExtensionData .
+
 @prefix mtr:   <http://gareus.org/oss/lv2/@LV2NAME@#> .
 
 <http://gareus.org/rgareus#me>
