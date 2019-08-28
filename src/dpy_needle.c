@@ -46,8 +46,9 @@ static float meter_deflect (int type, float v) {
 	}
 }
 
-#include "rtk/common.h"
+#define RTK_INLINE_STYLE
 #include "rtk/style.h"
+#include "rtk/common.h"
 #include "gui/meterimage.c"
 
 static LV2_Inline_Display_Image_Surface *
