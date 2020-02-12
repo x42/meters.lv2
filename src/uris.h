@@ -41,12 +41,14 @@
 #define DIST_RANGE (150.f)
 #define DIST_ZERO  (180.f) // DIST_OFF + DIST_RANGE
 
-// offsets in histS for bitmeter
-#define BIM_DHIT 0
-#define BIM_NHIT 23
-#define BIM_DONE 280
-#define BIM_NONE 303
-#define BIM_DSET 560
+/* offsets in histS for bitmeter */
+#define BIM_DHIT 0   // + exp + k [count totals]
+#define BIM_NHIT 23  // + exp
+
+#define BIM_DONE 280 // + exp + k [abs-scale]
+#define BIM_NONE 303 // + exp     [abs-scale (1 + 0) * 2^exp]
+
+#define BIM_DSET 560 // + k       [mantissa stats]
 #define BIM_LAST 584
 
 #define MTR__ebulevels        MTR_URI "ebulevels"

@@ -3372,6 +3372,7 @@ mtr:bitmeter@URI_SUFFIX@
 	lv2:requiredFeature urid:map ;
 	lv2:extensionData state:interface ;
 	@SIGNATURE@
+	@INLINEDISPLAYTLL@
 	ui:ui @BITGUI@ ;
 	lv2:port [
 		a atom:AtomPort ,

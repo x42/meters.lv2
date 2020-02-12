@@ -90,7 +90,7 @@ static void float_stats (LV2meter* self, float const * const sample) {
 		exp = 1; /* E-126 not E-127 for denormals */
 	}
 
-	for (int k= 0; k < 23; ++k) {
+	for (int k = 0; k < 23; ++k) {
 		const int bit = 1 << k;
 		++self->histS[BIM_DHIT + exp + k];
 		if (value & bit) {
@@ -124,6 +124,11 @@ bim_instantiate(
 		if (!strcmp (features[i]->URI, LV2_URID__map)) {
 			self->map = (LV2_URID_Map*)features[i]->data;
 		}
+#ifdef DISPLAY_INTERFACE
+		if (!strcmp(features[i]->URI, LV2_INLINEDISPLAY__queue_draw)) {
+			self->queue_draw = (LV2_Inline_Display*) features[i]->data;
+		}
+#endif
 	}
 
 	if (!self->map) {
@@ -256,7 +261,6 @@ bim_run(LV2_Handle instance, uint32_t n_samples)
 	self->radar_resync += n_samples;
 
 	if (self->radar_resync >= fps_limit || self->send_state_to_ui) {
-		self->radar_resync = self->radar_resync % fps_limit;
 
 		if (self->ui_active && (self->ebu_integrating || self->send_state_to_ui)) {
 			LV2_Atom_Forge_Frame frame;
@@ -287,19 +291,33 @@ bim_run(LV2_Handle instance, uint32_t n_samples)
 			lv2_atom_forge_pop(&self->forge, &frame);
 		}
 
-		if (self->ui_active) {
-			LV2_Atom_Forge_Frame frame;
-			lv2_atom_forge_frame_time(&self->forge, 0);
-			x_forge_object(&self->forge, &frame, 1, self->uris.bim_information);
-			lv2_atom_forge_property_head(&self->forge, self->uris.ebu_integrating, 0);
-			lv2_atom_forge_bool(&self->forge, self->ebu_integrating);
-			lv2_atom_forge_property_head(&self->forge, self->uris.bim_averaging, 0);
-			lv2_atom_forge_bool(&self->forge, self->bim_average);
-			lv2_atom_forge_pop(&self->forge, &frame);
-		}
+		if (self->radar_resync >= fps_limit) {
+			self->radar_resync = self->radar_resync % fps_limit;
 
-		if (!self->bim_average) {
-			bim_clear (self);
+#ifdef DISPLAY_INTERFACE
+			if (self->queue_draw) {
+				self->queue_draw->queue_draw (self->queue_draw->handle);
+				for (int k = 118; k < 154; ++k) {
+					self->histM[BIM_DHIT + k] = self->histS[BIM_DHIT + k];
+					self->histM[BIM_DONE + k] = self->histS[BIM_DONE + k];
+				}
+			}
+#endif
+
+			if (self->ui_active) {
+				LV2_Atom_Forge_Frame frame;
+				lv2_atom_forge_frame_time(&self->forge, 0);
+				x_forge_object(&self->forge, &frame, 1, self->uris.bim_information);
+				lv2_atom_forge_property_head(&self->forge, self->uris.ebu_integrating, 0);
+				lv2_atom_forge_bool(&self->forge, self->ebu_integrating);
+				lv2_atom_forge_property_head(&self->forge, self->uris.bim_averaging, 0);
+				lv2_atom_forge_bool(&self->forge, self->bim_average);
+				lv2_atom_forge_pop(&self->forge, &frame);
+			}
+
+			if (!self->bim_average) {
+				bim_clear (self);
+			}
 		}
 	}
 
@@ -323,6 +341,11 @@ bim_cleanup(LV2_Handle instance)
 {
 	LV2meter* self = (LV2meter*)instance;
 	FREE_VARPORTS;
+#ifdef DISPLAY_INTERFACE
+	if (self->display) cairo_surface_destroy(self->display);
+	if (self->face) cairo_surface_destroy(self->face);
+	if (self->mpat) cairo_pattern_destroy(self->mpat);
+#endif
 	free(instance);
 }
 
@@ -362,6 +385,99 @@ bim_restore(LV2_Handle              instance,
   return LV2_STATE_SUCCESS;
 }
 
+#ifdef DISPLAY_INTERFACE
+#include "rtk/common.h"
+
+static LV2_Inline_Display_Image_Surface *
+bit_render (LV2_Handle instance, uint32_t w, uint32_t max_h)
+{
+#ifdef WITH_SIGNATURE
+	if (!is_licensed (instance)) { return NULL; }
+#endif
+	LV2meter* self = (LV2meter*)instance;
+	uint32_t h = MIN (72, max_h);
+	h &= ~1;
+
+	if (!self->display || self->w != w || self->h != h) {
+		if (self->display) cairo_surface_destroy(self->display);
+		self->display = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, w, h);
+		self->w = w;
+		self->h = h;
+	}
+	cairo_t* cr = cairo_create (self->display);
+	cairo_rectangle (cr, 0, 0, w, h);
+	cairo_set_source_rgba (cr, .2, .2, .2, 1.0);
+	cairo_fill (cr);
+
+	const int xc = w / 2;
+	const int xr = w / 2 - 4;
+
+	cairo_set_line_width (cr, 1);
+	cairo_set_line_cap(cr, CAIRO_LINE_CAP_ROUND);
+
+	for (int k = 0; k < 36; ++k) {
+		/* BIM_D(HIT|ONE) + 150 ~= 1.0 == 2^0 || bit 150 = 23 + 127 */
+		const int o = 153 - k;
+		if (self->histM[BIM_DHIT + o] == 0) {
+			continue;
+		}
+		float xo = xr * self->histM[BIM_DONE + o] / (float) self->histM[BIM_DHIT + o];
+		if (k < 4) {
+			cairo_set_source_rgba (cr, .9, .3, .0, 1.0); // 2^0 .. 2^3
+		} else if (k < 12) {
+			cairo_set_source_rgba (cr, .7, .7, .0, 1.0); // 2^-8 .. 2^-1
+		} else if (k < 20) {
+			cairo_set_source_rgba (cr, .2, .9, .2, 1.0); // 2^-16 .. 2^-9
+		} else if (k < 28) {
+			cairo_set_source_rgba (cr, .0, .6, .0, 1.0); // 2^-24 .. 2^-15
+		} else {
+			cairo_set_source_rgba (cr, .0, .0, .6, 1.0); // 2^-32 .. 2^-25
+		}
+
+		cairo_move_to (cr, xc - xo, k * 2 - .5);
+		cairo_line_to (cr, xc + xo, k * 2 - .5);
+		cairo_stroke (cr);
+	}
+
+	double dash = 2;
+	cairo_set_dash (cr, &dash, 1, 0);
+	cairo_set_line_cap(cr, CAIRO_LINE_CAP_BUTT);
+	cairo_set_source_rgba (cr, .7, .7, .7, 0.5);
+
+	cairo_move_to (cr, 0, 6.5);
+	cairo_line_to (cr, w - 8, 6.5);
+	cairo_stroke (cr);
+	cairo_move_to (cr, 0, 22.5);
+	cairo_line_to (cr, w - 8, 22.5);
+	cairo_stroke (cr);
+	cairo_move_to (cr, 0, 38.5);
+	cairo_line_to (cr, w - 12, 38.5);
+	cairo_stroke (cr);
+	cairo_move_to (cr, 0, 54.5);
+	cairo_line_to (cr, w - 12, 54.5);
+	cairo_stroke (cr);
+
+	cairo_set_dash (cr, NULL, 0, 0);
+
+	PangoFontDescription* font = pango_font_description_from_string ("Mono 8px");
+	write_text_full (cr, "0",  font, w - 2,  7, 0, 1, c_g80);
+	write_text_full (cr, "8",  font, w - 2, 23, 0, 1, c_g80);
+	write_text_full (cr, "16", font, w - 2, 39, 0, 1, c_g80);
+	write_text_full (cr, "24", font, w - 2, 55, 0, 1, c_g80);
+	pango_font_description_free (font);
+
+	cairo_destroy (cr);
+
+	cairo_surface_flush (self->display);
+	self->surf.width = cairo_image_surface_get_width (self->display);
+	self->surf.height = cairo_image_surface_get_height (self->display);
+	self->surf.stride = cairo_image_surface_get_stride (self->display);
+	self->surf.data = cairo_image_surface_get_data  (self->display);
+
+	return &self->surf;
+}
+#endif
+
 static const void*
 extension_data_bim(const char* uri)
 {
@@ -369,6 +485,16 @@ extension_data_bim(const char* uri)
   if (!strcmp(uri, LV2_STATE__interface)) {
     return &state;
   }
+#ifdef DISPLAY_INTERFACE
+	static const LV2_Inline_Display_Interface display  = { bit_render };
+	if (!strcmp(uri, LV2_INLINEDISPLAY__interface)) {
+#if (defined _WIN32 && defined RTK_STATIC_INIT)
+		static int once = 0;
+		if (!once) {once = 1; gobject_init_ctor();}
+#endif
+		return &display;
+	}
+#endif
 #ifdef WITH_SIGNATURE
 	LV2_LICENSE_EXT_C
 #endif

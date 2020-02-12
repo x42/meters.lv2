@@ -308,8 +308,8 @@ static void gen_faceplate (BITui* ui, const int ww, const int hh) {
 }
 
 static bool draw_bit_box (BITui* ui, cairo_t* cr, float x0, float y0, float rd, int hit, int set) {
-	const int scnt = ui->integration_spl;
-	if ( (hit < 0 && scnt == ui->f_zero) || (hit == 0)) {
+	const int scnt = hit > 0 ? hit : ui->integration_spl;
+	if ((hit < 0 && scnt == ui->f_zero) || (hit == 0)) {
 		cairo_set_source_rgba (cr, .5, .5, .5, 1.0);
 	} else if (set == 0) {
 		cairo_set_source_rgba (cr, .0, .0, .9, 1.0);
