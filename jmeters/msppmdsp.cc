@@ -36,11 +36,11 @@ Msppmdsp::Msppmdsp (float mdb) :
     _z2 (0),
     _m (0),
     _res (true),
-    _mv (0)
+    _db (0),
+    _mv (1.0)
 {
-    _mv = powf(10, .05 * mdb);
+    set_gain (mdb);
 }
-
 
 Msppmdsp::~Msppmdsp (void)
 {
@@ -131,6 +131,17 @@ void Msppmdsp::init (float fsamp)
     _w2 = 860.0f / fsamp;
     _w3 = 1.0f - 4.0f / fsamp;
     _g = 0.5141f;
+}
+
+
+void
+Msppmdsp::set_gain (float db)
+{
+    if (_db == db) {
+	return;
+    }
+    _db = db;
+    _mv = powf (10, .05 * db);
 }
 
 }

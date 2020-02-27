@@ -35,6 +35,7 @@ public:
     void processM (float *pl, float *pr, int n);  
     void processS (float *pl, float *pr, int n);  
     float read (void);
+    void set_gain (float);
 
     static void init (float fsamp); 
 
@@ -44,7 +45,8 @@ private:
     float          _z2;          // filter state
     float          _m;           // max value since last read()
     bool           _res;         // flag to reset m
-    float          _mv;          // dB offset m3, m6
+    float          _db;          // dB offset m3, m6
+    float          _mv;          // gain-coeff
 
     static float   _w1;          // attack filter coefficient
     static float   _w2;          // attack filter coefficient
