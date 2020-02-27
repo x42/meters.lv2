@@ -554,6 +554,9 @@ bbcm_run(LV2_Handle instance, uint32_t n_samples)
 		self->rlgain = powf (10.0f, 0.05f * (self->p_refl + 18.0));
 	}
 
+	bool s20 = (*(self->peak[0]) > 0.5) ? true : false; // port 7
+	self->bms[1]->set_gain (s20 ? +14 : -6);
+
 	self->bms[0]->processM(self->input[0], self->input[1], n_samples);
 	self->mval[0] = *self->level[0] = self->rlgain * self->bms[0]->read();
 

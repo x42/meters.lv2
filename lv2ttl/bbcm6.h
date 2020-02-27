@@ -10,7 +10,7 @@ static const RtkLv2Description _plugin_bbcm6 = {
 	, 30 // uint32_t dsp_descriptor_id
 	, 0 // uint32_t gui_descriptor_id
 	, "BBC M-6" // const char *plugin_human_id
-	, (const struct LV2Port[7])
+	, (const struct LV2Port[8])
 	{
 		{ "ref", CONTROL_IN, -18.000000, -30.000000, 0.000000, "Reference Level 0dBu"},
 		{ "inL", AUDIO_IN, nan, nan, nan, "InL"},
@@ -19,16 +19,17 @@ static const RtkLv2Description _plugin_bbcm6 = {
 		{ "inR", AUDIO_IN, nan, nan, nan, "InR"},
 		{ "outR", AUDIO_OUT, nan, nan, nan, "OutR"},
 		{ "levelS6", CONTROL_OUT, nan, 0.000000, 1.000000, "LevelS6"},
+		{ "s20", CONTROL_IN, 0.000000, 0.000000, 1.000000, "S+20dB"},
 	}
-	, 7 // uint32_t nports_total
+	, 8 // uint32_t nports_total
 	, 2 // uint32_t nports_audio_in
 	, 2 // uint32_t nports_audio_out
 	, 0 // uint32_t nports_midi_in
 	, 0 // uint32_t nports_midi_out
 	, 0 // uint32_t nports_atom_in
 	, 0 // uint32_t nports_atom_out
-	, 3 // uint32_t nports_ctrl
-	, 1 // uint32_t nports_ctrl_in
+	, 4 // uint32_t nports_ctrl
+	, 2 // uint32_t nports_ctrl_in
 	, 2 // uint32_t nports_ctrl_out
 	, 8192 // uint32_t min_atom_bufsiz
 	, false // bool send_time_info

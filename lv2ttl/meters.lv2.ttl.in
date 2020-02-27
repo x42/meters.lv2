@@ -3358,6 +3358,17 @@ mtr:BBCM6@URI_SUFFIX@
 		lv2:name "LevelS6" ;
 		lv2:minimum 0.0 ;
 		lv2:maximum 1.0 ;
+	] , [
+		a lv2:ControlPort,
+			lv2:InputPort ;
+		lv2:index 7 ;
+		lv2:symbol "s20" ;
+		lv2:name "S+20dB" ;
+		lv2:minimum 0 ;
+		lv2:maximum 1 ;
+		lv2:default 0 ;
+		lv2:portProperty lv2:toggled;
+		lv2:portProperty lv2:integer;
 	] ;
 	rdfs:comment "BBC M-6, Mid/Side stereo audio level meter according to IEC 60268-10 / Type IIa. L/R -6dB."
 	.
