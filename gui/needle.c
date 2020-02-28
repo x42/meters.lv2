@@ -58,6 +58,7 @@ typedef struct {
 	float lvl[2];
 	float cal;
 	float cal_rad;
+	bool bbc_s20;
 	int chn;
 	enum MtrType type;
 
@@ -66,7 +67,7 @@ typedef struct {
 	int x0, y0;
 	int x1, y1;
 
-	PangoFontDescription *font;
+	PangoFontDescription* font[2];
 
 	/*** pixel design ***/
 	float scale;
@@ -78,6 +79,13 @@ typedef struct {
 	float s_h2;
 	cairo_rectangle_t screwrect;
 	cairo_rectangle_t textrect;
+
+	/* bbc +20dB */
+	float bbc_xc;
+	float bbc_yc;
+	float bbc_w2;
+	float bbc_h2;
+	cairo_rectangle_t bbc_rect;
 
 	/* meter size */
 	float m_width;
@@ -130,6 +138,16 @@ static void set_needle_sizes(MetersLV2UI* ui) {
 	ui->textrect.width = 150;
 	ui->textrect.height = 30;
 
+	/* BBC switch */
+	ui->bbc_xc = .5 + floor (72.0 * scale);
+	ui->bbc_yc = .5 + floor (153.0 * scale);
+	ui->bbc_w2 = floor (20 * ui->s_scale);
+	ui->bbc_h2 = floor (10 * ui->s_scale);
+	ui->bbc_rect.x = (ui->bbc_xc - ui->bbc_w2) - 2;
+	ui->bbc_rect.y = (ui->bbc_yc - ui->bbc_h2) - 2;
+	ui->bbc_rect.width  = 4 + 2 * ui->bbc_w2;
+	ui->bbc_rect.height = 4 + 2 * ui->bbc_h2;
+
 	/* meter size */
 	ui->m_width  = rint(300.0 * scale);
 	ui->m_height = rint(170.0 * scale);
@@ -145,13 +163,16 @@ static void set_needle_sizes(MetersLV2UI* ui) {
 	ui->height = ui->m_height;
 
 	if (ui->bg) cairo_surface_destroy(ui->bg);
-	if (ui->font) pango_font_description_free(ui->font);
+	if (ui->font[0]) pango_font_description_free(ui->font[0]);
+	if (ui->font[1]) pango_font_description_free(ui->font[1]);
 
 	ui->bg = render_front_face(ui->type, ui->m_width, ui->m_height);
 
 	char fontname[32];
 	sprintf(fontname, "Sans %dpx", (int)rint(10.0 * ui->scale));
-	ui->font = pango_font_description_from_string(fontname);
+	ui->font[0] = pango_font_description_from_string(fontname);
+	sprintf(fontname, "Sans %dpx", (int)rint(8.0 * ui->scale));
+	ui->font[1] = pango_font_description_from_string(fontname);
 
 	if (ui->sf_nfo) {
 		cairo_surface_destroy(ui->sf_nfo);
@@ -286,7 +307,7 @@ static void draw_needle (MetersLV2UI* ui, cairo_t* cr, float val,
 	cairo_set_line_width (cr, .75 * ui->scale); \
 	CairoSetSouerceRGBA(c_gry); \
 	cairo_stroke(cr); \
-	write_text_full(cr, "NaN", ui->font, (X), (Y) + 5 * ui->scale, 0, 2, c_wht); \
+	write_text_full(cr, "NaN", ui->font[0], (X), (Y) + 5 * ui->scale, 0, 2, c_wht); \
 	cairo_restore(cr);
 
 
@@ -370,7 +391,7 @@ static bool expose_event(RobWidget* handle, cairo_t* cr, cairo_rectangle_t* ev) 
 				break;
 		}
 
-		write_text_full(cr, buf, ui->font, ui->s_xc + ui->s_w2 + 8, ui->s_yc, 0, 3, c_wht);
+		write_text_full(cr, buf, ui->font[0], ui->s_xc + ui->s_w2 + 8, ui->s_yc, 0, 3, c_wht);
 	}
 
 	/* draw callibration screw */
@@ -394,6 +415,84 @@ static bool expose_event(RobWidget* handle, cairo_t* cr, cairo_rectangle_t* ev) 
 		cairo_restore(cr);
 	}
 
+	/* draw +20db switch */
+	if (ui->type == MT_BM6 && rect_intersect (ev, &ui->bbc_rect)) {
+		cairo_save(cr);
+		cairo_translate (cr, ui->bbc_xc - ui->bbc_w2, ui->bbc_yc - ui->bbc_h2);
+		cairo_rectangle (cr, 0, 0, 2 * ui->bbc_w2, 2 * ui->bbc_h2);
+		cairo_clip (cr);
+
+		int sw_x1 = 2 * ui->bbc_w2 - 2;
+		int sw_y1 = 2 * ui->bbc_h2 - 3;
+		int sw_ww = floor (7 * ui->s_scale);
+
+
+		if (ui->bbc_s20) {
+			cairo_set_source_rgba (cr, .7, .1, .1, .7);
+			cairo_rectangle (cr, 0, 0, 2 * ui->bbc_w2, 2 * ui->bbc_h2);
+		} else {
+			cairo_set_source_rgba (cr, .7, .1, .1, .7);
+			cairo_rectangle (cr, 0, 0, sw_ww + 4, 2 * ui->bbc_h2);
+			cairo_fill (cr);
+			cairo_set_source_rgba (cr, .1, .1, .1, .7);
+			cairo_rectangle (cr, sw_ww + 4, 0, 2 * ui->bbc_w2 - sw_ww - 4, 2 * ui->bbc_h2);
+		}
+		cairo_fill (cr);
+
+		/* schieber */
+		cairo_save(cr);
+		if (ui->bbc_s20) {
+			cairo_translate (cr, sw_x1 - sw_ww, 1);
+		} else {
+			cairo_translate (cr, 2, 1);
+		}
+
+		cairo_rectangle (cr, 0, 0, sw_ww, sw_y1);
+		cairo_set_source_rgba (cr, 1, .0, .0, .7);
+		cairo_fill (cr);
+
+		cairo_set_line_width (cr, 1);
+		cairo_set_source_rgba (cr, 1, .2, .2, 1);
+
+		cairo_move_to (cr, 0, 0);
+		cairo_rel_line_to (cr, sw_ww, 0);
+		cairo_stroke (cr);
+		cairo_move_to (cr, sw_ww, 0);
+		cairo_rel_line_to (cr, 0, sw_y1);
+		cairo_stroke (cr);
+
+		cairo_set_source_rgba (cr, .5, .0, .0, 1);
+		cairo_move_to (cr, 0, 0);
+		cairo_rel_line_to (cr, 0, sw_y1);
+		cairo_stroke (cr);
+		cairo_move_to (cr, 0, sw_y1);
+		cairo_rel_line_to (cr, sw_ww, 0);
+		cairo_stroke (cr);
+		cairo_restore(cr);
+
+		if (ui->bbc_s20) {
+			cairo_save (cr);
+			write_text_full (cr, "S+20", ui->font[1], ui->bbc_w2 - sw_ww / 2, ui->bbc_h2, 0, 2, c_wht);
+			cairo_restore (cr);
+		}
+
+		cairo_rectangle (cr, 0, 0, 2 * ui->bbc_w2, 2 * ui->bbc_h2);
+		CairoSetSouerceRGBA (c_scr);
+		cairo_set_line_width (cr, 1.0);
+		cairo_stroke (cr);
+
+		cairo_set_line_width (cr, 1.5);
+		cairo_set_source_rgba (cr, .1, .1, .1, .5);
+		cairo_move_to (cr, 1, 0);
+		cairo_rel_line_to (cr, 0, 2 * ui->bbc_h2 - 1);
+		cairo_stroke (cr);
+		cairo_move_to (cr, 0, 2 * ui->bbc_h2 - 1);
+		cairo_rel_line_to (cr, 2 * ui->bbc_w2 - 1, 0);
+		cairo_stroke (cr);
+
+		cairo_restore(cr);
+	}
+
 	return TRUE;
 }
 
@@ -412,6 +511,19 @@ static RobWidget* mousedown(RobWidget* handle, RobTkBtnEvent *event) {
 
 	if (ui->naned[0]) { ui->naned[0] = FALSE; queue_draw(ui->rw); }
 	if (ui->naned[1]) { ui->naned[1] = FALSE; queue_draw(ui->rw); }
+	if (ui->type == MT_BM6
+	    && event->x > ui->bbc_xc - ui->bbc_w2
+	    && event->x < ui->bbc_xc + ui->bbc_w2
+	    && event->y > ui->bbc_yc - ui->bbc_h2
+	    && event->y < ui->bbc_yc + ui->bbc_h2
+		 )
+	{
+		/* Toggle BBC +20dB Side switch */
+		float onoff = ui->bbc_s20 ? 0 : 1;
+		ui->write(ui->controller, 7, sizeof(float), 0, (const void*) &onoff);
+		return NULL;
+	}
+
 	if (   event->x < ui->s_xc - ui->s_w2
 			|| event->x > ui->s_xc + ui->s_w2
 			|| event->y < ui->s_yc - ui->s_h2
@@ -563,13 +675,15 @@ instantiate(
 	ui->naned[0]   = ui->naned[1] = FALSE;
 	ui->cal        = -18.0;
 	ui->cal_rad    = cal2rad(ui->type, ui->cal);
+	ui->bbc_s20    = false;
 	ui->bg         = NULL;
 	ui->adj        = NULL;
 	ui->sf_nfo     = NULL;
 	ui->img0       = NULL;
 	ui->drag_x     = ui->drag_y = -1;
 	ui->scale      = 1.0;
-	ui->font       = NULL;
+	ui->font[0]    = NULL;
+	ui->font[1]    = NULL;
 
 	ui->nfo = robtk_info(ui_toplevel);
 	set_needle_sizes(ui);
@@ -611,7 +725,8 @@ cleanup(LV2UI_Handle handle)
 	cairo_surface_destroy(ui->sf_nfo);
 	cairo_surface_destroy(ui->bg);
 	cairo_surface_destroy(ui->adj);
-	pango_font_description_free(ui->font);
+	pango_font_description_free(ui->font[0]);
+	pango_font_description_free(ui->font[1]);
 	robwidget_destroy(ui->rw);
 	free(ui->img0);
 	free(ui->img1);
@@ -684,6 +799,10 @@ port_event(LV2UI_Handle handle,
 	if (port_index == 0) {
 		ui->cal = *(float *)buffer;
 		ui->cal_rad = cal2rad(ui->type, ui->cal);
+		queue_draw(ui->rw);
+	} else
+	if (port_index == 7 && ui->type == MT_BM6) {
+		ui->bbc_s20 = *(float *)buffer > 0;
 		queue_draw(ui->rw);
 	}
 }
