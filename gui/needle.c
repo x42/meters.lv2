@@ -63,6 +63,8 @@ typedef struct {
 
 	float drag_x, drag_y, drag_cal;
 	int width, height;
+	int x0, y0;
+	int x1, y1;
 
 	PangoFontDescription *font;
 
@@ -297,6 +299,13 @@ static bool expose_event(RobWidget* handle, cairo_t* cr, cairo_rectangle_t* ev) 
 	cairo_rectangle (cr, ev->x, ev->y, ev->width, ev->height);
 	cairo_clip (cr);
 
+	cairo_rectangle (cr, 2.5, 2.5, ui->x1 - 5, ui->y1 - 5);
+	cairo_set_source_rgb (cr, .55, .55, .55);
+	cairo_set_line_width (cr, 6.0);
+	cairo_stroke(cr);
+
+	cairo_translate (cr, ui->x0, ui->y0);
+
 	switch(ui->type) {
 		case MT_VU:
 			col = c_blk;
@@ -496,22 +505,13 @@ size_limit(RobWidget* rw, int *w, int *h) {
 	if (scale > 3.5 ) scale = 3.5;
 	ui->scale  = scale;
 	set_needle_sizes(ui); // sets ui->width, ui->height
-	robwidget_set_size(rw, ui->width, ui->height); // single top-level
-	*w = ui->width;
-	*h = ui->height;
+	ui->x0 = (*w - ui->width) / 2;
+	ui->y0 = (*h - ui->height) / 2;
+	ui->x1 = *w;
+	ui->y1 = *h;
+	robwidget_set_size(rw, *w, *h);
 	queue_draw(rw);
 }
-
-static void
-size_allocate(RobWidget* rw, int w, int h) {
-	int ww = w;
-	int wh = h;
-	size_limit(rw, &ww, &wh);
-	robwidget_set_alignment(rw, .5, .5);
-	rw->area.x = rint((w - rw->area.width) * rw->xalign);
-	rw->area.y = rint((h - rw->area.height) * rw->yalign);
-}
-
 
 /******************************************************************************
  * LV2 callbacks
@@ -582,7 +582,6 @@ instantiate(
 
 	robwidget_set_expose_event(ui->rw, expose_event);
 	robwidget_set_size_request(ui->rw, size_request);
-	robwidget_set_size_allocate(ui->rw, size_allocate);
 	robwidget_set_size_limit(ui->rw, size_limit);
 	robwidget_set_size_default(ui->rw, size_default);
 
@@ -658,7 +657,7 @@ static void invalidate_area(MetersLV2UI* ui, int c, float oldval, float newval) 
 	calc_needle_area(ui, oldval, xoff, &r1);
 	calc_needle_area(ui, newval, xoff, &r2);
 	rect_combine(&r1, &r2, &r1);
-	queue_tiny_area(ui->rw, r1.x, r1.y, r1.width, r1.height);
+	queue_tiny_area(ui->rw, ui->x0 + r1.x, ui->y0 + r1.y, r1.width, r1.height);
 }
 
 static void
