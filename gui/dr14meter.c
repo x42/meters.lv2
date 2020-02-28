@@ -333,6 +333,68 @@ static void create_surfaces(DRUI* ui) {
 }
 
 /******************************************************************************
+ * invalidation and pixel position cache
+ */
+
+#define INVALIDATE_RECT(XX,YY,WW,HH) queue_tiny_area(ui->m0, XX, YY, WW, HH);
+#define VCMP(A,B) (ui->dr_operation_mode && RCMP((A),(B)))
+#define RCMP(A,B) (rintf(100.f * (A)) != rintf(100.f * (B)))
+
+static void invalidate_meter(DRUI* ui, const int mtr, const int px1, const int px2, const int corners) {
+	if (px1 == px2) return;
+
+	if (ui->dr_operation_mode) {
+		INVALIDATE_RECT(
+				MA_WIDTH + GM_WIDTH * mtr, GM_MARGIN_Y,
+				GM_WIDTH, GM_RANGE+1);
+		return;
+	}
+
+	if (px1 < px2) {
+		INVALIDATE_RECT(
+				MA_WIDTH + GM_WIDTH * mtr, GM_MARGIN_Y + GM_RANGE - px2 - corners,
+				GM_WIDTH, px2 - px1 + 2 + 2*corners);
+	} else {
+		INVALIDATE_RECT(
+				MA_WIDTH + GM_WIDTH * mtr, GM_MARGIN_Y + GM_RANGE - px1 - corners,
+				GM_WIDTH, px1 - px2 + 2 + 2*corners);
+	}
+}
+
+static void invalidate_dbtp_v(DRUI* ui, int mtr, float val) {
+	int px = deflect(ui, val);
+	invalidate_meter(ui, mtr, ui->px_dbtp_v[mtr][0], px, 0);
+	ui->px_dbtp_v[mtr][1] = px;
+	ui->dbtp_v[mtr][1] = val;
+}
+
+static void invalidate_dbtp_p(DRUI* ui, int mtr, float val) {
+	int px = deflect(ui, val);
+	invalidate_meter(ui, mtr, ui->px_dbtp_p[mtr][0], px, 0);
+	if (VCMP(ui->dbtp_p[mtr][0], val)) queue_draw(ui->m1);
+	ui->px_dbtp_p[mtr][1] = px;
+	if (RCMP(ui->dbtp_p[mtr][0], val)) { INVALIDATE_RECT(MA_WIDTH + GM_WIDTH * mtr, 2, GM_WIDTH, 12); }
+	ui->dbtp_p[mtr][1] = val;
+}
+
+static void invalidate_rms_v(DRUI* ui, int mtr, float val) {
+	int px = deflect(ui, val);
+	invalidate_meter(ui, mtr, ui->px_rms_v[mtr][0], px, 0);
+	ui->px_rms_v[mtr][1] = px;
+	if (RCMP(ui->rms_v[mtr][0], val)) { INVALIDATE_RECT(MA_WIDTH + GM_WIDTH * mtr, 26, GM_WIDTH, 12); }
+	ui->rms_v[mtr][1] = val;
+}
+
+static void invalidate_rms_p(DRUI* ui, int mtr, float val) {
+	int px = deflect(ui, val);
+	invalidate_meter(ui, mtr, ui->px_rms_p[mtr][0], px, 3);
+	if (VCMP(ui->rms_p[mtr][0], val)) queue_draw(ui->m1);
+	ui->px_rms_p[mtr][1] = px;
+	if (RCMP(ui->rms_p[mtr][0], val)) { INVALIDATE_RECT(MA_WIDTH + GM_WIDTH * mtr, 14, GM_WIDTH, 12); }
+	ui->rms_p[mtr][1] = val;
+}
+
+/******************************************************************************
  * main drawing
  */
 
@@ -351,7 +413,6 @@ static void format_db(char *buf, const float val) {
 	}
 }
 
-#define RCMP(A,B) (rintf(100.f * (A)) != rintf(100.f * (B)))
 static bool m0_expose_event(RobWidget* handle, cairo_t* cr, cairo_rectangle_t *ev) {
 	DRUI* ui = (DRUI*)GET_HANDLE(handle);
 
@@ -359,6 +420,13 @@ static bool m0_expose_event(RobWidget* handle, cairo_t* cr, cairo_rectangle_t *e
 		create_surfaces(ui);
 		create_meter_pattern(ui);
 		ui->size_changed = false;
+		/* update cached pixel values */
+		for (uint32_t i = 0; i < ui->num_meters ; ++i) {
+			invalidate_rms_v (ui, i, ui->rms_v[i][1]);
+			invalidate_rms_p (ui, i, ui->rms_p[i][1]);
+			invalidate_dbtp_v (ui, i, ui->dbtp_v[i][1]);
+			invalidate_dbtp_p (ui, i, ui->dbtp_p[i][1]);
+		}
 	}
 
 	cairo_rectangle (cr, ev->x, ev->y, ev->width, ev->height);
@@ -844,67 +912,6 @@ static const void*
 extension_data(const char* uri)
 {
 	return NULL;
-}
-
-/******************************************************************************
- * backend communication
- */
-
-#define INVALIDATE_RECT(XX,YY,WW,HH) queue_tiny_area(ui->m0, XX, YY, WW, HH);
-#define VCMP(A,B) (ui->dr_operation_mode && RCMP((A),(B)))
-
-static void invalidate_meter(DRUI* ui, const int mtr, const int px1, const int px2, const int corners) {
-	if (px1 == px2) return;
-
-	if (ui->dr_operation_mode) {
-		INVALIDATE_RECT(
-				MA_WIDTH + GM_WIDTH * mtr, GM_MARGIN_Y,
-				GM_WIDTH, GM_RANGE+1);
-		return;
-	}
-
-	if (px1 < px2) {
-		INVALIDATE_RECT(
-				MA_WIDTH + GM_WIDTH * mtr, GM_MARGIN_Y + GM_RANGE - px2 - corners,
-				GM_WIDTH, px2 - px1 + 2 + 2*corners);
-	} else {
-		INVALIDATE_RECT(
-				MA_WIDTH + GM_WIDTH * mtr, GM_MARGIN_Y + GM_RANGE - px1 - corners,
-				GM_WIDTH, px1 - px2 + 2 + 2*corners);
-	}
-}
-
-static void invalidate_dbtp_v(DRUI* ui, int mtr, float val) {
-	int px = deflect(ui, val);
-	invalidate_meter(ui, mtr, ui->px_dbtp_v[mtr][0], px, 0);
-	ui->px_dbtp_v[mtr][1] = px;
-	ui->dbtp_v[mtr][1] = val;
-}
-
-static void invalidate_dbtp_p(DRUI* ui, int mtr, float val) {
-	int px = deflect(ui, val);
-	invalidate_meter(ui, mtr, ui->px_dbtp_p[mtr][0], px, 0);
-	if (VCMP(ui->dbtp_p[mtr][0], val)) queue_draw(ui->m1);
-	ui->px_dbtp_p[mtr][1] = px;
-	if (RCMP(ui->dbtp_p[mtr][0], val)) { INVALIDATE_RECT(MA_WIDTH + GM_WIDTH * mtr, 2, GM_WIDTH, 12); }
-	ui->dbtp_p[mtr][1] = val;
-}
-
-static void invalidate_rms_v(DRUI* ui, int mtr, float val) {
-	int px = deflect(ui, val);
-	invalidate_meter(ui, mtr, ui->px_rms_v[mtr][0], px, 0);
-	ui->px_rms_v[mtr][1] = px;
-	if (RCMP(ui->rms_v[mtr][0], val)) { INVALIDATE_RECT(MA_WIDTH + GM_WIDTH * mtr, 26, GM_WIDTH, 12); }
-	ui->rms_v[mtr][1] = val;
-}
-
-static void invalidate_rms_p(DRUI* ui, int mtr, float val) {
-	int px = deflect(ui, val);
-	invalidate_meter(ui, mtr, ui->px_rms_p[mtr][0], px, 3);
-	if (VCMP(ui->rms_p[mtr][0], val)) queue_draw(ui->m1);
-	ui->px_rms_p[mtr][1] = px;
-	if (RCMP(ui->rms_p[mtr][0], val)) { INVALIDATE_RECT(MA_WIDTH + GM_WIDTH * mtr, 14, GM_WIDTH, 12); }
-	ui->rms_p[mtr][1] = val;
 }
 
 /******************************************************************************
