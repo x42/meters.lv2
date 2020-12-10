@@ -623,6 +623,13 @@ extension_data(const char* uri)
 #ifdef DISPLAY_INTERFACE
 #include "dpy_needle.c"
 #include "dpy_bargraph.c"
+# if (defined _WIN32 && defined RTK_STATIC_INIT)
+static void rtk_static_glib ()
+{
+	static int once = 0;
+	if (!once) {once = 1; gobject_init_ctor();}
+}
+# endif
 #endif
 
 const void*
@@ -632,8 +639,7 @@ extension_data_needle(const char* uri)
 	static const LV2_Inline_Display_Interface display  = { needle_render };
 	if (!strcmp(uri, LV2_INLINEDISPLAY__interface)) {
 #if (defined _WIN32 && defined RTK_STATIC_INIT)
-		static int once = 0;
-		if (!once) {once = 1; gobject_init_ctor();}
+		rtk_static_glib ();
 #endif
 		return &display;
 	}
@@ -648,8 +654,7 @@ extension_data_kmeter(const char* uri)
 	static const LV2_Inline_Display_Interface display  = { bargraph_render };
 	if (!strcmp(uri, LV2_INLINEDISPLAY__interface)) {
 #if (defined _WIN32 && defined RTK_STATIC_INIT)
-		static int once = 0;
-		if (!once) {once = 1; gobject_init_ctor();}
+		rtk_static_glib ();
 #endif
 		return &display;
 	}
