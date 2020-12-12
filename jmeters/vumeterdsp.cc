@@ -67,8 +67,8 @@ void Vumeterdsp::process (float *p, int n)
 	if (z2 > m) m = z2;
     }
 
-    if (!finite(z1)) {_z1 = 0; m = INFINITY;} else _z1 = z1;
-    if (!finite(z2)) {_z2 = 0; m = INFINITY;} else _z2 = z2 + 1e-10f;
+    if (!isfinite(z1)) {_z1 = 0; m = INFINITY;} else _z1 = z1;
+    if (!isfinite(z2)) {_z2 = 0; m = INFINITY;} else _z2 = z2 + 1e-10f;
     _m = m;
 }
 
