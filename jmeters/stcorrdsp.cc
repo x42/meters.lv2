@@ -62,11 +62,11 @@ void Stcorrdsp::process (float *pl, float *pr, int n)
 	zrr += _w2 * (zr * zr - zrr);
     }
 
-    if (!finite(zl)) zl = 0;
-    if (!finite(zr)) zr = 0;
-    if (!finite(zlr)) zlr = 0;
-    if (!finite(zll)) zll = 0;
-    if (!finite(zrr)) zrr = 0;
+    if (!isfinite(zl)) zl = 0;
+    if (!isfinite(zr)) zr = 0;
+    if (!isfinite(zlr)) zlr = 0;
+    if (!isfinite(zll)) zll = 0;
+    if (!isfinite(zrr)) zrr = 0;
 
     _zl = zl;
     _zr = zr;
