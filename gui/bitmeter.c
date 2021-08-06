@@ -92,17 +92,17 @@ static void initialize_font_cache (BITui* ui) {
 
 static void format_num (char *buf, const int num) {
 	if (num >= 1000000000) {
-		sprintf (buf, "%.0fM", num / 1000000.f);
+		snprintf (buf, 32, "%.0fM", num / 1000000.f);
 	} else if (num >= 100000000) {
-		sprintf (buf, "%.1fM", num / 1000000.f);
+		snprintf (buf, 32, "%.1fM", num / 1000000.f);
 	} else if (num >= 10000000) {
-		sprintf (buf, "%.2fM", num / 1000000.f);
+		snprintf (buf, 32, "%.2fM", num / 1000000.f);
 	} else if (num >= 100000) {
-		sprintf (buf, "%.0fK", num / 1000.f);
+		snprintf (buf, 32, "%.0fK", num / 1000.f);
 	} else if (num >= 10000) {
-		sprintf (buf, "%.1fK", num / 1000.f);
+		snprintf (buf, 32, "%.1fK", num / 1000.f);
 	} else {
-		sprintf (buf, "%d", num);
+		snprintf (buf, 32, "%d", num);
 	}
 }
 
