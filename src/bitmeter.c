@@ -301,6 +301,13 @@ bim_run(LV2_Handle instance, uint32_t n_samples)
 					self->histM[BIM_DHIT + k] = self->histS[BIM_DHIT + k];
 					self->histM[BIM_DONE + k] = self->histS[BIM_DONE + k];
 				}
+				self->histM[0] = self->bim_zero;
+				self->histM[1] = self->bim_pos;
+				self->histM[2] = self->bim_nan;
+				self->histM[3] = self->bim_inf;
+				self->histM[4] = self->bim_den;
+				self->gui_min  = self->bim_min;
+				self->gui_max  = self->bim_max;
 			}
 #endif
 
@@ -388,6 +395,24 @@ bim_restore(LV2_Handle              instance,
 #ifdef DISPLAY_INTERFACE
 #include "rtk/common.h"
 
+/* see also gui/bitmeter.c */
+static void format_num (char *buf, const char* pfx, const int num) {
+	if (num >= 1000000000) {
+		snprintf (buf, 48, "%s: %.0fM", pfx, num / 1000000.f);
+	} else if (num >= 100000000) {
+		snprintf (buf, 48, "%s: %.1fM", pfx, num / 1000000.f);
+	} else if (num >= 10000000) {
+		snprintf (buf, 48, "%s: %.2fM", pfx, num / 1000000.f);
+	} else if (num >= 100000) {
+		snprintf (buf, 48, "%s: %.0fK", pfx, num / 1000.f);
+	} else if (num >= 10000) {
+		snprintf (buf, 48, "%s: %.1fK", pfx, num / 1000.f);
+	} else {
+		snprintf (buf, 48, "%s: %d", pfx, num);
+	}
+}
+
+
 static LV2_Inline_Display_Image_Surface *
 bit_render (LV2_Handle instance, uint32_t w, uint32_t max_h)
 {
@@ -415,12 +440,14 @@ bit_render (LV2_Handle instance, uint32_t w, uint32_t max_h)
 	cairo_set_line_width (cr, 1);
 	cairo_set_line_cap(cr, CAIRO_LINE_CAP_ROUND);
 
+	bool have_data = false;
 	for (int k = 0; k < 36; ++k) {
 		/* BIM_D(HIT|ONE) + 150 ~= 1.0 == 2^0 || bit 150 = 23 + 127 */
 		const int o = 153 - k;
 		if (self->histM[BIM_DHIT + o] == 0) {
 			continue;
 		}
+		have_data = true;
 		float xo = xr * self->histM[BIM_DONE + o] / (float) self->histM[BIM_DHIT + o];
 		if (k < 4) {
 			cairo_set_source_rgba (cr, .9, .3, .0, 1.0); // 2^0 .. 2^3
@@ -439,32 +466,62 @@ bit_render (LV2_Handle instance, uint32_t w, uint32_t max_h)
 		cairo_stroke (cr);
 	}
 
-	double dash = 2;
-	cairo_set_dash (cr, &dash, 1, 0);
-	cairo_set_line_cap(cr, CAIRO_LINE_CAP_BUTT);
-	cairo_set_source_rgba (cr, .7, .7, .7, 0.5);
+	if (have_data) {
+		double dash = 2;
+		cairo_set_dash (cr, &dash, 1, 0);
+		cairo_set_line_cap(cr, CAIRO_LINE_CAP_BUTT);
+		cairo_set_source_rgba (cr, .7, .7, .7, 0.5);
 
-	cairo_move_to (cr, 0, 6.5);
-	cairo_line_to (cr, w - 8, 6.5);
-	cairo_stroke (cr);
-	cairo_move_to (cr, 0, 22.5);
-	cairo_line_to (cr, w - 8, 22.5);
-	cairo_stroke (cr);
-	cairo_move_to (cr, 0, 38.5);
-	cairo_line_to (cr, w - 12, 38.5);
-	cairo_stroke (cr);
-	cairo_move_to (cr, 0, 54.5);
-	cairo_line_to (cr, w - 12, 54.5);
-	cairo_stroke (cr);
+		cairo_move_to (cr, 0, 6.5);
+		cairo_line_to (cr, w - 8, 6.5);
+		cairo_stroke (cr);
+		cairo_move_to (cr, 0, 22.5);
+		cairo_line_to (cr, w - 8, 22.5);
+		cairo_stroke (cr);
+		cairo_move_to (cr, 0, 38.5);
+		cairo_line_to (cr, w - 12, 38.5);
+		cairo_stroke (cr);
+		cairo_move_to (cr, 0, 54.5);
+		cairo_line_to (cr, w - 12, 54.5);
+		cairo_stroke (cr);
 
-	cairo_set_dash (cr, NULL, 0, 0);
+		cairo_set_dash (cr, NULL, 0, 0);
 
-	PangoFontDescription* font = pango_font_description_from_string ("Mono 8px");
-	write_text_full (cr, "0",  font, w - 2,  7, 0, 1, c_g80);
-	write_text_full (cr, "8",  font, w - 2, 23, 0, 1, c_g80);
-	write_text_full (cr, "16", font, w - 2, 39, 0, 1, c_g80);
-	write_text_full (cr, "24", font, w - 2, 55, 0, 1, c_g80);
-	pango_font_description_free (font);
+		PangoFontDescription* font = pango_font_description_from_string ("Mono 8px");
+		write_text_full (cr, "0",  font, w - 2,  7, 0, 1, c_g80);
+		write_text_full (cr, "8",  font, w - 2, 23, 0, 1, c_g80);
+		write_text_full (cr, "16", font, w - 2, 39, 0, 1, c_g80);
+		write_text_full (cr, "24", font, w - 2, 55, 0, 1, c_g80);
+		pango_font_description_free (font);
+	} else if (self->histM[0] > 0 && self->bim_min == INFINITY && self->bim_max <= 0 /*&& self->histM[3] == 0 && self->histM[2] == 0*/) {
+		PangoFontDescription* font = pango_font_description_from_string ("Sans 10px");
+		write_text_full (cr, "Silence", font, w / 2, h / 2, 0, 2, c_g80);
+		pango_font_description_free (font);
+	} else {
+		PangoFontDescription* font = pango_font_description_from_string ("Mono 9px");
+		char buf[48];
+		format_num (buf, "NaN", self->histM[2]);
+		write_text_full (cr, buf, font, 4 , 7, 0, 3, c_g80);
+		format_num (buf, "Inf", self->histM[3]);
+		write_text_full (cr, buf, font, 4 , 20, 0, 3, c_g80);
+		format_num (buf, "Den", self->histM[4]);
+		write_text_full (cr, buf, font, 4 , 33, 0, 3, c_g80);
+
+		if (self->gui_min == INFINITY || self->gui_min <= 0) {
+			write_text_full (cr, "Min: N/A", font, 4 , 46, 0, 3, c_g80);
+		} else {
+			snprintf(buf, 48, "Min: %.1f dBFS", 20.f * log10f (self->gui_min));
+			write_text_full (cr, buf, font, 4 , 46, 0, 3, c_g80);
+		}
+		if (self->gui_max == INFINITY || self->gui_max <= 0) {
+			write_text_full (cr, "Max: N/A", font, 4 , 59, 0, 3, c_g80);
+		} else {
+			snprintf(buf, 48, "Max: %.1f dBFS", 20.f * log10f (self->gui_max));
+			write_text_full (cr, buf, font, 4 , 59, 0, 3, c_g80);
+		}
+
+		pango_font_description_free (font);
+	}
 
 	cairo_destroy (cr);
 

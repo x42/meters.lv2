@@ -149,6 +149,7 @@ typedef struct {
 	// bitmeter
 
 	float bim_min, bim_max;
+	float gui_min, gui_max;
 	int bim_zero, bim_pos, bim_nan, bim_inf, bim_den;
 
 	bool need_expose;
