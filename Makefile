@@ -454,7 +454,7 @@ GLGUIOBJ = $(OBJDIR)pugl.o \
 					 $(OBJDIR)$(LV2GUI10).o \
 					 $(OBJDIR)$(LV2GUI11).o
 
-$(BUILDDIR)meters_glui.so: gui/meters.c $(GLGUIOBJ) $(goniometer_UIDEP)
+$(BUILDDIR)meters_glui.$(LIB_EXT): gui/meters.c $(GLGUIOBJ) $(goniometer_UIDEP)
 
 ###############################################################################
 # install/uninstall/clean target definitions
