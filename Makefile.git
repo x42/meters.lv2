@@ -15,6 +15,7 @@ submodule_check:
 	  git submodule status \
 	  | grep -q "^-" \
 	  && $(MAKE) submodules || true
+	@-test -d .git -a .gitmodules && git submodule sync
 	@-test -d .git -a .gitmodules && \
 	  git submodule status \
 	  | grep -q "^+" \
