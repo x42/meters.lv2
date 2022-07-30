@@ -72,7 +72,7 @@ ifeq ($(UNAME),Darwin)
   LIB_EXT=.dylib
   EXE_EXT=
   UI_TYPE=ui:CocoaUI
-  PUGL_SRC=$(RW)pugl/pugl_osx.m
+  PUGL_SRC=$(RW)pugl/pugl_osx.mm
   PKG_LIBS=
   GLUILIBS=-framework Cocoa -framework OpenGL
   STRIPFLAGS=-u -r -arch all -s $(RW)lv2syms
