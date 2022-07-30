@@ -1128,7 +1128,7 @@ static RobWidget * toplevel(MF2UI* ui, void * const top)
 	robtk_cbtn_set_color_off(ui->btn_oct, .1, .3, .1);
 
 	/* Normalize */
-	ui->btn_norm = robtk_cbtn_new("Normalize", GBT_LED_LEFT, false);
+	ui->btn_norm = robtk_cbtn_new("Auto-Gain", GBT_LED_LEFT, false);
 	robtk_cbtn_set_active(ui->btn_norm, false);
 	robtk_cbtn_set_callback(ui->btn_norm, cb_set_norm, ui);
 
