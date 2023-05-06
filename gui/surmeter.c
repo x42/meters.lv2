@@ -672,7 +672,7 @@ instantiate(
 
 	ui->box = rob_vbox_new(FALSE, 2);
 	robwidget_make_toplevel(ui->box, ui_toplevel);
-	robwidget_toplevel_enable_scaling (ui->box);
+	robwidget_toplevel_enable_scaling (ui->box, NULL, NULL);
 	ROBWIDGET_SETNAME(ui->box, "surmeter");
 
 	ui->tbl = rob_table_new (/*rows*/7, /*cols*/3, FALSE);

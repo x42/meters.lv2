@@ -914,7 +914,7 @@ static RobWidget * toplevel(SAUI* ui, void * const top)
 	ui->rw = rob_hbox_new(FALSE, 2);
 	robwidget_make_toplevel(ui->rw, top);
 	if (ui->display_freq) {
-		robwidget_toplevel_enable_scaling (ui->rw);
+		robwidget_toplevel_enable_scaling (ui->rw, NULL, NULL);
 	}
 
 	/* DPM main drawing area */
