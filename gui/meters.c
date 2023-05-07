@@ -6,8 +6,13 @@
 #include <glib-object.h>
 #endif
 
-#include "lv2/lv2plug.in/ns/lv2core/lv2.h"
-#include "lv2/lv2plug.in/ns/extensions/ui/ui.h"
+#ifdef HAVE_LV2_1_18_6
+#include <lv2/core/lv2.h>
+#include <lv2/ui/ui.h>
+#else
+#include <lv2/lv2plug.in/ns/lv2core/lv2.h>
+#include <lv2/lv2plug.in/ns/extensions/ui/ui.h>
+#endif
 
 extern const LV2UI_Descriptor* lv2ui_kmeter (uint32_t index);
 extern const LV2UI_Descriptor* lv2ui_needle (uint32_t index);

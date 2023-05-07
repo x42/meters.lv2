@@ -18,7 +18,11 @@
  * Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#include "lv2/lv2plug.in/ns/ext/state/state.h"
+#ifdef HAVE_LV2_1_18_6
+#include <lv2/state/state.h>
+#else
+#include <lv2/lv2plug.in/ns/ext/state/state.h>
+#endif
 
 #ifndef MAX
 #define MAX(A,B) ( (A) > (B) ? (A) : (B) )

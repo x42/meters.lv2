@@ -19,7 +19,12 @@
 
 #include <string.h>
 #include <stdlib.h>
-#include "lv2/lv2plug.in/ns/ext/urid/urid.h"
+
+#ifdef HAVE_LV2_1_18_6
+#include <lv2/urid/urid.h>
+#else
+#include <lv2/lv2plug.in/ns/ext/urid/urid.h>
+#endif
 
 /* simple lockless ringbuffer
  * for goniometer stereo signal
