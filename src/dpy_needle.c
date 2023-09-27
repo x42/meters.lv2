@@ -86,8 +86,9 @@ needle_render (LV2_Handle instance, uint32_t w, uint32_t max_h)
 			break;
 		case MT_VU:
 			if (self->chn == 2) {
+				static const float c_ngrn[4] = {0.0, 0.5, 0.1, 1.0};
 				mcol[0] = c_red;
-				mcol[1] = c_grn;
+				mcol[1] = c_ngrn;
 			} else {
 				mcol[1] = c_blk;
 				mcol[0] = c_blk;
