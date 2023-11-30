@@ -293,7 +293,7 @@ static void draw_needle (MetersLV2UI* ui, cairo_t* cr, float val,
 	cairo_move_to (cr, _xc, ui->n_yc);
 	cairo_line_to (cr, px, py);
 	CairoSetSouerceRGBA(col);
-	cairo_set_line_width (cr, lw * ui->scale);
+	cairo_set_line_width (cr, lw * MAX (1.4, ui->scale));
 	cairo_stroke (cr);
 
 	cairo_restore(cr);
@@ -359,7 +359,7 @@ static bool expose_event(RobWidget* handle, cairo_t* cr, cairo_rectangle_t* ev) 
 		for (c=0; c < ui->chn; ++c) {
 			draw_background (ui, cr, ui->m_width * c, 0);
 			if (ui->naned[c]) { NANED(ui->m_width * c + ui->m_width/2, ui->height*2/3, c_red); }
-			draw_needle (ui, cr, ui->lvl[c], ui->m_width * c, col, 1.4);
+			draw_needle (ui, cr, ui->lvl[c], ui->m_width * c, col, 1.5);
 		}
 	}
 
