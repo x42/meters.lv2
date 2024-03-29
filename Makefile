@@ -89,6 +89,7 @@ ifeq ($(UNAME),Darwin)
   UI_TYPE=ui:CocoaUI
   PUGL_SRC=$(RW)pugl/pugl_osx.mm
   PKG_LIBS=
+  GLUICFLAGS+=-DROBTK_UPSCALE
   GLUILIBS=-framework Cocoa -framework OpenGL
   STRIPFLAGS=-u -r -arch all -s $(RW)lv2syms
   EXTENDED_RE=-E
