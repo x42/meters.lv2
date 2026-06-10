@@ -423,6 +423,7 @@ gl_bitmeter_LV2DESC = lv2ui_bitmeter
 gl_surmeter_LV2DESC = lv2ui_surmeter
 
 COLLECTION_OBJS = \
+	$(OBJDIR)fft_static.o \
 	$(APPBLD)x42-ebur128.o \
 	$(APPBLD)x42-phase-correlation.o \
 	$(APPBLD)x42-dr14.o \
@@ -448,6 +449,10 @@ $(APPBLD)x42-meter-collection$(EXE_EXT): src/meters.cc $(DSPSRC) $(DSPDEPS) $(CO
 
 -include $(RW)robtk.mk
 
+$(OBJDIR)fft_static.o: gui/fft_static.c
+	$(CXX) -c $(CPPFLAGS) $(CFLAGS) $(PTHREADCFLAGS)  \
+	  -o $(OBJDIR)fft_static.o gui/fft_static.c
+
 $(OBJDIR)$(LV2GUI1).o: $(UIIMGS) src/uris.h gui/needle.c gui/meterimage.c
 $(OBJDIR)$(LV2GUI2).o: gui/ebur.c src/uris.h
 $(OBJDIR)$(LV2GUI3).o: gui/goniometer.c src/goniometer.h \
@@ -462,6 +467,7 @@ $(OBJDIR)$(LV2GUI10).o: gui/bitmeter.c
 $(OBJDIR)$(LV2GUI11).o: gui/surmeter.c
 
 GLGUIOBJ = $(OBJDIR)pugl.o \
+					 $(OBJDIR)fft_static.o \
 					 $(OBJDIR)$(LV2GUI1).o \
 					 $(OBJDIR)$(LV2GUI2).o \
 					 $(OBJDIR)$(LV2GUI3).o \
@@ -518,7 +524,7 @@ clean:
 	rm -f $(BUILDDIR)manifest.ttl $(BUILDDIR)$(LV2NAME).ttl \
 	  $(BUILDDIR)$(LV2NAME)$(LIB_EXT) \
 		$(BUILDDIR)meters_glui$(LIB_EXT)
-	rm -f $(OBJDIR)pugl.o \
+	rm -f $(OBJDIR)pugl.o $(OBJDIR)fft_static.o \
 	  $(OBJDIR)$(LV2GUI1).o $(OBJDIR)$(LV2GUI2).o \
 	  $(OBJDIR)$(LV2GUI3).o $(OBJDIR)$(LV2GUI4).o \
 	  $(OBJDIR)$(LV2GUI5).o $(OBJDIR)$(LV2GUI6).o \

@@ -25,8 +25,8 @@
 #define MIN(A, B) ((A) < (B) ? (A) : (B))
 #endif
 
-static pthread_mutex_t fftw_planner_lock = PTHREAD_MUTEX_INITIALIZER;
-static unsigned int    instance_count    = 0;
+extern pthread_mutex_t x42_meters_fftw_planner_lock;
+extern unsigned int    x42_meters_instance_count;
 
 typedef enum {
 	W_HANN = 0,
@@ -230,10 +230,10 @@ fftx_init (struct FFTAnalysis* ft, uint32_t window_size, double rate, double fps
 
 	fftx_reset (ft);
 
-	pthread_mutex_lock (&fftw_planner_lock);
+	pthread_mutex_lock (&x42_meters_fftw_planner_lock);
 	ft->fftplan = fftwf_plan_r2r_1d (window_size, ft->fft_in, ft->fft_out, FFTW_R2HC, FFTW_MEASURE);
-	++instance_count;
-	pthread_mutex_unlock (&fftw_planner_lock);
+	++x42_meters_instance_count;
+	pthread_mutex_unlock (&x42_meters_fftw_planner_lock);
 }
 
 FFTX_FN_PREFIX
@@ -255,10 +255,10 @@ fftx_free (struct FFTAnalysis* ft)
 	if (!ft) {
 		return;
 	}
-	pthread_mutex_lock (&fftw_planner_lock);
+	pthread_mutex_lock (&x42_meters_fftw_planner_lock);
 	fftwf_destroy_plan (ft->fftplan);
-	if (instance_count > 0) {
-		--instance_count;
+	if (x42_meters_instance_count > 0) {
+		--x42_meters_instance_count;
 	}
 #ifdef WITH_STATIC_FFTW_CLEANUP
 	/* use this only when statically linking to a local fftw!
@@ -270,11 +270,11 @@ fftx_free (struct FFTAnalysis* ft)
 	 * If libfftwf is shared with other plugins or the host this can
 	 * cause undefined behavior.
 	 */
-	if (instance_count == 0) {
+	if (x42_meters_instance_count == 0) {
 		fftwf_cleanup ();
 	}
 #endif
-	pthread_mutex_unlock (&fftw_planner_lock);
+	pthread_mutex_unlock (&x42_meters_fftw_planner_lock);
 	free (ft->window);
 	free (ft->ringbuf);
 	fftwf_free (ft->fft_in);
