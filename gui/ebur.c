@@ -1046,7 +1046,7 @@ static bool expose_event(RobWidget* handle, cairo_t* cr, cairo_rectangle_t *ev) 
 			sprintf(buf, "Int:   %s %s", format_lufs(lufb0, LUFS(ui->il)), lufs ? "LUFS" : "LU");
 			write_text(cr, buf, FONT(FONT_M09), COORD_BI_X+10 , COORD_BI_Y+40, 0,  6, c_wht);
 		} else {
-			sprintf(buf, "[Integrating over 5 sec]");
+			sprintf(buf, "[Integrating over 400 ms]");
 			write_text(cr, buf, FONT(FONT_S09), COORD_BI_X+10 , COORD_BI_Y+40, 0,  6, c_wht);
 		}
 

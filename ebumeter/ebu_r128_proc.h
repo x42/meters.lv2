@@ -108,8 +108,9 @@ private:
     float             _frpwr;        // Power accumulated for current fragment.
     float             _power [64];   // Array of fragment powers.
     int               _wrind;        // Write index into _frpwr 
-    int               _div1;         // M period counter, 200 ms;
-    int               _div2;         // S period counter, 1s;
+    int               _div1;         // M period counter, 100 ms;
+    int               _div2;         // S period counter, 500 ms;
+    int               _integr_fragments; // 50 ms fragments since integration reset.
     float             _loudness_M;
     float             _maxloudn_M;
     float             _loudness_S;

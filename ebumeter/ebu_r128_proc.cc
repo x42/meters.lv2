@@ -107,7 +107,7 @@ void Ebu_r128_hist::calc_integ (float *vi, float *th)
     int   k;
     float s;
 
-    if (_count < 50)
+    if (_count < 1)
     {
         *vi = -200.0f;
 	return;
@@ -201,6 +201,7 @@ void Ebu_r128_proc::integr_reset (void)
     _range_max  = -200.0f;
     _range_thr  = -200.0f;
     _div1 = _div2 = 0;
+    _integr_fragments = 0;
 }
 
 
@@ -228,16 +229,20 @@ void Ebu_r128_proc::process (int nfram, float *input [])
             if (_loudness_S > _maxloudn_S) _maxloudn_S = _loudness_S;
 	    if (_integr)
 	    {
+		if (_integr_fragments < 8) _integr_fragments++;
 	        if (++_div1 == 2)
   	        {
-		    _hist_M.addpoint (_loudness_M);
+		    if (_integr_fragments >= 8)
+		    {
+		        _hist_M.addpoint (_loudness_M);
+		        _hist_M.calc_integ (&_integrated, &_integ_thr);
+		    }
 		    _div1 = 0;
 	        }
 	        if (++_div2 == 10)
 	        {
 		    _hist_S.addpoint (_loudness_S);
 		    _div2 = 0;
-		    _hist_M.calc_integ (&_integrated, &_integ_thr);
 		    _hist_S.calc_range (&_range_min, &_range_max, &_range_thr);
 		}
 	    }
