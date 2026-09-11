@@ -29,7 +29,8 @@
 
 #define CLIP_GM
 
-typedef void Stcorrdsp;
+namespace LV2M { class Stcorrdsp; }
+using LV2M::Stcorrdsp;
 
 #ifdef HAVE_LV2_1_18_6
 #include <lv2/ui/ui.h>

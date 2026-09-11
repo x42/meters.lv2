@@ -31,7 +31,7 @@
 #define LVGL_RESIZEABLE
 
 /* meter types */
-enum MtrType {
+enum NeedleMtrType {
 	MT_BBC = 1,
 	MT_BM6,
 	MT_EBU,
@@ -60,7 +60,7 @@ typedef struct {
 	float cal_rad;
 	bool bbc_s20;
 	int chn;
-	enum MtrType type;
+	enum NeedleMtrType type;
 
 	float drag_x, drag_y, drag_cal;
 	int width, height;
@@ -210,7 +210,7 @@ static void draw_background (MetersLV2UI* ui, cairo_t* cr, float xoff, float yof
  * some simple maths helpers
  */
 
-static float cal2rad(enum MtrType t, float v) {
+static float cal2rad(enum NeedleMtrType t, float v) {
 	/* rotate screw  [-30..0]  -> [-M_PI/4 .. M_PI/4] */
 	return .0837758 * (v + (t == MT_DIN ? 15.0 : 18.0));
 }
