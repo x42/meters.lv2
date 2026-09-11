@@ -492,7 +492,7 @@ static void img_draw_vu(cairo_t* cr, float scale) {
 }
 
 
-static cairo_surface_t* render_front_face_sf (enum MtrType t, cairo_surface_t *bg, int w, int h) {
+static cairo_surface_t* render_front_face_sf (int t, cairo_surface_t *bg, int w, int h) {
 	cairo_surface_t *sf = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, w, h);
 	cairo_t* cr = cairo_create(sf);
 
@@ -545,7 +545,7 @@ static cairo_surface_t* render_front_face_sf (enum MtrType t, cairo_surface_t *b
 	return sf;
 }
 
-static cairo_surface_t* render_front_face(enum MtrType t, int w, int h) {
+static cairo_surface_t* render_front_face(int t, int w, int h) {
 	cairo_surface_t *bg = NULL;
 	unsigned char * img_tmp;
 	if (t==MT_VU) {
