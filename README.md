@@ -47,16 +47,45 @@ Should be pretty much self-explanatory. A few notes:
 Install
 -------
 
-Compiling these plugin requires the LV2 SDK, gnu-make, a c-compiler,
-libpango, libcairo and openGL (sometimes called: glu, glx, mesa).
+### Requirements
 
-```bash
-  git clone https://github.com/x42/meters.lv2.git
-  cd meters.lv2
-  make submodules
-  make
-  sudo make install PREFIX=/usr
+Building the complete plugin collection and the standalone JACK applications
+requires:
+
+| Dependency | `pkg-config` name | Used for |
+| --- | --- | --- |
+| LV2 SDK 1.6.0 or newer | `lv2` | Plugin API and idle interface |
+| GLib | `glib-2.0` | Utility functions |
+| Cairo and Pango | `cairo`, `pangocairo`, `pango` | Meter rendering and text |
+| FFTW single-precision library | `fftw3f` | Spectrum analysis |
+| JACK development library | `jack` | Standalone meter applications |
+| OpenGL and GLU (Linux) | `gl`, `glu` | Plugin user interfaces |
+
+A C compiler, a C++ compiler, GNU Make, `pkg-config`, and the Git client are
+also needed. Distribution package names vary; development packages commonly
+end in `-dev` or `-devel`. In particular, FFTW must provide the
+single-precision `fftw3f` library, not only `fftw3`.
+
+After installing the dependencies, this command checks the libraries that the
+Linux build expects:
+
+```console
+pkg-config --exists lv2 glib-2.0 cairo pangocairo pango fftw3f jack gl glu
 ```
+
+A successful check prints nothing and exits with status zero.
+
+### Compile and install
+
+```console
+git clone --recursive https://github.com/x42/meters.lv2.git
+cd meters.lv2
+make
+sudo make install PREFIX=/usr
+```
+
+For an existing clone made without `--recursive`, run `make submodules` before
+`make` to fetch the required `robtk` source.
 
 Note to packagers: The Makefile honors `PREFIX` and `DESTDIR` variables as well
 as `CFLAGS`, `LDFLAGS` and `OPTIMIZATIONS` (additions to `CFLAGS`), also
